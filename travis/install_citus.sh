@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Inspired by https://gist.github.com/petere/6023944
+
+set -eux
+
+# we set PGVERSION to 10x of the Citus version when testing Citus, so
+# only install PostgreSQL proper if it's greater than 9.5
+if [ "${PGVERSION//./}" -gt "95" ]; then
+  cituspkgs="$HOME/.cache/citusdb_pkgs"
+  citusversion="$((${PGVERSION//./} / 100)).0"
+  citusdownload="citusdb-${citusversion}.0-1.amd64.deb"
+  citusurl="https://s3.amazonaws.com/packages.citusdata.com/travis/${citusdownload}"
+
+  # install travis Citus package
+  wget -N -P "${cituspkgs}" "${citusurl}"
+  sudo dpkg --force-confdef --force-confold --install "${cituspkgs}/${citusdownload}"
+
+  sudo ln -s "/opt/citusdb/${citusversion}" "/usr/lib/postgresql/${PGVERSION}"
+fi

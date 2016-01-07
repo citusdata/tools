@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Inspired by https://gist.github.com/petere/6023944
+
+set -eux
+
+status=0
+
+# Run tests. DBs owned by non-standard owner put socket in /tmp
+PGHOST=/tmp PGPORT=55435 make installcheck PGUSER=`whoami` PG_CONFIG=/usr/lib/postgresql/$PGVERSION/bin/pg_config || status=$?
+
+# Print diff if it exists
+if test -f regression.diffs; then cat regression.diffs; fi
+
+exit $status
