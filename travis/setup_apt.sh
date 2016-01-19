@@ -5,7 +5,7 @@
 set -eux
 
 # import the PostgreSQL repository key
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ACCC4CF8
 
 # add the PostgreSQL 9.5 repository
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main 9.5" >> /etc/apt/sources.list.d/postgresql.list'
