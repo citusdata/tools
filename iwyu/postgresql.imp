@@ -1,0 +1,5 @@
+[
+	{ include: [ "\"pg_config.h\"", private, "\"c.h\"", public ] },
+	{ include: [ "\"pg_config_manual.h\"", private, "\"c.h\"", public ] },
+	{ include: [ "\"postgres_ext.h\"", private, "\"c.h\"", public ] }
+]
