@@ -4,10 +4,6 @@ set -eux
 
 status=0
 
-# Create Ubuntu's PostgreSQL socket dir and relax permissions.
-sudo mkdir -p /var/run/postgresql
-sudo chown -R `whoami` /var/run/postgresql
-
 # Configure, build, and install extension
 ./configure PG_CONFIG=/usr/lib/postgresql/$PGVERSION/bin/pg_config
 make all
