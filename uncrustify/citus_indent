@@ -1,0 +1,114 @@
+#!/usr/bin/perl -wT
+
+use strict;
+use warnings;
+use Getopt::Long qw(:config no_auto_abbrev no_ignore_case prefix=--);
+use POSIX qw(setlocale LC_ALL);
+
+# untaint environment
+$ENV{'PATH'} = '/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin';
+delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+
+my ($quiet, $check);
+exit 64 unless GetOptions ('quiet' => \$quiet, 'check' => \$check);
+
+my $null_delimited_triples = `git ls-files -z | git check-attr --stdin -z citus-style`;
+my @flattened_triples = split(/\x00/, $null_delimited_triples);
+my $exit_code = $? >> 8;
+
+die "could not list files under source control\n" if $exit_code;
+
+my @files_to_format = ();
+my @formatter_args = qw(-c /usr/local/etc/citustools/citus-style.cfg);
+
+push @formatter_args, '-q' if $quiet;
+push @formatter_args, ($check ? '--check' : '--no-backup');
+
+while(my ($filename, $attrname, $attrvalue) = splice(@flattened_triples, 0, 3)) {
+    next unless $attrvalue eq 'set';
+
+    # untaint filename and error if '..' is present
+    if ($filename =~ /^(.*(?!\.\.)$)/) {
+        push @files_to_format, $1;        
+    } else {
+        die "illegal filename\n";
+    }
+}
+
+push @formatter_args, @files_to_format;
+
+system('uncrustify', @formatter_args);
+
+if ($? == -1) {
+    print "failed to execute: $!\n";
+}
+elsif ($? & 127) {
+    printf "child died with signal %d, %s coredump\n",
+        ($? & 127),  ($? & 128) ? 'with' : 'without';
+}
+else {
+    $exit_code = $? >> 8;
+    die "formatting check failed. see output for details.\n" if ($check && $exit_code);
+}
+
+__END__
+
+=head1 NAME
+
+citus_indent - apply Citus formatting conventions to a C codebase
+
+=head1 SYNOPSIS
+
+B<citus_indent> [I<options>]
+
+=head1 DESCRIPTION
+
+
+Applies (or enforces) the C formatting conventions used within Citus Data to
+all C files within the working directory. To be subject to formatting rules,
+files must be under L<git(1)> source control and have the I<citus-style> file
+attribute applied (see L<gitattributes(5)>).
+
+By default, all files with this attribute beneath the working directory will
+be formatted in-place (combined with source control, this in-place formatting
+is generally safe). A bundled L<uncrustify(1)> configuration file specifies all
+formatting options.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<--quiet>
+
+Quiet Mode: do not show progress as files are being processed.
+
+=item B<--check>
+
+Do not modify any files, instead simply verify that all files eligible for
+formatting are compliant with Citus Data style. The exit code I<EXIT_SUCCESS>
+signals that a codebase is compliant, otherwise I<EXIT_FAILURE> is used.
+
+=back
+
+=head1 FILES
+
+=over 4
+
+=item C</usr/local/etc/citustools/citus-style.cfg>
+
+This configuration file defines Citus Data's C style and will be passed to
+L<uncrustify(1)> to apply (or enforce) coding style.
+
+=back
+
+=head1 TODO
+
+It might be nice to be able to invoke our style on arbitrary files.
+
+=head1 SEE ALSO
+
+L<git(1)>, L<gitattributes(5)>, L<uncrustify(1)>
+
+=head1 AUTHOR
+
+Jason Petersen L<E<lt>jason@citusdata.comE<gt>>
