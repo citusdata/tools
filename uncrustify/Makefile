@@ -31,6 +31,6 @@ install: all installdirs
 	$(INSTALL_SCRIPT) citus_indent $(DESTDIR)$(bindir)
 	$(INSTALL_DATA) $(MANPAGES) $(DESTDIR)$(mandir)/man1
 	$(INSTALL_DATA) citus-style.cfg $(DESTDIR)$(pkgsysconfdir)
-	sed -i -e 's,/usr/local/etc/citustools,$(pkgsysconfdir),g' \
+	perl -pi -e 's,/usr/local/etc/citustools,$(pkgsysconfdir),g' \
 	$(DESTDIR)$(bindir)/citus_indent \
 	$(DESTDIR)$(mandir)/man1/citus_indent.1
