@@ -1,4 +1,11 @@
-PACKAGE_NAME := citustools
+export PACKAGE_NAME = citustools
+
+export prefix := /usr/local
+export bindir := $(prefix)/bin
+export datarootdir := $(prefix)/share
+export mandir := $(datarootdir)/man
+export sysconfdir := $(prefix)/etc
+export pkgsysconfdir := $(sysconfdir)/$(PACKAGE_NAME)
 
 # logic from http://stackoverflow.com/a/11206700
 SUBDIRS := $(addsuffix /., uncrustify)
