@@ -1,0 +1,6 @@
+# ====================
+# = Project-Specific =
+# ====================
+
+# generate man pages
+*.1
