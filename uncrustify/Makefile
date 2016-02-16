@@ -1,18 +1,11 @@
-PACKAGE_NAME = citustools
+# needed variables will be passed in via top-level Makefile
 
-prefix = /usr/local
-bindir = $(prefix)/bin
-datarootdir = $(prefix)/share
-mandir = $(datarootdir)/man
-sysconfdir = $(prefix)/etc
-pkgsysconfdir = $(sysconfdir)/$(PACKAGE_NAME)
+INSTALL := install -c
+INSTALL_DATA := $(INSTALL) -m 644
+INSTALL_SCRIPT := $(INSTALL) -m 755
 
-INSTALL = install -c
-INSTALL_DATA = $(INSTALL) -m 644
-INSTALL_SCRIPT = $(INSTALL) -m 755
-
-POD2MAN=pod2man --center "Citus Data Tools" -r "Citus Data"
-MANPAGES = citus_indent.1
+POD2MAN := pod2man --center "Citus Data Tools" -r "Citus Data"
+MANPAGES := citus_indent.1
 
 all: man
 
@@ -34,3 +27,5 @@ install: all installdirs
 	perl -pi -e 's,/usr/local/etc/citustools,$(pkgsysconfdir),g' \
 	$(DESTDIR)$(bindir)/citus_indent \
 	$(DESTDIR)$(mandir)/man1/citus_indent.1
+
+.PHONY: all man clean installdirs install
