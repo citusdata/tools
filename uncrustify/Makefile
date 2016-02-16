@@ -34,3 +34,5 @@ install: all installdirs
 	perl -pi -e 's,/usr/local/etc/citustools,$(pkgsysconfdir),g' \
 	$(DESTDIR)$(bindir)/citus_indent \
 	$(DESTDIR)$(mandir)/man1/citus_indent.1
+
+.PHONY: all man clean installdirs install
