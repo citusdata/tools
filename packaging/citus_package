@@ -1,0 +1,209 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+use Getopt::Long qw(:config no_auto_abbrev no_ignore_case);
+use POSIX qw(setlocale LC_ALL);
+use File::Temp qw(tempdir);
+use List::Util qw(any none);
+use Cwd qw(getcwd);
+
+# untaint environment
+local $ENV{'PATH'} = '/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin';
+delete @ENV{ 'IFS', 'CDPATH', 'ENV', 'BASH_ENV' };
+
+use constant BAD_USAGE => 64; ## no critic (ProhibitConstantPragma)
+
+my %supported_platforms = (
+    debian => [ "jessie", "wheezy" ],
+    el     => [ "7",      "6" ],
+    fedora => [ "23",     "22" ],
+    ol     => [ "7",      "6" ],
+    ubuntu => [ "xenial", "wily", "trusty", "precise" ]
+);
+
+my @rh_flavors = qw(el fedora ol);
+
+my %docker_names = (
+    debian => "debian",
+    el     => "centos",
+    fedora => "fedora",
+    ol     => "oraclelinux",
+    ubuntu => "ubuntu"
+);
+
+sub verify_platforms {
+    my (@platforms) = @_;
+
+    if ( @platforms == 0 ) {
+        print "You must specify at least one platform.\n";
+        exit BAD_USAGE;
+    }
+
+    foreach my $platform (@platforms) {
+        my ( $os, $release ) = split( '/', $platform, 2 );
+
+        if ( exists $supported_platforms{$os} ) {
+            my @releases = @{ $supported_platforms{$os} };
+            if ( none { $_ eq $release } @releases ) {
+                print "Unrecognized $os release: $release\n";
+                exit BAD_USAGE;
+            }
+        }
+        else {
+            print "Unrecognized OS: $os\n";
+            exit BAD_USAGE;
+        }
+    }
+
+    return;
+}
+
+my ( @platforms, $project, $build_type );
+
+exit BAD_USAGE unless GetOptions( 'p|platform=s' => \@platforms );
+
+verify_platforms(@platforms);
+
+if ( @ARGV != 2 ) {
+    print "You must specify a project and build type.\n";
+    exit BAD_USAGE;
+}
+
+( $project, $build_type ) = @ARGV;
+
+if ( $project =~ /^(citus|enterprise|rebalancer)$/ ) {
+    $project = $1;
+}
+else {
+    print "Unrecognized project: $project\n";
+    exit BAD_USAGE;
+}
+
+my $homedir = ( getpwuid($<) )[7];
+my $tempdir = tempdir( ".citus_package.XXXXX", DIR => $homedir, CLEANUP => 1 );
+my $currentdir = getcwd();
+
+foreach my $platform (@platforms) {
+    my ( $os, $release );
+
+    if ( $platform =~ /^(\w+)\/(\w+)$/ ) {
+        $os      = $1;
+        $release = $2;
+    }
+
+    my $docker_name     = $docker_names{$os};
+    my $docker_platform = "$docker_name-$release";
+    my $outputdir       = $tempdir . '/' . $docker_platform;
+    my @pg_versions =
+      ( any { $_ eq $os } @rh_flavors ) ? qw (pg94 pg95) : qw (all);
+
+    foreach my $pg (@pg_versions) {
+        my @docker_args = (
+            qw(run --rm -v),
+            "$outputdir:/packages",
+            '-e',
+            "GITHUB_TOKEN=$ENV{GITHUB_TOKEN}",
+            "citusdata/packaging:$docker_platform-$pg",
+            $project,
+            $build_type
+        );
+
+        system( 'docker', @docker_args );
+    }
+}
+
+system( 'mv', ( ( glob "$tempdir/*" ), $currentdir ) );
+
+__END__
+
+=head1 NAME
+
+citus_package - easily create OS packages for Citus projects
+
+=head1 SYNOPSIS
+
+B<citus_package> [I<options>] I<project> I<build_type>
+
+=head1 DESCRIPTION
+
+
+Packages a Citus project for one or more platforms and places the results in
+platform-specific directories within the working directory. B<citus_package>
+uses Docker under the hood to ensure repeatable builds, so a working Docker
+installation is the only prerequisite.
+
+Given a Citus I<project> and I<build_type>, B<citus_package> will build one
+package for a single platform, specified using the B<--platform> option. This
+option can be provided multiple times in order to build a package for many
+platforms at once.
+
+The I<build_type> argument has two special values: I<release> and I<nightly>. A
+release build is based on the latest release version (extracted from the build
+files contained within the C<citusdata/packaging> GitHub repository), pulling
+code from the corresponding git tag, which must be have a GitHub-verified
+signature. A nightly build is based on the latest commit to the "active" branch
+for a given project, which is usually C<master>, but can differ by project.
+
+All other I<build_type> values are passed directly to GitHub, which is free to
+interpret them how it sees fit, e.g. branch names, tags, or commit identifiers.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-p> I<os/release>, B<--platform=>I<os/release>
+
+Platform: required. Provide more than once for multi-platform builds
+
+=back
+
+=head1 SUPPORTED PROJECTS
+
+=over 4
+
+=item B<citus>          Citus (Open-Source)
+
+=item B<enterprise>     Citus Enterprise
+
+=item B<rebalancer>     Shard Rebalancer
+
+=back
+
+=head1 SUPPORTED PLATFORMS
+
+=over 4
+
+=item B<debian/jessie>  Debian 8 "Jessie"
+
+=item B<debian/wheezy>  Debian 7 "Wheezy"
+
+=item B<el/7>           Enterprise Linux 7.0 (CentOS, RedHat, Amazon Linux)
+
+=item B<el/6>           Enterprise Linux 6.0 (CentOS, RedHat, Amazon Linux)
+
+=item B<fedora/23>      Fedora 23
+
+=item B<fedora/22>      Fedora 22
+
+=item B<ol/7>           Oracle Linux 7.0
+
+=item B<ol/6>           Oracle Linux 6.0
+
+=item B<ubuntu/xenial>  Ubuntu (16.04 LTS Xenial Xerus)
+
+=item B<ubuntu/wily>    Ubuntu 15.10 (Wily Werewolf)
+
+=item B<ubuntu/trusty>  Ubuntu 14.04 LTS (Trusty Tahr)
+
+=item B<ubuntu/precise> Ubuntu 12.04 LTS (Precise Pangolin)
+
+=back
+
+=head1 TODO
+
+Eventually support a different output folder.
+
+=head1 AUTHOR
+
+Jason Petersen L<E<lt>jason@citusdata.comE<gt>>
