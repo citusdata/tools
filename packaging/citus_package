@@ -7,12 +7,15 @@ use POSIX qw(setlocale LC_ALL);
 use File::Temp qw(tempdir);
 use List::Util qw(any none);
 use Cwd qw(getcwd);
+BEGIN { $Pod::Usage::Formatter = 'Pod::Text::Termcap'; }
+use Pod::Usage qw(pod2usage);
 
 # untaint environment
-local $ENV{'PATH'} = '/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin';
+local $ENV{'PATH'} =
+  '/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin';
 delete @ENV{ 'IFS', 'CDPATH', 'ENV', 'BASH_ENV' };
 
-use constant BAD_USAGE => 64; ## no critic (ProhibitConstantPragma)
+use constant BAD_USAGE => 64;    ## no critic (ProhibitConstantPragma)
 
 my %supported_platforms = (
     debian => [ "jessie", "wheezy" ],
@@ -36,8 +39,11 @@ sub verify_platforms {
     my (@platforms) = @_;
 
     if ( @platforms == 0 ) {
-        print "You must specify at least one platform.\n";
-        exit BAD_USAGE;
+        pod2usage(
+            -msg     => "You must specify at least one platform.",
+            -exitval => BAD_USAGE,
+            -verbose => 1
+        );
     }
 
     foreach my $platform (@platforms) {
@@ -46,28 +52,44 @@ sub verify_platforms {
         if ( exists $supported_platforms{$os} ) {
             my @releases = @{ $supported_platforms{$os} };
             if ( none { $_ eq $release } @releases ) {
-                print "Unrecognized $os release: $release\n";
-                exit BAD_USAGE;
+                pod2usage(
+                    -msg      => "Unrecognized $os release: $release",
+                    -exitval  => BAD_USAGE,
+                    -verbose  => 99,
+                    -sections => "SYNOPSIS|OPTIONS|SUPPORTED PLATFORMS"
+                );
             }
         }
         else {
-            print "Unrecognized OS: $os\n";
-            exit BAD_USAGE;
+            pod2usage(
+                -msg      => "Unrecognized OS: $os",
+                -exitval  => BAD_USAGE,
+                -verbose  => 99,
+                -sections => "SYNOPSIS|OPTIONS|SUPPORTED PLATFORMS"
+            );
         }
     }
 
     return;
 }
 
-my ( @platforms, $project, $build_type );
+my ( @platforms, $project, $build_type, $opt_help );
 
-exit BAD_USAGE unless GetOptions( 'p|platform=s' => \@platforms );
+GetOptions( 'p|platform=s' => \@platforms, 'help!' => \$opt_help )
+  or pod2usage(
+    -msg     => "See '$0 --help' for more information.",
+    -exitval => BAD_USAGE
+  );
+
+pod2usage( -verbose => 1 ) if $opt_help;
 
 verify_platforms(@platforms);
 
 if ( @ARGV != 2 ) {
-    print "You must specify a project and build type.\n";
-    exit BAD_USAGE;
+    pod2usage(
+        -msg     => "You must specify a project and build type.",
+        -exitval => BAD_USAGE
+    );
 }
 
 ( $project, $build_type ) = @ARGV;
@@ -76,8 +98,10 @@ if ( $project =~ /^(citus|enterprise|rebalancer)$/ ) {
     $project = $1;
 }
 else {
-    print "Unrecognized project: $project\n";
-    exit BAD_USAGE;
+    pod2usage(
+        -msg     => "Unrecognized project: $project",
+        -exitval => BAD_USAGE
+    );
 }
 
 my $homedir = ( getpwuid($<) )[7];
