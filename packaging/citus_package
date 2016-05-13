@@ -15,7 +15,10 @@ local $ENV{'PATH'} =
   '/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin';
 delete @ENV{ 'IFS', 'CDPATH', 'ENV', 'BASH_ENV' };
 
-use constant BAD_USAGE => 64;    ## no critic (ProhibitConstantPragma)
+use constant BAD_USAGE  => 64;    ## no critic (ProhibitConstantPragma)
+use constant BAD_INPUT  => 65;    ## no critic (ProhibitConstantPragma)
+use constant NO_SERVICE => 69;    ## no critic (ProhibitConstantPragma)
+use constant BAD_CONFIG => 78;    ## no critic (ProhibitConstantPragma)
 
 my %supported_platforms = (
     debian => [ "jessie", "wheezy" ],
@@ -54,7 +57,7 @@ sub verify_platforms {
             if ( none { $_ eq $release } @releases ) {
                 pod2usage(
                     -msg      => "Unrecognized $os release: $release",
-                    -exitval  => BAD_USAGE,
+                    -exitval  => BAD_INPUT,
                     -verbose  => 99,
                     -sections => "SYNOPSIS|OPTIONS|SUPPORTED PLATFORMS"
                 );
@@ -63,7 +66,7 @@ sub verify_platforms {
         else {
             pod2usage(
                 -msg      => "Unrecognized OS: $os",
-                -exitval  => BAD_USAGE,
+                -exitval  => BAD_INPUT,
                 -verbose  => 99,
                 -sections => "SYNOPSIS|OPTIONS|SUPPORTED PLATFORMS"
             );
@@ -76,8 +79,8 @@ sub verify_platforms {
 sub get_and_verify_token {
     unless ( exists $ENV{GITHUB_TOKEN} ) {
         pod2usage(
-            -msg     => "You must have a GITHUB_TOKEN set.",
-            -exitval => BAD_USAGE,
+            -msg      => "You must have a GITHUB_TOKEN set.",
+            -exitval  => BAD_CONFIG,
             -verbose  => 99,
             -sections => "ENVIRONMENT"
         );
@@ -89,8 +92,8 @@ sub get_and_verify_token {
     }
     else {
         pod2usage(
-            -msg     => "Malformed GITHUB_TOKEN: $github_token",
-            -exitval => BAD_USAGE,
+            -msg      => "Malformed GITHUB_TOKEN: $github_token",
+            -exitval  => BAD_INPUT,
             -verbose  => 99,
             -sections => "ENVIRONMENT"
         );
@@ -98,19 +101,31 @@ sub get_and_verify_token {
 
     my $cmd = "curl -sf -H 'Authorization: token $github_token' "
       . 'https://api.github.com/';
-    my $result    = `$cmd`;
+    my $result    = `$cmd > /dev/null 2>&1`;
     my $exit_code = $? >> 8;
 
     if ( $exit_code == 22 ) {
         pod2usage(
-            -msg     => "Your token was rejected by GitHub.",
-            -exitval => BAD_USAGE,
+            -msg      => "Your token was rejected by GitHub.",
+            -exitval  => BAD_INPUT,
             -verbose  => 99,
             -sections => "ENVIRONMENT"
         );
     }
 
     return $github_token;
+}
+
+sub verify_docker_running {
+    my $result    = `docker info > /dev/null 2>&1`;
+    my $exit_code = $? >> 8;
+
+    unless ( $exit_code == 0 ) {
+        warn "Cannot connect to the Docker daemon. Is Docker running?\n";
+        exit NO_SERVICE;
+    }
+
+    return;
 }
 
 my ( @platforms, $project, $build_type, $opt_help );
@@ -140,9 +155,11 @@ if ( $project =~ /^(citus|enterprise|rebalancer)$/ ) {
 else {
     pod2usage(
         -msg     => "Unrecognized project: $project",
-        -exitval => BAD_USAGE
+        -exitval => BAD_INPUT
     );
 }
+
+verify_docker_running();
 
 my $github_token = get_and_verify_token();
 my $homedir      = ( getpwuid($<) )[7];
