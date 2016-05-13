@@ -73,6 +73,46 @@ sub verify_platforms {
     return;
 }
 
+sub get_and_verify_token {
+    unless ( exists $ENV{GITHUB_TOKEN} ) {
+        pod2usage(
+            -msg     => "You must have a GITHUB_TOKEN set.",
+            -exitval => BAD_USAGE,
+            -verbose  => 99,
+            -sections => "ENVIRONMENT"
+        );
+    }
+
+    my $github_token = $ENV{GITHUB_TOKEN};
+    if ( $ENV{GITHUB_TOKEN} =~ /^(\w+)$/ ) {
+        $github_token = $1;
+    }
+    else {
+        pod2usage(
+            -msg     => "Malformed GITHUB_TOKEN: $github_token",
+            -exitval => BAD_USAGE,
+            -verbose  => 99,
+            -sections => "ENVIRONMENT"
+        );
+    }
+
+    my $cmd = "curl -sf -H 'Authorization: token $github_token' "
+      . 'https://api.github.com/';
+    my $result    = `$cmd`;
+    my $exit_code = $? >> 8;
+
+    if ( $exit_code == 22 ) {
+        pod2usage(
+            -msg     => "Your token was rejected by GitHub.",
+            -exitval => BAD_USAGE,
+            -verbose  => 99,
+            -sections => "ENVIRONMENT"
+        );
+    }
+
+    return $github_token;
+}
+
 my ( @platforms, $project, $build_type, $opt_help );
 
 GetOptions( 'p|platform=s' => \@platforms, 'help!' => \$opt_help )
@@ -104,7 +144,8 @@ else {
     );
 }
 
-my $homedir = ( getpwuid($<) )[7];
+my $github_token = get_and_verify_token();
+my $homedir      = ( getpwuid($<) )[7];
 my $tempdir = tempdir( ".citus_package.XXXXX", DIR => $homedir, CLEANUP => 1 );
 my $currentdir = getcwd();
 
@@ -127,13 +168,25 @@ foreach my $platform (@platforms) {
             qw(run --rm -v),
             "$outputdir:/packages",
             '-e',
-            "GITHUB_TOKEN=$ENV{GITHUB_TOKEN}",
+            "GITHUB_TOKEN=$github_token",
             "citusdata/packaging:$docker_platform-$pg",
             $project,
             $build_type
         );
 
         system( 'docker', @docker_args );
+
+        if ( $? == -1 ) {
+            die "failed to execute: $!\n";
+        }
+        elsif ( $? & 127 ) {
+            die "child died with signal %d, %s coredump\n",
+              ( $? & 127 ), ( $? & 128 ) ? 'with' : 'without';
+        }
+        else {
+            my $exit_code = $? >> 8;
+            die "docker run failed. see output for details.\n" if $exit_code;
+        }
     }
 }
 
@@ -172,6 +225,10 @@ for a given project, which is usually C<master>, but can differ by project.
 All other I<build_type> values are passed directly to GitHub, which is free to
 interpret them how it sees fit, e.g. branch names, tags, or commit identifiers.
 
+B<citus_package> uses the GitHub API to gather information about the project
+it is building. As such, a valid C<GITHUB_TOKEN> environment variable must be
+set. See the L</ENVIRONMENT> section for details.
+
 =head1 OPTIONS
 
 =over 4
@@ -182,15 +239,32 @@ Platform: required. Provide more than once for multi-platform builds
 
 =back
 
+=head1 ENVIRONMENT
+
+For B<citus_package> to do its job, the C<GITHUB_TOKEN> environment variable
+must be populated with a valid GitHub personal access token. It is recommended
+that you add a line to your shell profile to ensure this variable is always
+correctly set.
+
+To generate a new access token, ensure you're logged into GitHub, then navigate
+to your account settings. Choose "Personal access tokens" from the sidebar,
+press the "Generate new token" button and name your token (like "packaging").
+Ensure the top-level C<repo> and C<user> boxes are checked and press the
+"Generate token" button.
+
+B<Do not leave the next page until you've copied your new token!> Paste it
+into your e.g. C<.bash_profile> or C<.zshrc> to ensure your shells will have
+access to your new token.
+
 =head1 SUPPORTED PROJECTS
 
 =over 4
 
-=item B<citus>          Citus (Open-Source)
+=item I<citus>          Citus (Open-Source)
 
-=item B<enterprise>     Citus Enterprise
+=item I<enterprise>     Citus Enterprise
 
-=item B<rebalancer>     Shard Rebalancer
+=item I<rebalancer>     Shard Rebalancer
 
 =back
 
@@ -198,35 +272,49 @@ Platform: required. Provide more than once for multi-platform builds
 
 =over 4
 
-=item B<debian/jessie>  Debian 8 "Jessie"
+=item I<debian/jessie>  Debian 8 "Jessie"
 
-=item B<debian/wheezy>  Debian 7 "Wheezy"
+=item I<debian/wheezy>  Debian 7 "Wheezy"
 
-=item B<el/7>           Enterprise Linux 7.0 (CentOS, RedHat, Amazon Linux)
+=item I<el/7>           Enterprise Linux 7.0 (CentOS, RedHat, Amazon Linux)
 
-=item B<el/6>           Enterprise Linux 6.0 (CentOS, RedHat, Amazon Linux)
+=item I<el/6>           Enterprise Linux 6.0 (CentOS, RedHat, Amazon Linux)
 
-=item B<fedora/23>      Fedora 23
+=item I<fedora/23>      Fedora 23
 
-=item B<fedora/22>      Fedora 22
+=item I<fedora/22>      Fedora 22
 
-=item B<ol/7>           Oracle Linux 7.0
+=item I<ol/7>           Oracle Linux 7.0
 
-=item B<ol/6>           Oracle Linux 6.0
+=item I<ol/6>           Oracle Linux 6.0
 
-=item B<ubuntu/xenial>  Ubuntu (16.04 LTS Xenial Xerus)
+=item I<ubuntu/xenial>  Ubuntu (16.04 LTS Xenial Xerus)
 
-=item B<ubuntu/wily>    Ubuntu 15.10 (Wily Werewolf)
+=item I<ubuntu/wily>    Ubuntu 15.10 (Wily Werewolf)
 
-=item B<ubuntu/trusty>  Ubuntu 14.04 LTS (Trusty Tahr)
+=item I<ubuntu/trusty>  Ubuntu 14.04 LTS (Trusty Tahr)
 
-=item B<ubuntu/precise> Ubuntu 12.04 LTS (Precise Pangolin)
+=item I<ubuntu/precise> Ubuntu 12.04 LTS (Precise Pangolin)
 
 =back
 
 =head1 TODO
 
 Eventually support a different output folder.
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<GitHub Personal Access Tokens|https://github.com/settings/tokens>
+
+=item L<Citus Packaging on GitHub|https://github.com/citusdata/packaging>
+
+=item L<Citus Packaging on Docker Hub|https://hub.docker.com/r/citusdata/packaging>
+
+=item L<Docker|https://www.docker.com>
+
+=back
 
 =head1 AUTHOR
 
