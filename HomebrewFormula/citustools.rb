@@ -1,3 +1,14 @@
+class Docker < Requirement
+  fatal true
+  default_formula "docker"
+
+  satisfy { which "docker" }
+
+  def message
+    "Docker is required for this package."
+  end
+end
+
 class Citustools < Formula
   desc "Tools and config used in Citus Data projects."
   homepage "https://github.com/citusdata/tools"
@@ -5,6 +16,7 @@ class Citustools < Formula
   sha256 "dc773c21989aa4d716b653ed7542d333f63f14a10d470f9a24fe12fac836b262"
 
   depends_on "uncrustify"
+  depends_on Docker
 
   def install
     system "make", "install", "prefix=#{prefix}", "sysconfdir=#{etc}"
