@@ -8,7 +8,7 @@ export sysconfdir := $(prefix)/etc
 export pkgsysconfdir := $(sysconfdir)/$(PACKAGE_NAME)
 
 # logic from http://stackoverflow.com/a/11206700
-SUBDIRS := $(addsuffix /., uncrustify)
+SUBDIRS := $(addsuffix /., packaging uncrustify)
 TARGETS := all clean install
 SUBDIRS_TARGETS := $(foreach t,$(TARGETS),$(addsuffix $t,$(SUBDIRS)))
 

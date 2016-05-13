@@ -6,7 +6,7 @@ use Getopt::Long qw(:config no_auto_abbrev no_ignore_case prefix=--);
 use POSIX qw(setlocale LC_ALL);
 
 # untaint environment
-$ENV{'PATH'} = '/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin';
+local $ENV{'PATH'} = '/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin';
 delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 
 my ($quiet, $check);
