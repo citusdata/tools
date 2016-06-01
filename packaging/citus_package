@@ -25,7 +25,8 @@ my %supported_platforms = (
     el     => [ "7",      "6" ],
     fedora => [ "23",     "22" ],
     ol     => [ "7",      "6" ],
-    ubuntu => [ "xenial", "wily", "trusty", "precise" ]
+    ubuntu => [ "xenial", "wily", "trusty", "precise" ],
+    pgxn   => [ "" ]
 );
 
 my @rh_flavors = qw(el fedora ol);
@@ -35,7 +36,8 @@ my %docker_names = (
     el     => "centos",
     fedora => "fedora",
     ol     => "oraclelinux",
-    ubuntu => "ubuntu"
+    ubuntu => "ubuntu",
+    pgxn   => "pgxn"
 );
 
 sub verify_platforms {
@@ -51,6 +53,7 @@ sub verify_platforms {
 
     foreach my $platform (@platforms) {
         my ( $os, $release ) = split( '/', $platform, 2 );
+        $release //= '';
 
         if ( exists $supported_platforms{$os} ) {
             my @releases = @{ $supported_platforms{$os} };
@@ -166,16 +169,32 @@ my $homedir      = ( getpwuid($<) )[7];
 my $tempdir = tempdir( ".citus_package.XXXXX", DIR => $homedir, CLEANUP => 1 );
 my $currentdir = getcwd();
 
+if (any { $_ eq 'pgxn' } @platforms) {
+   pod2usage(
+       -msg     => "PGXN unsupported for project: $project",
+       -exitval => BAD_INPUT
+   ) unless ($project eq 'citus');
+
+   pod2usage(
+       -msg     => "PGXN unsupported for build type: $build_type",
+       -exitval => BAD_INPUT
+   ) unless ($build_type eq 'release');
+}
+
 foreach my $platform (@platforms) {
     my ( $os, $release );
 
     if ( $platform =~ /^(\w+)\/(\w+)$/ ) {
         $os      = $1;
         $release = $2;
+    } else {
+       $os = 'pgxn';
+       $release = '';
     }
 
-    my $docker_name     = $docker_names{$os};
-    my $docker_platform = "$docker_name-$release";
+    my $docker_platform = $docker_names{$os};
+    $docker_platform .= "-$release" if $release;
+
     my $outputdir       = $tempdir . '/' . $docker_platform;
     my @pg_versions =
       ( any { $_ eq $os } @rh_flavors ) ? qw (pg94 pg95) : qw (all);
@@ -313,11 +332,18 @@ access to your new token.
 
 =item I<ubuntu/precise> Ubuntu 12.04 LTS (Precise Pangolin)
 
+=item I<pgxn>           PostgreSQL Extension Network (PGXN)
+
 =back
 
 =head1 TODO
 
 Eventually support a different output folder.
+
+=head1 CAVEATS
+
+Projects other than Citus may not use the PGXN platform. When building a PGXN
+Citus package, only the I<release> build type may be used.
 
 =head1 SEE ALSO
 
