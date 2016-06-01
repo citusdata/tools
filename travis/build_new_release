@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# make bash behave
+set -euo pipefail
+IFS=$'\n\t'
+
+# constants
+stderr=2
+badusage=64
+
+latestpg="9.5"
+pkgflavor="${TRAVIS_BRANCH%%-*}"
+pkgauth="${PACKAGECLOUD_API_TOKEN}:"
+projname="${TRAVIS_BRANCH##*-}"
+repotype="enterprise"
+
+if [ "${projname}" == 'citus' ]; then
+    repotype="community"
+fi
+
+devbranch='master'
+case "${projname}" in
+    citus)
+        hubproj='citus'
+        ;;
+    enterprise)
+        hubproj='citus-enterprise'
+        ;;
+    rebalancer)
+        hubproj='shard_rebalancer'
+        ;;
+    *)
+        echo "$0: unknown project -- ${projname}" >&2
+        usage $stderr $badusage
+        ;;
+esac
+
+case "${pkgflavor}" in
+    debian)
+        pkgflavor='deb'
+        pkgname="postgresql-${latestpg}-${hubproj}"
+        pkgarch="amd64"
+        jqfilter='map(.version + "-" + .release)'
+        ;;
+    redhat)
+        pkgflavor='rpm'
+        pkgname="${hubproj}_${latestpg//./}"
+        pkgarch="x86_64"
+        jqfilter='map(.version + "-" + .release | gsub("\\.centos$";"") | gsub("\\.[^.]*$";""))'
+        ;;
+    *)
+        echo "$0: unknown package flavor -- ${pkgflavor}" >&2
+        usage $stderr $badusage
+        ;;
+esac
+
+pkgapiurl="https://packagecloud.io/api/v1/repos/citusdata/${repotype}"
+pkgapiurl+="/package/${pkgflavor}/${TARGET_PLATFORM}/${pkgname}/${pkgarch}/versions.json"
+
+fetch_build_files "${projname}" "${pkgflavor}" .
+lastrelease=$(parse_latest_release "${projname}" "${pkgflavor}" .)
+needrelease=$(curl -sf -u "${pkgauth}" "${pkgapiurl}?per_page=1000" | \
+              jq -r "${jqfilter} | index(\"${lastrelease}\") < 0")
+
+if [ "${needrelease}" == "true" ]; then
+    mkdir releases && cd releases
+    citus_package -p "${TARGET_PLATFORM}" "${projname}" release
+    cd ..
+else
+    echo 'release up to date'
+fi

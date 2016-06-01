@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# make bash behave
+set -euo pipefail
+IFS=$'\n\t'
+
+# constants
+success=0
+failure=1
+
+if [ "${TARGET_PLATFORM}" != "debian/jessie" ]; then
+    echo "not Debian Jessie, skipping Docker trigger..." >&2
+    exit $success
+elif [ ! -e "nightlies" ]; then
+    echo "no new nightlies, skipping Docker trigger..." >&2
+    exit $success
+fi
+
+echo "new Debian Jessie nightly, triggering Docker nightly build..." >&2
+
+dockertriggerurl="https://registry.hub.docker.com/u/citusdata/citus/trigger"
+dockertriggerurl+="/${DOCKER_TRIGGER_TOKEN}/"
+type="Content-Type: application/json"
+data='{"docker_tag": "nightly"}'
+
+httpcode=$(curl -s -H "${type}" --data "${data}" -X POST \
+           -w "%{http_code}" -o /dev/null "${dockertriggerurl}")
+
+if [ "${httpcode}" -ne 200 ]; then
+    echo "$0: could not trigger docker build" >&2
+    echo "$0: HTTP code was: ${httpcode}" >&2
+    exit $failure
+fi
