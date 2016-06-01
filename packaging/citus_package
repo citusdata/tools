@@ -26,7 +26,7 @@ my %supported_platforms = (
     fedora => [ "23",     "22" ],
     ol     => [ "7",      "6" ],
     ubuntu => [ "xenial", "wily", "trusty", "precise" ],
-    pgxn   => [ "" ]
+    pgxn => [""]
 );
 
 my @rh_flavors = qw(el fedora ol);
@@ -169,16 +169,16 @@ my $homedir      = ( getpwuid($<) )[7];
 my $tempdir = tempdir( ".citus_package.XXXXX", DIR => $homedir, CLEANUP => 1 );
 my $currentdir = getcwd();
 
-if (any { $_ eq 'pgxn' } @platforms) {
-   pod2usage(
-       -msg     => "PGXN unsupported for project: $project",
-       -exitval => BAD_INPUT
-   ) unless ($project eq 'citus');
+if ( any { $_ eq 'pgxn' } @platforms ) {
+    pod2usage(
+        -msg     => "PGXN unsupported for project: $project",
+        -exitval => BAD_INPUT
+    ) unless ( $project eq 'citus' );
 
-   pod2usage(
-       -msg     => "PGXN unsupported for build type: $build_type",
-       -exitval => BAD_INPUT
-   ) unless ($build_type eq 'release');
+    pod2usage(
+        -msg     => "PGXN unsupported for build type: $build_type",
+        -exitval => BAD_INPUT
+    ) unless ( $build_type eq 'release' );
 }
 
 foreach my $platform (@platforms) {
@@ -187,15 +187,16 @@ foreach my $platform (@platforms) {
     if ( $platform =~ /^(\w+)\/(\w+)$/ ) {
         $os      = $1;
         $release = $2;
-    } else {
-       $os = 'pgxn';
-       $release = '';
+    }
+    else {
+        $os      = 'pgxn';
+        $release = '';
     }
 
     my $docker_platform = $docker_names{$os};
     $docker_platform .= "-$release" if $release;
 
-    my $outputdir       = $tempdir . '/' . $docker_platform;
+    my $outputdir = $tempdir . '/' . $docker_platform;
     my @pg_versions =
       ( any { $_ eq $os } @rh_flavors ) ? qw (pg94 pg95) : qw (all);
 
