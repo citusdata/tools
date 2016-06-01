@@ -90,7 +90,7 @@ sub get_and_verify_token {
     }
 
     my $github_token = $ENV{GITHUB_TOKEN};
-    if ( $ENV{GITHUB_TOKEN} =~ /^(\w+)$/ ) {
+    if ( $ENV{GITHUB_TOKEN} =~ /^(\w+)$/x ) {
         $github_token = $1;
     }
     else {
@@ -152,7 +152,7 @@ if ( @ARGV != 2 ) {
 
 ( $project, $build_type ) = @ARGV;
 
-if ( $project =~ /^(citus|enterprise|rebalancer)$/ ) {
+if ( $project =~ /^(citus|enterprise|rebalancer)$/x ) {
     $project = $1;
 }
 else {
@@ -184,7 +184,7 @@ if ( any { $_ eq 'pgxn' } @platforms ) {
 foreach my $platform (@platforms) {
     my ( $os, $release );
 
-    if ( $platform =~ /^(\w+)\/(\w+)$/ ) {
+    if ( $platform =~ /^(\w+)\/(\w+)$/x ) {
         $os      = $1;
         $release = $2;
     }
