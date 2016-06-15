@@ -19,6 +19,8 @@ use constant BAD_USAGE  => 64;    ## no critic (ProhibitConstantPragma)
 use constant BAD_INPUT  => 65;    ## no critic (ProhibitConstantPragma)
 use constant NO_SERVICE => 69;    ## no critic (ProhibitConstantPragma)
 use constant BAD_CONFIG => 78;    ## no critic (ProhibitConstantPragma)
+use constant FINGERPRINT =>       ## no critic (ProhibitConstantPragma)
+  '47EA 3DE1 08AB EA75 0F81  E34B 4BD9 69CA 3F95 D6C6';
 
 my %supported_platforms = (
     debian => [ "jessie", "wheezy" ],
@@ -131,6 +133,93 @@ sub verify_docker_running {
     return;
 }
 
+sub get_signing_creds {
+    my ( $secret_key, $passphrase );
+
+    if ( exists $ENV{PACKAGING_SECRET_KEY} ) {
+        $secret_key = $ENV{PACKAGING_SECRET_KEY};
+    }
+    else {
+        my $result =
+          `gpg --batch --fingerprint packaging\@citusdata.com 2> /dev/null`;
+        my $exit_code   = $? >> 8;
+        my $fingerprint = FINGERPRINT;
+
+        unless ( $exit_code == 0 ) {
+            warn "Could not find signing key. Is gpg installed?\n";
+        }
+
+        if ( $result =~ /fingerprint.*\Q$fingerprint\E/x ) {
+
+            # remove spaces
+            $fingerprint =~ s/\s+//gx;
+
+            $secret_key =
+              `gpg --batch --export-secret-keys -a $fingerprint | base64`;
+        }
+    }
+
+    if ( exists $ENV{PACKAGING_PASSPHRASE} ) {
+        $passphrase = $ENV{PACKAGING_PASSPHRASE};
+    }
+
+    return ( $secret_key, $passphrase );
+}
+
+sub sign_packages {
+    my ( $tempdir, $secret_key, $passphrase ) = @_;
+    my @debfiles  = glob("$tempdir/*/*.deb");
+    my @rpmfiles  = glob("$tempdir/*/*.rpm");
+    my @base_args = (
+        qw(run --rm -v), "$tempdir:/packages",
+        '-e',            "PACKAGING_SECRET_KEY",
+        '-e',            'PACKAGING_PASSPHRASE',
+    );
+
+    local $ENV{PACKAGING_SECRET_KEY} = $secret_key;
+    local $ENV{PACKAGING_PASSPHRASE} = $passphrase;
+
+    if ( @debfiles > 0 ) {
+        my @deb_args = @base_args;
+        push @deb_args, 'citusdata/packaging:debsigner';
+
+        system( 'docker', @deb_args );
+
+        if ( $? == -1 ) {
+            die "failed to execute: $!\n";
+        }
+        elsif ( $? & 127 ) {
+            die "child died with signal %d, %s coredump\n",
+              ( $? & 127 ), ( $? & 128 ) ? 'with' : 'without';
+        }
+        else {
+            my $exit_code = $? >> 8;
+            die "docker run failed. see output for details.\n" if $exit_code;
+        }
+    }
+
+    if ( @rpmfiles > 0 ) {
+        my @rpm_args = @base_args;
+        push @rpm_args, 'citusdata/packaging:rpmsigner';
+
+        system( 'docker', @rpm_args );
+
+        if ( $? == -1 ) {
+            die "failed to execute: $!\n";
+        }
+        elsif ( $? & 127 ) {
+            die "child died with signal %d, %s coredump\n",
+              ( $? & 127 ), ( $? & 128 ) ? 'with' : 'without';
+        }
+        else {
+            my $exit_code = $? >> 8;
+            die "docker run failed. see output for details.\n" if $exit_code;
+        }
+    }
+
+    return;
+}
+
 my ( @platforms, $project, $build_type, $opt_help );
 
 GetOptions( 'p|platform=s' => \@platforms, 'help!' => \$opt_help )
@@ -169,6 +258,8 @@ my $homedir      = ( getpwuid($<) )[7];
 my $tempdir = tempdir( ".citus_package.XXXXX", DIR => $homedir, CLEANUP => 1 );
 my $currentdir = getcwd();
 
+local $ENV{GITHUB_TOKEN} = $github_token;
+
 if ( any { $_ eq 'pgxn' } @platforms ) {
     pod2usage(
         -msg     => "PGXN unsupported for project: $project",
@@ -203,12 +294,9 @@ foreach my $platform (@platforms) {
     foreach my $pg (@pg_versions) {
         my @docker_args = (
             qw(run --rm -v),
-            "$outputdir:/packages",
-            '-e',
-            "GITHUB_TOKEN=$github_token",
+            "$outputdir:/packages", '-e', "GITHUB_TOKEN",
             "citusdata/packaging:$docker_platform-$pg",
-            $project,
-            $build_type
+            $project, $build_type
         );
 
         system( 'docker', @docker_args );
@@ -225,6 +313,15 @@ foreach my $platform (@platforms) {
             die "docker run failed. see output for details.\n" if $exit_code;
         }
     }
+}
+
+my ( $secret_key, $passphrase ) = get_signing_creds();
+
+if ( $secret_key and $passphrase ) {
+    sign_packages( $tempdir, $secret_key, $passphrase );
+}
+else {
+    warn "Could not get signing credentials. Skipping signing...\n";
 }
 
 system( 'mv', ( ( glob "$tempdir/*" ), $currentdir ) );
@@ -292,6 +389,16 @@ Ensure the top-level C<repo> and C<user> boxes are checked and press the
 B<Do not leave the next page until you've copied your new token!> Paste it
 into your e.g. C<.bash_profile> or C<.zshrc> to ensure your shells will have
 access to your new token.
+
+B<citus_package> will attempt to sign any Linux packages it builds if the
+C<PACKAGING_SECRET_KEY> and C<PACKAGING_PASSPHRASE> environment variables are
+set. C<PACKAGING_SECRET_KEY> must be a base64-encoded PGP private key. The
+passphrase needed to decrypt this key must be specified in the other variable,
+C<PACKAGING_PASSPHRASE>.
+
+If L<gpg(1)> is installed, B<citus_package> will search its keychain for the
+Citus Data private key so that only the C<PACKAGING_PASSPHRASE> will be needed
+to sign packages.
 
 =head1 SUPPORTED PROJECTS
 
