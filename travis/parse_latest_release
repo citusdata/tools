@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# make bash behave
+set -euo pipefail
+IFS=$'\n\t'
+
+# constants
+stdout=1
+stderr=2
+success=0
+failure=1
+badusage=64
+noinput=66
+
+# outputs usage message on specified device before exiting with provided status
+usage() {
+    cat << 'E_O_USAGE' >&"$1"
+usage: parse_latest_release project format build_directory
+
+    project : 'citus', 'enterprise', or 'rebalancer'
+    format : 'deb', 'rpm', or 'pgxn'
+
+parse_latest_release extracts the latest stable release from the build files
+for a specified project and software packaging system.
+E_O_USAGE
+
+    exit "${2}";
+}
+
+# validates file containing changelog
+validatefile() {
+    if [ -d "$1" ]; then
+        echo "$0: $1: Is a directory" >&2
+        exit $noinput
+    elif [ ! -e "$1" ]; then
+        echo "$0: $1: No such file" >&2
+        exit $noinput
+    elif [ ! -r "$1" ]; then
+        echo "$0: $1: Permission denied" >&2
+        exit $noinput
+    fi
+}
+
+if [ "$#" -eq 1 ] && [ "${1}" = '-h' ]; then
+    usage $stdout $success
+fi
+
+if [ "$#" -ne 3 ]; then
+    usage $stderr $badusage
+fi
+
+case "${1}" in
+    citus)
+        specfile='citus.spec'
+        ;;
+    enterprise)
+        specfile='citus-enterprise.spec'
+        ;;
+    rebalancer)
+        specfile='citus-rebalancer.spec'
+        ;;
+    *)
+        echo "$0: unknown project -- ${1}" >&2
+        usage $stderr $badusage
+        ;;
+esac
+
+builddir=$3
+case "${2}" in
+    deb)
+        changelog="${builddir}/debian/changelog"
+        validatefile "${changelog}"
+        set +e
+        latest=$(egrep -o '\([^\(\)]+\)' "${changelog}" | tr -d '()' | head -n 1)
+        set -e
+        ;;
+    rpm)
+        changelog="${builddir}/${specfile}"
+        validatefile "${changelog}"
+        set +e
+        latest=$(awk '/^%changelog/{m=1;next}m' "${changelog}" | awk '/^*/{print $NF}' | head -n 1)
+        set -e
+        ;;
+    pgxn)
+        metadata="${builddir}/META.json"
+        validatefile "${metadata}"
+        latest=$(jq -r '.version // empty' < "${metadata}")
+        ;;
+    *)
+        echo "$0: unknown format -- ${2}" >&2
+        usage $stderr $badusage
+        ;;
+esac
+
+if [ -z "${latest}" ]; then
+    echo "$0: could not determine latest release version" >&2
+    exit $failure
+fi
+
+echo "$latest"

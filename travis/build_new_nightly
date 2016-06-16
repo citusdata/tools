@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# make bash behave
+set -euo pipefail
+IFS=$'\n\t'
+
+# constants
+stderr=2
+badusage=64
+
+latestpg="9.5"
+pkgflavor="${TRAVIS_BRANCH%%-*}"
+pkgauth="${PACKAGECLOUD_API_TOKEN}:"
+hubauth="Authorization: token ${GITHUB_TOKEN}"
+projname="${TRAVIS_BRANCH##*-}"
+repotype="enterprise"
+
+if [ "${projname}" == 'citus' ]; then
+    repotype="community"
+fi
+
+devbranch='master'
+case "${projname}" in
+    citus)
+        hubproj='citus'
+        ;;
+    enterprise)
+        hubproj='citus-enterprise'
+        devbranch='enterprise-master'
+        ;;
+    rebalancer)
+        hubproj='shard_rebalancer'
+        ;;
+    *)
+        echo "$0: unknown project -- ${projname}" >&2
+        usage $stderr $badusage
+        ;;
+esac
+
+case "${pkgflavor}" in
+    debian)
+        pkgflavor='deb'
+        pkgname="postgresql-${latestpg}-${hubproj}"
+        pkgarch="amd64"
+        ;;
+    redhat)
+        pkgflavor='rpm'
+        pkgname="${hubproj}_${latestpg//./}"
+        pkgarch="x86_64"
+        ;;
+    *)
+        echo "$0: unknown package flavor -- ${pkgflavor}" >&2
+        usage $stderr $badusage
+        ;;
+esac
+
+pkgapiurl="https://packagecloud.io/api/v1/repos/citusdata/${repotype}-nightlies"
+pkgapiurl+="/package/${pkgflavor}/${TARGET_PLATFORM}/${pkgname}/${pkgarch}/versions.json"
+
+epochstr='"1970-01-01T00:00:00.000Z"'
+lastnightly=$(curl -sf -u "${pkgauth}" "${pkgapiurl}?per_page=1000" | \
+              jq -r "map(.created_at) | sort | last // ${epochstr}")
+
+hubapiurl="https://api.github.com/repos/citusdata/${hubproj}/commits?"
+hubapiurl+="sha=${devbranch}&since=${lastnightly}&per_page=1"
+
+newcommitcount=$(curl -sf -H "${hubauth}" "${hubapiurl}" | jq -r 'length')
+
+if [ "${newcommitcount}" -gt 0 ]; then
+    mkdir nightlies && cd nightlies
+    citus_package -p "${TARGET_PLATFORM}" "${projname}" nightly
+    cd ..
+else
+    echo 'nightly up to date'
+fi
+
