@@ -46,3 +46,38 @@ Runs regression tests against a more "complex" extension, usually one that:
   * Starts its own PostgreSQL instances within a `check` Make target.
 
 If this script is used, it is likely that `config_and_start_cluster.sh` is unnecessary.
+
+### `build_new_nightly`
+
+Checks packagecloud.io for the last nightly for the project being built. If any commits have been made to that project's GitHub development branch since the last nightly upload, this script builds a new nightly release (using `citus_package`).
+
+If no nightly is needed, exits immediately.
+
+### `build_new_release`
+
+Downloads the packaging files for the project being built. If the packaging files specify a version that is not yet in packagecloud.io, this script builds a new official release (using `citus_package`).
+
+If no new release is needed, exits immediately.
+
+### `release_pgxn`
+
+Downloads the PGXN `META.json` file for the project build built, produces a new PGXN-compatible archive, and uploads that archive to pgxn.org.
+
+Does not presently check ahead of time if PGXN already contains the archive; instead the script will exit successfully with a message indicating that the server already contained the version it uploaded.
+
+### `sync_to_enterprise`
+
+Pushes branches from the open-source Citus GitHub repository to the closed-source Citus Enterprise repository. Intended for use with the `master` branch and any branches beginning with `release-`.
+
+### `trigger_docker_nightly`
+
+Pairs with `build_new_nightly` to trigger a new Docker Hub nightly image build. Only runs if the following conditions are met:
+
+  * Project is `citus`
+  * OS is `debian`
+  * Release is `jessie`
+  * New nightly was produced
+
+### `fetch_build_files` and `parse_latest_release`
+
+Needed by packaging-related scripts. Copy-pasted from the `citusdata/packaging` repository. See that project for details.
