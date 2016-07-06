@@ -23,13 +23,16 @@ devbranch='master'
 case "${projname}" in
     citus)
         hubproj='citus'
+        pkgbase="${hubproj}"
         ;;
     enterprise)
         hubproj='citus-enterprise'
         devbranch='enterprise-master'
+        pkgbase="${hubproj}"
         ;;
     rebalancer)
         hubproj='shard_rebalancer'
+        pkgbase='citus-rebalancer'
         ;;
     *)
         echo "$0: unknown project -- ${projname}" >&2
@@ -40,12 +43,12 @@ esac
 case "${pkgflavor}" in
     debian)
         pkgflavor='deb'
-        pkgname="postgresql-${latestpg}-${hubproj}"
+        pkgname="postgresql-${latestpg}-${pkgbase}"
         pkgarch="amd64"
         ;;
     redhat)
         pkgflavor='rpm'
-        pkgname="${hubproj}_${latestpg//./}"
+        pkgname="${pkgbase}_${latestpg//./}"
         pkgarch="x86_64"
         ;;
     *)

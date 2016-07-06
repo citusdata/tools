@@ -18,16 +18,18 @@ if [ "${projname}" == 'citus' ]; then
     repotype="community"
 fi
 
-devbranch='master'
 case "${projname}" in
     citus)
         hubproj='citus'
+        pkgbase="${hubproj}"
         ;;
     enterprise)
         hubproj='citus-enterprise'
+        pkgbase="${hubproj}"
         ;;
     rebalancer)
         hubproj='shard_rebalancer'
+        pkgbase='citus-rebalancer'
         ;;
     *)
         echo "$0: unknown project -- ${projname}" >&2
@@ -38,13 +40,13 @@ esac
 case "${pkgflavor}" in
     debian)
         pkgflavor='deb'
-        pkgname="postgresql-${latestpg}-${hubproj}"
+        pkgname="postgresql-${latestpg}-${pkgbase}"
         pkgarch="amd64"
         jqfilter='map(.version + "-" + .release)'
         ;;
     redhat)
         pkgflavor='rpm'
-        pkgname="${hubproj}_${latestpg//./}"
+        pkgname="${pkgbase}_${latestpg//./}"
         pkgarch="x86_64"
         jqfilter='map(.version + "-" + .release | gsub("\\.centos$";"") | gsub("\\.[^.]*$";""))'
         ;;
