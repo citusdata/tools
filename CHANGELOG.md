@@ -1,3 +1,7 @@
+### citustools v0.3.1 (July 6, 2016) ###
+
+* Adds support for building Fedora 24 packages
+
 ### citustools v0.3.0 (June 16, 2016) ###
 
 * Adds support for building PGXN releases
