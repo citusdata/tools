@@ -1,3 +1,7 @@
+### citustools v0.3.2 (July 6, 2016) ###
+
+* Fixes bug that caused Travis to unnecessarily build rebalancer
+
 ### citustools v0.3.1 (July 6, 2016) ###
 
 * Adds support for building Fedora 24 packages
