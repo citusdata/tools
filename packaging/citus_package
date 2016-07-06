@@ -25,7 +25,7 @@ use constant FINGERPRINT =>       ## no critic (ProhibitConstantPragma)
 my %supported_platforms = (
     debian => [ "jessie", "wheezy" ],
     el     => [ "7",      "6" ],
-    fedora => [ "23",     "22" ],
+    fedora => [ "23",     "22", "24" ],
     ol     => [ "7",      "6" ],
     ubuntu => [ "xenial", "wily", "trusty", "precise" ],
     pgxn => [""]
@@ -426,6 +426,8 @@ to sign packages.
 =item I<el/7>           Enterprise Linux 7.0 (CentOS, RedHat, Amazon Linux)
 
 =item I<el/6>           Enterprise Linux 6.0 (CentOS, RedHat, Amazon Linux)
+
+=item I<fedora/24>      Fedora 24
 
 =item I<fedora/23>      Fedora 23
 
