@@ -437,7 +437,7 @@ to sign packages.
 
 =item I<ol/6>           Oracle Linux 6.0
 
-=item I<ubuntu/xenial>  Ubuntu (16.04 LTS Xenial Xerus)
+=item I<ubuntu/xenial>  Ubuntu 16.04 LTS (Xenial Xerus)
 
 =item I<ubuntu/wily>    Ubuntu 15.10 (Wily Werewolf)
 
