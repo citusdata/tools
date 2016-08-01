@@ -1,3 +1,9 @@
+### citustools v0.3.3 (August 1, 2016) ###
+
+* Removes packaging support for PostgreSQL 9.4
+
+* Fixes minor documentation typo
+
 ### citustools v0.3.2 (July 6, 2016) ###
 
 * Fixes bug that caused Travis to unnecessarily build rebalancer
