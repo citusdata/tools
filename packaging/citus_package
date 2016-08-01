@@ -289,7 +289,7 @@ foreach my $platform (@platforms) {
 
     my $outputdir = $tempdir . '/' . $docker_platform;
     my @pg_versions =
-      ( any { $_ eq $os } @rh_flavors ) ? qw (pg94 pg95) : qw (all);
+      ( any { $_ eq $os } @rh_flavors ) ? qw (pg95) : qw (all);
 
     # create output directory to ensure we, and not the docker user, own it
     mkdir $outputdir;
