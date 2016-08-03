@@ -1,3 +1,11 @@
+### citustools v0.4.0 (August 2, 2016) ###
+
+* Adds Travis script to alleviate uncrustify installation
+
+* Adds logic to fully install Travis scripts
+
+* Removes .sh prefix from all Travis executables
+
 ### citustools v0.3.3 (August 1, 2016) ###
 
 * Removes packaging support for PostgreSQL 9.4
