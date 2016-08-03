@@ -24,6 +24,10 @@ It is possible that your Travis CI virtual machine starts with a PostgreSQL inst
 
 A PostgreSQL version will be installed based on the value of the `PGVERSION` environment variable. In addition, common extension dependencies and development headers are installed. Suitable values for `PGVERSION` might be `9.3`, `9.4`, or `9.5`.
 
+### `install_uncrustify.sh`
+
+Installs a recent `uncrustify` version from a Citus-specific Trusty package stored in S3.
+
 ### `install_citus.sh`
 
 Similar to `install_pg.sh`, but installs CitusDB instead of vanilla PostgreSQL. The convention is that `PGVERSION` should be set to ten times the CitusDB version (to avoid possible collisions with existing PostgreSQL versions). For instance, a value of `40.0` installs CitusDB 4.0, and `41.0` installs CitusDB 4.1.
