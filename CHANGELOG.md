@@ -1,3 +1,7 @@
+### citustools v0.4.1 (August 19, 2016) ###
+
+* Multi test now requires args rather than using hardcoded targets
+
 ### citustools v0.4.0 (August 2, 2016) ###
 
 * Adds Travis script to alleviate uncrustify installation
