@@ -2,9 +2,15 @@
 
 set -eux
 
+badusage=64
+
+if [ "$#" -eq 0 ]; then
+    echo "$0: you must specify test targets" >&2
+    exit $noinput
+fi
+
 status=0
-testtargets="check-multi check-multi-fdw check-worker"
-testtargets="${testtargets} $*"
+testtargets="$*"
 
 # Configure, build, and install extension
 ./configure PG_CONFIG=/usr/lib/postgresql/$PGVERSION/bin/pg_config
