@@ -241,7 +241,7 @@ if ( @ARGV != 2 ) {
 
 ( $project, $build_type ) = @ARGV;
 
-if ( $project =~ /^(citus|enterprise|rebalancer)$/x ) {
+if ( $project =~ /^(citus|enterprise|hll|rebalancer)$/x ) {
     $project = $1;
 }
 else {
@@ -410,6 +410,8 @@ to sign packages.
 =item I<citus>          Citus (Open-Source)
 
 =item I<enterprise>     Citus Enterprise
+
+=item I<hll>            HyperLogLog
 
 =item I<rebalancer>     Shard Rebalancer
 

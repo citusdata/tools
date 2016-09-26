@@ -15,20 +15,22 @@ hubauth="Authorization: token ${GITHUB_TOKEN}"
 projname="${TRAVIS_BRANCH##*-}"
 repotype="enterprise"
 
-if [ "${projname}" == 'citus' ]; then
-    repotype="community"
-fi
-
 devbranch='master'
 case "${projname}" in
     citus)
         hubproj='citus'
         pkgbase="${hubproj}"
+        repotype='community'
         ;;
     enterprise)
         hubproj='citus-enterprise'
         devbranch='enterprise-master'
         pkgbase="${hubproj}"
+        ;;
+    hll)
+        hubproj='postgresql-hll'
+        pkgbase='hll'
+        repotype='community'
         ;;
     rebalancer)
         hubproj='shard_rebalancer'
