@@ -20,7 +20,7 @@ usage() {
     cat << 'E_O_USAGE' >&"$1"
 usage: fetch_build_files project format target_directory
 
-    project : 'citus', 'enterprise', or 'rebalancer'
+    project : 'citus', 'enterprise', 'hll', or 'rebalancer'
     format : 'deb', 'rpm', or 'pgxn'
 
 fetch_build_files fetches files needed to package a specified Citus project for
@@ -39,7 +39,7 @@ if [ "$#" -ne 3 ]; then
 fi
 
 case "${1}" in
-    citus|enterprise|rebalancer)
+    citus|enterprise|hll|rebalancer)
         project=${1}
         ;;
     *)

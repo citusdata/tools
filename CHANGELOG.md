@@ -1,3 +1,7 @@
+### citustools v0.4.2 (September 27, 2016) ###
+
+* Adds support for building the HyperLogLog package
+
 ### citustools v0.4.1 (August 19, 2016) ###
 
 * Multi test now requires args rather than using hardcoded targets

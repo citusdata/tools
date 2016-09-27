@@ -17,7 +17,7 @@ usage() {
     cat << 'E_O_USAGE' >&"$1"
 usage: parse_latest_release project format build_directory
 
-    project : 'citus', 'enterprise', or 'rebalancer'
+    project : 'citus', 'enterprise', 'hll', or 'rebalancer'
     format : 'deb', 'rpm', or 'pgxn'
 
 parse_latest_release extracts the latest stable release from the build files
@@ -55,6 +55,9 @@ case "${1}" in
         ;;
     enterprise)
         specfile='citus-enterprise.spec'
+        ;;
+    hll)
+        specfile='hll.spec'
         ;;
     rebalancer)
         specfile='citus-rebalancer.spec'
