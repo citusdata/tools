@@ -6,7 +6,7 @@ set -eux
 
 # we set PGVERSION to 10x of the Citus version when testing Citus, so
 # only install PostgreSQL proper if it's greater than 9.5
-if [ "${PGVERSION//./}" -gt "95" ]; then
+if [ "${PGVERSION//./}" -gt "96" ]; then
   cituspkgs="$HOME/.cache/citusdb_pkgs"
   citusversion="$((${PGVERSION//./} / 100)).0"
   citusdownload="citusdb-${citusversion}.0-1.amd64.deb"
