@@ -1,3 +1,7 @@
+### citustools v0.4.3 (September 30, 2016) ###
+
+* Make Travis install scripts PostgreSQL 9.6-aware
+
 ### citustools v0.4.2 (September 27, 2016) ###
 
 * Adds support for building the HyperLogLog package
