@@ -167,11 +167,11 @@ sub get_signing_creds {
 }
 
 sub sign_packages {
-    my ( $tempdir, $secret_key, $passphrase ) = @_;
-    my @debfiles  = glob("$tempdir/*/*.deb");
-    my @rpmfiles  = glob("$tempdir/*/*.rpm");
+    my ( $pkgsdir, $secret_key, $passphrase ) = @_;
+    my @debfiles  = glob("$pkgsdir/*/*.deb");
+    my @rpmfiles  = glob("$pkgsdir/*/*.rpm");
     my @base_args = (
-        qw(run --rm -v), "$tempdir:/packages",
+        qw(run --rm -v), "$pkgsdir:/packages",
         '-e',            "PACKAGING_SECRET_KEY",
         '-e',            'PACKAGING_PASSPHRASE',
     );
@@ -256,6 +256,8 @@ verify_docker_running();
 my $github_token = get_and_verify_token();
 my $homedir      = ( getpwuid($<) )[7];
 my $tempdir = tempdir( ".citus_package.XXXXX", DIR => $homedir, CLEANUP => 1 );
+my $pkgsdir = $tempdir . '/packages';
+my $filedir = $tempdir . '/buildfiles';
 my $currentdir = getcwd();
 
 local $ENV{GITHUB_TOKEN} = $github_token;
@@ -287,7 +289,7 @@ foreach my $platform (@platforms) {
     my $docker_platform = $docker_names{$os};
     $docker_platform .= "-$release" if $release;
 
-    my $outputdir = $tempdir . '/' . $docker_platform;
+    my $outputdir = $pkgsdir . '/' . $docker_platform;
     my @pg_versions =
       ( any { $_ eq $os } @rh_flavors ) ? qw (pg95) : qw (all);
 
@@ -321,13 +323,13 @@ foreach my $platform (@platforms) {
 my ( $secret_key, $passphrase ) = get_signing_creds();
 
 if ( $secret_key and $passphrase ) {
-    sign_packages( $tempdir, $secret_key, $passphrase );
+    sign_packages( $pkgsdir, $secret_key, $passphrase );
 }
 else {
     warn "Could not get signing credentials. Skipping signing...\n";
 }
 
-system( 'mv', ( ( glob "$tempdir/*" ), $currentdir ) );
+system( 'mv', ( ( glob "$pkgsdir/*" ), $currentdir ) );
 
 __END__
 
