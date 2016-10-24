@@ -260,7 +260,7 @@ if ( any { $_ eq 'pgxn' } @platforms ) {
     pod2usage(
         -msg     => "PGXN unsupported for project: $project",
         -exitval => BAD_INPUT
-    ) unless ( $project eq 'citus' );
+    ) unless ( $project eq 'citus' or $project eq 'local' );
 
     pod2usage(
         -msg     => "PGXN unsupported for build type: $build_type",
@@ -282,7 +282,8 @@ foreach my $platform (@platforms) {
         $format  = 'pgxn';
     }
 
-    my $filesubdir = $filedir . '/' . $format;
+    my $filesubdir =
+      ( $project eq 'local' ) ? $currentdir : $filedir . '/' . $format;
 
     # if this format's build files don't exist yet, fetch them
     unless ( -d $filesubdir ) {
