@@ -421,7 +421,9 @@ installation is the only prerequisite.
 Given a Citus I<project> and I<build_type>, B<citus_package> will build one
 package for a single platform, specified using the B<--platform> option. This
 option can be provided multiple times in order to build a package for many
-platforms at once.
+platforms at once. In addition, if the special value I<local> is provided as
+the project name, B<citus_package> will use packaging files from the current
+directory rather than fetching any particular project's files from GitHub.
 
 The I<build_type> argument has two special values: I<release> and I<nightly>. A
 release build is based on the latest release version (extracted from the build
