@@ -13,7 +13,7 @@ projname="${TRAVIS_BRANCH##*-}"
 pgxnuser='citusdata'
 pgxnurl='https://manager.pgxn.org/upload'
 
-citus_package -p pgxn "${projname}" release
+citus_package -p pgxn 'local' release
 
 # shellcheck disable=SC2012
 archive=$(ls pgxn | head -n1)

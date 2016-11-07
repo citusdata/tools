@@ -80,7 +80,3 @@ Pairs with `build_new_nightly` to trigger a new Docker Hub nightly image build. 
   * OS is `debian`
   * Release is `jessie`
   * New nightly was produced
-
-### `fetch_build_files` and `parse_latest_release`
-
-Needed by packaging-related scripts. Copy-pasted from the `citusdata/packaging` repository. See that project for details.
