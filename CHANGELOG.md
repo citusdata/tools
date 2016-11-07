@@ -1,6 +1,16 @@
+### citustools v0.5.0 (November 7, 2016) ###
+
+* Adds support for per-project, per-build-type multi-PostgreSQL builds
+
+* Extends citus_package to understand new pkgvars metadata file
+
+* Adds support for arbitrary projects (must be in GitHub)
+
+* Adds support for building packages from local build files
+
 ### citustools v0.4.3 (September 30, 2016) ###
 
-* Make Travis install scripts PostgreSQL 9.6-aware
+* Makes Travis install scripts PostgreSQL 9.6-aware
 
 ### citustools v0.4.2 (September 27, 2016) ###
 
