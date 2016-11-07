@@ -21,13 +21,15 @@ use constant NO_SERVICE => 69;    ## no critic (ProhibitConstantPragma)
 use constant BAD_CONFIG => 78;    ## no critic (ProhibitConstantPragma)
 use constant FINGERPRINT =>       ## no critic (ProhibitConstantPragma)
   '47EA 3DE1 08AB EA75 0F81  E34B 4BD9 69CA 3F95 D6C6';
+use constant PACKAGE_URL =>       ## no critic (ProhibitConstantPragma)
+  'https://github.com/citusdata/packaging/archive';
 
 my %supported_platforms = (
     debian => [ "jessie", "wheezy" ],
     el     => [ "7",      "6" ],
     fedora => [ "23",     "22", "24" ],
     ol     => [ "7",      "6" ],
-    ubuntu => [ "xenial", "wily", "trusty", "precise" ],
+    ubuntu => [ "xenial", "trusty", "precise" ],
     pgxn => [""]
 );
 
@@ -167,11 +169,11 @@ sub get_signing_creds {
 }
 
 sub sign_packages {
-    my ( $tempdir, $secret_key, $passphrase ) = @_;
-    my @debfiles  = glob("$tempdir/*/*.deb");
-    my @rpmfiles  = glob("$tempdir/*/*.rpm");
+    my ( $pkgsdir, $secret_key, $passphrase ) = @_;
+    my @debfiles  = glob("$pkgsdir/*/*.deb");
+    my @rpmfiles  = glob("$pkgsdir/*/*.rpm");
     my @base_args = (
-        qw(run --rm -v), "$tempdir:/packages",
+        qw(run --rm -v), "$pkgsdir:/packages",
         '-e',            "PACKAGING_SECRET_KEY",
         '-e',            'PACKAGING_PASSPHRASE',
     );
@@ -241,21 +243,15 @@ if ( @ARGV != 2 ) {
 
 ( $project, $build_type ) = @ARGV;
 
-if ( $project =~ /^(citus|enterprise|hll|rebalancer)$/x ) {
-    $project = $1;
-}
-else {
-    pod2usage(
-        -msg     => "Unrecognized project: $project",
-        -exitval => BAD_INPUT
-    );
-}
-
 verify_docker_running();
 
 my $github_token = get_and_verify_token();
 my $homedir      = ( getpwuid($<) )[7];
 my $tempdir = tempdir( ".citus_package.XXXXX", DIR => $homedir, CLEANUP => 1 );
+my $pkgsdir = $tempdir . '/packages';
+my $filedir = $tempdir . '/buildfiles';
+mkdir $pkgsdir;
+mkdir $filedir;
 my $currentdir = getcwd();
 
 local $ENV{GITHUB_TOKEN} = $github_token;
@@ -264,7 +260,7 @@ if ( any { $_ eq 'pgxn' } @platforms ) {
     pod2usage(
         -msg     => "PGXN unsupported for project: $project",
         -exitval => BAD_INPUT
-    ) unless ( $project eq 'citus' );
+    ) unless ( $project eq 'citus' or $project eq 'local' );
 
     pod2usage(
         -msg     => "PGXN unsupported for build type: $build_type",
@@ -273,33 +269,108 @@ if ( any { $_ eq 'pgxn' } @platforms ) {
 }
 
 foreach my $platform (@platforms) {
-    my ( $os, $release );
+    my ( $os, $release, $format );
 
     if ( $platform =~ /^(\w+)\/(\w+)$/x ) {
         $os      = $1;
         $release = $2;
+        $format  = ( any { $_ eq $os } @rh_flavors ) ? 'redhat' : 'debian';
     }
     else {
         $os      = 'pgxn';
         $release = '';
+        $format  = 'pgxn';
+    }
+
+    my $filesubdir =
+      ( $project eq 'local' ) ? $currentdir : $filedir . '/' . $format;
+
+    # if this format's build files don't exist yet, fetch them
+    unless ( -d $filesubdir ) {
+        mkdir $filesubdir;
+        my $downloadurl = PACKAGE_URL . "/$format-$project.tar.gz";
+        my $download    = $filedir . '/' . "/$format-$project.tar.gz";
+        my $httpcode = `curl -sL '$downloadurl' -w '%{http_code}' -o $download`;
+
+        unless ( $httpcode == 200 ) {
+            pod2usage(
+                -msg =>
+                  "Could not retrieve $format build files for '$project'.\n"
+                  . "Received a $httpcode response from:\n"
+                  . "  $downloadurl",
+                -exitval => NO_SERVICE
+            );
+        }
+
+        # expand them directly into the target directory
+        my $untar  = "tar xf '$download' -C '$filesubdir' --strip-components 1";
+        my $result = `$untar > /dev/null 2>&1`;
+
+        if ( $? == -1 ) {
+            die "failed to execute: $!\n";
+        }
+        elsif ( $? & 127 ) {
+            die "child died with signal %d, %s coredump\n",
+              ( $? & 127 ), ( $? & 128 ) ? 'with' : 'without';
+        }
+        else {
+            my $exit_code = $? >> 8;
+            die "build files tarball expansion failed!\n" if $exit_code;
+        }
+    }
+
+    # read release and nightly PG versions from pkgvars file
+    my @pg_versions;
+    if ( $format eq 'redhat' ) {
+        my $releasepg = '9.5,9.6';
+        my $nightlypg;
+        my $pkgvars = "$filesubdir/pkgvars";
+
+        open( my $fh, '<', $pkgvars )    ## no critic (RequireBriefOpen)
+          or die "opening pkgvars file failed!\n";
+        while (<$fh>) {
+            chomp;
+            my ( $key, $value ) = split /\s*=\s*/x;
+            if ( $key eq 'releasepg' ) {
+                $releasepg = $value;
+            }
+            elsif ( $key eq 'nightlypg' ) {
+                $nightlypg = $value;
+            }
+        }
+        close($fh);
+
+        $nightlypg //= $releasepg;
+
+        my $finalpg = ( $build_type eq 'release' ) ? $releasepg : $nightlypg;
+        $finalpg =~ s/(\d)\.(\d)/pg$1$2/gx;
+
+        @pg_versions = split( /,/x, $finalpg );
+    }
+    else {
+        @pg_versions = qw (all);
     }
 
     my $docker_platform = $docker_names{$os};
     $docker_platform .= "-$release" if $release;
 
-    my $outputdir = $tempdir . '/' . $docker_platform;
-    my @pg_versions =
-      ( any { $_ eq $os } @rh_flavors ) ? qw (pg95) : qw (all);
+    my $outputdir = $pkgsdir . '/' . $docker_platform;
 
     # create output directory to ensure we, and not the docker user, own it
     mkdir $outputdir;
 
     foreach my $pg (@pg_versions) {
         my @docker_args = (
-            qw(run --rm -v),
-            "$outputdir:/packages", '-e', "GITHUB_TOKEN",
+            'run',
+            '--rm',
+            '-v',
+            "$outputdir:/packages",
+            '-v',
+            "$filesubdir:/buildfiles:ro",
+            '-e',
+            "GITHUB_TOKEN",
             "citusdata/packaging:$docker_platform-$pg",
-            $project, $build_type
+            $build_type
         );
 
         system( 'docker', @docker_args );
@@ -321,13 +392,13 @@ foreach my $platform (@platforms) {
 my ( $secret_key, $passphrase ) = get_signing_creds();
 
 if ( $secret_key and $passphrase ) {
-    sign_packages( $tempdir, $secret_key, $passphrase );
+    sign_packages( $pkgsdir, $secret_key, $passphrase );
 }
 else {
     warn "Could not get signing credentials. Skipping signing...\n";
 }
 
-system( 'mv', ( ( glob "$tempdir/*" ), $currentdir ) );
+system( 'mv', ( ( glob "$pkgsdir/*" ), $currentdir ) );
 
 __END__
 
@@ -350,7 +421,9 @@ installation is the only prerequisite.
 Given a Citus I<project> and I<build_type>, B<citus_package> will build one
 package for a single platform, specified using the B<--platform> option. This
 option can be provided multiple times in order to build a package for many
-platforms at once.
+platforms at once. In addition, if the special value I<local> is provided as
+the project name, B<citus_package> will use packaging files from the current
+directory rather than fetching any particular project's files from GitHub.
 
 The I<build_type> argument has two special values: I<release> and I<nightly>. A
 release build is based on the latest release version (extracted from the build
@@ -403,7 +476,7 @@ If L<gpg(1)> is installed, B<citus_package> will search its keychain for the
 Citus Data private key so that only the C<PACKAGING_PASSPHRASE> will be needed
 to sign packages.
 
-=head1 SUPPORTED PROJECTS
+=head1 COMMON PROJECTS
 
 =over 4
 
@@ -440,8 +513,6 @@ to sign packages.
 =item I<ol/6>           Oracle Linux 6.0
 
 =item I<ubuntu/xenial>  Ubuntu 16.04 LTS (Xenial Xerus)
-
-=item I<ubuntu/wily>    Ubuntu 15.10 (Wily Werewolf)
 
 =item I<ubuntu/trusty>  Ubuntu 14.04 LTS (Trusty Tahr)
 

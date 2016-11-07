@@ -8,47 +8,31 @@ IFS=$'\n\t'
 stderr=2
 badusage=64
 
-latestpg="9.5"
 pkgflavor="${TRAVIS_BRANCH%%-*}"
 pkgauth="${PACKAGECLOUD_API_TOKEN}:"
-projname="${TRAVIS_BRANCH##*-}"
-repotype="enterprise"
 
-case "${projname}" in
-    citus)
-        hubproj='citus'
-        pkgbase="${hubproj}"
-        repotype='community'
-        ;;
-    enterprise)
-        hubproj='citus-enterprise'
-        pkgbase="${hubproj}"
-        ;;
-    hll)
-        hubproj='postgresql-hll'
-        pkgbase='hll'
-        repotype='community'
-        ;;
-    rebalancer)
-        hubproj='shard_rebalancer'
-        pkgbase='citus-rebalancer'
-        ;;
-    *)
-        echo "$0: unknown project -- ${projname}" >&2
-        usage $stderr $badusage
-        ;;
-esac
+# populate variables from packaging metadata file
+# shellcheck source=/dev/null
+source pkgvars
+
+# set default values for certain packaging variables
+declare pkglatest # to make shellcheck happy
+hubproj="${hubproj:-${pkgname}}"
+nightlyref="${nightlyref:-master}"
+releasepg="${releasepg:-9.5,9.6}"
+nightlypg="${nightlypg:-${releasepg}}"
+latestpg=$(echo "${releasepg}" | tr ',' '\n' | sort -t. -k1,1n -k2,2n | tail -n1)
 
 case "${pkgflavor}" in
     debian)
         pkgflavor='deb'
-        pkgname="postgresql-${latestpg}-${pkgbase}"
+        pkgfull="postgresql-${latestpg}-${pkgname}"
         pkgarch="amd64"
         jqfilter='map(.version + "-" + .release)'
         ;;
     redhat)
         pkgflavor='rpm'
-        pkgname="${pkgbase}_${latestpg//./}"
+        pkgfull="${pkgname}_${latestpg//./}"
         pkgarch="x86_64"
         jqfilter='map(.version + "-" + .release | gsub("\\.centos$";"") | gsub("\\.[^.]*$";""))'
         ;;
@@ -58,18 +42,17 @@ case "${pkgflavor}" in
         ;;
 esac
 
-pkgapiurl="https://packagecloud.io/api/v1/repos/citusdata/${repotype}"
-pkgapiurl+="/package/${pkgflavor}/${TARGET_PLATFORM}/${pkgname}/${pkgarch}/versions.json"
+pkgapiurl="https://packagecloud.io/api/v1/repos/citusdata/${PKG_REPOTYPE}"
+pkgapiurl+="/package/${pkgflavor}/${TARGET_PLATFORM}/${pkgfull}/${pkgarch}/versions.json"
 
-fetch_build_files "${projname}" "${pkgflavor}" .
-lastrelease=$(parse_latest_release "${projname}" "${pkgflavor}" .)
 needrelease=$(curl -sf -u "${pkgauth}" "${pkgapiurl}?per_page=1000" | \
-              jq -r "${jqfilter} | index(\"${lastrelease}\") < 0")
+              jq -r "${jqfilter} | index(\"${pkglatest}\") < 0")
 
 if [ "${needrelease}" == "true" ]; then
-    mkdir releases && cd releases
-    citus_package -p "${TARGET_PLATFORM}" "${projname}" release
-    cd ..
+    citus_package -p "${TARGET_PLATFORM}" 'local' release
+    mkdir releases
+    shopt -s nullglob
+    cp */*.rpm */*.deb releases
 else
     echo 'release up to date'
 fi
