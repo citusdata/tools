@@ -1,3 +1,7 @@
+### citustools v0.5.1 (December 6, 2016) ###
+
+* Adds `--enable-coverage` configure flag in `pg_travis_multi_test`
+
 ### citustools v0.5.0 (November 7, 2016) ###
 
 * Adds support for per-project, per-build-type multi-PostgreSQL builds
