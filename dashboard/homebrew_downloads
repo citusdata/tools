@@ -50,6 +50,10 @@ esac
 
 echo '"os","release","name","pg_version","version","date","downloads"'
 
+if [ "${since}" >= "${enddate}" ]; then
+  exit
+fi
+
 package=${1}
 homebrewurl='https://bintray.com/statistics/packageStatistics'
 homebrewurl+="?pkgPath=/homebrew/bottles/citus&startDate=${since}&endDate=${enddate}"
