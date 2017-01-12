@@ -92,16 +92,28 @@ def brewdate(d):
 ;
 
 def makebrewrows(name):
-    map(
-        .version as $version |
-        .series | map(select(.[1] > 0)) |
-        map([
-          "macOS",
-          null,
-          name,
-          null,
-          $version,
-          brewdate(.[0]),
-          .[1]])
+  reduce .[] as $item (
+    {};
+    ($item | .version | split("_")[0]) as $base_version |
+    ($item | .series) as $series |
+    .[$base_version] += $series
+  ) | map_values(
+    reduce .[] as $datum (
+      {};
+      ($datum | .[0]) as $date |
+      ($datum | .[1]) as $count |
+      .[$date] += $count
+    ) | to_entries | map([.key, .value])
+  ) | to_entries | map(
+    .key as $version |
+    .value | map(select(.[1] > 0)) |
+    map([
+      "macOS",
+      null,
+      name,
+      null,
+      $version,
+      brewdate(.[0]),
+      .[1]])
     ) | flatten(1)
 ;

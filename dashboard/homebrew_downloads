@@ -20,7 +20,9 @@ usage: homebrew_downloads package [since]
 
 homebrew_downloads outputs CSV-formatted daily Homebrew install counts for a
 given package. The optional 'since' parameter can be used to provide a custom
-start date: without one, all known data is requested.
+start date: without one, all known data is requested. If package revisions are
+present (i.e. "6.0.0_1"), they are normalized to the upstream version (in the
+previous case, "6.0.0") and have their installs aggregated under that.
 E_O_USAGE
 
     exit "${2}";
