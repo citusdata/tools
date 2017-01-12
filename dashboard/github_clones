@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+# make bash behave
+set -euo pipefail
+IFS=$'\n\t'
+
+# constants
+stdout=1
+stderr=2
+success=0
+badusage=64
+
+hubauth="Authorization: token ${GITHUB_TOKEN}"
+preview="Accept: application/vnd.github.spiderman-preview"
+
+# outputs usage message on specified device before exiting with provided status
+usage() {
+    cat << 'E_O_USAGE' >&"$1"
+usage: github_clones repo [since]
+
+    repo : a citusdata GitHub repository name
+    since : a date (optional) in YYYY-MM-DD format
+
+github_clones outputs CSV-formatted daily GitHub clone counts for a given repo
+in the citusdata org. The optional 'since' parameter can be used to provide a
+custom start date: without one, all known data is requested, though GitHub's
+maximum window is only two weeks long.
+E_O_USAGE
+
+    exit "${2}";
+}
+
+if [ "$#" -eq 1 ]; then
+  if [ "${1}" = '-h' ]; then
+    usage $stdout $success
+  fi
+  since="1970-01-01T00:00:00Z"
+elif [ "$#" -eq 2 ]; then
+  since="${2}T00:00:00Z"
+else
+  usage $stderr $badusage
+fi
+
+echo '"os","release","name","pg_version","version","date","downloads"'
+
+repo=${1}
+trafficurl="https://api.github.com/repos/citusdata/${repo}/traffic/clones"
+
+curl -sf -H "${hubauth}" -H "${preview}" "${trafficurl}" |
+jq -r "include \"pkg\"; .clones[] | filterdate(\"${since}\") | makeclonerows(\"${repo}\") | @csv"
