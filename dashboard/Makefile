@@ -1,4 +1,9 @@
-# needed variables will be passed in via top-level Makefile
+export prefix := /usr/local
+export bindir := $(prefix)/bin
+export datarootdir := $(prefix)/share
+export mandir := $(datarootdir)/man
+export sysconfdir := $(prefix)/etc
+export pkgsysconfdir := $(sysconfdir)/$(PACKAGE_NAME)
 
 INSTALL := install -c
 INSTALL_SCRIPT := $(INSTALL) -m 755

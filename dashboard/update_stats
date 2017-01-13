@@ -19,7 +19,6 @@ while read -r line; do
 
   since=$(psql -qXtAc "SELECT COALESCE((SELECT max(date + 1) FROM download_stats WHERE ${qual}), '2016-01-01'::date);" "${DATABASE_URL}")
 
-  stats_csv=$(mktemp)
   ${script} ${repo_or_pkg} ${since} | psql -qXtAc 'COPY download_stats FROM STDIN WITH (FORMAT csv, HEADER true)' "${DATABASE_URL}"
 done <<DATA_SOURCES
 packagecloud_downloads,community,name='citus' AND release IS NOT NULL
