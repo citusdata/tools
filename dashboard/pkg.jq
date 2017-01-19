@@ -87,6 +87,18 @@ def makeclonerows(name):
     ]
 ;
 
+def makepullrow(name):
+    [
+        "Docker",
+        null,
+        name,
+        null,
+        "all",
+        ( now | strftime("%Y-%m-%d")),
+        .pull_count
+    ]
+;
+
 def brewdate(d):
     d | tonumber / 1000 | todateiso8601 | split("T")[0]
 ;
