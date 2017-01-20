@@ -87,6 +87,21 @@ def makeclonerows(name):
     ]
 ;
 
+def makegemrows(name):
+  ( now | strftime("%Y-%m-%d")) as $today |
+  map(
+    [
+        "ruby",
+        null,
+        name,
+        null,
+        .number,
+        $today,
+        .downloads_count
+    ]
+  )
+;
+
 def makepullrow(name):
     [
         "Docker",
