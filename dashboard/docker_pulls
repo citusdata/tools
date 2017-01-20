@@ -18,7 +18,7 @@ usage: docker_pulls repo [since]
     repo : a citusdata Docker Hub repository name
     since : a date (optional) in YYYY-MM-DD format
 
-docker_pulls outputs a CSV-formatted pull total for a given in the citusdata
+docker_pulls outputs a CSV-formatted pull total for a given repo in citusdata's
 org. As Docker Hub can only provide the total number of downloads for all image
 versions since the beginning of time, that is what is emitted. Passing the most
 recent time point's date as the 'since' parameter will cause this program to
