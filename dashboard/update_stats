@@ -25,4 +25,6 @@ packagecloud_downloads,community,download_stats,name='citus' AND release IS NOT 
 packagecloud_downloads,enterprise,download_stats,name='citus-enterprise' AND release IS NOT NULL
 github_clones,citus,download_stats,os IS NULL
 homebrew_downloads,citus,download_stats,os='macOS'
+docker_pulls,citus,download_levels,name='citus' AND os='Docker'
+rubygem_installs,activerecord-multi-tenant,download_levels,name='activerecord-multi-tenant' AND os='ruby'
 DATA_SOURCES
