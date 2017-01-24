@@ -56,6 +56,6 @@ fi
 
 package=${1}
 homebrewurl='https://bintray.com/statistics/packageStatistics'
-homebrewurl+="?pkgPath=/homebrew/bottles/citus&startDate=${since}&endDate=${enddate}"
+homebrewurl+="?pkgPath=/homebrew/bottles/${package}&startDate=${since}&endDate=${enddate}"
 
 curl -s "${homebrewurl}" | jq -r "include \"pkg\"; .data | makebrewrows(\"${package}\") | .[] | @csv"
