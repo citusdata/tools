@@ -10,6 +10,8 @@ stderr=2
 success=0
 badusage=64
 
+jq=$(which jq)
+
 # outputs usage message on specified device before exiting with provided status
 usage() {
     cat << 'E_O_USAGE' >&"$1"
@@ -51,4 +53,4 @@ repo=${1}
 repourl="https://hub.docker.com/v2/repositories/citusdata/${repo}/"
 
 curl -sf "${repourl}" |
-jq -r "include \"pkg\"; makepullrow(\"${repo}\") | @csv"
+${jq} -r "include \"pkg\"; makepullrow(\"${repo}\") | @csv"

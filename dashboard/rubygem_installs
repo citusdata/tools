@@ -10,6 +10,8 @@ stderr=2
 success=0
 badusage=64
 
+jq=$(which jq)
+
 # outputs usage message on specified device before exiting with provided status
 usage() {
     cat << 'E_O_USAGE' >&"$1"
@@ -51,4 +53,4 @@ gem=${1}
 versionsurl="https://rubygems.org/api/v1/versions/${gem}.json"
 
 curl -sf "${versionsurl}" |
-jq -r "include \"pkg\"; makegemrows(\"${gem}\") | .[] | @csv"
+${jq} -r "include \"pkg\"; makegemrows(\"${gem}\") | .[] | @csv"

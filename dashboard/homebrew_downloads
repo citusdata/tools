@@ -10,6 +10,8 @@ stderr=2
 success=0
 badusage=64
 
+jq=$(which jq)
+
 # outputs usage message on specified device before exiting with provided status
 usage() {
     cat << 'E_O_USAGE' >&"$1"
@@ -58,4 +60,4 @@ package=${1}
 homebrewurl='https://bintray.com/statistics/packageStatistics'
 homebrewurl+="?pkgPath=/homebrew/bottles/${package}&startDate=${since}&endDate=${enddate}"
 
-curl -s "${homebrewurl}" | jq -r "include \"pkg\"; .data | makebrewrows(\"${package}\") | .[] | @csv"
+curl -s "${homebrewurl}" | ${jq} -r "include \"pkg\"; .data | makebrewrows(\"${package}\") | .[] | @csv"

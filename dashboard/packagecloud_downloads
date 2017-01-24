@@ -12,6 +12,8 @@ badusage=64
 
 pkgauth="${PACKAGECLOUD_API_TOKEN}:"
 
+jq=$(which jq)
+
 # outputs usage message on specified device before exiting with provided status
 usage() {
     cat << 'E_O_USAGE' >&"$1"
@@ -50,21 +52,21 @@ pkgapiurl="https://packagecloud.io/api/v1/repos/citusdata/${repo}/packages.json?
 for ((page=1; ; page++))
 do
   totalresults=$(curl -sf -u "${pkgauth}" "${pkgapiurl}&page=${page}")
-  totalcount=$(echo ${totalresults} | jq 'length')
+  totalcount=$(echo ${totalresults} | ${jq} 'length')
 
   if [ "${totalcount}" -le 0 ]; then
       break
   fi
 
-  results=$(echo "${totalresults}" | jq 'include "pkg"; stripdebuginfo')
-  count=$(echo ${results} | jq 'length')
+  results=$(echo "${totalresults}" | ${jq} 'include "pkg"; stripdebuginfo')
+  count=$(echo ${results} | ${jq} 'length')
 
   for ((i=0; i<${count}; i++))
   do
-    result=$(echo ${results} | jq -r --argjson i "${i}" '.[$i]')
-    series_url=$(echo ${result} | jq -r "include \"pkg\"; extracturl(${since})")
+    result=$(echo ${results} | ${jq} -r --argjson i "${i}" '.[$i]')
+    series_url=$(echo ${result} | ${jq} -r "include \"pkg\"; extracturl(${since})")
 
     curl -sf -u "${pkgauth}" "https://packagecloud.io${series_url}" |
-    jq --argjson r "${result}" -r 'include "pkg"; stripzeros | .[] | makerow($r) | @csv'
+    ${jq} --argjson r "${result}" -r 'include "pkg"; stripzeros | .[] | makerow($r) | @csv'
   done
 done
