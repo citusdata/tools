@@ -15,14 +15,14 @@ if [ -e ~/.dashboard_secrets ]; then
 fi
 
 while read -r line; do
-  IFS=',' read -r script repo_or_pkg qual <<< "$line"
+  IFS=',' read -r script repo_or_pkg table qual <<< "$line"
 
-  since=$(psql -qXtAc "SELECT COALESCE((SELECT max(date + 1) FROM download_stats WHERE ${qual}), '2016-01-01'::date);" "${DATABASE_URL}")
+  since=$(psql -qXtAc "SELECT COALESCE((SELECT max(date + 1) FROM ${table} WHERE ${qual}), '2016-01-01'::date);" "${DATABASE_URL}")
 
-  ${script} ${repo_or_pkg} ${since} | psql -qXtAc 'COPY download_stats FROM STDIN WITH (FORMAT csv, HEADER true)' "${DATABASE_URL}"
+  ${script} ${repo_or_pkg} ${since} | psql -qXtAc "COPY ${table} FROM STDIN WITH (FORMAT csv, HEADER true)" "${DATABASE_URL}"
 done <<DATA_SOURCES
-packagecloud_downloads,community,name='citus' AND release IS NOT NULL
-packagecloud_downloads,enterprise,name='citus-enterprise' AND release IS NOT NULL
-github_clones,citus,os IS NULL
-homebrew_downloads,citus,os='macOS'
+packagecloud_downloads,community,download_stats,name='citus' AND release IS NOT NULL
+packagecloud_downloads,enterprise,download_stats,name='citus-enterprise' AND release IS NOT NULL
+github_clones,citus,download_stats,os IS NULL
+homebrew_downloads,citus,download_stats,os='macOS'
 DATA_SOURCES
