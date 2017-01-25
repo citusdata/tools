@@ -106,7 +106,7 @@ def makeclonerows(name):
 # normalizes a RubyGems gem version listing into download_stats schema
 # Input: a RubyGems gem version listing; name, a gem name
 def makegemrows(name):
-  ( now | strftime("%Y-%m-%d")) as $today |
+  ((now - 86400) | strftime("%Y-%m-%d")) as $today |
   map(
     [
         "ruby",
@@ -129,7 +129,7 @@ def makepullrow(name):
         name,
         null,
         "all",
-        ( now | strftime("%Y-%m-%d")),
+        ((now - 86400) | strftime("%Y-%m-%d")),
         .pull_count
     ]
 ;
