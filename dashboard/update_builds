@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# make bash behave
+set -euox pipefail
+IFS=$'\n\t'
+
+# constants
+stdout=1
+stderr=2
+success=0
+badusage=64
+
+if [ -e ~/.dashboard_secrets ]; then
+  source ~/.dashboard_secrets
+fi
+
+since=$(psql -qXtAc "SELECT COALESCE((SELECT max(\"number\") FROM travis_builds WHERE name='citus'), 3083);" "${DATABASE_URL}")
+
+travis_builds 'citus' ${since} | psql -qXtAc "COPY travis_builds FROM STDIN WITH (FORMAT csv, HEADER true)" "${DATABASE_URL}"
