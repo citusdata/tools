@@ -103,6 +103,28 @@ def makeclonerows(name):
     ]
 ;
 
+# remove Travis builds not yet complete or not after 'since'
+# Input: an array of Travis CI build objects
+def filterbuilds(since):
+  select((.state | in({passed: null,
+                      failed: null,
+                      errored: null,
+                      canceled: null})) and
+         ((.number | tonumber) > since)
+  )
+;
+
+# transform Travis builds into CSV rows
+# Input: a stream of Travis CI build objects
+def maketravisrows(name):
+  [
+    name,
+    (.number | tonumber),
+    (.started_at | split("T")[0]),
+    (.job_ids | length)
+  ]
+;
+
 # normalizes a RubyGems gem version listing into download_stats schema
 # Input: a RubyGems gem version listing; name, a gem name
 def makegemrows(name):
