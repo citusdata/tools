@@ -21,3 +21,12 @@ CREATE TABLE download_levels
     total_downloads integer NOT NULL
 );
 CREATE INDEX ON download_levels ("date");
+
+CREATE TABLE travis_builds
+(
+	"name" text NOT NULL,
+	"number" integer NOT NULL,
+	"date" date NOT NULL,
+	job_count integer NOT NULL
+);
+CREATE INDEX ON travis_builds ("date");

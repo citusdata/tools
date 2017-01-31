@@ -55,7 +55,7 @@ tvstoken=$(curl -sf -A "${agent}" -H "${format}" -H "${content}" \
                     -d "${hubtoken}" ${authurl} | jq -r '.access_token')
 tvsauth="Authorization: token \"${tvstoken}\""
 
-echo '"name","build_number","date","job_count"'
+echo '"name","number","date","job_count"'
 
 # ensure very high initial 'after'; will use to paginate
 after='10000000'
