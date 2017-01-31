@@ -8,7 +8,7 @@ CREATE TABLE download_stats
     "date" date NOT NULL,
     downloads integer NOT NULL
 );
-CREATE INDEX ON download_stats (date);
+CREATE INDEX ON download_stats ("date");
 
 CREATE TABLE download_levels
 (
@@ -20,4 +20,4 @@ CREATE TABLE download_levels
     "date" date NOT NULL,
     total_downloads integer NOT NULL
 );
-CREATE INDEX ON download_levels (date);
+CREATE INDEX ON download_levels ("date");
