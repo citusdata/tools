@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # make bash behave
-set -euox pipefail
+set -euo pipefail
 IFS=$'\n\t'
 
 # constants
