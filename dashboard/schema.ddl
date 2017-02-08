@@ -30,3 +30,7 @@ CREATE TABLE travis_builds
 	job_count integer NOT NULL
 );
 CREATE INDEX ON travis_builds ("date");
+
+CREATE VIEW job_stats AS
+SELECT "date", SUM(job_count) AS jobs
+FROM travis_builds GROUP BY 1 ORDER BY 1;
