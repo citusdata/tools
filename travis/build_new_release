@@ -52,7 +52,7 @@ if [ "${needrelease}" == "true" ]; then
     citus_package -p "${TARGET_PLATFORM}" 'local' release
     mkdir releases
     shopt -s nullglob
-    cp */*.rpm */*.deb releases
+    cp ./*/*.rpm ./*/*.deb releases
 else
     echo 'release up to date'
 fi

@@ -13,4 +13,5 @@ if [ "${PGVERSION//./}" -le "96" ]; then
   packages="$packages postgresql-$PGVERSION postgresql-server-dev-$PGVERSION"
 fi
 
+# shellcheck disable=SC2086
 sudo apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install $packages

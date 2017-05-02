@@ -18,7 +18,6 @@ hubauth="Authorization: token ${GITHUB_TOKEN}"
 source pkgvars
 
 # set default values for certain packaging variables
-declare pkglatest # to make shellcheck happy
 hubproj="${hubproj:-${pkgname}}"
 nightlyref="${nightlyref:-master}"
 releasepg="${releasepg:-9.5,9.6}"
@@ -58,7 +57,7 @@ if [ "${newcommitcount}" -gt 0 ]; then
     citus_package -p "${TARGET_PLATFORM}" 'local' nightly
     mkdir nightlies
     shopt -s nullglob
-    cp */*.rpm */*.deb nightlies
+    cp ./*/*.rpm ./*/*.deb nightlies
 else
     echo 'nightly up to date'
 fi

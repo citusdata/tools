@@ -2,7 +2,7 @@
 
 set -eux
 
-badusage=64
+noinput=66
 
 if [ "$#" -eq 0 ]; then
     echo "$0: you must specify test targets" >&2
@@ -13,7 +13,7 @@ status=0
 testtargets="$*"
 
 # Configure, build, and install extension
-./configure --enable-coverage PG_CONFIG=/usr/lib/postgresql/$PGVERSION/bin/pg_config
+./configure --enable-coverage PG_CONFIG="/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
 make all
 sudo make install
 
@@ -21,6 +21,7 @@ sudo make install
 cd src/test/regress
 
 # Run tests. DBs owned by non-standard owner put socket in /tmp
+# shellcheck disable=SC2086
 make ${testtargets} || status=$?
 
 # Print diff if it exists
