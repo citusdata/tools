@@ -50,9 +50,10 @@ needrelease=$(curl -sf -u "${pkgauth}" "${pkgapiurl}?per_page=1000" | \
 
 if [ "${needrelease}" == "true" ]; then
     citus_package -p "${TARGET_PLATFORM}" 'local' release
-    mkdir releases
+    mkdir -p pkgs/releases
     shopt -s nullglob
-    cp ./*/*.rpm ./*/*.deb releases
+    mv ./*/*.rpm ./*/*.deb pkgs/releases
+    git clean -df -e pkgs
 else
     echo 'release up to date'
 fi
