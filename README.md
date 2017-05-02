@@ -10,4 +10,4 @@ Guides for getting things done, programming well, and programming in style.
 
 ## License
 
-Copyright © 2016 Citus Data, Inc.
+Copyright © 2016–2017 Citus Data, Inc.

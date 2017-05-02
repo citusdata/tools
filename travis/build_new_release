@@ -22,17 +22,33 @@ nightlyref="${nightlyref:-master}"
 releasepg="${releasepg:-9.5,9.6}"
 nightlypg="${nightlypg:-${releasepg}}"
 latestpg=$(echo "${releasepg}" | tr ',' '\n' | sort -t. -k1,1n -k2,2n | tail -n1)
+versioning="${versioning:-simple}"
 
 case "${pkgflavor}" in
     debian)
         pkgflavor='deb'
         pkgfull="postgresql-${latestpg}-${pkgname}"
+
+        # add minor/major version to package name if using fancy versioning
+        if [ "${versioning}" == 'fancy' ]; then
+            suffix=$(echo "${pkglatest}" | grep -oE '^[0-9]+\.[0-9]+')
+            pkgfull="postgresql-${latestpg}-${pkgname}-${suffix}"
+        fi
+
         pkgarch="amd64"
         jqfilter='map(.version + "-" + .release)'
         ;;
     redhat)
         pkgflavor='rpm'
-        pkgfull="${pkgname}_${latestpg//./}"
+
+        # add minor/major version to package name if using fancy versioning
+        if [ "${versioning}" == 'fancy' ]; then
+            infix=$(echo "${pkglatest}" | grep -oE '^[0-9]+\.[0-9]+' | tr -d '.')
+            pkgfull="${pkgname}${infix}_${latestpg//./}"
+        else
+            pkgfull="${pkgname}_${latestpg//./}"
+        fi
+
         pkgarch="x86_64"
         jqfilter='map(.version + "-" + .release | gsub("\\.centos$";"") | gsub("\\.[^.]*$";""))'
         ;;
@@ -50,9 +66,10 @@ needrelease=$(curl -sf -u "${pkgauth}" "${pkgapiurl}?per_page=1000" | \
 
 if [ "${needrelease}" == "true" ]; then
     citus_package -p "${TARGET_PLATFORM}" 'local' release
-    mkdir releases
+    mkdir -p pkgs/releases
     shopt -s nullglob
-    cp */*.rpm */*.deb releases
+    mv ./*/*.rpm ./*/*.deb pkgs/releases
+    git clean -df -e pkgs
 else
     echo 'release up to date'
 fi

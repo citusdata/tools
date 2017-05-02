@@ -1,3 +1,11 @@
+### citustools v0.5.2 (May 2, 2017) ###
+
+* Adds support for version numbers baked in to package names ("fancy")
+
+* Fixes bug preventing Travis from producing both a release and nightly at once
+
+* Addresses all shellcheck warnings and errors
+
 ### citustools v0.5.1 (December 6, 2016) ###
 
 * Adds `--enable-coverage` configure flag in `pg_travis_multi_test`

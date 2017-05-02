@@ -9,7 +9,6 @@ success=0
 failure=1
 badinput=65
 
-projname="${TRAVIS_BRANCH##*-}"
 pgxnuser='citusdata'
 pgxnurl='https://manager.pgxn.org/upload'
 
