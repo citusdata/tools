@@ -55,9 +55,10 @@ newcommitcount=$(curl -sf -H "${hubauth}" "${hubapiurl}" | jq -r 'length')
 
 if [ "${newcommitcount}" -gt 0 ]; then
     citus_package -p "${TARGET_PLATFORM}" 'local' nightly
-    mkdir nightlies
+    mkdir -p pkgs/nightlies
     shopt -s nullglob
-    cp ./*/*.rpm ./*/*.deb nightlies
+    mv ./*/*.rpm ./*/*.deb pkgs/nightlies
+    git clean -df -e pkgs
 else
     echo 'nightly up to date'
 fi
