@@ -1,3 +1,7 @@
+### citustools v0.5.3 (May 2, 2017) ###
+
+* Fixes `trigger_docker_nightly` to expect intermediate pkgs directory
+
 ### citustools v0.5.2 (May 2, 2017) ###
 
 * Adds support for version numbers baked in to package names ("fancy")
