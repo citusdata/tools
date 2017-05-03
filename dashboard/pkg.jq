@@ -58,6 +58,8 @@ def gittag(r):
     r.version | rtrimstr(".citus") as $version |
     if ($version | contains("~")) then
         $version | sub("~"; "-")
+    elif (r.release | startswith("rc")) then # hack for bad deb version 1.0.0-rc.1
+        $version + "-" + r.release
     elif (r.release | contains("rc")) then
         $version + "-" +
         (r.release | split(".") | .[2] + "." + .[3])
