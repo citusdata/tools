@@ -37,14 +37,14 @@ def pkgnameandpgversion(name):
     if (name | startswith("postgresql-")) then
         name | split("-") as $parts |
         [
-            ($parts[2:] | join("-")), # name portion (after PG version)
-            $parts[1]                 # PG version portion
+            ($parts[2:] | join("-") | sub("-\\d\\.\\d$"; "")), # name portion (after PG version)
+            $parts[1]                                          # PG version portion
         ]
     else
         name | split("_") as $parts |
         [
-            ($parts[:-1] | join("_")),              # name portion (before PG version)
-            $parts[-1][0:1] + "." + $parts[-1][1:2] # PG version portion
+            ($parts[:-1] | join("_") | sub("\\d\\d$"; "")), # name portion (before PG version)
+            $parts[-1][0:1] + "." + $parts[-1][1:2]         # PG version portion
         ]
     end
 ;
