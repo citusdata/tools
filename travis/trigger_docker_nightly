@@ -11,7 +11,7 @@ failure=1
 if [ "${TARGET_PLATFORM}" != "debian/jessie" ]; then
     echo "not Debian Jessie, skipping Docker trigger..." >&2
     exit $success
-elif [ ! -e "nightlies" ]; then
+elif [ ! -e "pkgs/nightlies" ]; then
     echo "no new nightlies, skipping Docker trigger..." >&2
     exit $success
 fi
