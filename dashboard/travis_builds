@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+# make bash behave
+set -euo pipefail
+IFS=$'\n\t'
+
+# constants
+stdout=1
+stderr=2
+success=0
+badusage=64
+
+agent="TravisCitusStatsAgent/1.0"
+format="Accept: application/vnd.travis-ci.2+json"
+content="Content-Type: application/json"
+hubtoken="{\"github_token\": \"${GITHUB_TOKEN}\"}"
+
+jq=$(which jq)
+
+# outputs usage message on specified device before exiting with provided status
+usage() {
+    cat << 'E_O_USAGE' >&"$1"
+usage: travis_builds repo [since]
+
+    repo : a citusdata GitHub repository name
+    since : a Travis build number (optional) valid for that repo
+
+travis_builds outputs a CSV-formatted build history for a given citusdata repo.
+As Travis uses build numbers for pagination and not dates, the optional 'since'
+parameter is a build number rather than the more customary date. Build events
+are emitted only for those builds with a status 'passed', 'failed',  errored',
+or 'canceled', in order to avoid logging information about builds still in the
+build queue or builds still in progress. Unlike other dashboard scripts, this
+script does not do daily aggregation of build statistics and emits a row for
+each build.
+E_O_USAGE
+
+    exit "${2}";
+}
+
+if [ "$#" -eq 1 ]; then
+  if [ "${1}" = '-h' ]; then
+    usage $stdout $success
+  fi
+  since="0"
+elif [ "$#" -eq 2 ]; then
+  since="${2}"
+else
+  usage $stderr $badusage
+fi
+
+# first we need to request a Travis auth token using our GitHub token
+authurl='https://api.travis-ci.org/auth/github'
+tvstoken=$(curl -sf -A "${agent}" -H "${format}" -H "${content}" \
+                    -d "${hubtoken}" ${authurl} | jq -r '.access_token')
+tvsauth="Authorization: token \"${tvstoken}\""
+
+echo '"name","number","date","job_count"'
+
+# ensure very high initial 'after'; will use to paginate
+after='10000000'
+
+repo=${1}
+buildsurl="https://api.travis-ci.org/repos/citusdata/${repo}/builds"
+
+# exit once we see the page with our last known build, 'since'
+for (( sinceidx=-1; sinceidx<0; ))
+do
+  # get page after 'after'-th build. Only care about 'builds' field
+  pageurl="${buildsurl}?after_number=${after}"
+  results=$(curl -sf -A "${agent}" -H "${format}" -H "${tvsauth}" "${pageurl}" |
+            ${jq} '.builds')
+
+  # sort build numbers; find lowest as well as possible index of 'since'
+  numbers=$(echo ${results} | ${jq} 'map(.number | tonumber) | sort')
+  after=$(echo ${numbers} | ${jq} -r 'first')
+  sinceidx=$(echo ${numbers} | ${jq} --argjson s "${since}" -r 'bsearch($s)')
+
+  # print out CSV rows for valid builds greater than 'since'
+  echo "${results}" |
+  ${jq} -r --argjson s "${since}" --argjson r "\"${repo}\"" \
+  'include "pkg"; .[] | filterbuilds($s) | maketravisrows($r) | @csv'
+done

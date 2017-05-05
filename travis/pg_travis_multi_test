@@ -20,11 +20,20 @@ sudo make install
 # Change to test directory for remainder
 cd src/test/regress
 
+# if a custom build is in use, we will also run check-vanilla
+# and check-isolation along with regular regression tests
+if [ -n "${USE_CUSTOM_PG}" ]; then
+    testtargets="${testtargets} check-vanilla check-isolation"
+fi
+
 # Run tests. DBs owned by non-standard owner put socket in /tmp
 # shellcheck disable=SC2086
 make ${testtargets} || status=$?
 
 # Print diff if it exists
 if test -f regression.diffs; then cat regression.diffs; fi
+if test -f ~/postgresql/src/test/regress/regression.diffs; then
+    cat ~/postgresql/src/test/regress/regression.diffs
+fi
 
 exit $status

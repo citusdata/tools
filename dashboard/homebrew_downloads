@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+# make bash behave
+set -euo pipefail
+IFS=$'\n\t'
+
+# constants
+stdout=1
+stderr=2
+success=0
+badusage=64
+
+jq=$(which jq)
+
+# outputs usage message on specified device before exiting with provided status
+usage() {
+    cat << 'E_O_USAGE' >&"$1"
+usage: homebrew_downloads package [since]
+
+    package : a package name, such as citus
+    since : a date (optional) in YYYY-MM-DD format
+
+homebrew_downloads outputs CSV-formatted daily Homebrew install counts for a
+given package. The optional 'since' parameter can be used to provide a custom
+start date: without one, all known data is requested. If package revisions are
+present (i.e. "6.0.0_1"), they are normalized to the upstream version (in the
+previous case, "6.0.0") and have their installs aggregated under that.
+E_O_USAGE
+
+    exit "${2}";
+}
+
+if [ "$#" -eq 1 ]; then
+  if [ "${1}" = '-h' ]; then
+    usage $stdout $success
+  fi
+  since="2016-01-01"
+elif [ "$#" -eq 2 ]; then
+  since="${2}"
+else
+  usage $stderr $badusage
+fi
+
+case "${OSTYPE}" in
+  darwin*)
+    enddate=$(date -v-1d "+%Y-%m-%d")
+    ;;
+  *)
+    enddate=$(date -d "1 days ago" "+%Y-%m-%d")
+    ;;
+esac
+
+echo '"os","release","name","pg_version","version","date","downloads"'
+
+if [[ "${since}" > "${enddate}" || "${since}" == "${enddate}" ]]; then
+  exit
+fi
+
+package=${1}
+homebrewurl='https://bintray.com/statistics/packageStatistics'
+homebrewurl+="?pkgPath=/homebrew/bottles/${package}&startDate=${since}&endDate=${enddate}"
+
+curl -s "${homebrewurl}" | ${jq} -r "include \"pkg\"; .data | makebrewrows(\"${package}\") | .[] | @csv"

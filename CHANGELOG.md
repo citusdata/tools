@@ -1,3 +1,9 @@
+### citustools v0.6.0 (May 5, 2017) ###
+
+* Adds scripts to query, normalize, and load download KPI data
+
+* Supports compiling and running tests against a custom-compiled PostgreSQL
+
 ### citustools v0.5.3 (May 2, 2017) ###
 
 * Fixes `trigger_docker_nightly` to expect intermediate pkgs directory
