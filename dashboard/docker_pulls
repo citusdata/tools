@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+# make bash behave
+set -euo pipefail
+IFS=$'\n\t'
+
+# constants
+stdout=1
+stderr=2
+success=0
+badusage=64
+
+jq=$(which jq)
+
+# outputs usage message on specified device before exiting with provided status
+usage() {
+    cat << 'E_O_USAGE' >&"$1"
+usage: docker_pulls repo [since]
+
+    repo : a citusdata Docker Hub repository name
+    since : a date (optional) in YYYY-MM-DD format
+
+docker_pulls outputs a CSV-formatted pull total for a given repo in citusdata's
+org. As Docker Hub can only provide the total number of downloads for all image
+versions since the beginning of time, that is what is emitted. Passing the most
+recent time point's date as the 'since' parameter will cause this program to
+exit without emitting any rows if that parameter is on or after today's date.
+E_O_USAGE
+
+    exit "${2}";
+}
+
+if [ "$#" -eq 1 ]; then
+  if [ "${1}" = '-h' ]; then
+    usage $stdout $success
+  fi
+  since="2016-01-01"
+elif [ "$#" -eq 2 ]; then
+  since="${2}"
+else
+  usage $stderr $badusage
+fi
+
+today=$(date "+%Y-%m-%d")
+
+echo '"os","release","name","pg_version","version","date","total_downloads"'
+
+if [[ "${since}" > "${today}" || "${since}" == "${today}" ]]; then
+  exit
+fi
+
+repo=${1}
+repourl="https://hub.docker.com/v2/repositories/citusdata/${repo}/"
+
+curl -sf "${repourl}" |
+${jq} -r "include \"pkg\"; makepullrow(\"${repo}\") | @csv"
