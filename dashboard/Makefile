@@ -6,7 +6,7 @@ INSTALL := install -c
 INSTALL_DATA := $(INSTALL) -m 644
 INSTALL_SCRIPT := $(INSTALL) -m 755
 
-DASHBOARD_SCRIPTS := $(filter-out pkg.jq schema.ddl Makefile,$(wildcard *))
+DASHBOARD_SCRIPTS := $(filter-out pkg.jq README.md schema.ddl Makefile,$(wildcard *))
 
 all:
 
