@@ -3,7 +3,7 @@
 set -eux
 
 # exit early if a custom build is not needed
-if [ -z "${USE_CUSTOM_PG}" ]; then
+if [ -z "${USE_CUSTOM_PG:-}" ]; then
   exit
 fi
 
