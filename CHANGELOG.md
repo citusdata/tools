@@ -1,3 +1,9 @@
+### citustools v0.6.1 (May 12, 2017) ###
+
+* Adds logic to apply PGDG's directory patches to custom builds
+
+* Fixes bug preventing builds where `USE_CUSTOM_PG` is undefined
+
 ### citustools v0.6.0 (May 5, 2017) ###
 
 * Adds scripts to query, normalize, and load download KPI data
