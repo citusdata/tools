@@ -22,7 +22,7 @@ cd src/test/regress
 
 # if a custom build is in use, we will also run check-vanilla
 # and check-isolation along with regular regression tests
-if [ -n "${USE_CUSTOM_PG}" ]; then
+if [ -n "${USE_CUSTOM_PG:-}" ]; then
     testtargets="${testtargets} check-vanilla check-isolation"
 fi
 

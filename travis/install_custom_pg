@@ -3,9 +3,16 @@
 set -eux
 
 # exit early if a custom build is not needed
-if [ -z "${USE_CUSTOM_PG}" ]; then
+if [ -z "${USE_CUSTOM_PG:-}" ]; then
   exit
 fi
+
+# in order for other PostgreSQL packages to operate correctly, we need
+# to ensure our build uses the same directories as the PGDG build; un-
+# fortunately, not all can be specified by ./configure, so we apply the
+# version-specific packaging patch used for the PGDG builds
+pkgingurl='https://anonscm.debian.org/git/pkg-postgresql/postgresql.git'
+patchurl="${pkgingurl}/plain/debian/patches/50-per-version-dirs.patch"
 
 # clone PostgreSQL
 cd ~
@@ -15,8 +22,10 @@ git clone -b "REL${PGVERSION//./_}_STABLE" --depth 1 git://git.postgresql.org/gi
 procs="$(nproc)"
 mjobs="$((procs + 1))"
 
-# configure, build and install PostgreSQL
+# configure, apply patch, build, and install PostgreSQL
 cd postgresql
+curl -sf "${patchurl}?h=${PGVERSION}" | git apply
+
 ./configure --enable-cassert --enable-debug --with-openssl \
     --mandir="/usr/share/postgresql/${PGVERSION}/man" \
     --docdir="/usr/share/doc/postgresql-doc-${PGVERSION}" \
