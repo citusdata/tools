@@ -7,25 +7,34 @@ if [ -z "${USE_CUSTOM_PG:-}" ]; then
   exit
 fi
 
-# in order for other PostgreSQL packages to operate correctly, we need
-# to ensure our build uses the same directories as the PGDG build; un-
-# fortunately, not all can be specified by ./configure, so we apply the
-# version-specific packaging patch used for the PGDG builds
-pkgingurl='https://anonscm.debian.org/git/pkg-postgresql/postgresql.git'
-patchurl="${pkgingurl}/plain/debian/patches/50-per-version-dirs.patch"
-
-# clone PostgreSQL
+# if there is cached PostgreSQL build, just pull new updates, hopefuly
+# there are no updates and we can skip the compiling PostgreSQL. Note
+# that travis always creates caching directories. It will be just empty
+# if there is no cache yet. We check whether the directory contains any
+# files.
 cd ~
-git clone -b "REL${PGVERSION//./_}_STABLE" --depth 1 git://git.postgresql.org/git/postgresql.git
+if [ "$(ls -A postgresql)" ]; then
+  git -C postgresql pull
+else
+  git clone -b "REL${PGVERSION//./_}_STABLE" --depth 1 git://git.postgresql.org/git/postgresql.git
+
+  # in order for other PostgreSQL packages to operate correctly, we need
+  # to ensure our build uses the same directories as the PGDG build; un-
+  # fortunately, not all can be specified by ./configure, so we apply the
+  # version-specific packaging patch used for the PGDG builds
+  pkgingurl='https://anonscm.debian.org/git/pkg-postgresql/postgresql.git'
+  patchurl="${pkgingurl}/plain/debian/patches/50-per-version-dirs.patch"
+
+  # apply patch
+  curl -sf "${patchurl}?h=${PGVERSION}" | git -C postgresql apply
+fi
 
 # we will use this to parallelize PostgreSQL compilation
 procs="$(nproc)"
 mjobs="$((procs + 1))"
 
-# configure, apply patch, build, and install PostgreSQL
+# configure, build, and install PostgreSQL
 cd postgresql
-curl -sf "${patchurl}?h=${PGVERSION}" | git apply
-
 ./configure --enable-cassert --enable-debug --with-openssl \
     --mandir="/usr/share/postgresql/${PGVERSION}/man" \
     --docdir="/usr/share/doc/postgresql-doc-${PGVERSION}" \
