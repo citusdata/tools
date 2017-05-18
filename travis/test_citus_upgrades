@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+# make bash behave
+set -exuo pipefail
+IFS=$'\n\t'
+
+coordport=55435
+work1port=55436
+work2port=55437
+
+export PGHOST='localhost'
+export PGPORT="${coordport}"
+export PGUSER='postgres'
+
+citusoldpkg="postgresql-${PGVERSION}-citus"
+citusnewpkg="postgresql-${PGVERSION}-citus"
+
+if [ "${CITUS_INITIAL_VERSION}" = '5.2' ]; then
+    citusoldpkg+='=5.2.2.citus-1'
+else
+    citusoldpkg+="-${CITUS_INITIAL_VERSION}"
+fi
+
+if [ "${CITUS_UPGRADE_VERSION}" = '5.2' ]; then
+    citusnewpkg+='=5.2.2.citus-1'
+else
+    citusnewpkg+="-${CITUS_UPGRADE_VERSION}"
+fi
+
+sudo apt-get install -y "${citusoldpkg}"
+
+sudo pg_createcluster "${PGVERSION}" coord -p "${coordport}" -- -A trust
+sudo pg_createcluster "${PGVERSION}" work1 -p "${work1port}" -- -A trust
+sudo pg_createcluster "${PGVERSION}" work2 -p "${work2port}" -- -A trust
+
+sudo pg_conftool "${PGVERSION}" coord set shared_preload_libraries citus
+sudo pg_conftool "${PGVERSION}" work1 set shared_preload_libraries citus
+sudo pg_conftool "${PGVERSION}" work2 set shared_preload_libraries citus
+
+coorddatadir=$(pg_conftool -s "${PGVERSION}" coord get data_directory | tr -d "'")
+
+printf "localhost\t%d\nlocalhost\t%d\n" "${work1port}" "${work2port}" | \
+    sudo -u "${PGUSER}" tee "${coorddatadir}/pg_worker_list.conf" > /dev/null
+
+sudo pg_ctlcluster "${PGVERSION}" coord start
+sudo pg_ctlcluster "${PGVERSION}" work1 start
+sudo pg_ctlcluster "${PGVERSION}" work2 start
+
+psql -h localhost -p "${coordport}" -c 'CREATE EXTENSION citus;'
+psql -h localhost -p "${work1port}" -c 'CREATE EXTENSION citus;'
+psql -h localhost -p "${work2port}" -c 'CREATE EXTENSION citus;'
+
+psql -c 'CREATE TABLE test (id integer);'
+psql -c "SELECT master_create_distributed_table('test', 'id', 'hash');"
+psql -c "SELECT master_create_worker_shards('test', 2, 2);"
+psql -c 'INSERT INTO test VALUES (1);'
+psql -c 'INSERT INTO test VALUES (2);'
+psql -c 'INSERT INTO test VALUES (3);'
+psql -c 'INSERT INTO test VALUES (4);'
+psql -c 'SELECT COUNT(*) FROM test;'
+
+sudo apt-get install -y "${citusnewpkg}"
+
+sudo pg_ctlcluster "${PGVERSION}" coord restart
+sudo pg_ctlcluster "${PGVERSION}" work1 restart
+sudo pg_ctlcluster "${PGVERSION}" work2 restart
+
+psql -l
+
+psql -h localhost -p "${coordport}" -c 'ALTER EXTENSION citus UPDATE;'
+psql -h localhost -p "${work1port}" -c 'ALTER EXTENSION citus UPDATE;'
+psql -h localhost -p "${work2port}" -c 'ALTER EXTENSION citus UPDATE;'
+
+psql -c 'SELECT COUNT(*) FROM test;'
+psql -c 'INSERT INTO test VALUES (5);'
+psql -c 'INSERT INTO test VALUES (6);'
+psql -c 'INSERT INTO test VALUES (7);'
+psql -c 'INSERT INTO test VALUES (8);'
+psql -c 'SELECT COUNT(*) FROM test;'

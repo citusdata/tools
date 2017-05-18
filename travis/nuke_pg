@@ -8,7 +8,7 @@ set -eux
 sudo service postgresql stop
 
 # remove existing installation of postgresql
-if [ -n "${USE_CUSTOM_PG:-}" ]; then
+if [ -z "${USE_CUSTOM_PG:-}" ]; then
     sudo apt-get --purge -y remove postgresql-*
 fi
 
