@@ -1,3 +1,11 @@
+### citustools v0.6.2 (June 19, 2017) ###
+
+* Fixes bug causing early exit during first release of new package
+
+* Adds support for building against PostgreSQL 10
+
+* Adds caching logic for PostgreSQL source builds
+
 ### citustools v0.6.1 (May 12, 2017) ###
 
 * Adds logic to apply PGDG's directory patches to custom builds
