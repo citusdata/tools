@@ -17,7 +17,7 @@ if [ "$(ls -A postgresql)" ]; then
   git -C postgresql pull
 else
   if [ "${PGVERSION}" -eq '10' ]; then
-    gitref='REL_10_BETA1'
+    gitref='master'
   else
     gitref="REL${PGVERSION//./_}_STABLE"
   fi
