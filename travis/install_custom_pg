@@ -16,7 +16,13 @@ cd ~
 if [ "$(ls -A postgresql)" ]; then
   git -C postgresql pull
 else
-  git clone -b "REL${PGVERSION//./_}_STABLE" --depth 1 git://git.postgresql.org/git/postgresql.git
+  if [ "${PGVERSION}" -eq '10' ]; then
+    gitref='master'
+  else
+    gitref="REL${PGVERSION//./_}_STABLE"
+  fi
+
+  git clone -b "${gitref}" --depth 1 git://git.postgresql.org/git/postgresql.git
 
   # in order for other PostgreSQL packages to operate correctly, we need
   # to ensure our build uses the same directories as the PGDG build; un-
