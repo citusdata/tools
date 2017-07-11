@@ -1,3 +1,7 @@
+### citustools v0.6.3 (July 11, 2017) ###
+
+* Addresses citus-style compatibility issues with uncrustify 0.65
+
 ### citustools v0.6.2 (June 19, 2017) ###
 
 * Fixes bug causing early exit during first release of new package
