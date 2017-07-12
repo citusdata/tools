@@ -1,0 +1,63 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# download and install required packages
+sudo apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq \
+    build-essential \
+    libreadline6 \
+    libreadline6-dev \
+    zlib1g-dev \
+    flex \
+    bison \
+    libssl-dev \
+    valgrind \
+    mailutils
+
+# set environment variables
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+export PG_CONFIG=/usr/local/pgsql/bin/pg_config
+
+# download and install PostgreSQL
+git clone -b "REL9_6_STABLE" --depth 1 git://git.postgresql.org/git/postgresql.git
+cd postgresql/
+./configure --enable-cassert --enable-debug CFLAGS="-ggdb -Og -DUSE_VALGRIND"
+
+# we will use this to parallelize PostgreSQL compilation
+procs="$(nproc)"
+mjobs="$((procs + 1))"
+make -j "${mjobs}" -s
+sudo make install
+export PATH=/usr/local/pgsql/bin:$PATH
+
+# download and install Citus
+cd ..
+git clone https://github.com/citusdata/citus.git
+cd citus/
+./configure
+make clean
+make -j8 -s
+sudo make install
+
+# this is necessary to start tests
+sudo chown ubuntu /usr/local/pgsql/bin/ -R
+
+# run valgrind tests
+cd src/test/regress
+make check-multi-vg VALGRIND_LOG_FILE=logs.txt || true
+
+# surprisingly this hits inbox
+if [ -s logs.txt ]; then
+	mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Failure" -A logs.txt burak@citusdata.com metin@citusdata.com < /dev/null
+else
+	mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Success" burak@citusdata.com metin@citusdata.com < /dev/null
+fi
+
+# just to ensure everything is completed in the test instance
+sleep 30
+
+# shut-down the instance, this will also terminate the instance because we set instance-initiated-shutdown-behavior to terminate
+sudo shutdown -h now

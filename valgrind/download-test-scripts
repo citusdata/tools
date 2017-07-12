@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# we send this script to aws while creating the instance, this script will run
+# as final step of the instance creation and download necessary scripts to run
+# valgrind tests from our repository.
+
+set -euo pipefail
+
+# download and install required packages
+apt-get update
+apt-get install git make -y
+
+# download the test scripts
+git clone https://github.com/citusdata/tools.git
+cd tools
+make install
