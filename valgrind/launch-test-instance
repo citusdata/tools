@@ -23,18 +23,18 @@ valgrind_instance_id=$(aws ec2 run-instances \
 # tag the instance as ValgrindTest
 echo "Tagging the instance..."
 aws ec2 create-tags \
-    --resources $valgrind_instance_id \
+    --resources "${valgrind_instance_id}" \
     --tags Key=Name,Value=ValgrindTest
 
 # wait for instance creation complete
 echo "Waiting for completion of instance creation... (This may take a several minutes)"
 aws ec2 wait instance-status-ok \
-    --instance-id $valgrind_instance_id
+    --instance-id "${valgrind_instance_id}"
 
 # get the instance ip address
 echo "Getting the ip address of the instance..."
 valgrind_instance_ip=$(aws ec2 describe-instances \
-    --instance-ids $valgrind_instance_id \
+    --instance-ids "${valgrind_instance_id}" \
     --query 'Reservations[0].Instances[0].PublicIpAddress' \
     --output text)
 
