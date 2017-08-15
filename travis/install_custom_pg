@@ -16,10 +16,12 @@ cd ~
 if [ "$(ls -A postgresql)" ]; then
   git -C postgresql pull
 else
-  if [ "${PGVERSION}" -eq '10' ]; then
-    gitref='master'
+  if [ "${PGVERSION}" == '11' ]; then
+    gitref="master"
+  elif [ "${PGVERSION}" == '9.6' ]; then
+    gitref="REL9_6_STABLE"
   else
-    gitref="REL${PGVERSION//./_}_STABLE"
+    gitref="REL_${PGVERSION}_STABLE"
   fi
 
   git clone -b "${gitref}" --depth 1 git://git.postgresql.org/git/postgresql.git
