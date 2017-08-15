@@ -1,3 +1,11 @@
+### citustools v0.6.4 (August 15, 2017) ###
+
+* Bumps Homebrew formula
+
+* Adds automation script for valgrind tests
+
+* Starts to use REL_10_STABLE branch for PostgreSQL tests
+
 ### citustools v0.6.3 (July 11, 2017) ###
 
 * Addresses citus-style compatibility issues with uncrustify 0.65
