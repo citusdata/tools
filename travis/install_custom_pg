@@ -16,12 +16,14 @@ cd ~
 if [ "$(ls -A postgresql)" ]; then
   git -C postgresql pull
 else
-  if [ "${PGVERSION}" == '11' ]; then
+  pgmajornum="${PGVERSION%%.*}"
+  if [ "${pgmajornum}" -gt '10' ]; then
+    # ten is highest stable build; use master for higher
     gitref="master"
-  elif [ "${PGVERSION}" == '9.6' ]; then
-    gitref="REL9_6_STABLE"
-  else
+  elif [ "${pgmajornum}" -gt '9' ]; then
     gitref="REL_${PGVERSION}_STABLE"
+  else
+    gitref="REL${PGVERSION//./_}_STABLE"
   fi
 
   git clone -b "${gitref}" --depth 1 git://git.postgresql.org/git/postgresql.git
