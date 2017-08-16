@@ -43,7 +43,7 @@ mjobs="$((procs + 1))"
 
 # configure, build, and install PostgreSQL
 cd postgresql
-./configure --enable-cassert --enable-debug --with-openssl \
+./configure --enable-cassert --enable-debug --enable-depend --with-openssl \
     --mandir="/usr/share/postgresql/${PGVERSION}/man" \
     --docdir="/usr/share/doc/postgresql-doc-${PGVERSION}" \
     --sysconfdir=/etc/postgresql-common \
