@@ -22,7 +22,7 @@ export LANGUAGE=en_US.UTF-8
 export PG_CONFIG=/usr/local/pgsql/bin/pg_config
 
 # download and install PostgreSQL
-git clone -b "REL9_6_STABLE" --depth 1 git://git.postgresql.org/git/postgresql.git
+git clone -b "REL_10_STABLE" --depth 1 git://git.postgresql.org/git/postgresql.git
 cd postgresql/
 ./configure --enable-cassert --enable-debug CFLAGS="-ggdb -Og -DUSE_VALGRIND"
 

@@ -1,3 +1,9 @@
+### citustools v0.6.5 (August 29, 2017) ###
+
+* Bumps PostgreSQL version for valgrind tests
+
+* Adds Debian Stretch to supported packaging versions
+
 ### citustools v0.6.4 (August 15, 2017) ###
 
 * Bumps Homebrew formula

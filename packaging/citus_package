@@ -25,7 +25,7 @@ use constant PACKAGE_URL =>       ## no critic (ProhibitConstantPragma)
   'https://github.com/citusdata/packaging/archive';
 
 my %supported_platforms = (
-    debian => [ "jessie", "wheezy" ],
+    debian => [ "jessie", "wheezy", "stretch" ],
     el     => [ "7",      "6" ],
     fedora => [ "23",     "22", "24" ],
     ol     => [ "7",      "6" ],
@@ -493,6 +493,8 @@ to sign packages.
 =head1 SUPPORTED PLATFORMS
 
 =over 4
+
+=item I<debian/stretch>  Debian 9 "Stretch"
 
 =item I<debian/jessie>  Debian 8 "Jessie"
 
