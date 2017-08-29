@@ -494,7 +494,7 @@ to sign packages.
 
 =over 4
 
-=item I<debian/stretch>  Debian 9 "Stretch"
+=item I<debian/stretch> Debian 9 "Stretch"
 
 =item I<debian/jessie>  Debian 8 "Jessie"
 
