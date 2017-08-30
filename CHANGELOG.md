@@ -1,3 +1,11 @@
+### citustools v0.7.0 (August 30, 2017) ###
+
+* Removes Ubuntu Precise from supported packaging versions
+
+* Removes Fedora 22, 23, and 24 from supported packaging versions
+
+* Adds Fedora 25 and 26 to supported packaging versions
+
 ### citustools v0.6.5 (August 29, 2017) ###
 
 * Bumps PostgreSQL version for valgrind tests
