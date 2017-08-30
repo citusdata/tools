@@ -25,11 +25,11 @@ use constant PACKAGE_URL =>       ## no critic (ProhibitConstantPragma)
   'https://github.com/citusdata/packaging/archive';
 
 my %supported_platforms = (
-    debian => [ "jessie", "wheezy", "stretch" ],
+    debian => [ "stretch", "jessie", "wheezy"],
     el     => [ "7",      "6" ],
-    fedora => [ "23",     "22", "24" ],
+    fedora => [ "25",     "26" ],
     ol     => [ "7",      "6" ],
-    ubuntu => [ "xenial", "trusty", "precise" ],
+    ubuntu => [ "xenial", "trusty" ],
     pgxn => [""]
 );
 
@@ -504,11 +504,9 @@ to sign packages.
 
 =item I<el/6>           Enterprise Linux 6.0 (CentOS, RedHat, Amazon Linux)
 
-=item I<fedora/24>      Fedora 24
+=item I<fedora/26>      Fedora 26
 
-=item I<fedora/23>      Fedora 23
-
-=item I<fedora/22>      Fedora 22
+=item I<fedora/25>      Fedora 25
 
 =item I<ol/7>           Oracle Linux 7.0
 
@@ -517,8 +515,6 @@ to sign packages.
 =item I<ubuntu/xenial>  Ubuntu 16.04 LTS (Xenial Xerus)
 
 =item I<ubuntu/trusty>  Ubuntu 14.04 LTS (Trusty Tahr)
-
-=item I<ubuntu/precise> Ubuntu 12.04 LTS (Precise Pangolin)
 
 =item I<pgxn>           PostgreSQL Extension Network (PGXN)
 
