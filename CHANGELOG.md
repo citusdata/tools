@@ -1,3 +1,11 @@
+### citustools v0.7.1 (August 30, 2017) ###
+
+* Add support for testing against PostgreSQL 11/master branch
+
+* Fixes bug causing early exit during first nightly of new OS/package
+
+* Add `--enable-depend` to avoid build problems with changed headers
+
 ### citustools v0.7.0 (August 30, 2017) ###
 
 * Removes Ubuntu Precise from supported packaging versions
@@ -18,7 +26,7 @@
 
 * Adds automation script for valgrind tests
 
-* Starts to use REL_10_STABLE branch for PostgreSQL tests
+* Starts to use `REL_10_STABLE` branch for PostgreSQL tests
 
 ### citustools v0.6.3 (July 11, 2017) ###
 
