@@ -44,9 +44,24 @@ esac
 pkgapiurl="https://packagecloud.io/api/v1/repos/citusdata/${PKG_REPOTYPE}-nightlies"
 pkgapiurl+="/package/${pkgflavor}/${TARGET_PLATFORM}/${pkgfull}/${pkgarch}/versions.json"
 
+response=$(curl -w '\n%{http_code}\n' -s -u "${pkgauth}" "${pkgapiurl}?per_page=1000")
+
+httpcode=$(echo "${response}" | tail -n1)
+case "${httpcode}" in
+    404)
+        httpbody='[]'
+        ;;
+    200)
+        httpbody=$(echo "${response}" | sed '$d')
+        ;;
+    *)
+        echo "$0: bad response code from packagecloud -- ${httpcode}" >&2
+        exit $noservice
+        ;;
+esac
+
 epochstr='"1970-01-01T00:00:00.000Z"'
-lastnightly=$(curl -sf -u "${pkgauth}" "${pkgapiurl}?per_page=1000" | \
-              jq -r "map(.created_at) | sort | last // ${epochstr}")
+lastnightly=$(echo "${httpbody}" | jq -r "map(.created_at) | sort | last // ${epochstr}")
 
 hubapiurl="https://api.github.com/repos/citusdata/${hubproj}/commits?"
 hubapiurl+="sha=${nightlyref}&since=${lastnightly}&per_page=1"
