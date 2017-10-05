@@ -8,7 +8,7 @@ IFS=$'\n\t'
 stderr=2
 badusage=64
 
-latestpg="9.5"
+latestpg="10"
 pkgflavor="${TRAVIS_BRANCH%%-*}"
 pkgauth="${PACKAGECLOUD_API_TOKEN}:"
 hubauth="Authorization: token ${GITHUB_TOKEN}"
@@ -20,7 +20,7 @@ source pkgvars
 # set default values for certain packaging variables
 hubproj="${hubproj:-${pkgname}}"
 nightlyref="${nightlyref:-master}"
-releasepg="${releasepg:-9.5,9.6}"
+releasepg="${releasepg:-9.6,10}"
 nightlypg="${nightlypg:-${releasepg}}"
 latestpg=$(echo "${nightlypg}" | tr ',' '\n' | sort -t. -k1,1n -k2,2n | tail -n1)
 
