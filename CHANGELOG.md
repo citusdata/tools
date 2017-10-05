@@ -1,3 +1,7 @@
+### citustools v0.7.3 (October 5, 2017) ###
+
+* Fixes regex problem with PG 10 RPM builds
+
 ### citustools v0.7.2 (October 5, 2017) ###
 
 * Changes packaging default PostgreSQL versions from 9.5,9.6 to 9.6,10
