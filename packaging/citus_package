@@ -343,7 +343,7 @@ foreach my $platform (@platforms) {
         $nightlypg //= $releasepg;
 
         my $finalpg = ( $build_type eq 'release' ) ? $releasepg : $nightlypg;
-        $finalpg =~ s/(\d)\.(\d)/pg$1$2/gx;
+        $finalpg =~ s/(\d)\.?(\d)/pg$1$2/gx;
 
         @pg_versions = split( /,/x, $finalpg );
     }
