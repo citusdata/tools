@@ -1,3 +1,7 @@
+### citustools v0.7.2 (October 5, 2017) ###
+
+* Changes packaging default PostgreSQL versions from 9.5,9.6 to 9.6,10
+
 ### citustools v0.7.1 (August 30, 2017) ###
 
 * Add support for testing against PostgreSQL 11/master branch
