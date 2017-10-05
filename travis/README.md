@@ -22,7 +22,7 @@ It is possible that your Travis CI virtual machine starts with a PostgreSQL inst
 
 ### `install_pg`
 
-A PostgreSQL version will be installed based on the value of the `PGVERSION` environment variable. In addition, common extension dependencies and development headers are installed. Suitable values for `PGVERSION` might be `9.3`, `9.4`, or `9.5`.
+A PostgreSQL version will be installed based on the value of the `PGVERSION` environment variable. In addition, common extension dependencies and development headers are installed. Suitable values for `PGVERSION` might be `9.5`, `9.6`, or `10`.
 
 ### `install_uncrustify`
 

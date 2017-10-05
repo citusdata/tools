@@ -322,7 +322,7 @@ foreach my $platform (@platforms) {
     # read release and nightly PG versions from pkgvars file
     my @pg_versions;
     if ( $format eq 'redhat' ) {
-        my $releasepg = '9.5,9.6';
+        my $releasepg = '9.6,10';
         my $nightlypg;
         my $pkgvars = "$filesubdir/pkgvars";
 
