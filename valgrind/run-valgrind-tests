@@ -13,7 +13,8 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq \
     bison \
     libssl-dev \
     valgrind \
-    mailutils
+    mailutils \
+    libcurl4-openssl-dev
 
 # set environment variables
 export LC_ALL=en_US.UTF-8
