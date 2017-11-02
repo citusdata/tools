@@ -13,4 +13,5 @@ apt-get install git make -y
 # download the test scripts
 git clone https://github.com/citusdata/tools.git
 cd tools
+git checkout send_regression_output
 make install

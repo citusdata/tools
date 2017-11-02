@@ -50,11 +50,19 @@ sudo chown ubuntu /usr/local/pgsql/bin/ -R
 cd src/test/regress
 make check-multi-vg VALGRIND_LOG_FILE=logs.txt || true
 
-# surprisingly this hits inbox
+attachments=""
 if [ -s logs.txt ]; then
-	mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Failure" -A logs.txt burak@citusdata.com metin@citusdata.com < /dev/null
+    attachments=$attachments" -A logs.txt"
+fi
+
+if [ -s regression.diffs ]; then
+    attachments=$attachments" -A regression.diffs"
+fi
+
+if [ -z "$attachments" ]; then
+    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Success" burak@citusdata.com metin@citusdata.com < /dev/null
 else
-	mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Success" burak@citusdata.com metin@citusdata.com < /dev/null
+    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Failure" $attachments burak@citusdata.com metin@citusdata.com < /dev/null
 fi
 
 # just to ensure everything is completed in the test instance
