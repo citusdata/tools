@@ -1,3 +1,9 @@
+### citustools v0.7.4 (November 15, 2017) ###
+
+* Switches nightly logic to detect Debian Stretch
+
+* Improvements to valgrind logic
+
 ### citustools v0.7.3 (October 5, 2017) ###
 
 * Fixes regex problem with PG 10 RPM builds
