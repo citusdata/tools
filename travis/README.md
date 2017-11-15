@@ -78,5 +78,5 @@ Pairs with `build_new_nightly` to trigger a new Docker Hub nightly image build. 
 
   * Project is `citus`
   * OS is `debian`
-  * Release is `jessie`
+  * Release is `stretch`
   * New nightly was produced
