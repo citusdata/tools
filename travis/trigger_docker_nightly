@@ -8,8 +8,8 @@ IFS=$'\n\t'
 success=0
 failure=1
 
-if [ "${TARGET_PLATFORM}" != "debian/jessie" ]; then
-    echo "not Debian Jessie, skipping Docker trigger..." >&2
+if [ "${TARGET_PLATFORM}" != "debian/stretch" ]; then
+    echo "not Debian Stretch, skipping Docker trigger..." >&2
     exit $success
 elif [ ! -e "pkgs/nightlies" ]; then
     echo "no new nightlies, skipping Docker trigger..." >&2
