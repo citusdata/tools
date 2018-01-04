@@ -80,7 +80,7 @@ esac
 
 needrelease=$(echo "${httpbody}" | jq -r "${jqfilter} | index(\"${pkglatest}\") < 0")
 if [ "${needrelease}" == "true" ]; then
-    citus_package -p "${TARGET_PLATFORM}" 'local' release
+    citus_package -p "${TARGET_PLATFORM}" 'local' release > citus_package.log
     mkdir -p pkgs/releases
     shopt -s nullglob
     mv ./*/*.rpm ./*/*.deb pkgs/releases
