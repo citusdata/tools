@@ -1,3 +1,11 @@
+### citustools v0.7.6 (February 7, 2018) ###
+
+* Update Debian patch URL
+
+### citustools v0.7.5 (January 16, 2018) ###
+
+* Add grep to check docker build output
+
 ### citustools v0.7.4 (November 15, 2017) ###
 
 * Switches nightly logic to detect Debian Stretch
