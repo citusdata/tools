@@ -32,11 +32,11 @@ else
   # to ensure our build uses the same directories as the PGDG build; un-
   # fortunately, not all can be specified by ./configure, so we apply the
   # version-specific packaging patch used for the PGDG builds
-  pkgingurl='https://anonscm.debian.org/git/pkg-postgresql/postgresql.git'
-  patchurl="${pkgingurl}/plain/debian/patches/50-per-version-dirs.patch"
+  debianscmurl='https://salsa.debian.org/postgresql/postgresql/raw'
+  patchurl="${pkgingurl}/${PGVERSION}/debian/patches/50-per-version-dirs.patch"
 
   # apply patch
-  curl -sf "${patchurl}?h=${PGVERSION}" | git -C postgresql apply
+  curl -sf "${patchurl}" | git -C postgresql apply
 fi
 
 # we will use this to parallelize PostgreSQL compilation
