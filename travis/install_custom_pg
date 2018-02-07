@@ -33,7 +33,7 @@ else
   # fortunately, not all can be specified by ./configure, so we apply the
   # version-specific packaging patch used for the PGDG builds
   debianscmurl='https://salsa.debian.org/postgresql/postgresql/raw'
-  patchurl="${pkgingurl}/${PGVERSION}/debian/patches/50-per-version-dirs.patch"
+  patchurl="${debianscmurl}/${PGVERSION}/debian/patches/50-per-version-dirs.patch"
 
   # apply patch
   curl -sf "${patchurl}" | git -C postgresql apply
