@@ -36,7 +36,7 @@ else
   patchurl="${debianscmurl}/${PGVERSION}/debian/patches/50-per-version-dirs.patch"
 
   # apply patch
-  curl -sf "${patchurl}" | git -C postgresql apply
+  curl -sf "${patchurl}" | git -C postgresql apply -C 1
 fi
 
 # we will use this to parallelize PostgreSQL compilation
