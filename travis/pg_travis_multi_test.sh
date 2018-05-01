@@ -13,7 +13,7 @@ sudo make install
 cd src/test/regress
 
 # Run tests. DBs owned by non-standard owner put socket in /tmp
-make check-multi check-multi-fdw check-worker || status=$?
+make check-failure || status=$?
 
 # Print diff if it exists
 if test -f regression.diffs; then cat regression.diffs; fi
