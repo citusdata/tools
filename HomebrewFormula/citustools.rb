@@ -1,11 +1,10 @@
 class Docker < Requirement
   fatal true
-  default_formula "docker"
 
   satisfy { which "docker" }
 
   def message
-    "Docker is required for this package."
+    "Docker is required. Get it at https://www.docker.com/docker-mac"
   end
 end
 
