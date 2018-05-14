@@ -7,7 +7,6 @@ VALGRIND_SCRIPTS := $(filter-out README.md Makefile,$(wildcard *))
 all:
 
 clean:
-	rm -f $(VALGRIND_SCRIPTS)
 
 install: all
 	$(INSTALL_SCRIPT) $(VALGRIND_SCRIPTS) $(DESTDIR)$(bindir)
