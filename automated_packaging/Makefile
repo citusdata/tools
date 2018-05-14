@@ -8,7 +8,10 @@ all:
 
 clean:
 
-install: all
+installdirs:
+	$(INSTALL) -d $(DESTDIR)$(bindir)
+
+install: all installdirs
 	$(INSTALL_SCRIPT) $(AUTOMATION_SCRIPTS) $(DESTDIR)$(bindir)
 	
-.PHONY: installdirs install
+.PHONY: clean installdirs install
