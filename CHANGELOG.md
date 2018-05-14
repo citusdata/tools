@@ -1,3 +1,9 @@
+### citustools v0.7.7 (May 14, 2018) ###
+
+* Add latest Ubuntu and Fedora releases
+
+* Remove use of `default_formula` in Homebrew formula
+
 ### citustools v0.7.6 (February 7, 2018) ###
 
 * Update Debian patch URL
