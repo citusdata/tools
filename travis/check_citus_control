@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if [ ! -f citus.control ]; then
+   echo "could not find citus.control"
+   exit 1
+fi
+
+if [ ! -f src/backend/distributed/citus.control ]; then
+  echo "could not find src/backend/distributed/citus.control"
+  exit 1
+fi
+
+STRIP_COMMENTS='s/#.*$//'
+DELETE_EMPTY_LINES='/^$/d'
+left=$(sed -e $STRIP_COMMENTS -e $DELETE_EMPTY_LINES citus.control)
+right=$(sed -e $STRIP_COMMENTS -e $DELETE_EMPTY_LINES src/backend/distributed/citus.control)
+
+ret=0
+diff <(echo $left) <(echo $right) || ret=$?
+
+if [ $ret -ne 0 ]; then
+  echo "citus.control and src/backend/distributed/citus.control must be the same"
+  echo "(ignoring comments and blank lines)"
+  exit $ret
+fi
