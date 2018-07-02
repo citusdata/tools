@@ -58,7 +58,10 @@ cd postgresql
 
 make -j "${mjobs}" -s all
 make -j "${mjobs}" -s -C src/test/isolation
+make -j "${mjobs}" -s -C contrib/pg_stat_statements
+
 sudo make install
+sudo make -C contrib/pg_stat_statements install
 
 # install postgresql-common to get psql wrappers, etc.
 sudo apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install postgresql-common
