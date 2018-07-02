@@ -60,9 +60,9 @@ if [ -s regression.diffs ]; then
 fi
 
 if [ -z "$attachments" ]; then
-    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Success" burak@citusdata.com metin@citusdata.com < /dev/null
+    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Success" burak@citusdata.com metin@citusdata.com furkan@citusdata.com < /dev/null
 else
-    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Failure" $attachments burak@citusdata.com metin@citusdata.com < /dev/null
+    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Failure" $attachments burak@citusdata.com metin@citusdata.com furkan@citusdata.com < /dev/null
 fi
 
 # just to ensure everything is completed in the test instance

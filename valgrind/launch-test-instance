@@ -13,10 +13,10 @@ echo "Starting an instance..."
 valgrind_instance_id=$(aws ec2 run-instances \
     --image-id ami-f4cc1de2 \
     --count 1 \
-    --instance-type m3.xlarge \
+    --instance-type r3.2xlarge \
     --key-name $key_name \
     --instance-initiated-shutdown-behavior terminate \
-    --user-data file://download-test-scripts \
+    --user-data file:///usr/local/bin/download-test-scripts \
     --query 'Instances[0].InstanceId' \
     --output text)
 
