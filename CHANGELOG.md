@@ -1,3 +1,13 @@
+### citustools v0.7.8 (July 02, 2018) ###
+
+* Install contrib packages during travis tests
+
+* Fix automated packaging install scripts
+
+* Switched to bigger instance for valgrind tests
+
+* Bump Homebrew version
+
 ### citustools v0.7.7 (May 14, 2018) ###
 
 * Add latest Ubuntu and Fedora releases
