@@ -1,3 +1,7 @@
+### citustools v0.7.9 (August 15, 2018) ###
+
+* Update PG11 build to use `REL_11_STABLE`, not `master`
+
 ### citustools v0.7.8 (July 02, 2018) ###
 
 * Install contrib packages during travis tests
