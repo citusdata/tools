@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""citus_dev
+
+Usage:
+  citus_dev make <name> [--size=<count>] [--port=<port>]
+  citus_dev restart <name> [--watch] [--port=<port>]
+  citus_dev (start|stop) <name> [--port=<port>]
+
+Options:
+  --size=<count>  Number of workers to create when 0 the coordinator will be added as a worker [default: 2]
+  --port=<port>   Port number to use for the coordinator. All workers take subsequent numbers [default: 9700]
+  --watch         Watch for changes to the citus plugin and restart the cluster when the plugin updates
+
+"""
+from docopt import docopt
+from subprocess import call
+from subprocess import Popen, PIPE
+import os
+import sys
+
+def main(arguments):
+	print(arguments)
+	if arguments["make"]:
+		cs = []
+		dir = "%s/coordinator" % arguments["<name>"]
+		cs.append("initdb -D %s" % dir)
+		cs.append("echo \"shared_preload_libraries = 'citus'\" >> %s/postgresql.conf" % dir)
+
+		size = int(arguments['--size'])
+
+		for i in range(size):
+			dir = "%s/worker%d" % (arguments["<name>"],i)
+			cs.append("initdb -D %s" % dir)
+			cs.append("echo \"shared_preload_libraries = 'citus'\" >> %s/postgresql.conf" % dir)
+			cs.append("echo \"wal_level = logical\" >> %s/postgresql.conf" % dir)
+
+		port = int(arguments['--port'])
+
+
+		cport = port
+		role = "coordinator"
+		cs.append('pg_ctl -D %s/%s -o "-p %d" -l %s_logfile start' % (arguments["<name>"], role, cport, role))
+		cport += 1
+
+		for i in range(size):
+			role = "worker%d" % i
+			cs.append('pg_ctl start -D %s/%s -o "-p %d" -l %s_logfile' % (arguments["<name>"], role, cport, role))
+			cport += 1
+
+		for i in range(size+1):
+			cs.append('psql -p %d -c "CREATE EXTENSION citus;"'%(port+i))
+
+		# If the cluster size is 0 we add the coordinator as the only node, otherwise we will add all other nodes
+		if size == 0:
+			cs.append("psql -p %d -c \"SELECT * from master_add_node('localhost', %d);\"" % (port, port))
+		else:
+			for i in range(size):
+				cs.append("psql -p %d -c \"SELECT * from master_add_node('localhost', %d);\"" % (port, port + 1 + i))
+
+		cs.append("psql -p %d -c \"SELECT * from master_get_active_worker_nodes();\"" % (port))
+
+		for c in cs:
+			print(c)
+			os.system(c)
+			print("")
+
+	elif arguments["stop"]:
+		cs = []
+		name = arguments["<name>"]
+		for role in getRoles(name):
+			cs.append("pg_ctl stop -D %s/%s"%(name, role))
+
+		for c in cs:
+			print(c)
+			os.system(c)
+			print("")
+
+	elif arguments["start"]:
+		cs = []
+		name = arguments["<name>"]
+		port = int(arguments["--port"])
+		cport = port
+		for role in getRoles(name):
+			cs.append('pg_ctl start -D %s/%s -o "-p %d" -l %s_logfile' % (name, role, cport, role))
+			cport += 1
+
+		for c in cs:
+			print(c)
+			os.system(c)
+			print("")
+
+	elif arguments["restart"]:
+		cs = []
+		name = arguments["<name>"]
+		port = int(arguments["--port"])
+		if arguments["--watch"]:
+			cs.append("fswatch -0 '%s' | xargs -0 -n 1 -I{} citus_dev restart %s --port=%d"%(citus_so(),name,port))
+
+		else:
+			cport = port
+			for role in getRoles(name):
+				cs.append('pg_ctl restart -D %s/%s -o "-p %d" -l %s_logfile' % (name, role, cport, role))
+				cport += 1
+
+		for c in cs:
+			print(c)
+			os.system(c)
+			print("")
+
+	else:
+		print("unknown command")
+		exit(1)
+
+def getRoles(name):
+	return [f.name for f in os.scandir(name) if f.is_dir() ]
+
+def pg_libdir():
+	process = Popen(["pg_config"], stdout=PIPE)
+	(output, err) = process.communicate()
+	exit_code = process.wait()
+
+	output = str(output)
+
+	for line in output.split('\\n'):
+		if line.startswith('LIBDIR'):
+			return line.split('=',1)[1].strip()
+
+	raise Exception("can't find postgres lib dir")
+
+def citus_so():
+	return pg_libdir() + "/citus.so"
+
+if __name__ == '__main__':
+	print(sys.argv)
+	main(docopt(__doc__, version='citus_dev'))
