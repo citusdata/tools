@@ -25,7 +25,7 @@ export PG_CONFIG=/usr/local/pgsql/bin/pg_config
 # download and install PostgreSQL
 git clone -b "REL_11_STABLE" --depth 1 git://git.postgresql.org/git/postgresql.git
 cd postgresql/
-./configure --enable-cassert --enable-debug CFLAGS="-ggdb -Og -DUSE_VALGRIND"
+./configure --with-openssl --enable-cassert --enable-debug CFLAGS="-ggdb -Og -DUSE_VALGRIND"
 
 # we will use this to parallelize PostgreSQL compilation
 procs="$(nproc)"
