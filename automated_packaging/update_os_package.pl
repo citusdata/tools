@@ -4,7 +4,10 @@ use common_functions;
 
 $DISTRO_VERSION = $ARGV[0];
 $PROJECT = $ARGV[1];
-$VERSION = $ARGV[2];
+$BASE_VERSION = $ARGV[2];
+$NEW_VERSION = $ARGV[3];
+$MIN_PG_VERSION = $ARGV[4];
+$MAX_PG_VERSION = $ARGV[5];
 
 # Name of the repo is represented differently on logs and repos
 my $github_repo_name = "citus";
@@ -15,6 +18,10 @@ if ( $PROJECT eq "enterprise" ) {
 }
 
 my $github_token = get_and_verify_token();
+my $new_point_version = substr($NEW_VERSION, -1, 1);
+my $new_minor_version = substr($NEW_VERSION, 0, -2);
+my $base_point_version = substr($BASE_VERSION, -1, 1);
+my $base_minor_version = substr($BASE_VERSION, 0, -2);
 
 # Debian branch has it's own changelog, we can get them through the CHANGELOG file of the code repo
 sub get_changelog_for_debian {
@@ -55,19 +62,40 @@ $year += 1900;
 $curTime = time();
 
 # Checkout the distro's branch
-`git checkout $DISTRO_VERSION-$PROJECT`;
+'git pull --all';
 
-# Create a new branch based on the distro's branch
-`git checkout -b $DISTRO_VERSION-$PROJECT-push-$curTime`;
+# If it's a new major version create a branch from the base version
+if ( $new_point_version eq '0' ) {
+    # First checkout to the base branch
+    `git checkout $DISTRO_VERSION-$PROJECT-$base_minor_version`;
 
-# Update pkgvars
-`sed -i 's/^pkglatest.*/pkglatest=$VERSION.citus-1/g' pkgvars`;
+    # Then create a new branch from that base, but first remove that branch
+    # in case of stale branch
+    `git branch -D $DISTRO_VERSION-$PROJECT-$new_minor_version`;
+    `git checkout -b $DISTRO_VERSION-$PROJECT-$new_minor_version`;
+
+    # Update pkgvars
+    `sed -i 's/^pkglatest.*/pkglatest=$NEW_VERSION.citus-1/g' pkgvars`;
+
+    # Update PG versions
+    @pg_versions_array = ($MIN_PG_VERSION..$MAX_PG_VERSION);
+    $pg_versions_string = join(',', @pg_versions_array);
+    `sed -i 's/^releasepg.*/releasepg=$pg_versions_string/g' pkgvars`;
+    `sed -i 's/^nightlypg.*/nightlypg=$pg_versions_string/g' pkgvars`;
+}
+else {
+    # Since it is a point release, we don't need to create a new branch
+    `git checkout $DISTRO_VERSION-$PROJECT-$new_minor_version`;
+
+    # Update pkgvars
+    `sed -i 's/^pkglatest.*/pkglatest=$NEW_VERSION.citus-1/g' pkgvars`;
+}
 
 # Based on the repo, update the package related variables
 if ( $DISTRO_VERSION eq "redhat" ) {
-    `sed -i 's|^Version:.*|Version:	$VERSION.citus|g' $github_repo_name.spec`;
-    `sed -i 's|^Source0:.*|Source0:       https:\/\/github.com\/citusdata\/$github_repo_name\/archive\/v$VERSION.tar.gz|g' $github_repo_name.spec`;
-    `sed -i 's|^%changelog|%changelog\\n* $abbr_day[$wday] $abbr_mon[$mon] $mday $year - Burak Velioglu <velioglub\@citusdata.com> $VERSION.citus-1\\n- Update to $log_repo_name $VERSION\\n|g' $github_repo_name.spec`;
+    `sed -i 's|^Version:.*|Version:	$NEW_VERSION.citus|g' $github_repo_name.spec`;
+    `sed -i 's|^Source0:.*|Source0:       https:\/\/github.com\/citusdata\/$github_repo_name\/archive\/v$NEW_VERSION.tar.gz|g' $github_repo_name.spec`;
+    `sed -i 's|^%changelog|%changelog\\n* $abbr_day[$wday] $abbr_mon[$mon] $mday $year - Burak Velioglu <velioglub\@citusdata.com> $NEW_VERSION.citus-1\\n- Update to $log_repo_name $NEW_VERSION\\n|g' $github_repo_name.spec`;
 }
 elsif ( $DISTRO_VERSION eq "debian" ) {
     open( DEB_CLOG_FILE, "<./debian/changelog" ) || die "Debian changelog file not found";
@@ -80,7 +108,7 @@ elsif ( $DISTRO_VERSION eq "debian" ) {
 
     # Update the changelog file of the debian branch
     open( DEB_CLOG_FILE, ">./debian/changelog" ) || die "Debian changelog file not found";
-    print DEB_CLOG_FILE "$github_repo_name ($VERSION.citus-1) stable; urgency=low\n";
+    print DEB_CLOG_FILE "$github_repo_name ($NEW_VERSION.citus-1) stable; urgency=low\n";
     print DEB_CLOG_FILE @changelog_print;
     print DEB_CLOG_FILE " -- Burak Velioglu <velioglub\@citusdata.com>  $abbr_day[$wday], $mday $abbr_mon[$mon] $year $print_hour:$min:$sec +0000\n\n";
     print DEB_CLOG_FILE @lines;
@@ -88,6 +116,6 @@ elsif ( $DISTRO_VERSION eq "debian" ) {
 }
 
 # Commit, push changes and open a pull request
-`git commit -a -m "Bump $DISTRO_VERSION $log_repo_name $VERSION"`;
-`git push origin $DISTRO_VERSION-$PROJECT-push-$curTime`;
-`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump $PROJECT $DISTRO_VERSION Version\", \"head\":\"$DISTRO_VERSION-$PROJECT-push-$curTime\", \"base\":\"$DISTRO_VERSION-$PROJECT\"}' https://api.github.com/repos/citusdata/packaging/pulls`;
+`git commit -a -m "Bump $DISTRO_VERSION $log_repo_name $NEW_VERSION"`;
+#`git push origin $DISTRO_VERSION-$PROJECT-push-$curTime`;
+#`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump $PROJECT $DISTRO_VERSION Version\", \"head\":\"$DISTRO_VERSION-$PROJECT-push-$curTime\", \"base\":\"$DISTRO_VERSION-$PROJECT\"}' https://api.github.com/repos/citusdata/packaging/pulls`;
