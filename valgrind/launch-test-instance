@@ -16,7 +16,7 @@ valgrind_instance_id=$(aws ec2 run-instances \
     --instance-type r3.2xlarge \
     --key-name $key_name \
     --instance-initiated-shutdown-behavior terminate \
-    --user-data file:///usr/local/bin/download-test-scripts \
+    --user-data file://download-test-scripts \
     --query 'Instances[0].InstanceId' \
     --output text)
 

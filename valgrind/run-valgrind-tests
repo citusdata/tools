@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+ulimit -c unlimited
+
 # download and install required packages
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq \
@@ -69,4 +71,4 @@ fi
 sleep 30
 
 # shut-down the instance, this will also terminate the instance because we set instance-initiated-shutdown-behavior to terminate
-sudo shutdown -h now
+# sudo shutdown -h now
