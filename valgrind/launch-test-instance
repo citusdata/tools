@@ -2,6 +2,17 @@
 
 set -euo pipefail
 
+REPORT_EMAIL=${REPORT_EMAIL:-burak@citusdata.com metin@citusdata.com furkan@citusdata.com}
+POSTGRES_GITREF=${POSTGRES_GITREF:-REL_11_STABLE}
+CITUS_GITREF=${CITUS_GITREF:-master}
+
+echo "ENV:"
+echo "     REPORT_EMAIL:" $REPORT_EMAIL
+echo "  POSTGRES_GITREF:" $POSTGRES_GITREF
+echo "     CITUS_GITREF:" $CITUS_GITREF
+
+read -p "Press enter to continue"
+
 # create a key pair just for valgrind tests and store it in valgrind-test.pem
 echo "Creating key pair..."
 key_name=valgrind_$RANDOM
@@ -19,6 +30,7 @@ valgrind_instance_id=$(aws ec2 run-instances \
     --user-data file://download-test-scripts \
     --query 'Instances[0].InstanceId' \
     --output text)
+echo "  instance id:" $valgrind_instance_id
 
 # tag the instance as ValgrindTest
 echo "Tagging the instance..."
@@ -41,7 +53,7 @@ valgrind_instance_ip=$(aws ec2 describe-instances \
 # run valgrind tests
 echo "Running the valgrind tests..."
 echo "This will take hours, test results will be sent via e-mail."
-ssh -o StrictHostKeyChecking=no -i $key_name.pem ubuntu@$valgrind_instance_ip "screen -d -m run-valgrind-tests"
+ssh -o StrictHostKeyChecking=no -i $key_name.pem ubuntu@$valgrind_instance_ip 'REPORT_EMAIL="${REPORT_EMAIL}" POSTGRES_GITREF="${POSTGRES_GITREF}" CITUS_GITREF="${CITUS_GITREF}" srceen -d -m run-valgrind-tests'
 
 echo login:
 echo "  " ssh -o StrictHostKeyChecking=no -i $key_name.pem ubuntu@$valgrind_instance_ip
