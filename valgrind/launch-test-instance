@@ -43,5 +43,11 @@ echo "Running the valgrind tests..."
 echo "This will take hours, test results will be sent via e-mail."
 ssh -o StrictHostKeyChecking=no -i $key_name.pem ubuntu@$valgrind_instance_ip "screen -d -m run-valgrind-tests"
 
+echo login:
+echo "  " ssh -o StrictHostKeyChecking=no -i $key_name.pem ubuntu@$valgrind_instance_ip
+echo
+
 #delete the key pair after we are done with tests
-aws ec2 delete-key-pair --key-name $key_name
+echo "please run when done"
+echo "  " aws ec2 delete-key-pair --key-name $key_name
+echo

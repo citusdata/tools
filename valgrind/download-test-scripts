@@ -13,5 +13,8 @@ apt-get install git make -y
 # download the test scripts
 git clone https://github.com/citusdata/tools.git
 cd tools
-git checkout add_ssl
+
+# TODO remove before merge
+git checkout valgring-custom-branch
+
 make install
