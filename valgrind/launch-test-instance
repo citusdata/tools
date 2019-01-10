@@ -53,7 +53,15 @@ valgrind_instance_ip=$(aws ec2 describe-instances \
 # run valgrind tests
 echo "Running the valgrind tests..."
 echo "This will take hours, test results will be sent via e-mail."
-ssh -o StrictHostKeyChecking=no -i $key_name.pem ubuntu@$valgrind_instance_ip 'REPORT_EMAIL="${REPORT_EMAIL}" POSTGRES_GITREF="${POSTGRES_GITREF}" CITUS_GITREF="${CITUS_GITREF}" srceen -d -m run-valgrind-tests'
+ssh \
+    -o IdentitiesOnly=yes \
+    -o StrictHostKeyChecking=no \
+    -i $key_name.pem \
+    ubuntu@$valgrind_instance_ip \
+    REPORT_EMAIL="${REPORT_EMAIL}" \
+    POSTGRES_GITREF="${POSTGRES_GITREF}" \
+    CITUS_GITREF="${CITUS_GITREF}" \
+    screen -d -m run-valgrind-tests
 
 echo login:
 echo "  " ssh -o StrictHostKeyChecking=no -i $key_name.pem ubuntu@$valgrind_instance_ip
