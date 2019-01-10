@@ -2,6 +2,17 @@
 
 set -euo pipefail
 
+REPORT_EMAIL=${REPORT_EMAIL:-burak@citusdata.com metin@citusdata.com furkan@citusdata.com}
+CITUS_GITREF=${CITUS_GITREF:-master}
+POSTGRES_GITREF=${POSTGRES_GITREF:-REL_11_STABLE}
+
+echo "ENV:"
+echo "     REPORT_EMAIL:" $REPORT_EMAIL
+echo "  POSTGRES_GITREF:" $POSTGRES_GITREF
+echo "     CITUS_GITREF:" $CITUS_GITREF
+
+ulimit -c unlimited
+
 # download and install required packages
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq \
@@ -20,31 +31,30 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq \
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
-export PG_CONFIG=/usr/local/pgsql/bin/pg_config
+export PATH=$HOME/pgsql/bin:$PATH
 
 # download and install PostgreSQL
-git clone -b "REL_10_STABLE" --depth 1 git://git.postgresql.org/git/postgresql.git
+git clone -b "${POSTGRES_GITREF}" --depth 1 git://git.postgresql.org/git/postgresql.git
 cd postgresql/
-./configure --enable-cassert --enable-debug CFLAGS="-ggdb -Og -DUSE_VALGRIND"
+./configure \
+    --prefix=$HOME/pgsql \
+    --with-openssl \
+    --enable-cassert \
+    --enable-debug \
+    CFLAGS="-ggdb -Og -DUSE_VALGRIND"
 
 # we will use this to parallelize PostgreSQL compilation
 procs="$(nproc)"
 mjobs="$((procs + 1))"
-make -j "${mjobs}" -s
-sudo make install
-export PATH=/usr/local/pgsql/bin:$PATH
+make install -j "${mjobs}" -s
 
 # download and install Citus
 cd ..
-git clone https://github.com/citusdata/citus.git
+git clone -b "${CITUS_GITREF}" --depth 1 https://github.com/citusdata/citus.git
 cd citus/
 ./configure
 make clean
-make -j8 -s
-sudo make install
-
-# this is necessary to start tests
-sudo chown ubuntu /usr/local/pgsql/bin/ -R
+make install -j "${mjobs}" -s
 
 # run valgrind tests
 cd src/test/regress
@@ -60,9 +70,9 @@ if [ -s regression.diffs ]; then
 fi
 
 if [ -z "$attachments" ]; then
-    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Success" burak@citusdata.com metin@citusdata.com furkan@citusdata.com < /dev/null
+    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Success" $REPORT_EMAIL < /dev/null
 else
-    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Failure" $attachments burak@citusdata.com metin@citusdata.com furkan@citusdata.com < /dev/null
+    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Failure" $attachments $REPORT_EMAIL < /dev/null
 fi
 
 # just to ensure everything is completed in the test instance
