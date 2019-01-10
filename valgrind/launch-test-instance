@@ -64,10 +64,8 @@ ssh \
     screen -d -m run-valgrind-tests
 
 echo login:
-echo "  " ssh -o StrictHostKeyChecking=no -i $key_name.pem ubuntu@$valgrind_instance_ip
+echo "  " ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -i $key_name.pem ubuntu@$valgrind_instance_ip
 echo
 
 #delete the key pair after we are done with tests
-echo "please run when done"
-echo "  " aws ec2 delete-key-pair --key-name $key_name
-echo
+aws ec2 delete-key-pair --key-name $key_name

@@ -54,7 +54,7 @@ git clone -b "${CITUS_GITREF}" --depth 1 https://github.com/citusdata/citus.git
 cd citus/
 ./configure
 make clean
-make install -j8 -s
+make install -j "${mjobs}" -s
 
 # run valgrind tests
 cd src/test/regress
