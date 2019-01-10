@@ -11,7 +11,11 @@ echo "     REPORT_EMAIL:" $REPORT_EMAIL
 echo "  POSTGRES_GITREF:" $POSTGRES_GITREF
 echo "     CITUS_GITREF:" $CITUS_GITREF
 
-read -p "Press enter to continue"
+# when running in a tty wait for the human to press enter, this is to allow the human to verify the settings
+# when running as a crontab it will just continue
+if [ -t 1 ] ; then
+    read -p "Press enter to continue"
+fi
 
 # create a key pair just for valgrind tests and store it in valgrind-test.pem
 echo "Creating key pair..."
