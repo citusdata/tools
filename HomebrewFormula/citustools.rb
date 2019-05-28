@@ -11,8 +11,8 @@ end
 class Citustools < Formula
   desc "Tools and config used in Citus Data projects."
   homepage "https://github.com/citusdata/tools"
-  url "https://github.com/citusdata/tools/archive/v0.7.7.tar.gz"
-  sha256 "5d3c29fb67575101c8b91c9bb4323d767646dae9f1a7fdc3d3a8871ff8401d81"
+  url "https://github.com/citusdata/tools/archive/v0.7.10.tar.gz"
+  sha256 "b16973b32c89be699e3f7924bc3afe04fe5d3c86407632d51b9e6ccf75a38f16"
 
   depends_on "uncrustify"
   depends_on Docker
