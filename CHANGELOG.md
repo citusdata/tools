@@ -1,3 +1,9 @@
+### citustools v0.7.10 (May 28, 2019) ###
+
+* Add custom branch support for valgrind tests
+
+* Add `--diff` option to `citus_indent`
+
 ### citustools v0.7.9 (August 15, 2018) ###
 
 * Update PG11 build to use `REL_11_STABLE`, not `master`
