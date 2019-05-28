@@ -9,14 +9,21 @@ use POSIX qw(setlocale LC_ALL);
 local $ENV{'PATH'} = '/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin';
 delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 
-my ($quiet, $check);
-exit 64 unless GetOptions ('quiet' => \$quiet, 'check' => \$check);
+my ($quiet, $check, $diff);
+exit 64 unless GetOptions ('quiet' => \$quiet, 'check' => \$check, 'diff' => \$diff);
 
-my $null_delimited_triples = `git ls-files -z | git check-attr --stdin -z citus-style`;
+my $null_delimited_triples = ($diff ? 
+    `git diff --cached --name-only -z | git check-attr --stdin -z citus-style` : 
+                     `git ls-files -z | git check-attr --stdin -z citus-style`
+);
 my @flattened_triples = split(/\x00/, $null_delimited_triples);
 my $exit_code = $? >> 8;
 
 die "could not list files under source control\n" if $exit_code;
+
+# exit if there are no files to check
+print "no files to check" if !@flattened_triples && !$quiet;
+exit if !@flattened_triples;
 
 my @files_to_format = ();
 my @formatter_args = qw(-c /usr/local/etc/citustools/citus-style.cfg);
@@ -87,6 +94,11 @@ Quiet Mode: do not show progress as files are being processed.
 Do not modify any files, instead simply verify that all files eligible for
 formatting are compliant with Citus Data style. The exit code I<EXIT_SUCCESS>
 signals that a codebase is compliant, otherwise I<EXIT_FAILURE> is used.
+
+=item B<--diff>
+
+Only check files that are staged for commit. This is primarily useful when used
+in a pre-commit hook as it is generally faster to only check the changed files.
 
 =back
 
