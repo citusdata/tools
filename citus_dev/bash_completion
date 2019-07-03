@@ -1,0 +1,52 @@
+# citus_dev completion
+
+_citus_dev()
+{
+    local cmd cur prev cmds opts clusters
+    COMPREPLY=()
+    _get_comp_words_by_ref cur prev
+    cmd="${COMP_WORDS[1]}"
+    cmds="make start stop restart"
+
+    case $prev in
+        make)
+            return 0
+            ;;
+        
+        start|stop|restart)
+            clusters=$(for x in `find . -type d -name 'coordinator' | awk -F '/' '{print $2}'`; do echo ${x} ; done );
+            COMPREPLY=($( compgen -W "${clusters}" -- "${cur}" ));
+            return 0
+            ;;
+    esac
+
+    case $cmd in
+        make)
+            opts="--size --port --use-ssl --no-extension --mx"
+            if [[ ${cur} == -* ]] ; then
+                COMPREPLY=($( compgen -W "${opts}" -- "${cur}"))
+            fi
+            return 0
+            ;;
+
+        start|stop)
+            opts="--port"
+            if [[ ${cur} == -* ]] ; then
+                COMPREPLY=($( compgen -W "${opts}" -- "${cur}"))
+            fi
+            return 0
+            ;;
+
+        restart)
+            opts="--port --watch"
+            if [[ ${cur} == -* ]] ; then
+                COMPREPLY=($( compgen -W "${opts}" -- "${cur}"))
+            fi
+            return 0
+            ;;
+    esac
+
+    COMPREPLY=($( compgen -W "${cmds}" -- "${cur}"))
+    return 0
+}
+complete -F _citus_dev citus_dev
