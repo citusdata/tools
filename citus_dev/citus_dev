@@ -2,7 +2,7 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx]
   citus_dev restart <name> [--watch] [--port=<port>]
   citus_dev (start|stop) <name> [--port=<port>]
 
@@ -12,6 +12,7 @@ Options:
   --watch         Watch for changes to the citus plugin and restart the cluster when the plugin updates
   --use-ssl       Create the cluster with ssl enabled
   --no-extension  Do not create the extension while creating the nodes
+  --mx            Enable metadata sync for all workers
 
 """
 from docopt import docopt
@@ -75,6 +76,8 @@ def main(arguments):
 			else:
 				for i in range(size):
 					cs.append("psql -p %d -c \"SELECT * from master_add_node('localhost', %d);\"" % (port, port + 1 + i))
+					if arguments['--mx']:
+						cs.append("psql -p %d -c \"SELECT start_metadata_sync_to_node('localhost', %d);\"" % (port, port + 1 + i))
 
 			cs.append("psql -p %d -c \"SELECT * from master_get_active_worker_nodes();\"" % (port))
 
