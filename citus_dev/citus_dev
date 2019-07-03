@@ -2,7 +2,7 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension]
   citus_dev restart <name> [--watch] [--port=<port>]
   citus_dev (start|stop) <name> [--port=<port>]
 
@@ -10,6 +10,8 @@ Options:
   --size=<count>  Number of workers to create when 0 the coordinator will be added as a worker [default: 2]
   --port=<port>   Port number to use for the coordinator. All workers take subsequent numbers [default: 9700]
   --watch         Watch for changes to the citus plugin and restart the cluster when the plugin updates
+  --use-ssl       Create the cluster with ssl enabled
+  --no-extension  Do not create the extension while creating the nodes
 
 """
 from docopt import docopt
@@ -18,21 +20,37 @@ from subprocess import Popen, PIPE
 import os
 import sys
 
+def createNodeCommands(clustername, role, index=None, usessl=False):
+	cs = []
+
+	nodename = role
+	if index != None:
+		nodename += "%d" % index
+
+	dir = "%s/%s" % (clustername, nodename)
+	cs.append("initdb -D %s" % dir)
+	cs.append("echo \"shared_preload_libraries = 'citus'\" >> %s/postgresql.conf" % dir)
+	cs.append("echo \"wal_level = logical\" >> %s/postgresql.conf" % dir)
+
+	if usessl:
+		cs.append("echo \"ssl = on\" >> %s/postgresql.conf" % dir)
+		cs.append("echo \"citus.node_conninfo = 'sslmode=require'\" >> %s/postgresql.conf" % dir)
+		cs.append("openssl req -new -x509 -days 365 -nodes -text -out %s/server.crt -keyout %s/server.key -subj '/CN=%s'" % (dir, dir, nodename))
+		cs.append("chmod 0600 %s/server.key" % dir)
+
+	return cs
+
 def main(arguments):
 	print(arguments)
 	if arguments["make"]:
 		cs = []
-		dir = "%s/coordinator" % arguments["<name>"]
-		cs.append("initdb -D %s" % dir)
-		cs.append("echo \"shared_preload_libraries = 'citus'\" >> %s/postgresql.conf" % dir)
+
+		cs += createNodeCommands(arguments["<name>"], "coordinator", usessl=arguments["--use-ssl"])
 
 		size = int(arguments['--size'])
 
 		for i in range(size):
-			dir = "%s/worker%d" % (arguments["<name>"],i)
-			cs.append("initdb -D %s" % dir)
-			cs.append("echo \"shared_preload_libraries = 'citus'\" >> %s/postgresql.conf" % dir)
-			cs.append("echo \"wal_level = logical\" >> %s/postgresql.conf" % dir)
+			cs += createNodeCommands(arguments["<name>"], "worker", i, usessl=arguments["--use-ssl"])
 
 		port = int(arguments['--port'])
 
@@ -47,17 +65,18 @@ def main(arguments):
 			cs.append('pg_ctl start -D %s/%s -o "-p %d" -l %s_logfile' % (arguments["<name>"], role, cport, role))
 			cport += 1
 
-		for i in range(size+1):
-			cs.append('psql -p %d -c "CREATE EXTENSION citus;"'%(port+i))
+		if not arguments["--no-extension"]:
+			for i in range(size+1):
+				cs.append('psql -p %d -c "CREATE EXTENSION citus;"'%(port+i))
 
-		# If the cluster size is 0 we add the coordinator as the only node, otherwise we will add all other nodes
-		if size == 0:
-			cs.append("psql -p %d -c \"SELECT * from master_add_node('localhost', %d);\"" % (port, port))
-		else:
-			for i in range(size):
-				cs.append("psql -p %d -c \"SELECT * from master_add_node('localhost', %d);\"" % (port, port + 1 + i))
+			# If the cluster size is 0 we add the coordinator as the only node, otherwise we will add all other nodes
+			if size == 0:
+				cs.append("psql -p %d -c \"SELECT * from master_add_node('localhost', %d);\"" % (port, port))
+			else:
+				for i in range(size):
+					cs.append("psql -p %d -c \"SELECT * from master_add_node('localhost', %d);\"" % (port, port + 1 + i))
 
-		cs.append("psql -p %d -c \"SELECT * from master_get_active_worker_nodes();\"" % (port))
+			cs.append("psql -p %d -c \"SELECT * from master_get_active_worker_nodes();\"" % (port))
 
 		for c in cs:
 			print(c)
@@ -112,7 +131,9 @@ def main(arguments):
 		exit(1)
 
 def getRoles(name):
-	return [f.name for f in os.scandir(name) if f.is_dir() ]
+	roles = [ f.name for f in os.scandir(name) if f.is_dir() ]
+	roles.sort()
+	return roles
 
 def pg_libdir():
 	process = Popen(["pg_config"], stdout=PIPE)
