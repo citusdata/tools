@@ -21,7 +21,7 @@ from subprocess import Popen, PIPE
 import os
 import sys
 
-def createNodeCommands(clustername, role, index=None, usessl=False):
+def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
 	cs = []
 
 	nodename = role
@@ -39,6 +39,9 @@ def createNodeCommands(clustername, role, index=None, usessl=False):
 		cs.append("openssl req -new -x509 -days 365 -nodes -text -out %s/server.crt -keyout %s/server.key -subj '/CN=%s'" % (dir, dir, nodename))
 		cs.append("chmod 0600 %s/server.key" % dir)
 
+	if mx:
+		cs.append("echo \"citus.replication_model = 'streaming'\" >> %s/postgresql.conf" % dir)
+
 	return cs
 
 def main(arguments):
@@ -46,12 +49,12 @@ def main(arguments):
 	if arguments["make"]:
 		cs = []
 
-		cs += createNodeCommands(arguments["<name>"], "coordinator", usessl=arguments["--use-ssl"])
+		cs += createNodeCommands(arguments["<name>"], "coordinator", usessl=arguments["--use-ssl"], mx=arguments["--mx"])
 
 		size = int(arguments['--size'])
 
 		for i in range(size):
-			cs += createNodeCommands(arguments["<name>"], "worker", i, usessl=arguments["--use-ssl"])
+			cs += createNodeCommands(arguments["<name>"], "worker", i, usessl=arguments["--use-ssl"], mx=arguments["--mx"])
 
 		port = int(arguments['--port'])
 
