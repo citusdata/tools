@@ -10,13 +10,7 @@ if [ -n "${USE_CUSTOM_PG:-}" ]; then
 fi
 
 # always install postgresql-common
-packages="postgresql-common postgresql-contrib-$PGVERSION libedit-dev libpam0g-dev libselinux1-dev"
-
-# we set PGVERSION to 10x of the Citus version when testing Citus, so
-# only install PostgreSQL proper if it's 10 or lower
-if [ "${PGVERSION//./}" -le "100" ]; then
-    packages="$packages postgresql-$PGVERSION postgresql-server-dev-$PGVERSION"
-fi
+packages="postgresql-common postgresql-contrib-$PGVERSION libedit-dev libpam0g-dev libselinux1-dev postgresql-$PGVERSION postgresql-server-dev-$PGVERSION"
 
 # shellcheck disable=SC2086
 sudo apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install $packages
