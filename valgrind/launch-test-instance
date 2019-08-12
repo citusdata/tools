@@ -2,7 +2,13 @@
 
 set -euo pipefail
 
-REPORT_EMAIL=${REPORT_EMAIL:-burak@citusdata.com metin@citusdata.com furkan@citusdata.com}
+REPORT_EMAIL=${REPORT_EMAIL:-burak@citusdata.com \
+                             furkan@citusdata.com \
+                             metin@citusdata.com \
+                             Burak.Yucesoy@microsoft.com \
+                             Furkan.Sahin@microsoft.com \
+                             Hanefi.Onaldi@microsoft.com \
+                             Metin.Doslu@microsoft.com }
 POSTGRES_GITREF=${POSTGRES_GITREF:-REL_11_STABLE}
 CITUS_GITREF=${CITUS_GITREF:-master}
 
