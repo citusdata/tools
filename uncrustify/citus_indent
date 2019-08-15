@@ -12,8 +12,8 @@ delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 my ($quiet, $check, $diff);
 exit 64 unless GetOptions ('quiet' => \$quiet, 'check' => \$check, 'diff' => \$diff);
 
-my $null_delimited_triples = ($diff ? 
-    `git diff --cached --name-only -z | git check-attr --stdin -z citus-style` : 
+my $null_delimited_triples = ($diff ?
+    `git diff --cached --name-only --diff-filter=ACMR -z | git check-attr --stdin -z citus-style` :
                      `git ls-files -z | git check-attr --stdin -z citus-style`
 );
 my @flattened_triples = split(/\x00/, $null_delimited_triples);
@@ -36,7 +36,7 @@ while(my ($filename, $attrname, $attrvalue) = splice(@flattened_triples, 0, 3)) 
 
     # untaint filename and error if '..' is present
     if ($filename =~ /^(.*(?!\.\.)$)/) {
-        push @files_to_format, $1;        
+        push @files_to_format, $1;
     } else {
         die "illegal filename\n";
     }
