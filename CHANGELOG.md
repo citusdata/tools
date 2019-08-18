@@ -1,3 +1,13 @@
+### citustools v0.7.11 (Aughust 18, 2019) ###
+
+* Bump Homebrew formula
+
+* Update couple of uncrustify settings
+
+* Update alpine dockerfiles
+
+* Use Microsoft mails for Valgrind test results
+
 ### citustools v0.7.10 (May 28, 2019) ###
 
 * Add custom branch support for valgrind tests
