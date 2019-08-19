@@ -2,7 +2,7 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy]
   citus_dev restart <name> [--watch] [--port=<port>]
   citus_dev (start|stop) <name> [--port=<port>]
 
@@ -13,6 +13,7 @@ Options:
   --use-ssl       Create the cluster with ssl enabled
   --no-extension  Do not create the extension while creating the nodes
   --mx            Enable metadata sync for all workers
+  --destroy       Destroy any old cluster with the same name
 
 """
 from docopt import docopt
@@ -58,6 +59,11 @@ def main(arguments):
     print(arguments)
     if arguments["make"]:
         cs = []
+        if arguments['--destroy']:
+            name = arguments["<name>"]
+            for role in getRoles(name):
+                cs.append("pg_ctl stop -D %s/%s" % (name, role))
+            cs.append('rm -rf %s' % (name))
 
         cs += createNodeCommands(
             arguments["<name>"],
