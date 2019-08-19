@@ -2,18 +2,19 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy] [--init-with=<sql_file>]
   citus_dev restart <name> [--watch] [--port=<port>]
   citus_dev (start|stop) <name> [--port=<port>]
 
 Options:
-  --size=<count>  Number of workers to create when 0 the coordinator will be added as a worker [default: 2]
-  --port=<port>   Port number to use for the coordinator. All workers take subsequent numbers [default: 9700]
-  --watch         Watch for changes to the citus plugin and restart the cluster when the plugin updates
-  --use-ssl       Create the cluster with ssl enabled
-  --no-extension  Do not create the extension while creating the nodes
-  --mx            Enable metadata sync for all workers
-  --destroy       Destroy any old cluster with the same name
+  --size=<count>           Number of workers to create when 0 the coordinator will be added as a worker [default: 2]
+  --port=<port>            Port number to use for the coordinator. All workers take subsequent numbers [default: 9700]
+  --watch                  Watch for changes to the citus plugin and restart the cluster when the plugin updates
+  --use-ssl                Create the cluster with ssl enabled
+  --no-extension           Do not create the extension while creating the nodes
+  --mx                     Enable metadata sync for all workers
+  --destroy                Destroy any old cluster with the same name
+  --init-with=<sql_file>   A SQL script to run after creation of the cluster to set up any necessary tables and data
 
 """
 from docopt import docopt
@@ -91,15 +92,17 @@ def main(arguments):
             'pg_ctl -D %s/%s -o "-p %d" -l %s_logfile start'
             % (arguments["<name>"], role, cport, role)
         )
-        cport += 1
+        port += 1
 
         for i in range(size):
             role = "worker%d" % i
             cs.append(
                 'pg_ctl start -D %s/%s -o "-p %d" -l %s_logfile'
-                % (arguments["<name>"], role, cport, role)
+                % (arguments["<name>"], role, port, role)
             )
-            cport += 1
+            port += 1
+        port = cport
+
 
         if not arguments["--no-extension"]:
             for i in range(size + 1):
@@ -127,6 +130,8 @@ def main(arguments):
                 'psql -p %d -c "SELECT * from master_get_active_worker_nodes();"'
                 % (port)
             )
+        if arguments['--init-with']:
+            cs.append('psql -p %d -f %s' % (cport, arguments['--init-with']))
 
         for c in cs:
             print(c)
