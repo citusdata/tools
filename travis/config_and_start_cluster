@@ -19,4 +19,4 @@ then
 fi
 
 # Start cluster
-sudo pg_ctlcluster "${PGVERSION}" test start
+pg_ctlcluster "${PGVERSION}" test start
