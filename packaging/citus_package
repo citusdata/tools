@@ -25,10 +25,10 @@ use constant PACKAGE_URL =>       ## no critic (ProhibitConstantPragma)
   'https://github.com/citusdata/packaging/archive';
 
 my %supported_platforms = (
-    debian => [ "stretch", "jessie", "wheezy"],
-    el     => [ "7",      "6" ],
+    debian => [ "buster", "stretch", "jessie", "wheezy"],
+    el     => [ "8",      "7",      "6" ],
     fedora => [ "28",     "27",      "26"],
-    ol     => [ "7",      "6" ],
+    ol     => [ "8",      "7",      "6" ],
     ubuntu => [ "bionic", "xenial", "trusty" ],
     pgxn => [""]
 );
@@ -494,11 +494,15 @@ to sign packages.
 
 =over 4
 
+=item I<debian/buster> Debian 10 "Buster"
+
 =item I<debian/stretch> Debian 9 "Stretch"
 
 =item I<debian/jessie>  Debian 8 "Jessie"
 
 =item I<debian/wheezy>  Debian 7 "Wheezy"
+
+=item I<el/8>           Enterprise Linux 8.0 (CentOS, RedHat, Amazon Linux)
 
 =item I<el/7>           Enterprise Linux 7.0 (CentOS, RedHat, Amazon Linux)
 
@@ -509,6 +513,8 @@ to sign packages.
 =item I<fedora/27>      Fedora 27
 
 =item I<fedora/26>      Fedora 26
+
+=item I<ol/8>           Oracle Linux 8.0
 
 =item I<ol/7>           Oracle Linux 7.0
 
