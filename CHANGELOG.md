@@ -1,4 +1,16 @@
-### citustools v0.7.11 (Aughust 18, 2019) ###
+### citustools v0.7.13 (October 09, 2019) ###
+
+* Introduces `citus_dev`
+
+* Adds Debian Bionic and EL/OL 8 to supported packaging versions
+
+* Changes the docker hub org from CitusData to Citus for packaging
+
+### citustools v0.7.12 (September 02, 2019) ###
+
+* Add support for testing against PostgreSQL 12
+
+### citustools v0.7.11 (August 18, 2019) ###
 
 * Bump Homebrew formula
 
