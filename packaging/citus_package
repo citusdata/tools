@@ -369,7 +369,7 @@ foreach my $platform (@platforms) {
             "$filesubdir:/buildfiles:ro",
             '-e',
             "GITHUB_TOKEN",
-            "citusdata/packaging:$docker_platform-$pg",
+            "citus/packaging:$docker_platform-$pg",
             $build_type
         );
 
@@ -547,7 +547,7 @@ Citus package, only the I<release> build type may be used.
 
 =item L<Citus Packaging on GitHub|https://github.com/citusdata/packaging>
 
-=item L<Citus Packaging on Docker Hub|https://hub.docker.com/r/citusdata/packaging>
+=item L<Citus Packaging on Docker Hub|https://hub.docker.com/r/citus/packaging>
 
 =item L<Docker|https://www.docker.com>
 
