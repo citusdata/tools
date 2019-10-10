@@ -22,6 +22,7 @@ from subprocess import call
 from subprocess import Popen, PIPE
 import os
 import sys
+import getpass
 
 
 def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
@@ -103,6 +104,9 @@ def main(arguments):
             port += 1
         port = cport
 
+        if getpass.getuser() != 'postgres' and not os.getenv('PGDATABASE'):
+            for i in range(size + 1):
+                cs.append('createdb -p %d' % (port + i))
 
         if not arguments["--no-extension"]:
             for i in range(size + 1):
