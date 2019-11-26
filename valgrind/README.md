@@ -25,7 +25,7 @@ To clone enterprise-master, it will ask you to enter your github credentials.
 Run this script in a detachable session (tmux, screen ..) for detaching after the valgrind test starts.
 It does not send an email for logs.txt etc. for now
 
-launc-test-instance:
+launch-test-instance:
 --------------------
 This script creates an instance on ec2 (just like in the develop branch).
 However, it does not start valgrind testing, does not send email and does not shutdown the machine.
@@ -38,4 +38,5 @@ TODO: improvements to be done on this branch before merging to develop (and then
 - parameterize enterprise repository branch name.
 - parameterize and divide the pipeline into steps (install postgresql, install citus, just run the tests or all etc.).
 - parameterize testing on community or enterprise repository.
+- filter the valgrind log with bash commands before sending the email
 
