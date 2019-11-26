@@ -2,22 +2,8 @@
 
 set -euo pipefail
 
-REPORT_EMAIL=${REPORT_EMAIL:-burak@citusdata.com \
-                             furkan@citusdata.com \
-                             metin@citusdata.com \
-                             Burak.Yucesoy@microsoft.com \
-                             Furkan.Sahin@microsoft.com \
-                             Hanefi.Onaldi@microsoft.com \
-                             Metin.Doslu@microsoft.com }
-CITUS_GITREF=${CITUS_GITREF:-master}
-POSTGRES_GITREF=${POSTGRES_GITREF:-REL_11_STABLE}
-
-echo "ENV:"
-echo "     REPORT_EMAIL:" $REPORT_EMAIL
-echo "  POSTGRES_GITREF:" $POSTGRES_GITREF
-echo "     CITUS_GITREF:" $CITUS_GITREF
-
-ulimit -c unlimited
+CITUS_GITREF=${CITUS_GITREF:-enterprise-master}
+POSTGRES_GITREF=${POSTGRES_GITREF:-REL_12_STABLE}
 
 # download and install required packages
 sudo apt-get update
@@ -31,6 +17,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq \
     libssl-dev \
     valgrind \
     mailutils \
+    uuid-dev \ # for propagate-extension-commands.sql regression test 
     libcurl4-openssl-dev
 
 # set environment variables
@@ -40,6 +27,7 @@ export LANGUAGE=en_US.UTF-8
 export PATH=$HOME/pgsql/bin:$PATH
 
 # download and install PostgreSQL
+rm -rf postgresql/
 git clone -b "${POSTGRES_GITREF}" --depth 1 git://git.postgresql.org/git/postgresql.git
 cd postgresql/
 ./configure \
@@ -47,17 +35,27 @@ cd postgresql/
     --with-openssl \
     --enable-cassert \
     --enable-debug \
+    --with-uuid=e2fs \
     CFLAGS="-ggdb -Og -DUSE_VALGRIND"
 
 # we will use this to parallelize PostgreSQL compilation
 procs="$(nproc)"
 mjobs="$((procs + 1))"
+
+# install postgresql
 make install -j "${mjobs}" -s
 
-# download and install Citus
-cd ..
-git clone -b "${CITUS_GITREF}" --depth 1 https://github.com/citusdata/citus.git
-cd citus/
+# install contrib extensions
+cd contrib/
+make clean
+make -j "${mjobs}" -s
+sudo make install
+
+# download and install citus-enterprise master
+cd ~
+rm -rf citus-enterprise/
+git clone -b "${CITUS_GITREF}" --depth 2 https://github.com/citusdata/citus-enterprise.git
+cd citus-enterprise/
 ./configure
 make clean
 make install -j "${mjobs}" -s
@@ -65,24 +63,3 @@ make install -j "${mjobs}" -s
 # run valgrind tests
 cd src/test/regress
 make check-multi-vg VALGRIND_LOG_FILE=logs.txt || true
-
-attachments=""
-if [ -s logs.txt ]; then
-    attachments=$attachments" -A logs.txt"
-fi
-
-if [ -s regression.diffs ]; then
-    attachments=$attachments" -A regression.diffs"
-fi
-
-if [ -z "$attachments" ]; then
-    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Success" $REPORT_EMAIL < /dev/null
-else
-    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Failure" $attachments $REPORT_EMAIL < /dev/null
-fi
-
-# just to ensure everything is completed in the test instance
-sleep 30
-
-# shut-down the instance, this will also terminate the instance because we set instance-initiated-shutdown-behavior to terminate
-sudo shutdown -h now

@@ -2,27 +2,6 @@
 
 set -euo pipefail
 
-REPORT_EMAIL=${REPORT_EMAIL:-burak@citusdata.com \
-                             furkan@citusdata.com \
-                             metin@citusdata.com \
-                             Burak.Yucesoy@microsoft.com \
-                             Furkan.Sahin@microsoft.com \
-                             Hanefi.Onaldi@microsoft.com \
-                             Metin.Doslu@microsoft.com }
-POSTGRES_GITREF=${POSTGRES_GITREF:-REL_11_STABLE}
-CITUS_GITREF=${CITUS_GITREF:-master}
-
-echo "ENV:"
-echo "     REPORT_EMAIL:" $REPORT_EMAIL
-echo "  POSTGRES_GITREF:" $POSTGRES_GITREF
-echo "     CITUS_GITREF:" $CITUS_GITREF
-
-# when running in a tty wait for the human to press enter, this is to allow the human to verify the settings
-# when running as a crontab it will just continue
-if [ -t 1 ] ; then
-    read -p "Press enter to continue"
-fi
-
 # create a key pair just for valgrind tests and store it in valgrind-test.pem
 echo "Creating key pair..."
 key_name=valgrind_$RANDOM
@@ -60,22 +39,19 @@ valgrind_instance_ip=$(aws ec2 describe-instances \
     --query 'Reservations[0].Instances[0].PublicIpAddress' \
     --output text)
 
-# run valgrind tests
-echo "Running the valgrind tests..."
-echo "This will take hours, test results will be sent via e-mail."
-ssh \
+# put the script to be run for installation and tests 
+scp \
     -o IdentitiesOnly=yes \
     -o StrictHostKeyChecking=no \
     -i $key_name.pem \
-    ubuntu@$valgrind_instance_ip \
-    REPORT_EMAIL="${REPORT_EMAIL}" \
-    POSTGRES_GITREF="${POSTGRES_GITREF}" \
-    CITUS_GITREF="${CITUS_GITREF}" \
-    screen -d -m run-valgrind-tests
+    run-valgrind-tests ubuntu@$valgrind_instance_ip:~/
+
+echo "Go to your instance with below ssh command and run ~/run-valgrind-tests in a detachable session..."
+echo "You are required to enter github credentials to fetch enterprise repository"
 
 echo login:
 echo "  " ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -i $key_name.pem ubuntu@$valgrind_instance_ip
 echo
 
-#delete the key pair after we are done with tests
 aws ec2 delete-key-pair --key-name $key_name
+
