@@ -3,8 +3,10 @@
 def stripdebuginfo:
     map(
         select(
-            .name |
-            endswith("debuginfo") |
+            (.name | endswith("debuginfo"))   or
+            (.name | endswith("dbgsym"))      or
+            (.name | startswith("citus-ha-")) or
+            (.name | startswith("pg-auto-failover-cli")) |
             not
         )
     )
