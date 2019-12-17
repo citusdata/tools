@@ -47,7 +47,7 @@ def pkgnameandpgversion(name):
             ($parts[:-1] | join("_") |              # name portion (before PG version)
              sub("\\d{2}$"; "")      |              # replace fancy version portion
              sub("^pg_cron$"; "pgcron")),           # normalize pg_cron to pgcron
-            $parts[-1][0:1] + "." + $parts[-1][1:2] # PG version portion
+            $parts[-1][:2] | sub("^9"; "9.")        # PG version portion
         ]
     end
 ;
