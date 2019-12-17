@@ -115,7 +115,8 @@ def filterbuilds(since):
                       failed: null,
                       errored: null,
                       canceled: null})) and
-         ((.number | tonumber) > since)
+         ((.number | tonumber) > since) and
+         .started_at
   )
 ;
 
