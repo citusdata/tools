@@ -82,7 +82,8 @@ def makerow(r):
                       (?<m>\\d{2})   # month
                       (?<d>\\d{2})Z$ # day";
                     "\(.y)-\(.m)-\(.d)"; "ix")),
-        .value
+        .value,
+        "PackageCloud"
     ] |
     flatten
 ;
@@ -106,7 +107,8 @@ def makeclonerows(name):
         null,
         "HEAD",
         ( .timestamp | split("T")[0]),
-        .count
+        .count,
+        "GitHub"
     ]
 ;
 
@@ -145,7 +147,8 @@ def makegemrows(name):
         null,
         .number,
         $today,
-        .downloads_count
+        .downloads_count,
+        "RubyGems"
     ]
   )
 ;
@@ -160,7 +163,8 @@ def makepullrow(name):
         null,
         "all",
         ((now - 86400) | strftime("%Y-%m-%d")),
-        .pull_count
+        .pull_count,
+        "Docker Hub"
     ]
 ;
 
@@ -195,6 +199,7 @@ def makebrewrows(name):
       null,
       $version,
       brewdate(.[0]),
-      .[1]])
+      .[1],
+      "Homebrew"])
     ) | flatten(1)
 ;
