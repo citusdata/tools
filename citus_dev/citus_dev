@@ -2,7 +2,7 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy] [--init-with=<sql_file>]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy] [--init-with=<sql_file>] [--zero-downtime] [--zd1=<sql_file>] [--zd2=<sql_file>]
   citus_dev restart <name> [--watch] [--port=<port>]
   citus_dev (start|stop) <name> [--port=<port>]
 
@@ -15,59 +15,66 @@ Options:
   --mx                     Enable metadata sync for all workers
   --destroy                Destroy any old cluster with the same name
   --init-with=<sql_file>   A SQL script to run after creation of the cluster to set up any necessary tables and data
+  --zero-downtime          Set up servers for zero downtime upgrade
+  --zd1=<sql_file>         sql to run between pg_start_backup and pg_basebackup
+  --zd2=<sql_file>                   sql to run after pg_basebackup
 
 """
 from docopt import docopt
 from subprocess import call
 from subprocess import Popen, PIPE
 import os
+import subprocess
 import sys
 import getpass
+import time
+
+
+def run(command, *args, **kwargs):
+    print(command)
+    result = subprocess.run(command, *args, check=True, shell=True, **kwargs)
+    print()
+    return result
 
 
 def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
-    cs = []
-
     nodename = role
     if index != None:
         nodename += "%d" % index
 
     dir = "%s/%s" % (clustername, nodename)
-    cs.append("initdb -D %s" % dir)
-    cs.append("echo \"shared_preload_libraries = 'citus'\" >> %s/postgresql.conf" % dir)
-    cs.append('echo "wal_level = logical" >> %s/postgresql.conf' % dir)
+    run("initdb -D %s" % dir)
+    run("echo \"shared_preload_libraries = 'citus'\" >> %s/postgresql.conf" % dir)
+    run('echo "wal_level = logical" >> %s/postgresql.conf' % dir)
 
     if usessl:
-        cs.append('echo "ssl = on" >> %s/postgresql.conf' % dir)
-        cs.append(
+        run('echo "ssl = on" >> %s/postgresql.conf' % dir)
+        run(
             "echo \"citus.node_conninfo = 'sslmode=require'\" >> %s/postgresql.conf"
             % dir
         )
-        cs.append(
+        run(
             "openssl req -new -x509 -days 365 -nodes -text -out %s/server.crt -keyout %s/server.key -subj '/CN=%s'"
             % (dir, dir, nodename)
         )
-        cs.append("chmod 0600 %s/server.key" % dir)
+        run("chmod 0600 %s/server.key" % dir)
 
     if mx:
-        cs.append(
+        run(
             "echo \"citus.replication_model = 'streaming'\" >> %s/postgresql.conf" % dir
         )
-
-    return cs
 
 
 def main(arguments):
     print(arguments)
     if arguments["make"]:
-        cs = []
         if arguments['--destroy']:
             name = arguments["<name>"]
             for role in getRoles(name):
-                cs.append("pg_ctl stop -D %s/%s" % (name, role))
-            cs.append('rm -rf %s' % (name))
+                run("pg_ctl stop -D %s/%s || true" % (name, role))
+            run('rm -rf %s' % (name))
 
-        cs += createNodeCommands(
+        createNodeCommands(
             arguments["<name>"],
             "coordinator",
             usessl=arguments["--use-ssl"],
@@ -77,7 +84,7 @@ def main(arguments):
         size = int(arguments["--size"])
 
         for i in range(size):
-            cs += createNodeCommands(
+            createNodeCommands(
                 arguments["<name>"],
                 "worker",
                 i,
@@ -89,15 +96,17 @@ def main(arguments):
 
         cport = port
         role = "coordinator"
-        cs.append(
+        run(
             'pg_ctl -D %s/%s -o "-p %d" -l %s_logfile start'
             % (arguments["<name>"], role, cport, role)
         )
         port += 1
 
+        worker_ports = []
         for i in range(size):
             role = "worker%d" % i
-            cs.append(
+            worker_ports.append(port)
+            run(
                 'pg_ctl start -D %s/%s -o "-p %d" -l %s_logfile'
                 % (arguments["<name>"], role, port, role)
             )
@@ -106,76 +115,98 @@ def main(arguments):
 
         if getpass.getuser() != 'postgres' and not os.getenv('PGDATABASE'):
             for i in range(size + 1):
-                cs.append('createdb -p %d' % (port + i))
+                run('createdb -p %d' % (port + i))
 
         if not arguments["--no-extension"]:
             for i in range(size + 1):
-                cs.append('psql -p %d -c "CREATE EXTENSION citus;"' % (port + i))
+                run('psql -p %d -c "CREATE EXTENSION citus;"' % (port + i))
 
             # If the cluster size is 0 we add the coordinator as the only node, otherwise we will add all other nodes
             if size == 0:
-                cs.append(
+                run(
                     "psql -p %d -c \"SELECT * from master_add_node('localhost', %d);\""
                     % (port, port)
                 )
             else:
                 for i in range(size):
-                    cs.append(
+                    run(
                         "psql -p %d -c \"SELECT * from master_add_node('localhost', %d);\""
                         % (port, port + 1 + i)
                     )
                     if arguments["--mx"]:
-                        cs.append(
+                        run(
                             "psql -p %d -c \"SELECT start_metadata_sync_to_node('localhost', %d);\""
                             % (port, port + 1 + i)
                         )
 
-            cs.append(
+            run(
                 'psql -p %d -c "SELECT * from master_get_active_worker_nodes();"'
                 % (port)
             )
         if arguments['--init-with']:
-            cs.append('psql -p %d -f %s' % (cport, arguments['--init-with']))
+            run('psql -p %d -f %s' % (cport, arguments['--init-with']))
 
-        for c in cs:
-            print(c)
-            os.system(c)
-            print("")
+        if arguments['--zero-downtime']:
+            for i, port in enumerate(worker_ports):
+                role = f"newworker{i}"
+                pgdir = f"{name}/{role}"
+                run(f"psql -p {port} -c \"SELECT * FROM pg_create_logical_replication_slot('marco_slot', 'pgoutput');\"")
+                if arguments['--zd1']:
+                    run(f"psql -p {cport} -f {arguments['--zd1']}")
+                result = run(f"psql -p {port} --no-psqlrc --no-align --tuples-only -c \"SELECT * FROM pg_start_backup('zero-downtime', true);\"", stdout=subprocess.PIPE)
+                lsn = result.stdout.decode().strip()
+                print("THE LSN IS ", lsn)
+                result4 = run(f"psql -p {port} --no-psqlrc --no-align --tuples-only -c \"SELECT * FROM pg_create_restore_point('zero-downtime-restore');\"", stdout=subprocess.PIPE)
+                print("THE LSN IS ", lsn)
+                lsn4 = result4.stdout.decode().strip()
+                run(f"psql -p {port} -c \"select pg_current_wal_lsn();\"")
+                # run(f"pg_basebackup -p {port} -D {pgdir} --write-recovery-conf")
+                run(f"cp -R {name}/worker{i} {pgdir}")
+                run(f"rm {pgdir}/postmaster.pid")
+                run(f"rm {pgdir}/backup_label")
+                if arguments['--zd2']:
+                    run(f"psql -p {cport} -f {arguments['--zd2']}")
+                result2 = run(f"psql -p {port} --no-psqlrc --no-align --tuples-only -c \"SELECT * FROM pg_stop_backup();\"", stdout=subprocess.PIPE)
+                lsn2 = result2.stdout.decode().strip()
+                result3 = run("grep 'CHECKPOINT LOCATION: ' zero-downtime/newworker0/backup_label | sed 's/CHECKPOINT LOCATION: //'", stdout=subprocess.PIPE)
+                lsn3 = result3.stdout.decode().strip()
+                
+                run(f"echo \"recovery_target_lsn = '{lsn}'\" > {pgdir}/recovery.conf")
+                run(f"echo \"recovery_target_lsn = '{lsn2}'\" > {pgdir}/recovery.conf")
+                run(f"echo \"recovery_target_lsn = '{lsn3}'\" > {pgdir}/recovery.conf")
+                run(f"echo \"recovery_target_lsn = '{lsn4}'\" > {pgdir}/recovery.conf")
+                # run(f"echo \"recovery_target_name = 'zero-downtime-restore'\" > {pgdir}/recovery.conf")
+                run(f"echo \"recovery_target_inclusive  = true\" >> {pgdir}/recovery.conf")
+                run(f"echo \"restore_command  = 'true'\" >> {pgdir}/recovery.conf")
+                run(f"echo \"standby_mode = 'off'\" >> {pgdir}/recovery.conf")
+                run(f'pg_ctl start -D {pgdir} -o "-p {port+size}" -l {role}_logfile')
+                time.sleep(5)
+                run(f"psql -p {port+size} -c \"select pg_current_wal_lsn();\"")
+
 
     elif arguments["stop"]:
-        cs = []
         name = arguments["<name>"]
         for role in getRoles(name):
-            cs.append("pg_ctl stop -D %s/%s" % (name, role))
+            run("pg_ctl stop -D %s/%s" % (name, role))
 
-        for c in cs:
-            print(c)
-            os.system(c)
-            print("")
 
     elif arguments["start"]:
-        cs = []
         name = arguments["<name>"]
         port = int(arguments["--port"])
         cport = port
         for role in getRoles(name):
-            cs.append(
+            run(
                 'pg_ctl start -D %s/%s -o "-p %d" -l %s_logfile'
                 % (name, role, cport, role)
             )
             cport += 1
 
-        for c in cs:
-            print(c)
-            os.system(c)
-            print("")
 
     elif arguments["restart"]:
-        cs = []
         name = arguments["<name>"]
         port = int(arguments["--port"])
         if arguments["--watch"]:
-            cs.append(
+            run(
                 "fswatch -0 '%s' | xargs -0 -n 1 -I{} citus_dev restart %s --port=%d"
                 % (citus_so(), name, port)
             )
@@ -183,16 +214,12 @@ def main(arguments):
         else:
             cport = port
             for role in getRoles(name):
-                cs.append(
+                run(
                     'pg_ctl restart -D %s/%s -o "-p %d" -l %s_logfile'
                     % (name, role, cport, role)
                 )
                 cport += 1
 
-        for c in cs:
-            print(c)
-            os.system(c)
-            print("")
 
     else:
         print("unknown command")
