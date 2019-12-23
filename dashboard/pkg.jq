@@ -3,8 +3,10 @@
 def stripdebuginfo:
     map(
         select(
-            .name |
-            endswith("debuginfo") |
+            (.name | endswith("debuginfo"))   or
+            (.name | endswith("dbgsym"))      or
+            (.name | startswith("citus-ha-")) or
+            (.name | startswith("pg-auto-failover-cli")) |
             not
         )
     )
@@ -47,7 +49,7 @@ def pkgnameandpgversion(name):
             ($parts[:-1] | join("_") |              # name portion (before PG version)
              sub("\\d{2}$"; "")      |              # replace fancy version portion
              sub("^pg_cron$"; "pgcron")),           # normalize pg_cron to pgcron
-            $parts[-1][0:1] + "." + $parts[-1][1:2] # PG version portion
+            $parts[-1][:2] | sub("^9"; "9.")        # PG version portion
         ]
     end
 ;
@@ -58,11 +60,11 @@ def gittag(r):
     r.version | rtrimstr(".citus") as $version |
     if ($version | contains("~")) then
         $version | sub("~"; "-")
-    elif (r.release | startswith("rc")) then # hack for bad deb version 1.0.0-rc.1
+    elif (r.release // "" | startswith("rc")) then # hack for bad deb version 1.0.0-rc.1
         $version + "-" + r.release
-    elif (r.release | contains("rc")) then
+    elif (r.release // "" | contains("rc")) then
         $version + "-" +
-        (r.release | split(".") | .[2] + "." + .[3])
+        (r.release // "" | split(".") | .[2] + "." + .[3])
     else
         $version
     end
@@ -115,7 +117,8 @@ def filterbuilds(since):
                       failed: null,
                       errored: null,
                       canceled: null})) and
-         ((.number | tonumber) > since)
+         ((.number | tonumber) > since) and
+         .started_at
   )
 ;
 
