@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# set working directory
+export TEST_AUTOMATION_DIR="$HOME/.test-automation"
+# set resource group name for create-cluster, connect delete-resource-group scripts
+export RESOURCE_GROUP_NAME="weekly_valgrind_test_rg"
+# set key pair name that will be used to access our test machine on azure
+export VALGRIND_MACHINE_KEY_NAME="valgrind_machine_key"
+# set fab command to run valgrind tests
+export VALGRIND_TEST_FAB_COMMAND="fab use.postgres:12.1 use.enterprise:enterprise-master run.valgrind"
+
+clone_and_cd_test_automation()
+{
+    # remove existing working directory (if any) and re-create it
+    rm -rf "$TEST_AUTOMATION_DIR"
+    mkdir "$TEST_AUTOMATION_DIR"
+
+    # clone test_automation repository into workind directory
+    git clone https://github.com/citusdata/test-automation.git "$TEST_AUTOMATION_DIR"
+    
+    # now cd to TEST_AUTOMATION_DIR for below commands
+    cd "$TEST_AUTOMATION_DIR"/azure
+}
+
+create_valgrind_machine_key_pair()
+{
+    ssh-keygen -t rsa -N "" -f "./$VALGRIND_MACHINE_KEY_NAME"
+}
+
+add_valgrind_machine_key()
+{
+    eval "$(ssh-agent -s)"
+    ssh-add ~/.ssh/id_rsa_valgrind 
+}
+
+connect_and_start_test()
+{
+    # get public ip of the test machine we created
+    public_ip=$(az group deployment show -g "${RESOURCE_GROUP_NAME}" -n azuredeploy --query properties.outputs.publicIP.value)
+    
+    # remove the quotes 
+    public_ip=$(echo ${public_ip} | cut -d "\"" -f 2)
+    
+    # delete security rule to be able to use ssh
+    sh ./delete-security-rule.sh
+
+    # finally, run valgrind test over ssh
+    ssh -o "StrictHostKeyChecking no" -A pguser@"${public_ip}" "\${VALGRIND_TEST_FAB_COMMAND}"
+}
+
+# clean and create working directory, clone test_automation repository as well
+clone_and_cd_test_automation "$TEST_AUTOMATION_DIR"
+
+# create and connect to our test machine on azure
+./create-cluster.sh
+
+# start valgrind test fabric task over ssh and wait for it to be completed
+connect_and_start_test
+
+# finally, delete the resource group
+./delete-resource-group.sh
