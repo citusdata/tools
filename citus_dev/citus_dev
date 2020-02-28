@@ -141,7 +141,7 @@ def main(arguments):
                 % (port)
             )
         if arguments['--init-with']:
-            run('psql -p %d -f %s' % (cport, arguments['--init-with']))
+            run('psql -p %d -f %s -v ON_ERROR_STOP=1' % (cport, arguments['--init-with']))
 
     elif arguments["stop"]:
         name = arguments["<name>"]
