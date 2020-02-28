@@ -41,7 +41,7 @@ def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
 
     dir = "%s/%s" % (clustername, nodename)
     run("initdb -D %s" % dir)
-    run("echo \"shared_preload_libraries = 'citus'\" >> %s/postgresql.conf" % dir)
+    run("echo \"shared_preload_libraries = 'citus,pg_stat_statements'\" >> %s/postgresql.conf" % dir)
     run('echo "wal_level = logical" >> %s/postgresql.conf' % dir)
 
     if usessl:
