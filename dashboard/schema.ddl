@@ -6,7 +6,8 @@ CREATE TABLE download_stats
     pg_version decimal,
     version text NOT NULL,
     "date" date NOT NULL,
-    downloads integer NOT NULL
+    downloads integer NOT NULL,
+    source text
 );
 CREATE INDEX ON download_stats ("date");
 
@@ -18,7 +19,8 @@ CREATE TABLE download_levels
     pg_version decimal,
     version text NOT NULL,
     "date" date NOT NULL,
-    total_downloads integer NOT NULL
+    total_downloads integer NOT NULL,
+    source text
 );
 CREATE INDEX ON download_levels ("date");
 

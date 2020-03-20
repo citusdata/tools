@@ -29,7 +29,14 @@ my @files_to_format = ();
 my @formatter_args = qw(-c /usr/local/etc/citustools/citus-style.cfg);
 
 push @formatter_args, '-q' if $quiet;
-push @formatter_args, ($check ? '--check' : '--no-backup');
+if ($check)
+{
+	push @formatter_args, '--check';
+}
+else
+{
+	push @formatter_args, '--no-backup', '--replace';
+}
 
 while(my ($filename, $attrname, $attrvalue) = splice(@flattened_triples, 0, 3)) {
     next unless $attrvalue eq 'set';

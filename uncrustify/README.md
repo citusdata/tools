@@ -4,7 +4,7 @@
 
 ## Getting Started
 
-`citus_indent` requires `uncrustify` v0.60 or greater.
+`citus_indent` requires `uncrustify` v0.68 or greater.
 
 `make install` to install the script, the Citus style configuration file, and a man page. `man citus_indent` for more details.
 
