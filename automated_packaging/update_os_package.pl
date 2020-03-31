@@ -59,6 +59,8 @@ $curTime = time();
 
 # Checkout the distro's branch
 `git checkout $DISTRO_VERSION-$PROJECT`;
+# Update distro's branch
+`git pull origin $DISTRO_VERSION-$PROJECT`;
 
 # Create a new branch based on the distro's branch
 `git checkout -b $DISTRO_VERSION-$PROJECT-push-$curTime`;
