@@ -16,6 +16,9 @@ if ( $PROJECT eq "enterprise" ) {
 
 my $github_token = get_and_verify_token();
 
+my $microsoft_email = get_microsoft_email();
+my $git_name = get_git_name();
+
 # Debian branch has it's own changelog, we can get them through the CHANGELOG file of the code repo
 sub get_changelog_for_debian {
 
@@ -66,8 +69,8 @@ $curTime = time();
 # Based on the repo, update the package related variables
 if ( $DISTRO_VERSION eq "redhat" ) {
     `sed -i 's|^Version:.*|Version:	$VERSION.citus|g' $github_repo_name.spec`;
-    `sed -i 's|^Source0:.*|Source0:       https:\/\/github.com\/citusdata\/$github_repo_name\/archive\/v$VERSION.tar.gz|g' $github_repo_name.spec`;
-    `sed -i 's|^%changelog|%changelog\\n* $abbr_day[$wday] $abbr_mon[$mon] $mday $year - Burak Velioglu <velioglub\@citusdata.com> $VERSION.citus-1\\n- Update to $log_repo_name $VERSION\\n|g' $github_repo_name.spec`;
+    `sed -i 's|^Source0:.*|Source0:	https:\/\/github.com\/citusdata\/$github_repo_name\/archive\/v$VERSION.tar.gz|g' $github_repo_name.spec`;
+    `sed -i 's|^%changelog|%changelog\\n* $abbr_day[$wday] $abbr_mon[$mon] $mday $year - $git_name <$microsoft_email> $VERSION.citus-1\\n- Update to $log_repo_name $VERSION\\n|g' $github_repo_name.spec`;
 }
 elsif ( $DISTRO_VERSION eq "debian" ) {
     open( DEB_CLOG_FILE, "<./debian/changelog" ) || die "Debian changelog file not found";
@@ -82,7 +85,7 @@ elsif ( $DISTRO_VERSION eq "debian" ) {
     open( DEB_CLOG_FILE, ">./debian/changelog" ) || die "Debian changelog file not found";
     print DEB_CLOG_FILE "$github_repo_name ($VERSION.citus-1) stable; urgency=low\n";
     print DEB_CLOG_FILE @changelog_print;
-    print DEB_CLOG_FILE " -- Burak Velioglu <velioglub\@citusdata.com>  $abbr_day[$wday], $mday $abbr_mon[$mon] $year $print_hour:$min:$sec +0000\n\n";
+    print DEB_CLOG_FILE " -- $git_name <$microsoft_email>  $abbr_day[$wday], $mday $abbr_mon[$mon] $year $print_hour:$min:$sec +0000\n\n";
     print DEB_CLOG_FILE @lines;
     close(DEB_CLOG_FILE);
 }

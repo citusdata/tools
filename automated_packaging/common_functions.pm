@@ -6,10 +6,28 @@ use JSON;
 
 # Export subroutines
 our @ISA = qw(Exporter);
-our @EXPORT = qw(get_and_verify_token get_sorted_prs create_release_changelog has_backport_label);
+our @EXPORT = qw(get_and_verify_token get_microsoft_email get_git_name get_sorted_prs create_release_changelog has_backport_label);
 
 # untaint environment
 local $ENV{'PATH'} = '/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin';
+
+sub get_microsoft_email {
+    unless (exists $ENV{MICROSOFT_EMAIL}) {
+        die "You must have a MICROSOFT_EMAIL set";
+    }
+
+    my $microsoft_email = $ENV{MICROSOFT_EMAIL};
+    return $microsoft_email;
+}
+
+sub get_git_name {
+    my $git_name = `git config user.name`;
+    if ($git_name eq "") {
+        die "You must set your git name using 'git config user.name \"Your name Here\"'";
+    }
+    return $microsoft_email;
+}
+
 
 sub get_and_verify_token {
     unless (exists $ENV{GITHUB_TOKEN}) {
