@@ -69,12 +69,12 @@ $curTime = time();
 `sed -i 's/^pkglatest.*/pkglatest=$VERSION.citus-1/g' pkgvars`;
 
 # Based on the repo, update the package related variables
-if ( $DISTRO_VERSION eq "redhat" ) {
+if ( $DISTRO_VERSION eq "redhat" || $DISTRO_VERSION eq "microsoft") {
     `sed -i 's|^Version:.*|Version:	$VERSION.citus|g' $github_repo_name.spec`;
     `sed -i 's|^Source0:.*|Source0:	https:\/\/github.com\/citusdata\/$github_repo_name\/archive\/v$VERSION.tar.gz|g' $github_repo_name.spec`;
     `sed -i 's|^%changelog|%changelog\\n* $abbr_day[$wday] $abbr_mon[$mon] $mday $year - $git_name <$microsoft_email> $VERSION.citus-1\\n- Update to $log_repo_name $VERSION\\n|g' $github_repo_name.spec`;
 }
-elsif ( $DISTRO_VERSION eq "debian" ) {
+if ( $DISTRO_VERSION eq "debian" || $DISTRO_VERSION eq "microsoft") {
     open( DEB_CLOG_FILE, "<./debian/changelog" ) || die "Debian changelog file not found";
     my @lines = <DEB_CLOG_FILE>;
     close(DEB_CLOG_FILE);
