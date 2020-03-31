@@ -23,7 +23,7 @@ my $git_name = get_git_name();
 sub get_changelog_for_debian {
 
     # Update project spec file
-    @changelog_file = `curl --user "$github_token:x-oauth-basic" -H "Accept: application/vnd.github.v3.raw" -X GET 'https://api.github.com/repos/citusdata/$github_repo_name/contents/CHANGELOG.md' 2> /dev/null`;
+    @changelog_file = `curl --user "$github_token:x-oauth-basic" -H "Accept: application/vnd.github.v3.raw" -X GET 'https://api.github.com/repos/citusdata/$github_repo_name/contents/CHANGELOG.md?ref=v$VERSION' 2> /dev/null`;
 
     $first_version_has_seen = 0;
     my @changelog_items;
