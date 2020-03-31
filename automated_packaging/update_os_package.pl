@@ -95,4 +95,4 @@ elsif ( $DISTRO_VERSION eq "debian" ) {
 # Commit, push changes and open a pull request
 `git commit -a -m "Bump $DISTRO_VERSION $log_repo_name $VERSION"`;
 `git push origin $DISTRO_VERSION-$PROJECT-push-$curTime`;
-`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump $PROJECT $DISTRO_VERSION Version\", \"head\":\"$DISTRO_VERSION-$PROJECT-push-$curTime\", \"base\":\"$DISTRO_VERSION-$PROJECT\"}' https://api.github.com/repos/citusdata/packaging/pulls`;
+`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump $PROJECT $DISTRO_VERSION Version to $VERSION\", \"head\":\"$DISTRO_VERSION-$PROJECT-push-$curTime\", \"base\":\"$DISTRO_VERSION-$PROJECT\"}' https://api.github.com/repos/citusdata/packaging/pulls`;
