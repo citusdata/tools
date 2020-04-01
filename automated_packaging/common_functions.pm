@@ -22,10 +22,12 @@ sub get_microsoft_email {
 
 sub get_git_name {
     my $git_name = `git config user.name`;
+    # Strip trailing newline
+    chomp $git_name;
     if ($git_name eq "") {
         die "You must set your git name using 'git config user.name \"Your name Here\"'";
     }
-    return $microsoft_email;
+    return $git_name;
 }
 
 
