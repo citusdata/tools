@@ -9,7 +9,12 @@ stderr=2
 badusage=64
 noservice=69
 
-pkgflavor="${TRAVIS_BRANCH%%-*}"
+if [ "${TARGET_PLATFORM:-}" = "" ]; then
+    echo TARGET_PLATFORM must be set
+    exit $badusage
+fi
+
+PLATFORM_TYPE="${TARGET_PLATFORM%%/*}"
 pkgauth="${PACKAGECLOUD_API_TOKEN}:"
 
 # populate variables from packaging metadata file
@@ -21,12 +26,12 @@ declare pkglatest # to make shellcheck happy
 hubproj="${hubproj:-${pkgname}}"
 nightlyref="${nightlyref:-master}"
 releasepg="${releasepg:-9.6,10}"
-nightlypg="${nightlypg:-${releasepg}}"
+nightlypg="${nightlypg:-}"
 latestpg=$(echo "${releasepg}" | tr ',' '\n' | sort -t. -k1,1n -k2,2n | tail -n1)
 versioning="${versioning:-simple}"
 
-case "${pkgflavor}" in
-    debian)
+case "${PLATFORM_TYPE}" in
+    debian|ubuntu)
         pkgflavor='deb'
         pkgfull="postgresql-${latestpg}-${pkgname}"
 
@@ -39,7 +44,7 @@ case "${pkgflavor}" in
         pkgarch="amd64"
         jqfilter='map(.version + "-" + .release)'
         ;;
-    redhat)
+    el|ol)
         pkgflavor='rpm'
 
         # add minor/major version to package name if using fancy versioning
