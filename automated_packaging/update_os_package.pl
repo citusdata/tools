@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use lib '/usr/local/bin';
+use lib './';
 use common_functions;
 
 $DISTRO_VERSION = $ARGV[0];
