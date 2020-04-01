@@ -371,6 +371,8 @@ foreach my $platform (@platforms) {
             "GITHUB_TOKEN",
             '-e',
             "PACKAGE_ENCRYPTION_KEY",
+            '-e',
+            "UNENCRYPTED_PACKAGE",
             "citus/packaging:$docker_platform-$pg",
             $build_type
         );
