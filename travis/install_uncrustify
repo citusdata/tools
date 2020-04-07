@@ -1,12 +1,12 @@
 #!/bin/bash
 
-set -eux
+set -euxo pipefail
 
-uncrustifypkgs="$HOME/.cache/uncrustify_pkgs"
-uncrustifyversion="0.63"
-uncrustifydownload="uncrustify_${uncrustifyversion}-1_amd64.deb"
-uncrustifyurl="https://s3.amazonaws.com/packages.citusdata.com/travis/${uncrustifydownload}"
-
-# install travis uncrustify package
-wget -N -P "${uncrustifypkgs}" "${uncrustifyurl}"
-sudo dpkg --force-confdef --force-confold --install "${uncrustifypkgs}/${uncrustifydownload}"
+curl -L https://github.com/uncrustify/uncrustify/archive/uncrustify-0.68.1.tar.gz | tar xz
+cd uncrustify-uncrustify-0.68.1/
+mkdir build
+cd build
+cmake ..
+make -j5
+sudo make install
+cd ../..
