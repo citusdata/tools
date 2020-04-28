@@ -75,6 +75,9 @@ if ( $NEW_VERSION =~ /.*\.0$/ ) {
     # Update the version on the configuration file
     `sed -i 's/$current_version_escape_dot/$UPCOMING_VERSION/g' configure.in`;
 
+    # Update the version on the config.py file (for upgrade tests)
+    `sed -i 's/$minor_version_escape_dot/$upcoming_minor_version/g' ./src/test/regress/upgrade/config.py`;
+
     # Run autoconf to generate new configure file
     `autoconf -f`;
 
@@ -84,54 +87,26 @@ if ( $NEW_VERSION =~ /.*\.0$/ ) {
     # We also need to update two different lines on the multi_extension.out
     `sed -i 's/Loaded library requires $minor_version/Loaded library requires $upcoming_minor_version/g' ./src/test/regress/expected/multi_extension.out`;
 
-    # Update the Makefile
-    open(MAKEFILE, "<./src/backend/distributed/Makefile" ) || die "Makefile not found";
-    my @makefile_lines = <MAKEFILE>;
-    close(MAKEFILE);
+    my $current_schema_version = `awk -F' += +' -v property=default_version '\$1 ~ property {print \$2}' "./src/backend/distributed/citus.control"`;
+    # trim output of awk (remove quotes and newline)
+    $current_schema_version = substr($current_schema_version, 1, -2);
 
-    my @newlines;
-    $last_version = "";
-    foreach $line (@makefile_lines) {
-        $line_copy = $line;
-
-        $line_copy =~ s/^\s+//;
-        if ( $line_copy =~ /^$minor_version.*/ ) {
-            $line_copy =~ s/\R\z//;
-            @line_parts = split( / /, $line_copy );
-            $last_version = @line_parts[-1];
-            $line_copy = "       " . $line_copy . " \\" . "\n	$upcoming_minor_version-1\n";
-            $line = $line_copy;
-        }
-
-        if ( $line_copy =~ /NO_PGXS/ ) {
-            pop(@newlines);
-            $new_extension_line = "\$(EXTENSION)--$upcoming_minor_version-1.sql: \$(EXTENSION)--$last_version.sql \$(EXTENSION)--$last_version--$upcoming_minor_version-1.sql\n";
-            push(@newlines, $new_extension_line);
-            $cat_line = "    cat \$^ > \$\@\n";
-            push(@newlines, $cat_line);
-            $empty_line = "\n";
-            push(@newlines, $empty_line);
-        }
-
-        push( @newlines, $line );
-    }
-
-    open(MAKEFILE, ">./src/backend/distributed/Makefile" ) || die "Makefile not found";
-    print MAKEFILE @newlines;
-    close(MAKEFILE);
+    # We need to append new lines to test files for migrating to new schema version
+    `sed -i "/^ALTER EXTENSION citus UPDATE TO '$current_schema_version';/a ALTER EXTENSION citus UPDATE TO '$upcoming_minor_version-1';" ./src/test/regress/sql/multi_extension.sql`;
+    `sed -i "/^ALTER EXTENSION citus UPDATE TO '$current_schema_version';/a ALTER EXTENSION citus UPDATE TO '$upcoming_minor_version-1';" ./src/test/regress/expected/multi_extension.out`;
 
     # Add a new sql file
-    open( NEW_SQL_FILE, ">./src/backend/distributed/citus--$last_version--$upcoming_minor_version-1.sql") || die "New SQL file couldn't created";
-    print NEW_SQL_FILE "/* citus--$last_version--$upcoming_minor_version-1 */"
+    open( NEW_SQL_FILE, ">./src/backend/distributed/citus--$current_schema_version--$upcoming_minor_version-1.sql") || die "New SQL file couldn't created";
+    print NEW_SQL_FILE "/* citus--$current_schema_version--$upcoming_minor_version-1 */"
       . "\n\n"
-      . "/* bump version to $upcoming_minor_version-1 */" . "\n\n";
+      . "-- bump version to $upcoming_minor_version-1" . "\n\n";
     close(NEW_SQL_FILE);
 
     # Update citus.control file
-    `sed -i 's/$last_version/$upcoming_minor_version-1/g' ./src/backend/distributed/citus.control`;
+    `sed -i 's/$current_schema_version/$upcoming_minor_version-1/g' ./src/backend/distributed/citus.control`;
 
     # Push the changes to the master branch
-    `git add ./src/backend/distributed/citus--$last_version--$upcoming_minor_version-1.sql`;
+    `git add ./src/backend/distributed/citus--$current_schema_version--$upcoming_minor_version-1.sql`;
     `git commit -a -m "Bump $PROJECT version to $UPCOMING_VERSION"`;
     `git push origin master-update-version-$curTime`;
     `curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump Citus to $UPCOMING_VERSION\", \"base\":\"master\", \"head\":\"master-update-version-$curTime"}' https://api.github.com/repos/citusdata/$PROJECT/pulls`;
