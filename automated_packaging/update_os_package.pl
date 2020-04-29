@@ -16,11 +16,14 @@ if ( $PROJECT eq "enterprise" ) {
 
 my $github_token = get_and_verify_token();
 
+my $microsoft_email = get_microsoft_email();
+my $git_name = get_git_name();
+
 # Debian branch has it's own changelog, we can get them through the CHANGELOG file of the code repo
 sub get_changelog_for_debian {
 
     # Update project spec file
-    @changelog_file = `curl --user "$github_token:x-oauth-basic" -H "Accept: application/vnd.github.v3.raw" -X GET 'https://api.github.com/repos/citusdata/$github_repo_name/contents/CHANGELOG.md' 2> /dev/null`;
+    @changelog_file = `curl --user "$github_token:x-oauth-basic" -H "Accept: application/vnd.github.v3.raw" -X GET 'https://api.github.com/repos/citusdata/$github_repo_name/contents/CHANGELOG.md?ref=v$VERSION' 2> /dev/null`;
 
     $first_version_has_seen = 0;
     my @changelog_items;
@@ -56,6 +59,8 @@ $curTime = time();
 
 # Checkout the distro's branch
 `git checkout $DISTRO_VERSION-$PROJECT`;
+# Update distro's branch
+`git pull origin $DISTRO_VERSION-$PROJECT`;
 
 # Create a new branch based on the distro's branch
 `git checkout -b $DISTRO_VERSION-$PROJECT-push-$curTime`;
@@ -64,12 +69,12 @@ $curTime = time();
 `sed -i 's/^pkglatest.*/pkglatest=$VERSION.citus-1/g' pkgvars`;
 
 # Based on the repo, update the package related variables
-if ( $DISTRO_VERSION eq "redhat" ) {
+if ( $DISTRO_VERSION eq "redhat" || $DISTRO_VERSION eq "microsoft" || $DISTRO_VERSION eq "all") {
     `sed -i 's|^Version:.*|Version:	$VERSION.citus|g' $github_repo_name.spec`;
-    `sed -i 's|^Source0:.*|Source0:       https:\/\/github.com\/citusdata\/$github_repo_name\/archive\/v$VERSION.tar.gz|g' $github_repo_name.spec`;
-    `sed -i 's|^%changelog|%changelog\\n* $abbr_day[$wday] $abbr_mon[$mon] $mday $year - Burak Velioglu <velioglub\@citusdata.com> $VERSION.citus-1\\n- Update to $log_repo_name $VERSION\\n|g' $github_repo_name.spec`;
+    `sed -i 's|^Source0:.*|Source0:	https:\/\/github.com\/citusdata\/$github_repo_name\/archive\/v$VERSION.tar.gz|g' $github_repo_name.spec`;
+    `sed -i 's|^%changelog|%changelog\\n* $abbr_day[$wday] $abbr_mon[$mon] $mday $year - $git_name <$microsoft_email> $VERSION.citus-1\\n- Update to $log_repo_name $VERSION\\n|g' $github_repo_name.spec`;
 }
-elsif ( $DISTRO_VERSION eq "debian" ) {
+if ( $DISTRO_VERSION eq "debian" || $DISTRO_VERSION eq "microsoft" || $DISTRO_VERSION eq "all") {
     open( DEB_CLOG_FILE, "<./debian/changelog" ) || die "Debian changelog file not found";
     my @lines = <DEB_CLOG_FILE>;
     close(DEB_CLOG_FILE);
@@ -82,7 +87,7 @@ elsif ( $DISTRO_VERSION eq "debian" ) {
     open( DEB_CLOG_FILE, ">./debian/changelog" ) || die "Debian changelog file not found";
     print DEB_CLOG_FILE "$github_repo_name ($VERSION.citus-1) stable; urgency=low\n";
     print DEB_CLOG_FILE @changelog_print;
-    print DEB_CLOG_FILE " -- Burak Velioglu <velioglub\@citusdata.com>  $abbr_day[$wday], $mday $abbr_mon[$mon] $year $print_hour:$min:$sec +0000\n\n";
+    print DEB_CLOG_FILE " -- $git_name <$microsoft_email>  $abbr_day[$wday], $mday $abbr_mon[$mon] $year $print_hour:$min:$sec +0000\n\n";
     print DEB_CLOG_FILE @lines;
     close(DEB_CLOG_FILE);
 }
@@ -90,4 +95,4 @@ elsif ( $DISTRO_VERSION eq "debian" ) {
 # Commit, push changes and open a pull request
 `git commit -a -m "Bump $DISTRO_VERSION $log_repo_name $VERSION"`;
 `git push origin $DISTRO_VERSION-$PROJECT-push-$curTime`;
-`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump $PROJECT $DISTRO_VERSION Version\", \"head\":\"$DISTRO_VERSION-$PROJECT-push-$curTime\", \"base\":\"$DISTRO_VERSION-$PROJECT\"}' https://api.github.com/repos/citusdata/packaging/pulls`;
+`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump $PROJECT $DISTRO_VERSION version to $VERSION\", \"head\":\"$DISTRO_VERSION-$PROJECT-push-$curTime\", \"base\":\"$DISTRO_VERSION-$PROJECT\"}' https://api.github.com/repos/citusdata/packaging/pulls`;

@@ -9,7 +9,12 @@ stderr=2
 badusage=64
 
 latestpg="10"
-pkgflavor="${TRAVIS_BRANCH%%-*}"
+if [ "${TARGET_PLATFORM:-}" = "" ]; then
+    echo TARGET_PLATFORM must be set
+    exit $badusage
+fi
+
+PLATFORM_TYPE="${TARGET_PLATFORM%%/*}"
 pkgauth="${PACKAGECLOUD_API_TOKEN}:"
 hubauth="Authorization: token ${GITHUB_TOKEN}"
 
@@ -24,13 +29,13 @@ releasepg="${releasepg:-9.6,10}"
 nightlypg="${nightlypg:-${releasepg}}"
 latestpg=$(echo "${nightlypg}" | tr ',' '\n' | sort -t. -k1,1n -k2,2n | tail -n1)
 
-case "${pkgflavor}" in
-    debian)
+case "${PLATFORM_TYPE}" in
+    debian|ubuntu)
         pkgflavor='deb'
         pkgfull="postgresql-${latestpg}-${pkgname}"
         pkgarch="amd64"
         ;;
-    redhat)
+    el|ol)
         pkgflavor='rpm'
         pkgfull="${pkgname}_${latestpg//./}"
         pkgarch="x86_64"
