@@ -10,7 +10,7 @@
 
 ## Usage
 
-Ensure your `GITHUB_TOKEN` environment variable is properly set (see the man page if you're not sure how to do that). Make sure Docker is running, then you're off to the races! For example, to build a `citus` community nightly on Debian Jessie and Ubuntu Xenial, first change your directory into "citusdata/packaging" repo directory and then checkout the `all-citus` or `all-enterprise` branch. Then execute the following:
+Ensure your `GITHUB_TOKEN` environment variable is properly set (see the man page if you're not sure how to do that). Make sure Docker is running, then you're off to the races! For example, to build a `citus` community "release" on Debian Jessie and Ubuntu Xenial, first change your directory into "citusdata/packaging" repo directory and then checkout the `all-citus` (would be `all-enterprise` for enterprise) branch as this branch has the specific `pkgvars` for community packages. Then execute the following:
 
 `citus_package -p debian/jessie -p ubuntu/xenial local release`
 
