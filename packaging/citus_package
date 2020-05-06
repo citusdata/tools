@@ -29,7 +29,7 @@ my %supported_platforms = (
     el     => [ "8",      "7",      "6" ],
     fedora => [ "28",     "27",      "26"],
     ol     => [ "8",      "7",      "6" ],
-    ubuntu => [ "bionic", "xenial", "trusty" ],
+    ubuntu => [ "focal",  "bionic", "xenial", "trusty" ],
     pgxn => [""]
 );
 
@@ -523,6 +523,8 @@ to sign packages.
 =item I<ol/7>           Oracle Linux 7.0
 
 =item I<ol/6>           Oracle Linux 6.0
+
+=item I<ubuntu/focal>   Ubuntu 20.04 LTS (Focal Fossa)
 
 =item I<ubuntu/bionic>  Ubuntu 18.04 LTS (Bionic Beaver)
 
