@@ -23,7 +23,6 @@ hubauth="Authorization: token ${GITHUB_TOKEN}"
 source pkgvars
 
 # set default values for certain packaging variables
-hubproj="${hubproj:-${pkgname}}"
 nightlyref="${nightlyref:-master}"
 releasepg="${releasepg:-9.6,10}"
 nightlypg="${nightlypg:-${releasepg}}"
@@ -32,11 +31,13 @@ latestpg=$(echo "${nightlypg}" | tr ',' '\n' | sort -t. -k1,1n -k2,2n | tail -n1
 case "${PLATFORM_TYPE}" in
     debian|ubuntu)
         pkgflavor='deb'
+        pkgname="${deb_pkgname:-${pkgname}}"
         pkgfull="postgresql-${latestpg}-${pkgname}"
         pkgarch="amd64"
         ;;
     el|ol)
         pkgflavor='rpm'
+        pkgname="${rpm_pkgname:-${pkgname}}"
         pkgfull="${pkgname}_${latestpg//./}"
         pkgarch="x86_64"
         ;;
@@ -45,6 +46,8 @@ case "${PLATFORM_TYPE}" in
         usage $stderr $badusage
         ;;
 esac
+
+hubproj="${hubproj:-${pkgname}}"
 
 pkgapiurl="https://packagecloud.io/api/v1/repos/citusdata/${PKG_REPOTYPE}-nightlies"
 pkgapiurl+="/package/${pkgflavor}/${TARGET_PLATFORM}/${pkgfull}/${pkgarch}/versions.json"

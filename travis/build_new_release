@@ -23,7 +23,6 @@ source pkgvars
 
 # set default values for certain packaging variables
 declare pkglatest # to make shellcheck happy
-hubproj="${hubproj:-${pkgname}}"
 nightlyref="${nightlyref:-master}"
 releasepg="${releasepg:-9.6,10}"
 nightlypg="${nightlypg:-}"
@@ -33,6 +32,7 @@ versioning="${versioning:-simple}"
 case "${PLATFORM_TYPE}" in
     debian|ubuntu)
         pkgflavor='deb'
+        pkgname="${deb_pkgname:-${pkgname}}"
         pkgfull="postgresql-${latestpg}-${pkgname}"
 
         # add minor/major version to package name if using fancy versioning
@@ -46,6 +46,7 @@ case "${PLATFORM_TYPE}" in
         ;;
     el|ol)
         pkgflavor='rpm'
+        pkgname="${rpm_pkgname:-${pkgname}}"
 
         # add minor/major version to package name if using fancy versioning
         if [ "${versioning}" == 'fancy' ]; then
@@ -63,6 +64,8 @@ case "${PLATFORM_TYPE}" in
         usage $stderr $badusage
         ;;
 esac
+
+hubproj="${hubproj:-${pkgname}}"
 
 pkgapiurl="https://packagecloud.io/api/v1/repos/citusdata/${PKG_REPOTYPE}"
 pkgapiurl+="/package/${pkgflavor}/${TARGET_PLATFORM}/${pkgfull}/${pkgarch}/versions.json"
