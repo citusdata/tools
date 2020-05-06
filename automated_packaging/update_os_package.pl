@@ -13,6 +13,17 @@ if ( $PROJECT eq "enterprise" ) {
     $github_repo_name = "citus-enterprise";
     $log_repo_name = "Citus Enterprise";
 }
+my $package_name = $github_repo_name;
+if ( $PROJECT eq "pgautofailover" ) {
+    $github_repo_name = "pg_auto_failover";
+    $package_name = "pg-auto-failover";
+    $log_repo_name = "pg_auto_failover";
+}
+if ( $PROJECT eq "pgautofailover-enterprise" ) {
+    $github_repo_name = "citus-ha";
+    $package_name = "pg-auto-failover-enterprise";
+    $log_repo_name = "pg_auto_failover enterprise";
+}
 
 my $github_token = get_and_verify_token();
 
@@ -70,9 +81,9 @@ $curTime = time();
 
 # Based on the repo, update the package related variables
 if ( $DISTRO_VERSION eq "redhat" || $DISTRO_VERSION eq "microsoft" || $DISTRO_VERSION eq "all") {
-    `sed -i 's|^Version:.*|Version:	$VERSION.citus|g' $github_repo_name.spec`;
-    `sed -i 's|^Source0:.*|Source0:	https:\/\/github.com\/citusdata\/$github_repo_name\/archive\/v$VERSION.tar.gz|g' $github_repo_name.spec`;
-    `sed -i 's|^%changelog|%changelog\\n* $abbr_day[$wday] $abbr_mon[$mon] $mday $year - $git_name <$microsoft_email> $VERSION.citus-1\\n- Update to $log_repo_name $VERSION\\n|g' $github_repo_name.spec`;
+    `sed -i 's|^Version:.*|Version:	$VERSION.citus|g' $package_name.spec`;
+    `sed -i 's|^Source0:.*|Source0:	https:\/\/github.com\/citusdata\/$package_name\/archive\/v$VERSION.tar.gz|g' $package_name.spec`;
+    `sed -i 's|^%changelog|%changelog\\n* $abbr_day[$wday] $abbr_mon[$mon] $mday $year - $git_name <$microsoft_email> $VERSION.citus-1\\n- Update to $log_repo_name $VERSION\\n|g' $package_name.spec`;
 }
 if ( $DISTRO_VERSION eq "debian" || $DISTRO_VERSION eq "microsoft" || $DISTRO_VERSION eq "all") {
     open( DEB_CLOG_FILE, "<./debian/changelog" ) || die "Debian changelog file not found";
@@ -85,7 +96,7 @@ if ( $DISTRO_VERSION eq "debian" || $DISTRO_VERSION eq "microsoft" || $DISTRO_VE
 
     # Update the changelog file of the debian branch
     open( DEB_CLOG_FILE, ">./debian/changelog" ) || die "Debian changelog file not found";
-    print DEB_CLOG_FILE "$github_repo_name ($VERSION.citus-1) stable; urgency=low\n";
+    print DEB_CLOG_FILE "$package_name ($VERSION.citus-1) stable; urgency=low\n";
     print DEB_CLOG_FILE @changelog_print;
     print DEB_CLOG_FILE " -- $git_name <$microsoft_email>  $abbr_day[$wday], $mday $abbr_mon[$mon] $year $print_hour:$min:$sec +0000\n\n";
     print DEB_CLOG_FILE @lines;
