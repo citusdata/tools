@@ -83,7 +83,7 @@ $curTime = time();
 if ( $DISTRO_VERSION eq "redhat" || $DISTRO_VERSION eq "microsoft" || $DISTRO_VERSION eq "all") {
     `sed -i 's|^Version:.*|Version:	$VERSION.citus|g' $package_name.spec`;
     `sed -i 's|^Source0:.*|Source0:	https:\/\/github.com\/citusdata\/$package_name\/archive\/v$VERSION.tar.gz|g' $package_name.spec`;
-    `sed -i 's|^%changelog|%changelog\\n* $abbr_day[$wday] $abbr_mon[$mon] $mday $year - $git_name <$microsoft_email> $VERSION.citus-1\\n- Update to $log_repo_name $VERSION\\n|g' $package_name.spec`;
+    `sed -i 's|^%changelog|%changelog\\n* $abbr_day[$wday] $abbr_mon[$mon] $mday $year - $git_name <$microsoft_email> $VERSION.citus-1\\n- Official $VERSION release of $log_repo_name\\n|g' $package_name.spec`;
 }
 if ( $DISTRO_VERSION eq "debian" || $DISTRO_VERSION eq "microsoft" || $DISTRO_VERSION eq "all") {
     open( DEB_CLOG_FILE, "<./debian/changelog" ) || die "Debian changelog file not found";
@@ -92,12 +92,21 @@ if ( $DISTRO_VERSION eq "debian" || $DISTRO_VERSION eq "microsoft" || $DISTRO_VE
 
     # Change hour and get changelog (TODO: may update it !)
     $print_hour = $hour - 3;
-    @changelog_print = get_changelog_for_debian();
+    if ($PROJECT eq 'citus' || $PROJECT eq 'enterprise') {
+        @changelog_print = get_changelog_for_debian();
+    }
+
 
     # Update the changelog file of the debian branch
     open( DEB_CLOG_FILE, ">./debian/changelog" ) || die "Debian changelog file not found";
     print DEB_CLOG_FILE "$package_name ($VERSION.citus-1) stable; urgency=low\n";
-    print DEB_CLOG_FILE @changelog_print;
+    if ($PROJECT eq 'citus' || $PROJECT eq 'enterprise') {
+        print DEB_CLOG_FILE @changelog_print;
+    }
+    else
+    {
+        print DEB_CLOG_FILE "\n  * Official $VERSION release of $log_repo_name\n\n";
+    }
     print DEB_CLOG_FILE " -- $git_name <$microsoft_email>  $abbr_day[$wday], $mday $abbr_mon[$mon] $year $print_hour:$min:$sec +0000\n\n";
     print DEB_CLOG_FILE @lines;
     close(DEB_CLOG_FILE);
