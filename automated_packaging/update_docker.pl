@@ -18,7 +18,7 @@ $year += 1900;
 $curTime = time();
 
 # Checkout to the release's branch
-`git checkout develop`;
+`git checkout master`;
 `git checkout -b release-$VERSION-$curTime`;
 
 # That means we want to update postgres version
