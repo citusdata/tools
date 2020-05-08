@@ -25,11 +25,10 @@ $curTime = time();
 
 # Update META.json file
 `sed -i 's/$old_version_escape_dot/$NEW_VERSION/g' META.json`;
-`sed -i 's/$old_minor_version-[[:digit:]]/$new_minor_version-$new_point_version/g' META.json`;
 
 # Commit changes to github
-`git commit -a -m "Bump Citus to $NEW_VERSION"`;
+`git commit -a -m "Bump Citus PGXN to $NEW_VERSION"`;
 `git push origin pgxn-citus-push-$curTime`;
 
 # Open a PR to the master
-`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump Citus to $NEW_VERSION\", \"base\":\"pgxn-citus\", \"head\":\"pgxn-citus-push-$curTime\"}' https://api.github.com/repos/citusdata/packaging/pulls`;
+`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump Citus PGXN to $NEW_VERSION\", \"base\":\"pgxn-citus\", \"head\":\"pgxn-citus-push-$curTime\"}' https://api.github.com/repos/citusdata/packaging/pulls`;
