@@ -29,7 +29,7 @@ my %supported_platforms = (
     el     => [ "8",      "7",      "6" ],
     fedora => [ "28",     "27",      "26"],
     ol     => [ "8",      "7",      "6" ],
-    ubuntu => [ "focal",  "bionic", "xenial", "trusty" ],
+    ubuntu => [ "focal",  "bionic", "xenial", "trusty", "focal" ],
     pgxn => [""]
 );
 
