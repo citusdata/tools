@@ -126,4 +126,4 @@ if ($DISTRO_VERSION eq "all") {
 my $commit_message = "Bump $commit_message_distro_version$log_repo_name version to $VERSION";
 `git commit -a -m "$commit_message"`;
 `git push origin $pr_branch`;
-`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"$commit_message\", \"head\":\"$pr_branch\", \"base\":\"$main_branch\"}' https://api.github.com/repos/citusdata/packaging/pulls`;
+`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"$commit_message\", \"head\":\"$pr_branch\", \"base\":\"$main_branch\" \"draft\":True}' https://api.github.com/repos/citusdata/packaging/pulls`;

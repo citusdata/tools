@@ -109,7 +109,7 @@ if ( $NEW_VERSION =~ /.*\.0$/ ) {
     `git add ./src/backend/distributed/citus--$current_schema_version--$upcoming_minor_version-1.sql`;
     `git commit -a -m "Bump $PROJECT version to $UPCOMING_VERSION"`;
     `git push origin master-update-version-$curTime`;
-    `curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump Citus to $UPCOMING_VERSION\", \"base\":\"master\", \"head\":\"master-update-version-$curTime"}' https://api.github.com/repos/citusdata/$PROJECT/pulls`;
+    `curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump Citus to $UPCOMING_VERSION\", \"base\":\"master\", \"head\":\"master-update-version-$curTime" \"draft\":True}' https://api.github.com/repos/citusdata/$PROJECT/pulls`;
 }
 
 # means it is a point version

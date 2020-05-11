@@ -26,4 +26,4 @@ $old_release_minor_version_escape_dot =~ s/\./\\./g;
 `git push origin master-$NEW_VERSION-$curTime`;
 
 # Open a PR to the master
-`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump Citus to $NEW_VERSION\", \"base\":\"master\", \"head\":\"master-$NEW_VERSION-$curTime\"}' https://api.github.com/repos/citusdata/citus_docs/pulls`;
+`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump Citus to $NEW_VERSION\", \"base\":\"master\", \"head\":\"master-$NEW_VERSION-$curTime\" \"draft\":True}' https://api.github.com/repos/citusdata/citus_docs/pulls`;

@@ -31,4 +31,4 @@ $curTime = time();
 `git push origin pgxn-citus-push-$curTime`;
 
 # Open a PR to the master
-`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump Citus PGXN to $NEW_VERSION\", \"base\":\"pgxn-citus\", \"head\":\"pgxn-citus-push-$curTime\"}' https://api.github.com/repos/citusdata/packaging/pulls`;
+`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump Citus PGXN to $NEW_VERSION\", \"base\":\"pgxn-citus\", \"head\":\"pgxn-citus-push-$curTime\" \"draft\":True}' https://api.github.com/repos/citusdata/packaging/pulls`;
