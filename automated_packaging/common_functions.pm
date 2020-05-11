@@ -154,7 +154,7 @@ sub create_release_changelog {
                     if (length($description_part) > 78) {
                         print("You have to shorten PR message $description_part of $pr_url\n");
                         print("Description should not be longer than 78 charachters, please manually shorten this description\n");
-                        push(@comment_lines, "* " . "PLEASE SHORTEN THE NEXT LINE MANUALLY, IT SHOULD BE NO LONGER THAN 78 CHARS\n");
+                        push(@comment_lines, "TODO: " . "PLEASE SHORTEN THE NEXT LINE MANUALLY, IT SHOULD BE NO LONGER THAN 78 CHARS\n");
                     }
 
                     print("Description $description_part has been added ... \n");
