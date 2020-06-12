@@ -68,9 +68,14 @@ def main(arguments):
     if arguments["make"]:
         if arguments['--destroy']:
             name = arguments["<name>"]
-            for role in getRoles(name):
-                run("pg_ctl stop -D %s/%s || true" % (name, role))
-            run('rm -rf %s' % (name))
+            try:
+                roles = getRoles(name)
+            except Exception:
+                pass
+            else:
+                for role in roles:
+                    run("pg_ctl stop -D %s/%s || true" % (name, role))
+                run('rm -rf %s' % (name))
 
         createNodeCommands(
             arguments["<name>"],
