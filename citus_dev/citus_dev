@@ -2,19 +2,20 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy] [--init-with=<sql_file>]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--no-extension-on-workers] [--mx] [--destroy] [--init-with=<sql_file>]
   citus_dev restart <name> [--watch] [--port=<port>]
   citus_dev (start|stop) <name> [--port=<port>]
 
 Options:
-  --size=<count>           Number of workers to create when 0 the coordinator will be added as a worker [default: 2]
-  --port=<port>            Port number to use for the coordinator. All workers take subsequent numbers [default: 9700]
-  --watch                  Watch for changes to the citus plugin and restart the cluster when the plugin updates
-  --use-ssl                Create the cluster with ssl enabled
-  --no-extension           Do not create the extension while creating the nodes
-  --mx                     Enable metadata sync for all workers
-  --destroy                Destroy any old cluster with the same name
-  --init-with=<sql_file>   A SQL script to run after creation of the cluster to set up any necessary tables and data
+  --size=<count>               Number of workers to create when 0 the coordinator will be added as a worker [default: 2]
+  --port=<port>                Port number to use for the coordinator. All workers take subsequent numbers [default: 9700]
+  --watch                      Watch for changes to the citus plugin and restart the cluster when the plugin updates
+  --use-ssl                    Create the cluster with ssl enabled
+  --no-extension               Do not create the extension while creating the nodes
+  --no-extension-on-workers    Do not create the extension on the workers while creating the nodes
+  --mx                         Enable metadata sync for all workers
+  --destroy                    Destroy any old cluster with the same name
+  --init-with=<sql_file>       A SQL script to run after creation of the cluster to set up any necessary tables and data
 
 """
 from docopt import docopt
@@ -115,8 +116,11 @@ def main(arguments):
                 run('createdb -p %d' % (port + i))
 
         if not arguments["--no-extension"]:
-            for i in range(size + 1):
-                run('psql -p %d -c "CREATE EXTENSION citus;"' % (port + i))
+            if arguments["--no-extension-on-workers"]:
+                run('psql -p %d -c "CREATE EXTENSION citus;"' % (port))
+            else:
+                for i in range(size + 1):
+                    run('psql -p %d -c "CREATE EXTENSION citus;"' % (port + i))
 
             # If the cluster size is 0 we add the coordinator as the only node, otherwise we will add all other nodes
             if size == 0:
