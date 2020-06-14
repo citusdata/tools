@@ -17,8 +17,8 @@ if [ "$(ls -A postgresql)" ]; then
   git -C postgresql pull
 else
   pgmajornum="${PGVERSION%%.*}"
-  if [ "${pgmajornum}" -gt '12' ]; then
-    # twelve is highest stable build; use master for higher
+  if [ "${pgmajornum}" -gt '13' ]; then
+    # 13 is highest stable build; use master for higher
     gitref="master"
   elif [ "${pgmajornum}" -gt '9' ]; then
     gitref="REL_${PGVERSION}_STABLE"
