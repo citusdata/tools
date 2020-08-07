@@ -18,14 +18,14 @@ clean:
 	rm -f *.1
 
 installdirs:
-	$(INSTALL) -d $(DESTDIR)$(bindir) $(DESTDIR)$(pkgsysconfdir) $(DESTDIR)$(mandir)/man1
+	$(INSTALL) -d $(bindir) $(pkgsysconfdir) $(mandir)/man1
 
 install: all installdirs
-	$(INSTALL_SCRIPT) citus_indent $(DESTDIR)$(bindir)
-	$(INSTALL_DATA) $(MANPAGES) $(DESTDIR)$(mandir)/man1
-	$(INSTALL_DATA) citus-style.cfg $(DESTDIR)$(pkgsysconfdir)
+	$(INSTALL_SCRIPT) citus_indent $(bindir)
+	$(INSTALL_DATA) $(MANPAGES) $(mandir)/man1
+	$(INSTALL_DATA) citus-style.cfg $(pkgsysconfdir)
 	perl -pi -e 's,/usr/local/etc/citustools,$(pkgsysconfdir),g' \
-	$(DESTDIR)$(bindir)/citus_indent \
-	$(DESTDIR)$(mandir)/man1/citus_indent.1
+	$(bindir)/citus_indent \
+	$(mandir)/man1/citus_indent.1
 
 .PHONY: all man clean installdirs install
