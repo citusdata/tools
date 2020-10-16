@@ -22,7 +22,7 @@ _citus_dev()
 
     case $cmd in
         make)
-            opts="--size --port --use-ssl --no-extension --mx"
+            opts="--size --port --use-ssl --no-extension --mx --destroy --with-pgbouncer"
             if [[ ${cur} == -* ]] ; then
                 COMPREPLY=($( compgen -W "${opts}" -- "${cur}"))
             fi
@@ -30,7 +30,7 @@ _citus_dev()
             ;;
 
         start|stop)
-            opts="--port"
+            opts="--port --force"
             if [[ ${cur} == -* ]] ; then
                 COMPREPLY=($( compgen -W "${opts}" -- "${cur}"))
             fi
