@@ -360,6 +360,14 @@ foreach my $platform (@platforms) {
     mkdir $outputdir;
 
     foreach my $pg (@pg_versions) {
+        if (($os eq "el" or $os eq "ol") and $release eq "6" and $pg eq "pg13")
+        {
+            # CentOS and OracleLinux 6 doesn't have pg13 packages yet
+            # so we dont't have package builder docker images yet.
+            # So skip building distro packages for them.
+            next;
+        }
+
         my @docker_args = (
             'run',
             '--rm',
