@@ -14,7 +14,8 @@ if [ "${TARGET_PLATFORM:-}" = "" ]; then
     exit $badusage
 fi
 
-PLATFORM_TYPE="${TARGET_PLATFORM%%/*}"
+PLATFORM_TYPE="$(echo "$TARGET_PLATFORM" | cut -d "/" -f1)"
+PLATFORM_VERSION="$(echo "$TARGET_PLATFORM" | cut -d "/" -f2)"
 pkgauth="${PACKAGECLOUD_API_TOKEN}:"
 hubauth="Authorization: token ${GITHUB_TOKEN}"
 
@@ -26,7 +27,16 @@ source pkgvars
 nightlyref="${nightlyref:-master}"
 releasepg="${releasepg:-9.6,10}"
 nightlypg="${nightlypg:-${releasepg}}"
+
 latestpg=$(echo "${nightlypg}" | tr ',' '\n' | sort -t. -k1,1n -k2,2n | tail -n1)
+if [[ "$PLATFORM_TYPE" == "debian" ]] && [[ "$PLATFORM_VERSION" == "jessie" ]]; then
+    # Debian Jessie doesn't have pg13 packages yet, override latestpg
+    latestpg=12
+fi
+if { [[ "$PLATFORM_TYPE" == "el" ]] || [[ "$PLATFORM_TYPE" == "ol" ]]; } && [[ "$PLATFORM_VERSION" == "6" ]]; then
+    # CentOS & OracleLinux 6 don't have pg13 packages yet, override latestpg
+    latestpg=12
+fi
 
 case "${PLATFORM_TYPE}" in
     debian|ubuntu)
