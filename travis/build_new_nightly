@@ -15,7 +15,7 @@ if [ "${TARGET_PLATFORM:-}" = "" ]; then
 fi
 
 PLATFORM_TYPE="$(echo "$TARGET_PLATFORM" | cut -d "/" -f1)"
-PLATFORM_VERSION="$(echo "$TARGET_PLATFORM" | cut -d "/" -f2 | cut -d "/" -f1)"
+PLATFORM_VERSION="$(echo "$TARGET_PLATFORM" | cut -d "/" -f2)"
 pkgauth="${PACKAGECLOUD_API_TOKEN}:"
 hubauth="Authorization: token ${GITHUB_TOKEN}"
 
