@@ -55,6 +55,7 @@ sub verify_platforms {
         );
     }
 
+
     foreach my $platform (@platforms) {
         my ( $os, $release ) = split( '/', $platform, 2 );
         $release //= '';
@@ -222,7 +223,10 @@ sub sign_packages {
     return;
 }
 
+
 my ( @platforms, $project, $build_type, $opt_help );
+
+print "Platforms:".@platforms."\n";
 
 GetOptions( 'p|platform=s' => \@platforms, 'help!' => \$opt_help )
   or pod2usage(
@@ -270,6 +274,8 @@ if ( any { $_ eq 'pgxn' } @platforms ) {
 
 foreach my $platform (@platforms) {
     my ( $os, $release, $format );
+
+    print "Os: ".$os." Release: ".$release." format:".$format."\n";
 
     if ( $platform =~ /^(\w+)\/(\w+)$/x ) {
         $os      = $1;
@@ -384,6 +390,10 @@ foreach my $platform (@platforms) {
             "citus/packaging:$docker_platform-$pg",
             $build_type
         );
+
+        foreach my $da (@docker_args) {
+            print $da." ";
+        }
 
         system( 'docker', @docker_args );
 
