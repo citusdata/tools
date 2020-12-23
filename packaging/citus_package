@@ -44,6 +44,8 @@ my %docker_names = (
     pgxn   => "pgxn"
 );
 
+print "citus_package started...\n";
+
 sub verify_platforms {
     my (@platforms) = @_;
 
