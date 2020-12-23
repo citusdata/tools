@@ -275,7 +275,7 @@ if ( any { $_ eq 'pgxn' } @platforms ) {
 foreach my $platform (@platforms) {
     my ( $os, $release, $format );
 
-    print "Os: ".$os." Release: ".$release." format:".$format."\n";
+
 
     if ( $platform =~ /^(\w+)\/(\w+)$/x ) {
         $os      = $1;
@@ -287,6 +287,8 @@ foreach my $platform (@platforms) {
         $release = '';
         $format  = 'pgxn';
     }
+
+    print "Os: ".$os." Release: ".$release." format:".$format."\n";
 
     my $filesubdir =
       ( $project eq 'local' ) ? $currentdir : $filedir . '/' . $format;
