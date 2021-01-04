@@ -59,6 +59,7 @@ if ( $NEW_VERSION =~ /.*\.0$/ ) {
 
     # Update expected version on multi_extension test
     `sed -i 's/$current_version_escape_dot/$NEW_VERSION/g' ./src/test/regress/expected/multi_extension.out`;
+    `sed -i 's/$current_version_escape_dot/$NEW_VERSION/g' ./src/test/regress/expected/multi_extension_0.out`;
 
     # Push the branch of new release
     `git commit -a -m "Bump Citus version to $NEW_VERSION"`;
@@ -83,9 +84,11 @@ if ( $NEW_VERSION =~ /.*\.0$/ ) {
 
     # Update expected version on multi_extension test
     `sed -i 's/$current_version_escape_dot/$UPCOMING_VERSION/g' ./src/test/regress/expected/multi_extension.out`;
+    `sed -i 's/$current_version_escape_dot/$UPCOMING_VERSION/g' ./src/test/regress/expected/multi_extension_0.out`;
 
-    # We also need to update two different lines on the multi_extension.out
+    # We also need to update two different lines on the multi_extension.out & multi_extension_0.out
     `sed -i 's/Loaded library requires $minor_version/Loaded library requires $upcoming_minor_version/g' ./src/test/regress/expected/multi_extension.out`;
+    `sed -i 's/Loaded library requires $minor_version/Loaded library requires $upcoming_minor_version/g' ./src/test/regress/expected/multi_extension_0.out`;
 
     my $current_schema_version = `awk -F' += +' -v property=default_version '\$1 ~ property {print \$2}' "./src/backend/distributed/citus.control"`;
     # trim output of awk (remove quotes and newline)
@@ -94,6 +97,7 @@ if ( $NEW_VERSION =~ /.*\.0$/ ) {
     # We need to append new lines to test files for migrating to new schema version
     `sed -i "/^ALTER EXTENSION citus UPDATE TO '$current_schema_version';/a ALTER EXTENSION citus UPDATE TO '$upcoming_minor_version-1';" ./src/test/regress/sql/multi_extension.sql`;
     `sed -i "/^ALTER EXTENSION citus UPDATE TO '$current_schema_version';/a ALTER EXTENSION citus UPDATE TO '$upcoming_minor_version-1';" ./src/test/regress/expected/multi_extension.out`;
+    `sed -i "/^ALTER EXTENSION citus UPDATE TO '$current_schema_version';/a ALTER EXTENSION citus UPDATE TO '$upcoming_minor_version-1';" ./src/test/regress/expected/multi_extension_0.out`;
 
     # Add a new sql file
     open( NEW_SQL_FILE, ">./src/backend/distributed/citus--$current_schema_version--$upcoming_minor_version-1.sql") || die "New SQL file couldn't created";
@@ -151,6 +155,7 @@ else {
 
     # Update multi_extension file
     `sed -i 's/$current_version_escape_dot/$NEW_VERSION/g' ./src/test/regress/expected/multi_extension.out`;
+    `sed -i 's/$current_version_escape_dot/$NEW_VERSION/g' ./src/test/regress/expected/multi_extension_0.out`;
 
     # Commit changes and push a new branch to pass travis tests
     `git commit -a -m "Bump version to $NEW_VERSION"`;
