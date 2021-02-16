@@ -28,4 +28,4 @@ sudo apt-get update -qq
 
 # remove traces of PostgreSQL versions
 # see: postgresql.org/message-id/20130508192711.GA9243@msgid.df7cb.de
-sudo update-alternatives --remove-all postmaster.1.gz
+sudo update-alternatives --remove-all postmaster.1.gz || true
