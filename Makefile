@@ -6,11 +6,13 @@ export datarootdir := $(prefix)/share
 export mandir := $(datarootdir)/man
 export sysconfdir := $(prefix)/etc
 export pkgsysconfdir := $(sysconfdir)/$(PACKAGE_NAME)
+export TRAVIS=true
 
 DIRNAMES = automated_packaging packaging uncrustify valgrind
 ifeq ($(TRAVIS), true)
 	DIRNAMES += travis
 endif
+$(info    TRAVIS is $(TRAVIS))
 
 # logic from http://stackoverflow.com/a/11206700
 SUBDIRS := $(addsuffix /., $(DIRNAMES))
