@@ -49,7 +49,7 @@ def upload_to_packagecloud(distro_name, package_name, packagecloud_token, repo_n
 
 
 def upload_files_in_directory_to_packagecloud(directoryName: str, distro_name: str, package_cloud_token: str,
-                                        repo_name: str) -> MultipleReturnValue:
+                                              repo_name: str) -> MultipleReturnValue:
     ret_status: List[ReturnValue] = []
     for filename in os.listdir(directoryName):
         ret_val = upload_to_packagecloud(distro_name, os.path.join(directoryName, filename), package_cloud_token,
@@ -69,10 +69,9 @@ if len(sys.argv) < 3:
 target_platform = sys.argv[0]
 package_cloud_api_token = sys.argv[1]
 repository_name = sys.argv[2]
-multiple_return_value = upload_files_in_directory_to_packagecloud(
-    "./pkgs/releases",
-    target_platform,
-    package_cloud_api_token, repository_name)
+multiple_return_value = upload_files_in_directory_to_packagecloud(os.path.join(os.getcwd(), "pkgs/releases"),
+                                                                  target_platform,
+                                                                  package_cloud_api_token, repository_name)
 print(multiple_return_value.success_status())
 [print(i) for i in multiple_return_value.return_values]
 
