@@ -37,14 +37,14 @@ class MultipleReturnValue:
 def upload_to_packagecloud(distro_name, package_name, packagecloud_token, repo_name) -> ReturnValue:
     distro_id = supported_distros[distro_name]
     files = {
-        'package[distro_version_id]': (None, distro_id),
+        'package[distro_version_id]': (None, str(distro_id)),
         'package[package_file]': (
             package_name, open(package_name, 'rb')),
     }
     package_query_url = 'https://' + packagecloud_token + ':@packagecloud.io/api/v1/repos/citus-bot/' + repo_name + '/packages.json'
-    print("Url:"+package_query_url)
-    response = requests.post(
-        package_query_url,files=files)
+    print("Url:" + package_query_url)
+    print("Package Name:"+package_name)
+    response = requests.post(package_query_url, files=files)
     return ReturnValue(response.ok, response.content)
 
 
