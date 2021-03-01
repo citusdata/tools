@@ -35,6 +35,11 @@ class MultipleReturnValue:
 
 
 def upload_to_packagecloud(distro_name, package_name, packagecloud_token, repo_name) -> ReturnValue:
+    print("Distro Name: " + distro_name)
+    print("Supported Distros:")
+    for key, value in supported_distros.items():
+        print(key + "=>" + value)
+
     distro_id = supported_distros[distro_name]
     files = {
         'package[distro_version_id]': (None, distro_id),
