@@ -35,10 +35,7 @@ class MultipleReturnValue:
 
 
 def upload_to_packagecloud(distro_name, package_name, packagecloud_token, repo_name) -> ReturnValue:
-    print("Distro Name: " + distro_name)
-    print("Supported Distros:")
-    for key, value in supported_distros.items():
-        print(key + "=>" + value)
+
 
     distro_id = supported_distros[distro_name]
     files = {
@@ -55,6 +52,10 @@ def upload_to_packagecloud(distro_name, package_name, packagecloud_token, repo_n
 
 def upload_files_in_directory_to_packagecloud(directoryName: str, distro_name: str, package_cloud_token: str,
                                               repo_name: str) -> MultipleReturnValue:
+    print("Distro Name: " + distro_name)
+    print("Supported Distros:")
+    for key, value in supported_distros.items():
+        print(key + "=>" + str(value))
     ret_status: List[ReturnValue] = []
     for filename in os.listdir(directoryName):
         ret_val = upload_to_packagecloud(distro_name, os.path.join(directoryName, filename), package_cloud_token,
