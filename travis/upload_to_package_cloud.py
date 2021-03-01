@@ -72,9 +72,9 @@ def upload_files_in_directory_to_packagecloud(directoryName: str, distro_name: s
 if len(sys.argv) < 3:
     raise Exception("Distro Name package_cloud_api_token and repository name parameters should be provided")
 
-target_platform = sys.argv[0]
-package_cloud_api_token = sys.argv[1]
-repository_name = sys.argv[2]
+target_platform = sys.argv[1]
+package_cloud_api_token = sys.argv[2]
+repository_name = sys.argv[3]
 multiple_return_value = upload_files_in_directory_to_packagecloud(os.path.join(os.getcwd(), "pkgs/releases"),
                                                                   target_platform,
                                                                   package_cloud_api_token, repository_name)
