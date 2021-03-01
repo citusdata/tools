@@ -1,5 +1,6 @@
 import os
 import sys
+import ntpath;
 from dataclasses import dataclass
 from typing import List
 
@@ -21,6 +22,9 @@ supported_distros = {
 class ReturnValue:
     success_status: bool
     message: str
+    file_name: str
+    distro: str
+    repo: str
 
 
 @dataclass
@@ -41,17 +45,18 @@ def upload_to_packagecloud(distro_name, package_name, packagecloud_token, repo_n
         'package[package_file]': (
             package_name, open(package_name, 'rb')),
     }
+
     package_query_url = 'https://' + packagecloud_token + ':@packagecloud.io/api/v1/repos/citus-bot/' + repo_name + '/packages.json'
-    print("Url:" + package_query_url)
-    print("Package Name:"+package_name)
+    print(f"Uploading package {ntpath.basename(package_name)} using path {package_query_url}")
     response = requests.post(package_query_url, files=files)
-    return ReturnValue(response.ok, response.content)
+    print(f"Response from package cloud: {response.content}")
+    return ReturnValue(response.ok, response.content, package_name, distro_name, repo_name)
 
 
 def upload_files_in_directory_to_packagecloud(directoryName: str, distro_name: str, package_cloud_token: str,
                                               repo_name: str) -> MultipleReturnValue:
-    print("Distro Name: " + distro_name)
-    print("Supported Distros:")
+    # print("Distro Name: " + distro_name)
+    # print("Supported Distros:")
     for key, value in supported_distros.items():
         print(key + "=>" + str(value))
     ret_status: List[ReturnValue] = []
@@ -63,10 +68,6 @@ def upload_files_in_directory_to_packagecloud(directoryName: str, distro_name: s
     return MultipleReturnValue(ret_status)
 
 
-# r = upload_to_packagecloud("el/8",
-#                            "pg-auto-failover14_12-1.4.2-2.el7.x86_64.rpm",
-#                            "cf058e6c1453b02742cae518499e80dd13a3e9a0893509fd")
-
 if len(sys.argv) < 3:
     raise Exception("Distro Name package_cloud_api_token and repository name parameters should be provided")
 
@@ -77,7 +78,18 @@ multiple_return_value = upload_files_in_directory_to_packagecloud(os.path.join(o
                                                                   target_platform,
                                                                   package_cloud_api_token, repository_name)
 print(multiple_return_value.success_status())
-[print(i) for i in multiple_return_value.return_values]
-
+for rv in multiple_return_value.return_values:
+    if not rv.success_status:
+        print(
+            f'Error occured while uploading file on package cloud. Error: {rv.message} Distro: {rv.distro} File Name: {ntpath.basename(rv.file_name)} Repo Name: {rv.repo}')
+    else:
+        print(
+            f'File successfully uploaded. Distro: {rv.distro} File Name: {ntpath.basename(rv.file_name)} Repo Name: {rv.repo}')
+if multiple_return_value.success_status():
+    sys.exit(0)
+else:
+    sys.exit(1)
+# for rv in multiple_return_value.return_values:
+#     if(rv.)
 # print(r.message)
 # print(r.success_status)
