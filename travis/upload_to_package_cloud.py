@@ -86,7 +86,9 @@ for rv in multiple_return_value.return_values:
     else:
         print(
             f'File successfully uploaded. Distro: {rv.distro} File Name: {ntpath.basename(rv.file_name)} Repo Name: {rv.repo}')
-if not multiple_return_value.success_status():
+if multiple_return_value.success_status():
+    sys.exit(0)
+else:
     sys.exit(1)
 # for rv in multiple_return_value.return_values:
 #     if(rv.)
