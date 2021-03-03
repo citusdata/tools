@@ -35,7 +35,7 @@ class MultipleReturnValue:
     multiple_return_value: List[ReturnValue]
 
     def success_status(self) -> bool:
-        return [r for r in self.return_values if not r.success_status].count == 0
+        return len([r for r in self.return_values if not r.success_status]) == 0
 
 
 def upload_to_packagecloud(distro_name, package_name, packagecloud_token, repo_name) -> ReturnValue:
