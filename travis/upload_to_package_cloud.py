@@ -78,6 +78,7 @@ multiple_return_value = upload_files_in_directory_to_packagecloud(os.path.join(o
                                                                   target_platform,
                                                                   package_cloud_api_token, repository_name)
 print(multiple_return_value.success_status())
+print(multiple_return_value.return_values)
 for rv in multiple_return_value.return_values:
     if not rv.success_status:
         print(
