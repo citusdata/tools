@@ -381,7 +381,7 @@ foreach my $platform (@platforms) {
             "PACKAGE_ENCRYPTION_KEY",
             '-e',
             "UNENCRYPTED_PACKAGE",
-            "ghcr.io/gurkanindibay/packaging:$docker_platform-$pg",
+            "citus/packaging:$docker_platform-$pg",
             $build_type
         );
 
