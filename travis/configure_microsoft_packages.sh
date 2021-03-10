@@ -1,5 +1,4 @@
 set -euxo pipefail
-git checkout repoclient
 sudo apt-get install python3-openssl python3-adal jo alien
 sudo dpkg -i azure-repoapi-client_1.0.5-beta_amd64.deb
 
