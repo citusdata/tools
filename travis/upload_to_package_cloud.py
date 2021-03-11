@@ -60,10 +60,19 @@ def upload_files_in_directory_to_packagecloud(directoryName: str, distro_name: s
     for key, value in supported_distros.items():
         print(key + "=>" + str(value))
     ret_status: List[ReturnValue] = []
-    for filename in os.listdir(directoryName):
-        ret_val = upload_to_packagecloud(distro_name, os.path.join(directoryName, filename), package_cloud_token,
-                                         repo_name)
-        ret_status.append(ret_val)
+
+    # TODO may be parameterized to push all files. Now only two level
+    for firstLevelFile in os.listdir(directoryName):
+        if os.path.isdir():
+            for filename in os.listdir(firstLevelFile):
+                ret_val = upload_to_packagecloud(distro_name, os.path.join(directoryName, filename),
+                                                 package_cloud_token,
+                                                 repo_name)
+                ret_status.append(ret_val)
+        else:
+            ret_val = upload_to_packagecloud(distro_name, os.path.join(directoryName, filename), package_cloud_token,
+                                             repo_name)
+            ret_status.append(ret_val)
 
     return MultipleReturnValue(ret_status)
 
