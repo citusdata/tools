@@ -6,7 +6,6 @@ import os
 import json
 import re
 import time
-import sys
 from pprint import pprint
 
 
@@ -38,9 +37,10 @@ pprint(citus_repos)
 
 
 submission_responses = {}
-target_platform = sys.argv[1]
+
 for platform in os.listdir("signed-packages"):
-    repo = citus_repos[target_platform]
+    print(platform)
+    repo = citus_repos[platform]
     pprint(citus_repos[platform])
     platform_dir = os.path.join("signed-packages", platform)
     for package in os.listdir(platform_dir):
