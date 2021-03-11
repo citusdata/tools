@@ -1,17 +1,21 @@
 #!/bin/bash
-set -euxo pipefail
 
 while getopts p: flag; do
   case "${flag}" in
-  p) PATH=${OPTARG} ;;
+  p) file_path=${OPTARG} ;;
   *) ;;
   esac
 done
 
-echo "File: ${PATH}"
 
-apt install python3-openssl python3-adal jo alien
-dpkg -i "${PATH}/azure-repoapi-client_1.0.5-beta_amd64.deb"
+echo "File: ${file_path}"
+if [ -z "${file_path}" ]; then
+  echo "File File path should not be empty Usage ./configure_microsoft_packages.sh -p <file-path>"
+  exit 1
+fi
+
+sudo apt install python3-openssl python3-adal jo alien
+sudo dpkg -i "${file_path}/azure-repoapi-client_1.0.5-beta_amd64.deb"
 
 mkdir -p ~/.repoclient
 # Uses package-repo-service.trafficmanager.net instead of
