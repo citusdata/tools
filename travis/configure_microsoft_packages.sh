@@ -9,7 +9,6 @@ while getopts p: flag; do
 done
 
 echo "File: ${PATH}"
-[ -z "${PATH}" ] && echo "File Path should not be empty Usage ./configure_microsoft_packages.sh -p <file-path>" && exit 1
 
 apt install python3-openssl python3-adal jo alien
 dpkg -i "${PATH}/azure-repoapi-client_1.0.5-beta_amd64.deb"
