@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euxo pipefail
 
 while getopts p: flag; do
   case "${flag}" in
