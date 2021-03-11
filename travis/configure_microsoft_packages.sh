@@ -10,7 +10,7 @@ done
 
 echo "File: ${file_path}"
 if [ -z "${file_path}" ]; then
-  echo "File File path should not be empty Usage ./configure_microsoft_packages.sh -p <file-path>"
+  echo "File  path should not be empty Usage ./configure_microsoft_packages.sh -p <file-path>"
   exit 1
 fi
 
@@ -37,7 +37,7 @@ EOD
 #repoclient repo list | jq '.[] | select(.url | startswith("citus"))'
 
 # Fix a bug in repoclient
-sed 's/resp.status_code != 200/resp.status_code >= 300/' -i /usr/lib/python3/dist-packages/azure/repoclient/repolib.py
+sudo sed 's/resp.status_code != 200/resp.status_code >= 300/' -i /usr/lib/python3/dist-packages/azure/repoclient/repolib.py
 
 # Import microsoft key to hide warnings
 curl https://packages.microsoft.com/keys/microsoft.asc >microsoft.asc &&  rpm --import microsoft.asc
