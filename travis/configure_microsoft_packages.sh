@@ -10,8 +10,8 @@ done
 echo "File: ${PATH}"
 [ -z "${PATH}" ] && echo "File Path should not be empty Usage ./configure_microsoft_packages.sh -p <file-path>" && exit 1
 
-sudo apt-get install python3-openssl python3-adal jo alien
-sudo dpkg -i "${PATH}/azure-repoapi-client_1.0.5-beta_amd64.deb"
+apt-get install python3-openssl python3-adal jo alien
+dpkg -i "${PATH}/azure-repoapi-client_1.0.5-beta_amd64.deb"
 
 mkdir -p ~/.repoclient
 # Uses package-repo-service.trafficmanager.net instead of
@@ -33,7 +33,7 @@ EOD
 #repoclient repo list | jq '.[] | select(.url | startswith("citus"))'
 
 # Fix a bug in repoclient
-sudo sed 's/resp.status_code != 200/resp.status_code >= 300/' -i /usr/lib/python3/dist-packages/azure/repoclient/repolib.py
+sed 's/resp.status_code != 200/resp.status_code >= 300/' -i /usr/lib/python3/dist-packages/azure/repoclient/repolib.py
 
 # Import microsoft key to hide warnings
-curl https://packages.microsoft.com/keys/microsoft.asc >microsoft.asc && sudo rpm --import microsoft.asc
+curl https://packages.microsoft.com/keys/microsoft.asc >microsoft.asc &&  rpm --import microsoft.asc
