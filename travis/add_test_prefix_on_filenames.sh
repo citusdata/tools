@@ -1,7 +1,5 @@
 #!/bin/bash
 
-sudo apt-get install python3-openssl python3-adal jo alien
-
  for FILE in ./pkgs/releases/*;do
    file_name="${FILE##*/}"
    path="${FILE%/*}"
