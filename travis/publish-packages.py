@@ -10,7 +10,7 @@ import sys
 from pprint import pprint
 
 ms_package_repo_map = {
-    "el/8:": "centos-8", "el/7": "centos-7", "debian/buster": "debian-buster", "debian/jessie": "debian-jessie",
+    "el/8": "centos-8", "el/7": "centos-7", "debian/buster": "debian-buster", "debian/jessie": "debian-jessie",
     "debian/stretch": "debian-stretch", "ubuntu/bionic": "ubuntu-bionic", "ubuntu/xenial": "ubuntu-xenial",
     "ubuntu/focal": "ubuntu-focal"}
 
@@ -46,7 +46,7 @@ print("Citus Repos")
 pprint(citus_repos)
 for platform in os.listdir("signed-packages"):
 
-    print("Platform is " + platform)
+    print("Target Platform is " + target_platform)
     repo = ms_package_repo_map[target_platform]
     pprint(citus_repos[platform])
     platform_dir = os.path.join("signed-packages", platform)
