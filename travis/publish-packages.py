@@ -43,7 +43,7 @@ for repo in all_repos:
 target_platform = sys.argv[1]
 submission_responses = {}
 print("Citus Repos")
-print("Current Dir"+os.getcwd())
+print("Current Dir" + os.getcwd())
 pprint(citus_repos)
 for package_file in os.listdir("pkgs/releases"):
 
@@ -67,15 +67,16 @@ for package_file in os.listdir("pkgs/releases"):
             os.rename(old_package_path, package_path)
 
     # Publish packages
-    result = run(
-        "repoclient package add --repoID %s %s" % (repo["id"], package_path),
-        stdout=PIPE,
-    )
-    submission_responses[package_path] = json.loads(result.stdout)
-    print(
-        "Waiting for 30 seconds to avoid concurrency problems on publishing server"
-    )
-    time.sleep(30)
+    if os.path.isfile(package_path):
+        result = run(
+            "repoclient package add --repoID %s %s" % (repo["id"], package_path),
+            stdout=PIPE,
+        )
+        submission_responses[package_path] = json.loads(result.stdout)
+        print(
+            "Waiting for 30 seconds to avoid concurrency problems on publishing server"
+        )
+        time.sleep(30)
 
 pprint(submission_responses)
 
