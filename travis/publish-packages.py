@@ -39,7 +39,7 @@ pprint(citus_repos)
 submission_responses = {}
 
 for platform in os.listdir("signed-packages"):
-    print(platform)
+    print("Platform is "+platform)
     repo = citus_repos[platform]
     pprint(citus_repos[platform])
     platform_dir = os.path.join("signed-packages", platform)
