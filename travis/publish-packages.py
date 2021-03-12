@@ -48,7 +48,6 @@ for platform in os.listdir("signed-packages"):
 
     print("Target Platform is " + target_platform)
     repo = ms_package_repo_map[target_platform]
-    pprint(citus_repos[platform])
     platform_dir = os.path.join("signed-packages", platform)
     for package in os.listdir(platform_dir):
         package_path = os.path.join(platform_dir, package)
