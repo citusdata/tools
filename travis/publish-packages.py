@@ -44,37 +44,37 @@ target_platform = sys.argv[1]
 submission_responses = {}
 print("Citus Repos")
 pprint(citus_repos)
-for platform in os.listdir("signed-packages"):
+for package_file in os.listdir("signed-packages"):
 
     print("Target Platform is " + target_platform)
     repo = ms_package_repo_map[target_platform]
-    platform_dir = os.path.join("signed-packages", platform)
-    for package in os.listdir(platform_dir):
-        package_path = os.path.join(platform_dir, package)
+    file_path = os.path.join("signed-packages", package_file)
 
-        # Ensure deb packages contain the distribution, so they do not conflict
-        if repo["url"] in ("citus-ubuntu", "citus-debian"):
-            if repo["distribution"] not in package:
-                if not package_path.endswith("amd64.deb"):
-                    raise "Package should have ended with amd64.deb: %s" % package_path
-                old_package_path = package_path
-                package_prefix = package_path[: -len("amd64.deb")]
-                package_path = "%s+%s_amd64.deb" % (
-                    package_prefix,
-                    repo["distribution"],
-                )
-                os.rename(old_package_path, package_path)
 
-        # Publish packages
-        result = run(
-            "repoclient package add --repoID %s %s" % (repo["id"], package_path),
-            stdout=PIPE,
-        )
-        submission_responses[package_path] = json.loads(result.stdout)
-        print(
-            "Waiting for 30 seconds to avoid concurrency problems on publishing server"
-        )
-        time.sleep(30)
+
+    # Ensure deb packages contain the distribution, so they do not conflict
+    if repo["url"] in ("citus-ubuntu", "citus-debian"):
+        if repo["distribution"] not in package_file:
+            if not package_path.endswith("amd64.deb"):
+                raise "Package should have ended with amd64.deb: %s" % package_path
+            old_package_path = package_path
+            package_prefix = package_path[: -len("amd64.deb")]
+            package_path = "%s+%s_amd64.deb" % (
+                package_prefix,
+                repo["distribution"],
+            )
+            os.rename(old_package_path, package_path)
+
+    # Publish packages
+    result = run(
+        "repoclient package add --repoID %s %s" % (repo["id"], package_path),
+        stdout=PIPE,
+    )
+    submission_responses[package_path] = json.loads(result.stdout)
+    print(
+        "Waiting for 30 seconds to avoid concurrency problems on publishing server"
+    )
+    time.sleep(30)
 
 pprint(submission_responses)
 
