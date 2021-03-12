@@ -43,15 +43,16 @@ for repo in all_repos:
 target_platform = sys.argv[1]
 submission_responses = {}
 print("Citus Repos")
+print("Current Dir"+os.getcwd())
 pprint(citus_repos)
-for package_file in os.listdir("signed-packages"):
+for package_file in os.listdir("pkgs/releases"):
 
     print("Target Platform is " + target_platform)
-    repo = ms_package_repo_map[target_platform]
-    file_path = os.path.join("signed-packages", package_file)
+    repo_platform = ms_package_repo_map[target_platform]
+    repo = citus_repos[repo_platform]
+    package_path = os.path.join("pkgs/releases", package_file)
 
-
-
+    print("Repo Url:" + repo["url"])
     # Ensure deb packages contain the distribution, so they do not conflict
     if repo["url"] in ("citus-ubuntu", "citus-debian"):
         if repo["distribution"] not in package_file:
