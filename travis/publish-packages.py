@@ -6,7 +6,13 @@ import os
 import json
 import re
 import time
+import sys
 from pprint import pprint
+
+ms_package_repo_map = {
+    "el/8:": "centos-8", "el/7": "centos-7", "debian/buster": "debian-buster", "debian/jessie": "debian-jessie",
+    "debian/stretch": "debian-stretch", "ubuntu/bionic": "ubuntu-bionic", "ubuntu/xenial": "ubuntu-xenial",
+    "ubuntu/focal": "ubuntu-focal"}
 
 
 def run(command, *args, **kwargs):
@@ -24,7 +30,7 @@ citus_repos = {}
 for repo in all_repos:
     if not repo["url"].startswith("citus-"):
         continue
-    name = repo["url"][len("citus-") :]
+    name = repo["url"][len("citus-"):]
     if name in ("ubuntu", "debian"):
         # Suffix distribution
         name = name + "-" + repo["distribution"]
@@ -33,14 +39,15 @@ for repo in all_repos:
         name = re.sub(r"(\d+)", r"-\1", name)
     citus_repos[name] = repo
 
-pprint(citus_repos)
-
-
+# pprint(citus_repos)
+target_platform = sys.argv[1]
 submission_responses = {}
-
+print("Citus Repos")
+pprint(citus_repos)
 for platform in os.listdir("signed-packages"):
-    print("Platform is "+platform)
-    repo = citus_repos[platform]
+
+    print("Platform is " + platform)
+    repo = ms_package_repo_map[target_platform]
     pprint(citus_repos[platform])
     platform_dir = os.path.join("signed-packages", platform)
     for package in os.listdir(platform_dir):
