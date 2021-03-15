@@ -66,10 +66,10 @@ def upload_files_in_directory_to_packagecloud(directoryName: str, distro_name: s
         item_name = os.path.join(directoryName, firstLevelFileItem)
         if os.path.isdir(item_name):
             for filename in os.listdir(item_name):
-
-                ret_val = upload_to_packagecloud(distro_name, os.path.join(item_name, filename),
-                                                 package_cloud_token,
-                                                 repo_name)
+                if filename.endswith(".rpm") or filename.endswith(".deb"):
+                    ret_val = upload_to_packagecloud(distro_name, os.path.join(item_name, filename),
+                                                     package_cloud_token,
+                                                     repo_name)
                 ret_status.append(ret_val)
         else:
             filename = firstLevelFileItem

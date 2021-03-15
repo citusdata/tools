@@ -67,7 +67,7 @@ for package_file in os.listdir("pkgs/releases"):
             os.rename(old_package_path, package_path)
 
     # Publish packages
-    if os.path.isfile(package_path):
+    if os.path.isfile(package_path) and package_file.endswith(".rpm") or package_file.endswith(".deb"):
         result = run(
             "repoclient package add --repoID %s %s" % (repo["id"], package_path),
             stdout=PIPE,
