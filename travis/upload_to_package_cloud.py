@@ -62,6 +62,7 @@ def upload_files_in_directory_to_packagecloud(directoryName: str, distro_name: s
     ret_status: List[ReturnValue] = []
 
     # TODO may be parameterized to push all files. Now only two level
+    print("Test version")
     for firstLevelFileItem in os.listdir(directoryName):
         item_name = os.path.join(directoryName, firstLevelFileItem)
         if os.path.isdir(item_name):
