@@ -28,7 +28,15 @@ import subprocess
 import sys
 import getpass
 import time
+import distutils.spawn
 
+# for osx we might want to start postgres via a fixopen binary that preloads a
+# dylib to fix the interrupted systemcall, this is done by changing the postgres
+# path for pg_ctl to the fixopen binary
+pgctl_flags = ""
+fixopen = distutils.spawn.find_executable("postgres.fixopen")
+if fixopen:
+    pgctl_flags += f' -p "{fixopen}"'
 
 def run(command, *args, **kwargs):
     print(command)
@@ -133,14 +141,14 @@ def main(arguments):
 
         cport = port
         role = "coordinator"
-        run(f'pg_ctl -D {clustername}/{role} -o "-p {cport}" -l {role}_logfile start')
+        run(f'pg_ctl {pgctl_flags} -D {clustername}/{role} -o "-p {cport}" -l {role}_logfile start')
         port += 1
 
         worker_ports = []
         for i in range(size):
             role = "worker%d" % i
             worker_ports.append(port)
-            run(f'pg_ctl start -D {clustername}/{role} -o "-p {port}" -l {role}_logfile')
+            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role} -o "-p {port}" -l {role}_logfile')
             port += 1
         port = cport
 
@@ -190,7 +198,7 @@ def main(arguments):
         clustername = arguments["<name>"]
         port = int(arguments["--port"])
         for role in getRoles(clustername):
-            run(f'pg_ctl start -D {clustername}/{role} -o "-p {port}" -l {role}_logfile')
+            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role} -o "-p {port}" -l {role}_logfile')
             port += 1
         for bouncerConfig in getPgBouncerConfigs(clustername):
             run(f'pgbouncer -d {clustername}/{bouncerConfig}')
@@ -209,7 +217,7 @@ def main(arguments):
         else:
             cport = port
             for role in getRoles(clustername):
-                run(f'pg_ctl restart -D {clustername}/{role} -o "-p {cport}" -l {role}_logfile')
+                run(f'pg_ctl {pgctl_flags} restart -D {clustername}/{role} -o "-p {cport}" -l {role}_logfile')
                 cport += 1
 
 
@@ -235,7 +243,7 @@ def stopCluster(clustername, always=False):
         pipeTrue = " || true"
 
     for role in getRoles(clustername):
-        run(f"pg_ctl stop -D {clustername}/{role} {pipeTrue}")
+        run(f"pg_ctl {pgctl_flags} stop -D {clustername}/{role} {pipeTrue}")
 
 def getPgBouncerConfigs(clustername):
     try:
