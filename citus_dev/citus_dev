@@ -53,8 +53,6 @@ def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
     run(f"initdb -D {clustername}/{nodename}")
 
     shared_preload_libraries = ['citus', 'pg_stat_statements']
-    if cstore:
-        shared_preload_libraries += ['cstore_fdw']
 
     shared_preload_libraries = ','.join(shared_preload_libraries)
 
