@@ -34,6 +34,10 @@ if ( $num_args == 2 ) {
 `sed -i 's/VERSION=[[:digit:]]*.[[:digit:]]*.[[:digit:]]*/VERSION=$VERSION/g' Dockerfile-alpine`;
 `sed -i 's/PG_MAJOR-citus-[[:digit:]]*.[[:digit:]]*/PG_MAJOR-citus-$minor_version/g' Dockerfile-alpine`;
 
+# Update citus version on alpine Dockerfile
+`sed -i 's/VERSION=[[:digit:]]*.[[:digit:]]*.[[:digit:]]*/VERSION=$VERSION/g' postgres-12/Dockerfile`;
+`sed -i 's/PG_MAJOR-citus-[[:digit:]]*.[[:digit:]]*/PG_MAJOR-citus-$minor_version/g' postgres-12/Dockerfile`;
+
 # Update citus version on docker-compose
 `sed -i 's/citus:[[:digit:]]*.[[:digit:]]*.[[:digit:]]*/citus:$VERSION/g' docker-compose.yml`;
 
@@ -59,5 +63,5 @@ close(CHANGELOG);
 
 # Push the branch and open a PR against master
 `git commit -a -m "Bump to version $VERSION"`;
-`git push origin release-$VERSION-$curTime`;
-`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump docker to $VERSION\", \"base\":\"master\", \"head\":\"release-$VERSION-$curTime\"}' https://api.github.com/repos/citusdata/docker/pulls`;
+# `git push origin release-$VERSION-$curTime`;
+# `curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump docker to $VERSION\", \"base\":\"master\", \"head\":\"release-$VERSION-$curTime\"}' https://api.github.com/repos/citusdata/docker/pulls`;
