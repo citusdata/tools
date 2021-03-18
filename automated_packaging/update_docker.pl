@@ -63,5 +63,5 @@ close(CHANGELOG);
 
 # Push the branch and open a PR against master
 `git commit -a -m "Bump to version $VERSION"`;
-# `git push origin release-$VERSION-$curTime`;
-# `curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump docker to $VERSION\", \"base\":\"master\", \"head\":\"release-$VERSION-$curTime\"}' https://api.github.com/repos/citusdata/docker/pulls`;
+`git push origin release-$VERSION-$curTime`;
+`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump docker to $VERSION\", \"base\":\"master\", \"head\":\"release-$VERSION-$curTime\"}' https://api.github.com/repos/citusdata/docker/pulls`;
