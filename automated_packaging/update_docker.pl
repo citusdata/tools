@@ -31,8 +31,12 @@ if ( $num_args == 2 ) {
 `sed -i 's/PG_MAJOR-citus-[[:digit:]]*.[[:digit:]]*/PG_MAJOR-citus-$minor_version/g' Dockerfile`;
 
 # Update citus version on alpine Dockerfile
-`sed -i 's/VERSION=[[:digit:]]*.[[:digit:]]*.[[:digit:]]*/VERSION=$VERSION/g' Dockerfile-alpine`;
-`sed -i 's/PG_MAJOR-citus-[[:digit:]]*.[[:digit:]]*/PG_MAJOR-citus-$minor_version/g' Dockerfile-alpine`;
+`sed -i 's/VERSION=[[:digit:]]*.[[:digit:]]*.[[:digit:]]*/VERSION=$VERSION/g' alpine/Dockerfile`;
+`sed -i 's/PG_MAJOR-citus-[[:digit:]]*.[[:digit:]]*/PG_MAJOR-citus-$minor_version/g' alpine/Dockerfile`;
+
+# Update citus version on Postgres 12 Dockerfile
+`sed -i 's/VERSION=[[:digit:]]*.[[:digit:]]*.[[:digit:]]*/VERSION=$VERSION/g' postgres-12/Dockerfile`;
+`sed -i 's/PG_MAJOR-citus-[[:digit:]]*.[[:digit:]]*/PG_MAJOR-citus-$minor_version/g' postgres-12/Dockerfile`;
 
 # Update citus version on docker-compose
 `sed -i 's/citus:[[:digit:]]*.[[:digit:]]*.[[:digit:]]*/citus:$VERSION/g' docker-compose.yml`;
