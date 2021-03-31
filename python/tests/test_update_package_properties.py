@@ -83,7 +83,7 @@ class PackagePropertiesTestCases(unittest.TestCase):
 
     def test_update_rpm_spec(self):
         project_name = "citus"
-        spec_file = f"{BASE_PATH}/{get_spec_file_name(project_name)}"
+        spec_file = f"{TEST_BASE_PATH}/files/{get_spec_file_name(project_name)}"
         spec_file_copy = f"{os.getcwd()}/{get_spec_file_name(project_name)}_copy"
         spec_file_reference = f"{TEST_BASE_PATH}/files/{get_spec_file_name(project_name)}"
         templates_path = f"{BASE_PATH}/templates"
@@ -122,14 +122,14 @@ class PackagePropertiesTestCases(unittest.TestCase):
             self.assertGreater(index, -1)
 
     def test_update_all_changes(self):
-        pkgvars_path = f"{BASE_PATH}/pkgvars"
+        pkgvars_path = f"{TEST_BASE_PATH}/files/pkgvars"
         pkgvars_copy_path = f"{pkgvars_path}_copy"
-        spec_file = f"{BASE_PATH}/{get_spec_file_name(PROJECT_NAME)}"
-        spec_file_copy = f"{os.getcwd()}/{get_spec_file_name(PROJECT_NAME)}_copy"
+        spec_file = f"{TEST_BASE_PATH}/files/{get_spec_file_name(PROJECT_NAME)}"
+        spec_file_copy = f"{spec_file}_copy"
         spec_file_reference = f"{TEST_BASE_PATH}/files/{get_spec_file_name(PROJECT_NAME)}"
 
-        changelog_file_path = f"{BASE_PATH}/debian/changelog"
-        changelog_file_copy_path = f"{BASE_PATH}/debian/changelog_copy"
+        changelog_file_path = f"{TEST_BASE_PATH}/files/debian/changelog"
+        changelog_file_copy_path = f"{changelog_file_path}_copy"
         copyfile(changelog_file_path, changelog_file_copy_path)
         copyfile(pkgvars_path, pkgvars_copy_path)
         copyfile(spec_file, spec_file_copy)
@@ -137,7 +137,7 @@ class PackagePropertiesTestCases(unittest.TestCase):
         try:
             update_all_changes(GITHUB_TOKEN, PROJECT_NAME, PROJECT_VERSION, TAG_NAME, True, 1, MICROSOFT_EMAIL,
                                NAME_SURNAME,
-                               CHANGELOG_DATE, BASE_PATH)
+                               CHANGELOG_DATE, f"{TEST_BASE_PATH}/files")
             self.verify_prepend_debian_changelog(changelog_file_path)
             self.verify_pkgvars(pkgvars_path)
             self.verify_rpm_spec(spec_file_reference, spec_file)
