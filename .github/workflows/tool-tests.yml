@@ -33,6 +33,7 @@ jobs:
       - name: Run a multi-line script
         run: |
           ls -la
+          pip install -r requirements.txt
           export GH_TOKEN=$(GH_TOKEN)
           export BASE_PATH=$(pwd)
           python -m unittest ./python/tests/test_update_package_properties.py
