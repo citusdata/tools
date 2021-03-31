@@ -1,0 +1,82 @@
+%global pgmajorversion 11
+%global pgpackageversion 11
+%global pginstdir /usr/pgsql-%{pgpackageversion}
+%global sname citus
+
+Summary:	PostgreSQL-based distributed RDBMS
+Name:		%{sname}%{?pkginfix}_%{pgmajorversion}
+Provides:	%{sname}_%{pgmajorversion}
+Conflicts:	%{sname}_%{pgmajorversion}
+Version:	{{rpm_version}}
+Release:	{{fancy_version_no}}%{dist}
+License:	AGPLv3
+Group:		Applications/Databases
+Source0:	https://github.com/citusdata/{{project_name}}/archive/v10.0.3.tar.gz
+URL:		https://github.com/citusdata/{{project_name}}
+BuildRequires:	postgresql%{pgmajorversion}-devel libcurl-devel
+Requires:	postgresql%{pgmajorversion}-server
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+%description
+Citus horizontally scales PostgreSQL across commodity servers
+using sharding and replication. Its query engine parallelizes
+incoming SQL queries across these servers to enable real-time
+responses on large datasets.
+
+Citus extends the underlying database rather than forking it,
+which gives developers and enterprises the power and familiarity
+of a traditional relational database. As an extension, Citus
+supports new PostgreSQL releases, allowing users to benefit from
+new features while maintaining compatibility with existing
+PostgreSQL tools. Note that Citus supports many (but not all) SQL
+commands.
+
+%prep
+%setup -q -n %{sname}-%{version}
+
+%build
+%configure PG_CONFIG=%{pginstdir}/bin/pg_config --with-extra-version="%{?conf_extra_version}" --with-security-flags
+make %{?_smp_mflags}
+
+%install
+%make_install
+# Install documentation with a better name:
+%{__mkdir} -p %{buildroot}%{pginstdir}/doc/extension
+%{__cp} README.md %{buildroot}%{pginstdir}/doc/extension/README-%{sname}.md
+# Set paths to be packaged other than LICENSE, README & CHANGELOG.md
+echo %{pginstdir}/include/server/citus_*.h >> installation_files.list
+echo %{pginstdir}/include/server/distributed/*.h >> installation_files.list
+echo %{pginstdir}/lib/%{sname}.so >> installation_files.list
+echo %{pginstdir}/share/extension/%{sname}-*.sql >> installation_files.list
+echo %{pginstdir}/share/extension/%{sname}.control >> installation_files.list
+%ifarch ppc64 ppc64le
+  %else
+  %if 0%{?rhel} && 0%{?rhel} <= 6
+  %else
+    echo %{pginstdir}/lib/bitcode/%{sname}/*.bc >> installation_files.list
+    echo %{pginstdir}/lib/bitcode/%{sname}*.bc >> installation_files.list
+    echo %{pginstdir}/lib/bitcode/%{sname}/*/*.bc >> installation_files.list
+    
+    # Columnar does not exist in Citus versions < 10.0
+    # At this point, we don't have %{pginstdir},
+    # so first check build directory for columnar.
+    [[ -d %{buildroot}%{pginstdir}/lib/bitcode/columnar/ ]] && echo %{pginstdir}/lib/bitcode/columnar/*.bc >> installation_files.list
+  %endif
+%endif
+
+%clean
+%{__rm} -rf %{buildroot}
+
+%files -f installation_files.list
+%files
+%defattr(-,root,root,-)
+%doc CHANGELOG.md
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%doc LICENSE
+%else
+%license LICENSE
+%endif
+%doc %{pginstdir}/doc/extension/README-%{sname}.md
+
+%changelog
+{{changelog}}
