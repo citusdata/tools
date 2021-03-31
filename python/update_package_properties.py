@@ -181,18 +181,6 @@ def prepend_latest_changelog_into_debian_changelog(latest_changelog: str, tag_na
             print("Already version in the debian changelog")
 
 
-# print(get_last_changelog_content(
-#     "### citus v8.3.3 (March 23, 2021) ###\n\n * Fix for something \n\n### citus v8.3.2 (March 23, 2020) ###\n\n* Fix for another thing\n\n"))
-
-
-# print(change_header_into_debian_header("### citus v8.3.3 (March 23, 2021) ###"))
-# print(remove_parentheses_from_string("### citus v8.3.3 (March 23, 2021) ###"))
-
-# print("citus v8.3.3".split(r" "))
-# print(get_changelog_for_tag("93647419346e194ae3094598139d68ebf2263ee0", "citus", "v10.0.3"))
-# print(get_debian_changelog_for_latest_entry("93647419346e194ae3094598139d68ebf2263ee0", "citus", "v10.0.3"))
-# print(save_latest_changelog_into_debian_template("93647419346e194ae3094598139d68ebf2263ee0", "citus", "v10.0.3"))
-
 
 @validate_parameters
 def update_pkgvars(version: is_version(non_empty(no_whitespaces(non_blank(str)))), fancy: bool,
