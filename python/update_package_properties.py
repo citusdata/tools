@@ -272,7 +272,7 @@ def update_rpm_spec(project_name: str, project_version: str, microsoft_email: st
 
 
 @validate_parameters
-def update_all_changes(github_token: non_blank(non_empty(str)), project_name: non_empty(str), project_version: is_version(str),
+def update_all_changes(github_token: non_empty(non_blank(str)), project_name: non_empty(str), project_version: is_version(str),
                        tag_name: is_tag(str), fancy: bool, fancy_version_number: non_negative(int),
                        microsoft_email: is_email(str),
                        name_surname: non_empty(non_blank(str)), release_date: date, packaging_path: str):
