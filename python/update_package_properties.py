@@ -1,6 +1,6 @@
 import argparse
 import re
-from datetime import date
+from datetime import date, datetime
 
 import pathlib2
 import string_utils
@@ -181,7 +181,6 @@ def prepend_latest_changelog_into_debian_changelog(latest_changelog: str, tag_na
             print("Already version in the debian changelog")
 
 
-
 @validate_parameters
 def update_pkgvars(version: is_version(non_empty(no_whitespaces(non_blank(str)))), fancy: bool,
                    fancy_release_count: non_negative(int), templates_path: str, pkgvars_path: str) -> None:
@@ -272,7 +271,8 @@ def update_rpm_spec(project_name: str, project_version: str, microsoft_email: st
 
 
 @validate_parameters
-def update_all_changes(github_token: non_empty(non_blank(str)), project_name: non_empty(str), project_version: is_version(str),
+def update_all_changes(github_token: non_empty(non_blank(str)), project_name: non_empty(str),
+                       project_version: is_version(str),
                        tag_name: is_tag(str), fancy: bool, fancy_version_number: non_negative(int),
                        microsoft_email: is_email(str),
                        name_surname: non_empty(non_blank(str)), release_date: date, packaging_path: str):
@@ -303,5 +303,10 @@ if __name__ == "__main__":
     parser.add_argument('--exec_path')
     args = parser.parse_args()
 
-    update_all_changes(args.gh_token, args.prj_name, args.tag_name, args.fancy, args.fancy_ver_no, args.email,
-                       args.name, args.date, args.exec_path)
+    if not string_utils.is_integer(args.fancy_ver_no):
+        raise ValueError(f"fancy_ver_no is expected to be numeric actual value {args.fancy_ver_no}")
+
+    exec_date = datetime.strptime(args.date, '%Y.%m.%d %H:%M:%S %z')
+
+    update_all_changes(args.gh_token, args.prj_name, args.prj_ver, args.tag_name, args.fancy, int(args.fancy_ver_no),
+                       args.email, args.name, exec_date, args.exec_path)
