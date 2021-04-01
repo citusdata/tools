@@ -137,13 +137,13 @@ def get_changelog_for_tag(github_token: str, project_name: str, tag_name: str) -
 @validate_parameters
 def get_debian_changelog_header(changelog_header: is_project_changelog_header(str), fancy: bool,
                                 fancy_version_number: int) -> str:
-    hash_removed_string = changelog_header.removeprefix("### ").removesuffix(" ###")
+    hash_removed_string = changelog_header.lstrip("### ").rstrip(" ###")
     parentheses_removed_string = remove_parentheses_from_string(hash_removed_string)
     words = parentheses_removed_string.strip().split(" ")
     if len(words) != 2:
         raise Exception("Two words should be included in striped version header")
     project_name = words[0]
-    project_version = words[1].removeprefix("v")
+    project_version = words[1].lstrip("v")
     version_on_changelog = get_version_number_with_project_name(project_name, project_version, fancy,
                                                                 fancy_version_number)
 
