@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euxo pipefail
+
 PRJ_NAME="citus"
 PRJ_VER="10.0.3"
 TAG_NAME="v${PRJ_VER}"
