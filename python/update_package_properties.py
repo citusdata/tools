@@ -88,25 +88,15 @@ def find_nth_overlapping_line_by_regex(subject_string, regex_pattern, n) -> int:
     return index
 
 
-# def find_nth_overlapping_regex(subject_string, search_string, n):
-#     re.
-#     start = subject_string.find(search_string)
-#
-#     while start >= 0 and n > 1:
-#         start = subject_string.find(search_string, start + 1)
-#         n -= 1
-#     return start
-
-
 def get_last_changelog_content(all_changelog_content: str) -> str:
     second_changelog_index = find_nth_overlapping(all_changelog_content, "###", 3)
     changelogs = all_changelog_content[:second_changelog_index]
     lines = changelogs.splitlines()
     if len(lines) < 1:
-        raise Exception("At least one line should be in changelog")
+        raise ValueError("At least one line should be in changelog")
     changelog_header = lines[0]
     if not changelog_header.startswith("###"):
-        raise Exception("Changelog header should start with '###'")
+        raise ValueError("Changelog header should start with '###'")
     return changelogs
 
 
@@ -115,7 +105,7 @@ def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
     lines = all_changelog_content.splitlines()
     changelogs = "".join([str(elem) + "\n" for elem in lines[:second_changelog_index - 1]])
     if len(lines) < 1:
-        raise Exception("At least one line should be in changelog")
+        raise ValueError("At least one line should be in changelog")
     return changelogs
 
 
@@ -141,7 +131,7 @@ def get_debian_changelog_header(changelog_header: is_project_changelog_header(st
     parentheses_removed_string = remove_parentheses_from_string(hash_removed_string)
     words = parentheses_removed_string.strip().split(" ")
     if len(words) != 2:
-        raise Exception("Two words should be included in striped version header")
+        raise ValueError("Two words should be included in striped version header")
     project_name = words[0]
     project_version = words[1].lstrip("v")
     version_on_changelog = get_version_number_with_project_name(project_name, project_version, fancy,
@@ -163,7 +153,7 @@ def convert_citus_changelog_into_debian_changelog(citus_changelog: str, fancy: b
     return debian_latest_changelog
 
 
-def prepend_latest_changelog_into_debian_changelog(latest_changelog: str, tag_name: str, fancy: bool,
+def prepend_latest_changelog_into_debian_changelog(latest_changelog: str, project_version: str, fancy: bool,
                                                    fancy_version_number: int, changelog_file_path: str,
                                                    microsoft_email: str, name_surname: str,
                                                    changelog_date: date) -> None:
@@ -171,7 +161,7 @@ def prepend_latest_changelog_into_debian_changelog(latest_changelog: str, tag_na
                                                                             fancy_version_number, microsoft_email,
                                                                             name_surname, changelog_date)
     with open(changelog_file_path, "r+") as reader:
-        if not (f"({tag_name}" in reader.readline()):
+        if not (f"({project_version}" in reader.readline()):
             reader.seek(0, 0)
             old_changelog = reader.read()
             changelog = f"{debian_latest_changelog}{old_changelog}"
@@ -179,7 +169,6 @@ def prepend_latest_changelog_into_debian_changelog(latest_changelog: str, tag_na
             reader.write(changelog)
         else:
             print("Already version in the debian changelog")
-
 
 
 @validate_parameters
@@ -246,12 +235,6 @@ def convert_citus_changelog_into_rpm_changelog(project_name: str, project_versio
     return rpm_changelog
 
 
-# # print(get_rpm_changelog_history("citus"))
-# changelog = get_changelog_for_tag("93647419346e194ae3094598139d68ebf2263ee0", "citus", "v10.0.3")
-# print(get_rpm_changelog("citus", "10.0.3", changelog, "gindibay@microsoft.com", "Gürkan İndibay", True, 1))
-# print(get_rpm_header("citus", "gindibay@microsoft.com", "Gurkan Indibay", "10.0.3", True, 2))
-
-
 def update_rpm_spec(project_name: str, project_version: str, microsoft_email: str,
                     name_surname: str, fancy: bool, fancy_version_number: int, spec_file_name: str,
                     changelog_date: date, templates_path: str) -> None:
@@ -260,6 +243,11 @@ def update_rpm_spec(project_name: str, project_version: str, microsoft_email: st
     fancy_version_str = get_version_number(project_version, fancy, fancy_version_number)
     template = env.get_template('project.spec.tmpl')
     rpm_changelog_history = get_rpm_changelog_history(project_name, spec_file_name)
+
+    history_lines = rpm_changelog_history.splitlines()
+
+    if len(history_lines) > 0 and project_version in history_lines[1]:
+        raise ValueError(f"{project_version} already exists in rpm spec file")
 
     latest_changelog = convert_citus_changelog_into_rpm_changelog(project_name, project_version, microsoft_email,
                                                                   name_surname, fancy, fancy_version_number,
@@ -272,14 +260,15 @@ def update_rpm_spec(project_name: str, project_version: str, microsoft_email: st
 
 
 @validate_parameters
-def update_all_changes(github_token: non_empty(non_blank(str)), project_name: non_empty(str), project_version: is_version(str),
+def update_all_changes(github_token: non_empty(non_blank(str)), project_name: non_empty(str),
+                       project_version: is_version(str),
                        tag_name: is_tag(str), fancy: bool, fancy_version_number: non_negative(int),
                        microsoft_email: is_email(str),
                        name_surname: non_empty(non_blank(str)), release_date: date, packaging_path: str):
     templates_path = f"{BASE_PATH}/templates"
     update_pkgvars(project_version, fancy, fancy_version_number, templates_path, f"{packaging_path}")
     latest_changelog = get_changelog_for_tag(github_token, project_name, tag_name)
-    prepend_latest_changelog_into_debian_changelog(latest_changelog, tag_name, fancy, fancy_version_number,
+    prepend_latest_changelog_into_debian_changelog(latest_changelog, project_version, fancy, fancy_version_number,
                                                    f"{packaging_path}/debian/changelog", microsoft_email, name_surname,
                                                    release_date)
     spec_file_name = f"{packaging_path}/{get_spec_file_name(project_name)}"

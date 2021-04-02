@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime
 from shutil import copyfile
 
-from .test_utils import *
+from .test_utils import are_strings_equal
 from ..update_package_properties import *
 
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -57,11 +57,25 @@ class PackagePropertiesTestCases(unittest.TestCase):
         refer_file_path = f"{TEST_BASE_PATH}/files/debian.changelog.refer"
         changelog_file_path = f"{TEST_BASE_PATH}/files/debian.changelog"
         copyfile(refer_file_path, changelog_file_path)
-        changelog = get_changelog_for_tag(GITHUB_TOKEN, PROJECT_NAME, TAG_NAME)
+        latest_changelog = get_changelog_for_tag(GITHUB_TOKEN, PROJECT_NAME, TAG_NAME)
         try:
-            prepend_latest_changelog_into_debian_changelog(changelog, PROJECT_VERSION, True, 1, changelog_file_path,
+            prepend_latest_changelog_into_debian_changelog(latest_changelog, PROJECT_VERSION, True, 1,
+                                                           changelog_file_path,
                                                            MICROSOFT_EMAIL, NAME_SURNAME, CHANGELOG_DATE)
             self.verify_prepend_debian_changelog(changelog_file_path)
+        finally:
+            os.remove(changelog_file_path)
+
+    def test_prepend_latest_changelog_into_debian_changelog_10_0_3_already_included(self):
+        refer_file_path = f"{TEST_BASE_PATH}/files/debian.changelog_include_10_0_3.refer"
+        changelog_file_path = f"{TEST_BASE_PATH}/files/debian.changelog"
+        copyfile(refer_file_path, changelog_file_path)
+        latest_changelog = get_changelog_for_tag(GITHUB_TOKEN, PROJECT_NAME, TAG_NAME)
+        try:
+            prepend_latest_changelog_into_debian_changelog(latest_changelog, PROJECT_VERSION, True, 1,
+                                                           changelog_file_path,
+                                                           MICROSOFT_EMAIL, NAME_SURNAME, CHANGELOG_DATE)
+            self.assertRaises(ValueError)
         finally:
             os.remove(changelog_file_path)
 
@@ -92,6 +106,20 @@ class PackagePropertiesTestCases(unittest.TestCase):
             update_rpm_spec(project_name, PROJECT_VERSION, MICROSOFT_EMAIL, NAME_SURNAME, True, 1,
                             spec_file, CHANGELOG_DATE, templates_path)
             self.verify_rpm_spec(spec_file_reference, spec_file)
+        finally:
+            copyfile(spec_file_copy, spec_file)
+            os.remove(spec_file_copy)
+
+    def test_update_rpm_spec_include_10_0_3(self):
+        project_name = "citus"
+        spec_file = f"{TEST_BASE_PATH}/files/citus_include_10_0_3.spec"
+        spec_file_copy = f"{os.getcwd()}/{get_spec_file_name(project_name)}_copy"
+        templates_path = f"{BASE_PATH}/templates"
+        copyfile(spec_file, spec_file_copy)
+        try:
+            update_rpm_spec(project_name, PROJECT_VERSION, MICROSOFT_EMAIL, NAME_SURNAME, True, 1,
+                            spec_file, CHANGELOG_DATE, templates_path)
+            self.assertRaises(ValueError)
         finally:
             copyfile(spec_file_copy, spec_file)
             os.remove(spec_file_copy)
