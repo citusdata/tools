@@ -1,6 +1,6 @@
 import argparse
 import re
-from datetime import date
+from datetime import date, datetime
 
 import pathlib2
 import string_utils
@@ -292,5 +292,10 @@ if __name__ == "__main__":
     parser.add_argument('--exec_path')
     args = parser.parse_args()
 
-    update_all_changes(args.gh_token, args.prj_name, args.tag_name, args.fancy, args.fancy_ver_no, args.email,
-                       args.name, args.date, args.exec_path)
+    if not string_utils.is_integer(args.fancy_ver_no):
+        raise ValueError(f"fancy_ver_no is expected to be numeric actual value {args.fancy_ver_no}")
+
+    exec_date = datetime.strptime(args.date, '%Y.%m.%d %H:%M:%S %z')
+
+    update_all_changes(args.gh_token, args.prj_name, args.prj_ver, args.tag_name, args.fancy, int(args.fancy_ver_no),
+                       args.email, args.name, exec_date, args.exec_path)
