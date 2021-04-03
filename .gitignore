@@ -4,3 +4,5 @@
 
 # generated man pages
 *.1
+/python/__pycache__/
+/python/tests/__pycache__/
