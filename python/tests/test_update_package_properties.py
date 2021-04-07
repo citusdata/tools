@@ -1,6 +1,5 @@
 import os
 import unittest
-from datetime import datetime
 from shutil import copyfile
 
 from .test_utils import are_strings_equal
@@ -20,15 +19,7 @@ CHANGELOG_DATE = datetime.strptime('Thu, 18 Mar 2021 01:40:08 +0000', '%a, %d %b
 
 class PackagePropertiesTestCases(unittest.TestCase):
 
-    def test_get_version_number(self):
-        self.assertEqual(get_version_number("10.0.3", True, 1), "10.0.3-1")
-        print(os.getenv("test"))
 
-    def test_get_version_number_with_project_name(self):
-        self.assertEqual(get_version_number_with_project_name("citus", "10.0.3", True, 1), "10.0.3.citus-1")
-
-    def test_find_nth_overlapping(self):
-        self.assertEqual(find_nth_overlapping("foofoo foofoo", "foofoo", 2), 7)
 
     def test_get_changelog_for_tag(self):
         changelog = get_changelog_for_tag(GITHUB_TOKEN, "citus", "v10.0.3")

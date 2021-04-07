@@ -1,91 +1,13 @@
 import argparse
-import re
 from datetime import date, datetime
-
 import pathlib2
-import string_utils
+
 from github import Github
-from jinja2 import Environment, FileSystemLoader
-from parameters_validation import no_whitespaces, non_blank, non_empty, non_negative, validate_parameters, \
-    parameter_validation
+from parameters_validation import no_whitespaces, non_blank, non_empty, non_negative, validate_parameters
+
+from .common_tool_methods import *
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
-
-
-@parameter_validation
-def is_version(version: str):
-    if version is None or not version:
-        raise ValueError("version should be non-empty and should not be None")
-    if not re.match(r"\d+\.\d+\.\d+$", version):
-        raise ValueError(
-            "version should include 3 levels of versions consists of numbers  separated with dots. e.g: 10.0.1")
-
-
-@parameter_validation
-def is_tag(tag: str):
-    if tag is None or not tag:
-        raise ValueError("tag  should be non-empty and should not be None")
-    if not re.match(r"v\d+\.\d+\.\d+$", tag):
-        raise ValueError(
-            "tag  should start with v and should include 3 levels of versions consists of numbers " +
-            "separated with dots. e.g: v10.0.1")
-
-
-@parameter_validation
-def is_email(email: str):
-    if not string_utils.is_email(email):
-        raise ValueError("Parameter is not in email format")
-
-
-@parameter_validation
-def is_project_changelog_header(header: str):
-    if header is None or not header:
-        raise ValueError("header should be non-empty and should not be None")
-    if not re.match(r"^### \w+\sv\d+\.\d+\.\d+\s\(\w+\s\d+,\s\d+\)\s###$", header):
-        raise ValueError(
-            f"changelog header is in invalid format. Actual:{header} Expected: ### citus v8.3.3 (March 23, 2021) ### ")
-
-
-def get_spec_file_name(project_name: str) -> str:
-    return f"{project_name}.spec"
-
-
-def get_version_number(version: str, fancy: bool, fancy_release_count: int) -> str:
-    fancy_suffix = f"-{fancy_release_count}" if fancy else ""
-    return f"{version}{fancy_suffix}"
-
-
-def get_version_number_with_project_name(project_name: str, version: str, fancy: bool, fancy_release_count: int) -> str:
-    fancy_suffix = f"-{fancy_release_count}" if fancy else ""
-    return f"{version}.{project_name}{fancy_suffix}"
-
-
-def get_template_environment(template_dir: str) -> Environment:
-    file_loader = FileSystemLoader(template_dir)
-    env = Environment(loader=file_loader)
-    return env
-
-
-def find_nth_overlapping(subject_string, search_string, n) -> int:
-    start = subject_string.find(search_string)
-
-    while start >= 0 and n > 1:
-        start = subject_string.find(search_string, start + 1)
-        n -= 1
-    return start
-
-
-def find_nth_overlapping_line_by_regex(subject_string, regex_pattern, n) -> int:
-    lines = subject_string.splitlines()
-    counter = 0
-    index = -1
-    for i in range(len(lines)):
-        if re.match(regex_pattern, lines[i]):
-            counter = counter + 1
-        if counter == n:
-            index = i
-            break
-    return index
 
 
 def get_last_changelog_content(all_changelog_content: str) -> str:
@@ -109,8 +31,13 @@ def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
     return changelogs
 
 
-def remove_parentheses_from_string(param: str) -> str:
-    return re.sub(r"[(\[].*?[)\]]", "", param)
+@parameter_validation
+def is_project_changelog_header(header: str):
+    if header is None or not header:
+        raise ValueError("header should be non-empty and should not be None")
+    if not re.match(r"^### \w+\sv\d+\.\d+\.\d+\s\(\w+\s\d+,\s\d+\)\s###$", header):
+        raise ValueError(
+            f"changelog header is in invalid format. Actual:{header} Expected: ### citus v8.3.3 (March 23, 2021) ### ")
 
 
 def get_changelog_for_tag(github_token: str, project_name: str, tag_name: str) -> str:
@@ -128,7 +55,7 @@ def get_changelog_for_tag(github_token: str, project_name: str, tag_name: str) -
 def get_debian_changelog_header(changelog_header: is_project_changelog_header(str), fancy: bool,
                                 fancy_version_number: int) -> str:
     hash_removed_string = changelog_header.lstrip("### ").rstrip(" ###")
-    parentheses_removed_string = remove_parentheses_from_string(hash_removed_string)
+    parentheses_removed_string = remove_string_inside_parentheses(hash_removed_string)
     words = parentheses_removed_string.strip().split(" ")
     if len(words) != 2:
         raise ValueError("Two words should be included in striped version header")
