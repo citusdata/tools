@@ -1,6 +1,7 @@
 import os
 
 from github import Github
+import uuid
 
 from .common_tool_methods import *
 
@@ -76,7 +77,7 @@ def update_release(github_token: str, project_name: str, project_version: is_ver
         print(f"OK Changes pushed for {release_branch_name}")
         print(f"OK {release_branch_name} prepared.")
         # Increase version number and change upcoming version
-        upcoming_version_branch = f"master-update-version {datetime.now().timestamp()}"
+        upcoming_version_branch = f"master-update-version-{uuid.uuid4()}"
         print(f"Preparing upcoming version branch for the new master with name {upcoming_version_branch}...")
         # checkout master
         print(f"Checking out {main_branch}...")
