@@ -33,7 +33,7 @@ def update_release(github_token: str, project_name: str, project_version: is_ver
         "UPCOMING_VERSION")
     upcoming_version_details = get_version_details(upcoming_version)
     upcoming_minor_version = f'{upcoming_version_details["major"]}.{upcoming_version_details["minor"]}'
-    release_branch_name = f'release-{project_version_details["major"]}.{project_version_details["minor"]}'
+    release_branch_name = f'release-test-{project_version_details["major"]}.{project_version_details["minor"]}'
     g = Github(github_token)
     repository = g.get_repo(f"{REPO_OWNER}/{project_name}")
 
