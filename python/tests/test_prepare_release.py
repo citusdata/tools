@@ -19,7 +19,7 @@ class PrepareReleaseTestCases(unittest.TestCase):
         self.initialize_env()
 
     def initialize_env(self):
-        print("Current Directory:"+os.getcwd())
+        # print("Current Directory:"+os.getcwd())
         if not os.path.exists("citus"):
             run("git clone https://github.com/citusdata/citus.git")
 
@@ -90,7 +90,7 @@ class PrepareReleaseTestCases(unittest.TestCase):
 
     def test_patch_release(self):
         self.initialize_env()
-        print(os.getcwd())
+        # print(os.getcwd())
         os.chdir("citus")
 
         update_release(github_token=github_token, project_name="citus", project_version="10.2.0",
