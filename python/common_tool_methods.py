@@ -109,15 +109,43 @@ def get_pr_issues_by_label(prs: List[PullRequest.PullRequest], label_name: str):
     return filtered_prs
 
 
-def replace_line_in_file(file: str, match_regex: str, replace_str: str):
+def has_file_include_line(base_path: str, relative_file_path: str, line_content: str) -> bool:
+    with open(f"{base_path}/{relative_file_path}", "r") as reader:
+        content = reader.read()
+        lines = content.splitlines()
+        found = False
+        for line in lines:
+            if line == line_content:
+                found = True
+                break
+    return found
+
+
+def line_count_in_file(base_path: str, relative_file_path: str, line_content: str) -> int:
+    with open(f"{base_path}/{relative_file_path}", "r") as reader:
+        content = reader.read()
+        lines = content.splitlines()
+        counter = 0
+        for line in lines:
+            if line == line_content:
+                counter = counter + 1
+
+    return counter
+
+
+def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
     with open(file, "r") as reader:
         file_content = reader.read()
         lines = file_content.splitlines()
         line_counter = 0
+        has_match = False
         for line in lines:
             if re.match(match_regex, line):
+                has_match = True
                 lines[line_counter] = replace_str
             line_counter = line_counter + 1
         edited_content = str_array_to_str(lines)
     with open(file, "w") as writer:
         writer.write(edited_content)
+
+    return has_match
