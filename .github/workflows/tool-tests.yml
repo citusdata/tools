@@ -15,9 +15,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: intall dependencies
+      - name: install dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev
       - name: install requirements
         run: python -m pip install -r python/requirements.txt
       - name: Execute Unit tests
-        run: python -m unittest python/tests/test_update_package_properties.py
+        run:  python -m pytest -q python/tests/test_update_package_properties.py
