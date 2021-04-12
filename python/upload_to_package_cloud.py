@@ -55,8 +55,6 @@ def upload_to_packagecloud(distro_name, package_name, packagecloud_token, repo_n
 
 def upload_files_in_directory_to_packagecloud(directoryName: str, distro_name: str, package_cloud_token: str,
                                               repo_name: str) -> MultipleReturnValue:
-    # print("Distro Name: " + distro_name)
-    # print("Supported Distros:")
     for key, value in supported_distros.items():
         print(key + "=>" + str(value))
     ret_status: List[ReturnValue] = []
@@ -104,7 +102,3 @@ if multiple_return_value.success_status():
     sys.exit(0)
 else:
     sys.exit(1)
-# for rv in multiple_return_value.return_values:
-#     if(rv.)
-# print(r.message)
-# print(r.success_status)

@@ -6,13 +6,13 @@ from .test_utils import are_strings_equal
 from ..update_package_properties import *
 
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
-BASE_PATH = pathlib2.Path(__file__).parents[1] if os.getenv("BASE_PATH") is None else os.getenv("BASE_PATH")
+BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[1])
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
-PROJECT_VERSION = "10.0.3" if os.getenv("PROJECT_VERSION") is None else os.getenv("PROJECT_VERSION")
-TAG_NAME = "v10.0.3" if os.getenv("TAG_NAME") is None else os.getenv("TAG_NAME")
-PROJECT_NAME = "citus" if os.getenv("PROJECT_NAME") is None else os.getenv("PROJECT_NAME")
-MICROSOFT_EMAIL = "gindibay@microsoft.com" if os.getenv("MICROSOFT_EMAIL") is None else os.getenv("MICROSOFT_EMAIL")
-NAME_SURNAME = "Gurkan Indibay" if os.getenv("NAME_SURNAME") is None else os.getenv("NAME_SURNAME")
+PROJECT_VERSION = os.getenv("PROJECT_VERSION", default="10.0.3")
+TAG_NAME = os.getenv("TAG_NAME", default="v10.0.3")
+PROJECT_NAME = os.getenv("PROJECT_NAME", default="citus")
+MICROSOFT_EMAIL = os.getenv("MICROSOFT_EMAIL", default="gindibay@microsoft.com")
+NAME_SURNAME = os.getenv("NAME_SURNAME", default="Gurkan Indibay")
 CHANGELOG_DATE = datetime.strptime('Thu, 18 Mar 2021 01:40:08 +0000', '%a, %d %b %Y %H:%M:%S %z') if os.getenv(
     "CHANGELOG_DATE") is None else datetime.strptime(os.getenv("CHANGELOG_DATE"), '%a, %d %b %Y %H:%M:%S %z')
 
