@@ -1,6 +1,5 @@
 import os
 import unittest
-from datetime import datetime
 from shutil import copyfile
 
 from .test_utils import are_strings_equal
@@ -58,10 +57,14 @@ class PackagePropertiesTestCases(unittest.TestCase):
         changelog_file_path = f"{TEST_BASE_PATH}/files/debian.changelog"
         copyfile(refer_file_path, changelog_file_path)
         latest_changelog = get_changelog_for_tag(GITHUB_TOKEN, PROJECT_NAME, TAG_NAME)
+
+        changelog_param = ChangelogParams()
+        changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
+            MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
+            1).set_changelog_date(CHANGELOG_DATE).set_fancy(True).set_latest_changelog(
+            latest_changelog)
         try:
-            prepend_latest_changelog_into_debian_changelog(latest_changelog, PROJECT_VERSION, True, 1,
-                                                           changelog_file_path,
-                                                           MICROSOFT_EMAIL, NAME_SURNAME, CHANGELOG_DATE)
+            prepend_latest_changelog_into_debian_changelog(changelog_param, changelog_file_path)
             self.verify_prepend_debian_changelog(changelog_file_path)
         finally:
             os.remove(changelog_file_path)
@@ -71,10 +74,13 @@ class PackagePropertiesTestCases(unittest.TestCase):
         changelog_file_path = f"{TEST_BASE_PATH}/files/debian.changelog"
         copyfile(refer_file_path, changelog_file_path)
         latest_changelog = get_changelog_for_tag(GITHUB_TOKEN, PROJECT_NAME, TAG_NAME)
+        changelog_param = ChangelogParams()
+        changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
+            MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
+            1).set_changelog_date(datetime.now()).set_fancy(True).set_latest_changelog(
+            latest_changelog)
         try:
-            prepend_latest_changelog_into_debian_changelog(latest_changelog, PROJECT_VERSION, True, 1,
-                                                           changelog_file_path,
-                                                           MICROSOFT_EMAIL, NAME_SURNAME, CHANGELOG_DATE)
+            prepend_latest_changelog_into_debian_changelog(changelog_param, changelog_file_path)
             self.assertRaises(ValueError)
         finally:
             os.remove(changelog_file_path)
@@ -88,9 +94,11 @@ class PackagePropertiesTestCases(unittest.TestCase):
         are_strings_equal(expected_content, latest_changelog)
 
     def test_convert_citus_changelog_into_rpm_changelog(self):
-        changelog = convert_citus_changelog_into_rpm_changelog(PROJECT_NAME, PROJECT_VERSION, MICROSOFT_EMAIL,
-                                                               NAME_SURNAME, True, 1,
-                                                               CHANGELOG_DATE)
+        changelog_param = ChangelogParams()
+        changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
+            MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
+            1).set_changelog_date(CHANGELOG_DATE).set_fancy(True).set_latest_changelog("")
+        changelog = convert_citus_changelog_into_rpm_changelog(changelog_param)
         with open(f"{TEST_BASE_PATH}/files/verify/rpm_latest_changelog_reference.txt", "r") as reader:
             content = reader.read()
         self.assertEqual(content, changelog)
@@ -103,8 +111,11 @@ class PackagePropertiesTestCases(unittest.TestCase):
         templates_path = f"{BASE_PATH}/templates"
         copyfile(spec_file, spec_file_copy)
         try:
-            update_rpm_spec(project_name, PROJECT_VERSION, MICROSOFT_EMAIL, NAME_SURNAME, True, 1,
-                            spec_file, CHANGELOG_DATE, templates_path)
+            changelog_param = ChangelogParams()
+            changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
+                MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
+                1).set_changelog_date(datetime.now()).set_fancy(True).set_latest_changelog("")
+            update_rpm_spec(changelog_param, spec_file, templates_path)
             self.verify_rpm_spec(spec_file_reference, spec_file)
         finally:
             copyfile(spec_file_copy, spec_file)
@@ -117,8 +128,11 @@ class PackagePropertiesTestCases(unittest.TestCase):
         templates_path = f"{BASE_PATH}/templates"
         copyfile(spec_file, spec_file_copy)
         try:
-            update_rpm_spec(project_name, PROJECT_VERSION, MICROSOFT_EMAIL, NAME_SURNAME, True, 1,
-                            spec_file, CHANGELOG_DATE, templates_path)
+            changelog_param = ChangelogParams()
+            changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
+                MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
+                1).set_changelog_date(datetime.now()).set_fancy(True).set_latest_changelog("")
+            update_rpm_spec(changelog_param, spec_file, templates_path)
             self.assertRaises(ValueError)
         finally:
             copyfile(spec_file_copy, spec_file)
