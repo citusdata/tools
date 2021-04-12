@@ -103,7 +103,7 @@ def get_last_changelog_content(all_changelog_content: str) -> str:
 def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
     second_changelog_index = find_nth_overlapping_line_by_regex(all_changelog_content, "^[a-zA-Z]", 2)
     lines = all_changelog_content.splitlines()
-    changelogs = "".join([str(elem) + "\n" for elem in lines[:second_changelog_index - 1]])
+    changelogs = "\n".join(lines[:second_changelog_index - 1]) + "\n"
     if len(lines) < 1:
         raise ValueError("At least one line should be in changelog")
     return changelogs
@@ -212,17 +212,12 @@ def get_rpm_changelog_from_actual_changelog(project_name: str, project_version: 
                                             spec_file_path: str):
     rpm_changelog_history = get_rpm_changelog_history(project_name, spec_file_path)
     changelog_histories = rpm_changelog_history.splitlines()
-    rpm_changelog = ""
-    if len(changelog_histories) < 1 or not (project_version in changelog_histories[1]):
-        lines = latest_changelog.splitlines()
-        lines[0] = get_rpm_header(project_name, microsoft_email, name_surname, project_version, fancy,
-                                  fancy_version_number, date.today())
-        rpm_changelog = rpm_changelog.join([str(elem) + "\n" for elem in lines])
-        rpm_changelog = f"{rpm_changelog}{rpm_changelog_history}"
-    else:
-        rpm_changelog = rpm_changelog_history
+    if len(changelog_histories) > 1 and project_version in changelog_histories[1]:
+        return rpm_changelog_history
 
-    return rpm_changelog
+    header = get_rpm_header(project_name, microsoft_email, name_surname, project_version, fancy,
+                            fancy_version_number, date.today())
+    return '\n'.join([header, latest_changelog, rpm_changelog_history])+"\n"
 
 
 def convert_citus_changelog_into_rpm_changelog(project_name: str, project_version: str, microsoft_email: str,
