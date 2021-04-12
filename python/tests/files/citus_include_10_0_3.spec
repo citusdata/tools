@@ -79,6 +79,9 @@ echo %{pginstdir}/share/extension/%{sname}.control >> installation_files.list
 %doc %{pginstdir}/doc/extension/README-%{sname}.md
 
 %changelog
+* Thu Apr 4 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.0.3.citus-1
+- Official 10.0.3 release of Citus
+
 * Thu Mar 4 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.0.2.citus-1
 - Official 10.0.2 release of Citus
 

@@ -231,7 +231,7 @@ def prepend_latest_changelog_into_debian_changelog(changelog_param: ChangelogPar
             reader.seek(0, 0)
             reader.write(changelog)
         else:
-            print("Already version in the debian changelog")
+            raise ValueError("Already version in the debian changelog")
 
 
 @validate_parameters
