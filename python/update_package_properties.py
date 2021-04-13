@@ -122,6 +122,10 @@ def get_version_number(version: str, fancy: bool, fancy_release_count: int) -> s
     return f"{version}{fancy_suffix}"
 
 
+def get_rpm_version(project_name: str, version: str) -> str:
+    return f"{version}.{project_name}"
+
+
 def get_version_number_with_project_name(project_name: str, version: str, fancy: bool,
                                          fancy_release_count: int) -> str:
     fancy_suffix = f"-{fancy_release_count}" if fancy else ""
@@ -270,7 +274,7 @@ def get_debian_trailer(microsoft_email: str, name_surname: str, changelog_date: 
 
 def convert_citus_changelog_into_rpm_changelog(changelog_params: ChangelogParams) -> str:
     header = get_rpm_header(changelog_params)
-    rpm_changelog = f"{header.strip()}\n- Update to {changelog_params.get_project_name().capitalize()} {changelog_params.get_project_version()}"
+    rpm_changelog = f"{header.strip()}\n- Official {changelog_params.get_project_version()} release of {changelog_params.get_project_name().capitalize()} "
 
     return rpm_changelog
 
@@ -279,8 +283,7 @@ def update_rpm_spec(changelog_param: ChangelogParams, spec_file_name: str,
                     templates_path: str) -> None:
     env = get_template_environment(templates_path)
 
-    fancy_version_str = get_version_number(changelog_param.get_project_version(), changelog_param.get_fancy(),
-                                           changelog_param.get_fancy_version_number())
+    rpm_version = get_rpm_version(changelog_param.get_project_name(), changelog_param.get_project_version())
     template = env.get_template('project.spec.tmpl')
     rpm_changelog_history = get_rpm_changelog_history(spec_file_name)
 
@@ -291,7 +294,7 @@ def update_rpm_spec(changelog_param: ChangelogParams, spec_file_name: str,
 
     latest_changelog = convert_citus_changelog_into_rpm_changelog(changelog_param)
     changelog = f"{latest_changelog}\n\n{rpm_changelog_history}"
-    content = template.render(version=changelog_param.get_project_version(), fancy_version_str=fancy_version_str,
+    content = template.render(version=changelog_param.get_project_version(), rpm_version=rpm_version,
                               fancy_version_no=changelog_param.get_fancy_version_number(), changelog=changelog)
     with open(spec_file_name, "w+") as writer:
         writer.write(content)

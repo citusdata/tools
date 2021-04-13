@@ -115,14 +115,14 @@ def test_update_rpm_spec():
     project_name = "citus"
     spec_file = f"{TEST_BASE_PATH}/files/{get_spec_file_name(project_name)}"
     spec_file_copy = f"{os.getcwd()}/{get_spec_file_name(project_name)}_copy"
-    spec_file_reference = f"{TEST_BASE_PATH}/files/{get_spec_file_name(project_name)}"
+    spec_file_reference = f"{TEST_BASE_PATH}/files/citus_include_10_0_3.spec"
     templates_path = f"{BASE_PATH}/templates"
     copyfile(spec_file, spec_file_copy)
     try:
         changelog_param = ChangelogParams()
         changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
             MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
-            1).set_changelog_date(datetime.now()).set_fancy(True).set_latest_changelog("")
+            1).set_changelog_date(CHANGELOG_DATE).set_fancy(True).set_latest_changelog("")
         update_rpm_spec(changelog_param, spec_file, templates_path)
         verify_rpm_spec(spec_file_reference, spec_file)
     finally:
@@ -140,7 +140,7 @@ def test_update_rpm_spec_include_10_0_3():
         changelog_param = ChangelogParams()
         changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
             MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
-            1).set_changelog_date(datetime.now()).set_fancy(True).set_latest_changelog("")
+            1).set_changelog_date(CHANGELOG_DATE).set_fancy(True).set_latest_changelog("")
         with pytest.raises(ValueError):
             update_rpm_spec(changelog_param, spec_file, templates_path)
     finally:
