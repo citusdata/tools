@@ -295,6 +295,7 @@ def update_rpm_spec(changelog_param: ChangelogParams, spec_file_name: str,
     latest_changelog = convert_citus_changelog_into_rpm_changelog(changelog_param)
     changelog = f"{latest_changelog}\n\n{rpm_changelog_history}"
     content = template.render(version=changelog_param.get_project_version(), rpm_version=rpm_version,
+                              project_name=changelog_param.get_project_name(),
                               fancy_version_no=changelog_param.get_fancy_version_number(), changelog=changelog)
     with open(spec_file_name, "w+") as writer:
         writer.write(content)
