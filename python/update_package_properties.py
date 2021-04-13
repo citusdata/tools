@@ -30,14 +30,14 @@ class ChangelogParams:
     def get_project_name(self) -> str:
         return self.__project_name
 
-    def set_project_name(self, param: str):
+    def set_project_name(self, param: non_empty(non_blank(str))):
         self.__project_name = param
         return self
 
     def get_project_version(self) -> str:
         return self.__project_version
 
-    def set_project_version(self, param: str):
+    def set_project_version(self, param: is_version(str)):
         self.__project_version = param
         return self
 
@@ -51,21 +51,21 @@ class ChangelogParams:
     def get_fancy_version_number(self) -> int:
         return self.__fancy_version_number
 
-    def set_fancy_version_number(self, param: int):
+    def set_fancy_version_number(self, param: non_negative(int)):
         self.__fancy_version_number = param
         return self
 
     def get_microsoft_email(self) -> str:
         return self.__microsoft_email
 
-    def set_microsoft_email(self, param: str):
+    def set_microsoft_email(self, param: is_email(str)):
         self.__microsoft_email = param
         return self
 
     def get_name_surname(self) -> str:
         return self.__name_surname
 
-    def set_name_surname(self, param: str):
+    def set_name_surname(self, param: non_empty(non_blank(str))):
         self.__name_surname = param
         return self
 
@@ -192,20 +192,6 @@ def get_rpm_header(changelog_params: ChangelogParams):
 def get_debian_trailer(microsoft_email: str, name_surname: str, changelog_date: date):
     formatted_date = changelog_date.strftime("%a, %d %b %Y %H:%M:%S %z ")
     return f" -- {name_surname} <{microsoft_email}>  {formatted_date} \n "
-
-
-def get_rpm_changelog_from_actual_changelog(project_name: str, project_version: str, latest_changelog: str,
-                                            microsoft_email: str,
-                                            name_surname: str, fancy: bool, fancy_version_number: int,
-                                            spec_file_path: str):
-    rpm_changelog_history = get_rpm_changelog_history(spec_file_path)
-    changelog_histories = rpm_changelog_history.splitlines()
-    if len(changelog_histories) > 1 and project_version in changelog_histories[1]:
-        return rpm_changelog_history
-
-    header = get_rpm_header(project_name, microsoft_email, name_surname, project_version, fancy,
-                            fancy_version_number, date.today())
-    return '\n'.join([header, latest_changelog, rpm_changelog_history]) + "\n"
 
 
 def convert_citus_changelog_into_rpm_changelog(changelog_params: ChangelogParams) -> str:
