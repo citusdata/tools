@@ -1,2 +1,2 @@
 * Thu Mar 18 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.0.3.citus-1
-- Update to Citus 10.0.3
+- Official 10.0.3 release of Citus
