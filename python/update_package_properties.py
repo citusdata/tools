@@ -239,15 +239,15 @@ def prepend_latest_changelog_into_debian_changelog(changelog_param: ChangelogPar
 
 
 @validate_parameters
-def update_pkgvars(version: is_version(non_empty(no_whitespaces(non_blank(str)))), fancy: bool,
+def update_pkgvars(project_name: str, version: is_version(non_empty(no_whitespaces(non_blank(str)))), fancy: bool,
                    fancy_release_count: non_negative(int), templates_path: str, pkgvars_path: str) -> None:
     env = get_template_environment(templates_path)
 
-    version_str = get_version_number(version, fancy, fancy_release_count)
+    version_str = get_version_number_with_project_name(project_name,version, fancy, fancy_release_count)
 
     template = env.get_template('pkgvars.tmpl')
 
-    pkgvars_content = template.render(version=version_str)
+    pkgvars_content = f"{template.render(version=version_str)}\n"
     with open(f'{pkgvars_path}/pkgvars', "w") as writer:
         writer.write(pkgvars_content)
 
@@ -308,7 +308,7 @@ def update_all_changes(github_token: non_empty(non_blank(str)), project_name: no
                        microsoft_email: is_email(str),
                        name_surname: non_empty(non_blank(str)), release_date: datetime, packaging_path: str):
     templates_path = f"{BASE_PATH}/templates"
-    update_pkgvars(project_version, fancy, fancy_version_number, templates_path, f"{packaging_path}")
+    update_pkgvars(project_name, project_version, fancy, fancy_version_number, templates_path, f"{packaging_path}")
     latest_changelog = get_changelog_for_tag(github_token, project_name, tag_name)
     changelog_param = ChangelogParams()
     changelog_param.set_project_version(project_version).set_project_name(project_name).set_microsoft_email(

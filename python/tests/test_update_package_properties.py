@@ -162,7 +162,7 @@ def test_update_pkg_vars():
     pkgvars_copy_path = f"{pkgvars_path}_copy"
     copyfile(pkgvars_path, pkgvars_copy_path)
     try:
-        update_pkgvars("10.0.3", True, 1, templates_path, f"{TEST_BASE_PATH}/files/")
+        update_pkgvars(PROJECT_NAME, PROJECT_VERSION, True, 1, templates_path, f"{TEST_BASE_PATH}/files/")
         verify_pkgvars(pkgvars_path)
     finally:
         copyfile(pkgvars_copy_path, pkgvars_path)
@@ -172,7 +172,7 @@ def test_update_pkg_vars():
 def verify_pkgvars(pkgvars_path):
     with open(pkgvars_path, "r") as reader:
         content = reader.read()
-        index = content.find("pkglatest=10.0.3-1")
+        index = content.find(f"pkglatest={PROJECT_VERSION}.{PROJECT_NAME}-1")
         assert index > -1
 
 
@@ -208,6 +208,3 @@ def test_update_all_changes():
 
 def test_regex():
     print(re.match(r"^### \w+\sv\d+\.\d+\.\d+\s\(\w+\s\d+,\s\d+\)\s###$", "### citus v10.0.3 (March 16, 2021) ###"))
-
-
-
