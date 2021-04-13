@@ -274,7 +274,7 @@ def get_debian_trailer(microsoft_email: str, name_surname: str, changelog_date: 
 
 def convert_citus_changelog_into_rpm_changelog(changelog_params: ChangelogParams) -> str:
     header = get_rpm_header(changelog_params)
-    rpm_changelog = f"{header.strip()}\n- Official {changelog_params.get_project_version()} release of {changelog_params.get_project_name().capitalize()} "
+    rpm_changelog = f"{header.strip()}\n- Official {changelog_params.get_project_version()} release of {changelog_params.get_project_name().capitalize()}"
 
     return rpm_changelog
 
