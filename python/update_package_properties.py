@@ -228,7 +228,7 @@ def update_all_changes(github_token: non_empty(non_blank(str)), project_name: no
                        project_version: is_version(str),
                        tag_name: is_tag(str), fancy: bool, fancy_version_number: non_negative(int),
                        microsoft_email: is_email(str),
-                       name_surname: non_empty(non_blank(str)), release_date: date, packaging_path: str):
+                       name_surname: non_empty(non_blank(str)), release_date: datetime, packaging_path: str):
     templates_path = f"{BASE_PATH}/templates"
     update_pkgvars(project_version, fancy, fancy_version_number, templates_path, f"{packaging_path}")
     latest_changelog = get_changelog_for_tag(github_token, project_name, tag_name)
