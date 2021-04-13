@@ -1,14 +1,14 @@
 import argparse
-import re
-from datetime import date, datetime
+from datetime import date
+
 import pathlib2
-import string_utils
 from github import Github
 from parameters_validation import no_whitespaces, non_blank, non_empty, non_negative, validate_parameters
 
 from .common_tool_methods import *
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
+
 
 class ChangelogParams:
     __latest_changelog: str = ""
