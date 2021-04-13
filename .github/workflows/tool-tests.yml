@@ -28,7 +28,7 @@ jobs:
         run:  python -m pytest -q python/tests/test_update_package_properties.py
 
       - name: Unit tests for "Prepare Release"
-        run: python -m unittest python/tests/test_prepare_release.py
+        run: python -m pytest -q python/tests/test_prepare_release.py
 
 
 
