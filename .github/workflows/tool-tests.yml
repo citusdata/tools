@@ -30,5 +30,8 @@ jobs:
       - name: Unit tests for "Prepare Release"
         run: python -m pytest -q python/tests/test_prepare_release.py
 
+      - name: Unit tests for "Update Docker"
+        run: python -m pytest -q python/tests/test_update_docker.py
+
 
 
