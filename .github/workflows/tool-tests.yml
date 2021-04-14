@@ -38,4 +38,5 @@ jobs:
         run:  python -m pytest -q packaging_automation/tests/test_update_package_properties.py
       - name: Execute unit tests for "Prepare Release"
         run: python -m pytest -q packaging_automation/tests/test_prepare_release.py
-
+      - name: Unit tests for "Update Docker"
+        run: python -m pytest -q python/tests/test_update_docker.py
