@@ -4,7 +4,7 @@ from ..prepare_release import *
 
 github_token = os.getenv("GH_TOKEN")
 
-BASE_PATH = pathlib2.Path(__file__).parents[2] if os.getenv("BASE_PATH") is None else os.getenv("BASE_PATH")
+BASE_PATH = os.getenv("BASE_PATH",default=pathlib2.Path(__file__).parents[2])
 TEST_BASE_PATH = f"{BASE_PATH}/citus"
 CITUS_PROJECT_TEST_PATH = f"{TEST_BASE_PATH}/projects/citus"
 CITUS_PROJECT_TEST_PATH_COPY = f"{TEST_BASE_PATH}/projects/citus_copy"

@@ -13,6 +13,11 @@ def get_spec_file_name(project_name: str) -> str:
     return f"{project_name}.spec"
 
 
+def get_minor_project_version(project_version: str) -> str:
+    project_version_details = get_version_details(project_version)
+    return f'{project_version_details["major"]}.{project_version_details["minor"]}'
+
+
 def get_version_number(version: str, fancy: bool, fancy_release_count: int) -> str:
     fancy_suffix = f"-{fancy_release_count}" if fancy else ""
     return f"{version}{fancy_suffix}"

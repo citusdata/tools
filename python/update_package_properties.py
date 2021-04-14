@@ -76,8 +76,10 @@ class ChangelogParams:
         self.__changelog_date = param
         return self
 
+
 def get_rpm_version(project_name: str, version: str) -> str:
     return f"{version}.{project_name}"
+
 
 def get_last_changelog_content(all_changelog_content: str) -> str:
     second_changelog_index = find_nth_overlapping(all_changelog_content, "###", 3)
@@ -167,7 +169,7 @@ def update_pkgvars(project_name: str, version: is_version(non_empty(no_whitespac
                    fancy_release_count: non_negative(int), templates_path: str, pkgvars_path: str) -> None:
     env = get_template_environment(templates_path)
 
-    version_str = get_version_number_with_project_name(project_name,version, fancy, fancy_release_count)
+    version_str = get_version_number_with_project_name(project_name, version, fancy, fancy_release_count)
 
     template = env.get_template('pkgvars.tmpl')
 
