@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     update_all_docker_files(args.prj_ver, tool_path, execution_path)
 
-    common_tool_methods.run(f'git commit -a -m "Bump to version {args.prj_ver}')
+    common_tool_methods.run(f'git commit -a -m "Bump to version {args.prj_ver}"')
     common_tool_methods.run(f'git push --set-upstream origin {pr_branch}')
 
     g = Github(github_token)
