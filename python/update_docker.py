@@ -89,6 +89,9 @@ if __name__ == "__main__":
     print(f"Tool Path: {tool_path}")
     github_token = os.getenv("GH_TOKEN")
 
+    if github_token is None or github_token == "":
+        raise ValueError("Github Token should be provided")
+
     common_tool_methods.run("git checkout master")
     pr_branch = f"release-{args.prj_ver}-{uuid.uuid4()}"
     common_tool_methods.run(f"git checkout -b {pr_branch}")
