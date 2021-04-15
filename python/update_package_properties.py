@@ -1,11 +1,16 @@
 import argparse
 from datetime import date
+from datetime import datetime
+import string_utils
+from parameters_validation import parameter_validation
+import re
 
 import pathlib2
 from github import Github
 from parameters_validation import no_whitespaces, non_blank, non_empty, non_negative, validate_parameters
 
-from .common_tool_methods import *
+from . import common_tool_methods
+from . import common_validations
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
@@ -37,7 +42,7 @@ class ChangelogParams:
     def get_project_version(self) -> str:
         return self.__project_version
 
-    def set_project_version(self, param: is_version(str)):
+    def set_project_version(self, param: common_validations.is_version(str)):
         self.__project_version = param
         return self
 
@@ -58,7 +63,7 @@ class ChangelogParams:
     def get_microsoft_email(self) -> str:
         return self.__microsoft_email
 
-    def set_microsoft_email(self, param: is_email(str)):
+    def set_microsoft_email(self, param: common_validations.is_email(str)):
         self.__microsoft_email = param
         return self
 
@@ -82,7 +87,7 @@ def get_rpm_version(project_name: str, version: str) -> str:
 
 
 def get_last_changelog_content(all_changelog_content: str) -> str:
-    second_changelog_index = find_nth_overlapping(all_changelog_content, "###", 3)
+    second_changelog_index = common_tool_methods.find_nth_overlapping(all_changelog_content, "###", 3)
     changelogs = all_changelog_content[:second_changelog_index]
     lines = changelogs.splitlines()
     if len(lines) < 1:
@@ -94,7 +99,8 @@ def get_last_changelog_content(all_changelog_content: str) -> str:
 
 
 def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
-    second_changelog_index = find_nth_overlapping_line_by_regex(all_changelog_content, "^[a-zA-Z]", 2)
+    second_changelog_index = common_tool_methods.find_nth_overlapping_line_by_regex(all_changelog_content, "^[a-zA-Z]",
+                                                                                    2)
     lines = all_changelog_content.splitlines()
     changelogs = "\n".join(lines[:second_changelog_index - 1]) + "\n"
     if len(lines) < 1:
@@ -126,14 +132,15 @@ def get_changelog_for_tag(github_token: str, project_name: str, tag_name: str) -
 def get_debian_changelog_header(changelog_header: is_project_changelog_header(str), fancy: bool,
                                 fancy_version_number: int) -> str:
     hash_removed_string = changelog_header.lstrip("### ").rstrip(" ###")
-    parentheses_removed_string = remove_string_inside_parentheses(hash_removed_string)
+    parentheses_removed_string = common_tool_methods.remove_string_inside_parentheses(hash_removed_string)
     words = parentheses_removed_string.strip().split(" ")
     if len(words) != 2:
         raise ValueError("Two words should be included in striped version header")
     project_name = words[0]
     project_version = words[1].lstrip("v")
-    version_on_changelog = get_version_number_with_project_name(project_name, project_version, fancy,
-                                                                fancy_version_number)
+    version_on_changelog = common_tool_methods.get_version_number_with_project_name(project_name, project_version,
+                                                                                    fancy,
+                                                                                    fancy_version_number)
 
     return f"{project_name} ({version_on_changelog}) stable; urgency=low"
 
@@ -165,11 +172,12 @@ def prepend_latest_changelog_into_debian_changelog(changelog_param: ChangelogPar
 
 
 @validate_parameters
-def update_pkgvars(project_name: str, version: is_version(non_empty(no_whitespaces(non_blank(str)))), fancy: bool,
+def update_pkgvars(project_name: str, version: common_validations.is_version(non_empty(no_whitespaces(non_blank(str)))), fancy: bool,
                    fancy_release_count: non_negative(int), templates_path: str, pkgvars_path: str) -> None:
-    env = get_template_environment(templates_path)
+    env = common_tool_methods.get_template_environment(templates_path)
 
-    version_str = get_version_number_with_project_name(project_name, version, fancy, fancy_release_count)
+    version_str = common_tool_methods.get_version_number_with_project_name(project_name, version, fancy,
+                                                                           fancy_release_count)
 
     template = env.get_template('pkgvars.tmpl')
 
@@ -190,7 +198,7 @@ def get_rpm_changelog_history(spec_file_path: str) -> str:
 def get_rpm_header(changelog_params: ChangelogParams):
     formatted_date = changelog_params.get_changelog_date().strftime("%a %b %d %Y")
     return f"* {formatted_date} - {changelog_params.get_name_surname()} <{changelog_params.get_microsoft_email()}> " \
-           f"{get_version_number_with_project_name(changelog_params.get_project_name(), changelog_params.get_project_version(), changelog_params.get_fancy(), changelog_params.get_fancy_version_number())} "
+           f"{common_tool_methods.get_version_number_with_project_name(changelog_params.get_project_name(), changelog_params.get_project_version(), changelog_params.get_fancy(), changelog_params.get_fancy_version_number())} "
 
 
 def get_debian_trailer(microsoft_email: str, name_surname: str, changelog_date: date):
@@ -207,7 +215,7 @@ def convert_citus_changelog_into_rpm_changelog(changelog_params: ChangelogParams
 
 def update_rpm_spec(changelog_param: ChangelogParams, spec_file_name: str,
                     templates_path: str) -> None:
-    env = get_template_environment(templates_path)
+    env = common_tool_methods.get_template_environment(templates_path)
 
     rpm_version = get_rpm_version(changelog_param.get_project_name(), changelog_param.get_project_version())
     template = env.get_template('project.spec.tmpl')
@@ -229,9 +237,9 @@ def update_rpm_spec(changelog_param: ChangelogParams, spec_file_name: str,
 
 @validate_parameters
 def update_all_changes(github_token: non_empty(non_blank(str)), project_name: non_empty(str),
-                       project_version: is_version(str),
-                       tag_name: is_tag(str), fancy: bool, fancy_version_number: non_negative(int),
-                       microsoft_email: is_email(str),
+                       project_version: common_validations.is_version(str),
+                       tag_name: common_validations.is_tag(str), fancy: bool, fancy_version_number: non_negative(int),
+                       microsoft_email: common_validations.is_email(str),
                        name_surname: non_empty(non_blank(str)), release_date: datetime, packaging_path: str):
     templates_path = f"{BASE_PATH}/templates"
     update_pkgvars(project_name, project_version, fancy, fancy_version_number, templates_path, f"{packaging_path}")
@@ -242,7 +250,7 @@ def update_all_changes(github_token: non_empty(non_blank(str)), project_name: no
         fancy_version_number).set_changelog_date(release_date).set_fancy(fancy).set_latest_changelog(latest_changelog)
 
     prepend_latest_changelog_into_debian_changelog(changelog_param, f"{packaging_path}/debian/changelog")
-    spec_file_name = f"{packaging_path}/{get_spec_file_name(project_name)}"
+    spec_file_name = f"{packaging_path}/{common_tool_methods.get_spec_file_name(project_name)}"
     update_rpm_spec(changelog_param, spec_file_name, templates_path)
 
 

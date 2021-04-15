@@ -2,13 +2,13 @@
 
 set -euxo pipefail
 
-#PRJ_NAME="citus"
-#PRJ_VER="10.0.3"
-#TAG_NAME="v${PRJ_VER}"
-#FANCY="True"
-#FANCY_VERSION_NO=2
-#MICROSOFT_EMAIL="gindibay@gmail.com"
-#NAME="Gurkan Indibay"
+PRJ_NAME="citus"
+PRJ_VER="10.0.3"
+TAG_NAME="v${PRJ_VER}"
+FANCY="True"
+FANCY_VERSION_NO=2
+MICROSOFT_EMAIL="gindibay@gmail.com"
+NAME="Gurkan Indibay"
 
 [ -z "${PRJ_NAME:-}" ] && echo "PRJ_NAME should be non-empty value" && exit 1
 [ -z "${PRJ_VER:-}" ] && echo "PRJ_VER should be non-empty value" && exit 1

@@ -1,10 +1,15 @@
+from datetime import datetime
+import os
+
 import pathlib2
 
-from ..prepare_release import *
+from ..common_tool_methods import run, has_file_include_line, line_count_in_file
+from ..prepare_release import MULTI_EXTENSION_SQL, MULTI_EXTENSION_OUT, update_release, CONFIGURE, CONFIGURE_IN, \
+    CONFIG_PY, CITUS_CONTROL, ResourceStatus
 
 github_token = os.getenv("GH_TOKEN")
 
-BASE_PATH = os.getenv("BASE_PATH",default=pathlib2.Path(__file__).parents[2])
+BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 TEST_BASE_PATH = f"{BASE_PATH}/citus"
 CITUS_PROJECT_TEST_PATH = f"{TEST_BASE_PATH}/projects/citus"
 CITUS_PROJECT_TEST_PATH_COPY = f"{TEST_BASE_PATH}/projects/citus_copy"
