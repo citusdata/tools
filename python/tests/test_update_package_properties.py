@@ -4,6 +4,7 @@ from shutil import copyfile
 
 from .test_utils import are_strings_equal
 from ..update_package_properties import *
+from ..common_tool_methods import *
 
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[1])
