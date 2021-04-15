@@ -5,7 +5,7 @@ from . import common_tool_methods
 import uuid
 from github import Repository, PullRequest, Github
 
-REPO_OWNER = "citus"
+REPO_OWNER = "citusdata"
 PROJECT_NAME = "docker"
 
 
@@ -96,6 +96,7 @@ if __name__ == "__main__":
     update_all_docker_files(args.prj_ver, tool_path, execution_path)
 
     common_tool_methods.run(f'git commit -a -m "Bump to version {args.prj_ver}"')
+    common_tool_methods.run(f'git push --set-upstream origin {pr_branch}"')
 
     g = Github(github_token)
     repository = g.get_repo(f"{REPO_OWNER}/{PROJECT_NAME}")
