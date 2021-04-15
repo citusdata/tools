@@ -1,12 +1,12 @@
-import re
 import subprocess
+import re
 from datetime import datetime
 from typing import Dict, List
 
 from github import Repository, PullRequest
 from jinja2 import Environment, FileSystemLoader
 
-from .common_validations import *
+from . import common_validations
 
 
 def get_spec_file_name(project_name: str) -> str:
@@ -73,12 +73,12 @@ def cherry_pick_prs(prs: List[PullRequest.PullRequest]):
             print(f"Cherry pick result for PR No {pr.number} and commit sha {single_commit.commit.sha}: {cp_result}  ")
 
 
-def get_version_details(version: is_version(str)) -> Dict[str, str]:
+def get_version_details(version: common_validations.is_version(str)) -> Dict[str, str]:
     version_parts = version.split(".")
     return {"major": version_parts[0], "minor": version_parts[1], "patch": version_parts[2]}
 
 
-def is_major_release(version: is_version(str)) -> bool:
+def is_major_release(version: common_validations.is_version(str)) -> bool:
     version_info = get_version_details(version)
     return version_info["patch"] == "0"
 
