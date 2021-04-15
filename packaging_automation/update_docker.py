@@ -83,7 +83,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     execution_path = os.getenv("EXEC_PATH", default=os.getcwd())
-    tool_path = os.getenv("TOOLS_PATH", default=f"{execution_path}/tools")
+    tool_path = os.getenv("TOOLS_PATH", default=execution_path)
     print(f"Exec Path: {execution_path}")
     print(f"Tool Path: {tool_path}")
     github_token = os.getenv("GH_TOKEN")
