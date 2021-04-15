@@ -2,6 +2,11 @@ import os
 import argparse
 from datetime import datetime
 from . import common_tool_methods
+import uuid
+from github import Repository, PullRequest, Github
+
+REPO_OWNER = "citus"
+PROJECT_NAME = "docker"
 
 
 def process_docker_template_file(project_version: str, templates_path: str, template_file_path: str):
@@ -78,7 +83,19 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     execution_path = os.getenv("EXEC_PATH", default=os.getcwd())
-    print(execution_path)
     tool_path = os.getenv("TOOLS_PATH", default=f"{execution_path}/tools")
-    print(tool_path)
+    github_token = os.getenv("GH_TOKEN")
+
+    common_tool_methods.run("git checkout master")
+    pr_branch = f"release-{args.prj_ver}-{uuid.uuid4()}"
+    common_tool_methods.run(f"git checkout -b {pr_branch }")
+
     update_all_docker_files(args.prj_ver, tool_path, execution_path)
+
+    common_tool_methods.run(f'git commit -a -m "Bump to version {args.prj_ver}"')
+
+    g = Github(github_token)
+    repository = g.get_repo(f"{REPO_OWNER}/{PROJECT_NAME}")
+
+    pr_result = repository.create_pull(title=f"Bump Citus to {args.prj_ver}", base="master",
+                                       head=pr_branch, body="")
