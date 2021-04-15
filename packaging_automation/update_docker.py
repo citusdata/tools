@@ -1,3 +1,6 @@
+import os
+import argparse
+
 from .common_tool_methods import *
 
 
@@ -53,3 +56,13 @@ def update_all_docker_files(project_version: str, template_path: str, exec_path:
     update_regular_docker_compose_file(project_version, template_path, exec_path)
     update_docker_file_alpine(project_version, template_path, exec_path)
     update_nightly_docker_file(project_version, template_path, exec_path)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--prj_ver')
+    args = parser.parse_args()
+
+    execution_path = os.getcwd()
+    templ_path = f"{execution_path}/tools/python/template/docker"
+    update_all_docker_files(args.prj_ver, templ_path, execution_path)
