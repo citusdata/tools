@@ -39,7 +39,7 @@ if __name__ == "__main__":
     execution_path = args.exec_path
     tool_path = args.tools_path
     github_token = args.gh_token
-    main_branch = "pgxn_citus"
+    main_branch = "pgxn-citus"
 
     print(f"Exec Path: {execution_path}")
 
