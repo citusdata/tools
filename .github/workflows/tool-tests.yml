@@ -40,3 +40,8 @@ jobs:
         run: python -m pytest -q packaging_automation/tests/test_prepare_release.py
       - name: Unit tests for "Update Docker"
         run: python -m pytest -q packaging_automation/tests/test_update_docker.py
+
+      - name: Unit tests for "Update Pgxn"
+        run: python -m pytest -q packaging_automation/tests/test_update_pgxn.py
+
+
