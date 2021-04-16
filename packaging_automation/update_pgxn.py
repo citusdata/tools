@@ -54,8 +54,8 @@ if __name__ == "__main__":
     common_tool_methods.run(f"git checkout {main_branch}")
     pr_branch = f"pgxn-citus-push-{args.prj_ver}-{uuid.uuid4()}"
     common_tool_methods.run(f"git checkout -b {pr_branch}")
-
-    update_pgxn_files(args.prj_ver, tool_path, execution_path)
+    template_path = f"{tool_path}/packaging_automation/templates/pgxn"
+    update_pgxn_files(args.prj_ver, template_path, execution_path)
 
     common_tool_methods.run(f'git commit -a -m "Bump to version {args.prj_ver}"')
     common_tool_methods.run(f'git push --set-upstream origin {pr_branch}')
