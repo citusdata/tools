@@ -1,53 +1,45 @@
-import os
 import argparse
-from datetime import datetime
-from . import common_tool_methods
 import uuid
-from github import Repository, PullRequest, Github
+from datetime import datetime
+
+from github import Github
+
+from . import common_tool_methods
 
 REPO_OWNER = "citusdata"
 PROJECT_NAME = "docker"
 
 
-def process_docker_template_file(project_version: str, templates_path: str, template_file_path: str):
-    minor_version = common_tool_methods.get_minor_project_version(project_version)
-    env = common_tool_methods.get_template_environment(templates_path)
-    template = env.get_template(template_file_path)
-    return f"{template.render(project_version=project_version, project_minor_version=minor_version)}\n"
 
-
-def write_to_file(content: str, dest_file_name: str):
-    with open(dest_file_name, "w") as writer:
-        writer.write(content)
 
 
 def update_docker_file_for_latest_postgres(project_version: str, template_path: str, exec_path: str):
     print(f"Template Path:{template_path}")
-    content = process_docker_template_file(project_version, template_path,
-                                           "latest/latest.tmpl.dockerfile")
+    content = common_tool_methods.process_docker_template_file(project_version, template_path,
+                                                               "latest/latest.tmpl.dockerfile")
     dest_file_name = f"{exec_path}/Dockerfile"
-    write_to_file(content, dest_file_name)
+    common_tool_methods.write_to_file(content, dest_file_name)
 
 
 def update_regular_docker_compose_file(project_version: str, template_path: str, exec_path: str):
-    content = process_docker_template_file(project_version, template_path,
-                                           "latest/docker-compose.tmpl.yml")
+    content = common_tool_methods.process_docker_template_file(project_version, template_path,
+                                                               "latest/docker-compose.tmpl.yml")
     dest_file_name = f"{exec_path}/docker-compose.yml"
-    write_to_file(content, dest_file_name)
+    common_tool_methods.write_to_file(content, dest_file_name)
 
 
 def update_docker_file_alpine(project_version: str, template_path: str, exec_path: str):
-    content = process_docker_template_file(project_version, template_path,
-                                           "alpine/alpine.tmpl.dockerfile")
+    content = common_tool_methods.process_docker_template_file(project_version, template_path,
+                                                               "alpine/alpine.tmpl.dockerfile")
     dest_file_name = f"{exec_path}/alpine/Dockerfile"
-    write_to_file(content, dest_file_name)
+    common_tool_methods.write_to_file(content, dest_file_name)
 
 
 def update_docker_file_for_postgres12(project_version: str, template_path: str, exec_path: str):
-    content = process_docker_template_file(project_version, template_path,
-                                           "postgres-12/postgres-12.tmpl.dockerfile")
+    content = common_tool_methods.process_docker_template_file(project_version, template_path,
+                                                               "postgres-12/postgres-12.tmpl.dockerfile")
     dest_file_name = f"{exec_path}/postgres-12/Dockerfile"
-    write_to_file(content, dest_file_name)
+    common_tool_methods.write_to_file(content, dest_file_name)
 
 
 def get_new_changelog_entry(project_version):

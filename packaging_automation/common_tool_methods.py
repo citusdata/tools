@@ -154,3 +154,15 @@ def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
         writer.write(edited_content)
 
     return has_match
+
+
+def process_docker_template_file(project_version: str, templates_path: str, template_file_path: str):
+    minor_version = get_minor_project_version(project_version)
+    env = get_template_environment(templates_path)
+    template = env.get_template(template_file_path)
+    return f"{template.render(project_version=project_version, project_minor_version=minor_version)}\n"
+
+
+def write_to_file(content: str, dest_file_name: str):
+    with open(dest_file_name, "w") as writer:
+        writer.write(content)
