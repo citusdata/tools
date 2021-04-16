@@ -92,8 +92,7 @@ if __name__ == "__main__":
     common_tool_methods.run("git checkout master")
     pr_branch = f"release-{args.prj_ver}-{uuid.uuid4()}"
     common_tool_methods.run(f"git checkout -b {pr_branch}")
-    template_path = f"{tool_path}/packaging_automation/templates/pgxn"
-    update_all_docker_files(args.prj_ver, template_path, execution_path)
+    update_all_docker_files(args.prj_ver, tool_path, execution_path)
 
     common_tool_methods.run(f'git commit -a -m "Bump to version {args.prj_ver}"')
     common_tool_methods.run(f'git push --set-upstream origin {pr_branch}')
