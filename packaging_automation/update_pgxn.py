@@ -1,22 +1,12 @@
-from . import common_tool_methods
 import argparse
 import uuid
+from . import common_tool_methods
 from github import Github
-import os
+
+
 
 REPO_OWNER = "citusdata"
 PROJECT_NAME = "packaging"
-
-
-def setup_module():
-    if not os.path.exists("docker"):
-        common_tool_methods.run("git clone https://github.com/citusdata/docker.git")
-
-
-def teardown_module():
-    if os.path.exists("docker"):
-        common_tool_methods.run("chmod -R 777 docker")
-        common_tool_methods.run("sudo rm -rf docker")
 
 
 def update_meta_json(project_version: str, template_path: str, exec_path: str):
