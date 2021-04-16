@@ -10,9 +10,6 @@ REPO_OWNER = "citusdata"
 PROJECT_NAME = "docker"
 
 
-
-
-
 def update_docker_file_for_latest_postgres(project_version: str, template_path: str, exec_path: str):
     print(f"Template Path:{template_path}")
     content = common_tool_methods.process_docker_template_file(project_version, template_path,
@@ -95,8 +92,8 @@ if __name__ == "__main__":
     common_tool_methods.run("git checkout master")
     pr_branch = f"release-{args.prj_ver}-{uuid.uuid4()}"
     common_tool_methods.run(f"git checkout -b {pr_branch}")
-    template_path=f"{tool_path}/packaging_automation/templates/pgxn"
-    update_all_docker_files(args.prj_ver, tool_path, execution_path)
+    template_path = f"{tool_path}/packaging_automation/templates/pgxn"
+    update_all_docker_files(args.prj_ver, template_path, execution_path)
 
     common_tool_methods.run(f'git commit -a -m "Bump to version {args.prj_ver}"')
     common_tool_methods.run(f'git push --set-upstream origin {pr_branch}')
