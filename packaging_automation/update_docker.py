@@ -22,6 +22,7 @@ def write_to_file(content: str, dest_file_name: str):
 
 
 def update_docker_file_for_latest_postgres(project_version: str, template_path: str, exec_path: str):
+    print(f"Template Path:{template_path}")
     content = process_docker_template_file(project_version, template_path,
                                            "latest/latest.tmpl.dockerfile")
     dest_file_name = f"{exec_path}/Dockerfile"
@@ -69,7 +70,7 @@ def update_changelog(project_version: str, exec_path: str):
 
 
 def update_all_docker_files(project_version: str, tools_path: str, exec_path: str):
-    template_path = f"{tools_path}/python/templates/docker"
+    template_path = f"{tools_path}/packaging_automation/templates/docker"
     update_docker_file_for_latest_postgres(project_version, template_path, exec_path)
     update_regular_docker_compose_file(project_version, template_path, exec_path)
     update_docker_file_alpine(project_version, template_path, exec_path)
@@ -80,17 +81,24 @@ def update_all_docker_files(project_version: str, tools_path: str, exec_path: st
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--prj_ver')
+    parser.add_argument('--exec_path')
+    parser.add_argument('--tools_path')
+    parser.add_argument('--gh_token')
     args = parser.parse_args()
 
-    os.chdir("..")
-    execution_path = os.getenv("EXEC_PATH", default=os.getcwd())
-    tool_path = os.getenv("TOOLS_PATH", default=f"{execution_path}/tools")
+    execution_path = args.exec_path
+    tool_path = args.tools_path
+    github_token = args.gh_token
+
     print(f"Exec Path: {execution_path}")
-    print(f"Tool Path: {tool_path}")
-    github_token = os.getenv("GH_TOKEN")
 
     if github_token is None or github_token == "":
         raise ValueError("Github Token should be provided")
+    if execution_path is None or execution_path == "":
+        raise ValueError("Execution Path should be provided")
+    if tool_path is None or tool_path == "":
+        tool_path = f"{execution_path}/tools"
+        print(f"Tools path is not provided. Default value is set: {tool_path}")
 
     common_tool_methods.run("git checkout master")
     pr_branch = f"release-{args.prj_ver}-{uuid.uuid4()}"
