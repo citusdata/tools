@@ -11,7 +11,7 @@ TEST_BASE_PATH = f"{BASE_PATH}/docker"
 PROJECT_VERSION = "10.0.3"
 PROJECT_NAME = "citus"
 version_details = common_tool_methods.get_version_details(PROJECT_VERSION)
-TEMPLATE_PATH = f"{BASE_PATH}/python/templates/docker"
+TEMPLATE_PATH = f"{BASE_PATH}/packaging_automation/templates/docker"
 
 
 def setup_module():
