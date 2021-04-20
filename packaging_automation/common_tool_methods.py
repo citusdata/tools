@@ -65,6 +65,11 @@ def run(command, *args, **kwargs):
     return result
 
 
+def run_with_output(command, *args, **kwargs):
+    result = subprocess.run(command, *args, check=True, shell=True, stdout=subprocess.PIPE, **kwargs)
+    return result
+
+
 def cherry_pick_prs(prs: List[PullRequest.PullRequest]):
     for pr in prs:
         commits = pr.get_commits()
@@ -166,3 +171,41 @@ def process_docker_template_file(project_version: str, templates_path: str, temp
 def write_to_file(content: str, dest_file_name: str):
     with open(dest_file_name, "w") as writer:
         writer.write(content)
+
+
+def get_gpg_key_from_email(email: str):
+    result = subprocess.run(f"gpg --list-keys ", check=True, shell=True, stdout=subprocess.PIPE)
+    lines = result.stdout.decode("ascii").splitlines()
+    counter = 0
+    line_found = False
+    for line in lines:
+        if line.startswith("uid") and email in line:
+            line_found = True
+            break
+        counter = counter + 1
+    if not line_found:
+        raise ValueError(f"Key with the  email address {email} could not be found ")
+    else:
+        return lines[counter - 1].strip()
+
+
+def delete_gpg_key_by_email(email: str):
+    try:
+        while True:
+            key_id = get_gpg_key_from_email(email)
+            run(f"gpg --batch --yes --delete-secret-key {key_id}")
+            run(f"gpg --batch --yes --delete-key {key_id}")
+    except ValueError:
+        print(f"Key for the email {email} does not exist")
+
+
+def get_secret_key_by_fingerprint(fingerprint: str) -> str:
+    try:
+        cmd = f'gpg --batch --export-secret-keys -a "{fingerprint}" | base64'
+        ps = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=2)
+        secret_key = ps.stdout.decode("ascii")
+        return secret_key
+    except subprocess.TimeoutExpired:
+        raise ValueError(
+            f"Error while getting key. Most probably packaging key is stored with password. "
+            f"Please remove the password when storing key with fingerprint {fingerprint}")
