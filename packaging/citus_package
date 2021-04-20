@@ -385,7 +385,11 @@ foreach my $platform (@platforms) {
             $build_type
         );
 
-        system( 'docker', @docker_args );
+        foreach (@docker_args) {
+          print "$_\n";
+        }
+
+        # system( 'docker', @docker_args );
 
         if ( $? == -1 ) {
             die "failed to execute: $!\n";
