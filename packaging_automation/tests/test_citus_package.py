@@ -9,8 +9,7 @@ TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[
 
 PACKAGING_SOURCE_FOLDER = "packaging_test"
 PACKAGING_EXEC_FOLDER = f"{TEST_BASE_PATH}/{PACKAGING_SOURCE_FOLDER}"
-RPM_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages/rpm"
-DEB_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages/deb"
+BASE_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
 
 package_counts = {
     "el/7": 4, "el/8": 6, "ol/7": 4, "debian/stretch": 4, "debian/buster": 4, "ubuntu/xenial": 2, "ubuntu/bionic": 2,
@@ -29,9 +28,9 @@ def setup_module():
             f"git clone --branch all-citus https://github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}")
 
 
-def teardown_module():
-    if os.path.exists("packaging_test"):
-        run("rm -r packaging_test")
+# def teardown_module():
+#     if os.path.exists("packaging_test"):
+#         run("rm -r packaging_test")
 
 
 def test_build_packages():
@@ -41,12 +40,11 @@ def test_build_packages():
     gpg_fingerprint = get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME)
     secret_key = get_secret_key_by_fingerprint_with_password(gpg_fingerprint, TEST_GPG_KEY_PASSPHRASE)
     build_packages(GH_TOKEN, platform, BuildType.release, secret_key,
-                   RPM_OUTPUT_FOLDER, DEB_OUTPUT_FOLDER, PACKAGING_EXEC_FOLDER)
+                   BASE_OUTPUT_FOLDER, PACKAGING_EXEC_FOLDER)
     define_rpm_public_key_to_machine(gpg_fingerprint)
-    sign_packages(RPM_OUTPUT_FOLDER, DEB_OUTPUT_FOLDER, secret_key, TEST_GPG_KEY_PASSPHRASE)
-    verify_rpm_signature_in_dir(RPM_OUTPUT_FOLDER)
+    verify_rpm_signature_in_dir(BASE_OUTPUT_FOLDER)
     os_name, os_version = decode_os_and_release(platform)
-    output_dir = DEB_OUTPUT_FOLDER if os_name in ("debian", "ubuntu") else RPM_OUTPUT_FOLDER
-    release_output_folder = get_release_package_folder(output_dir, os_name, os_version)
+    sub_folder = get_release_package_folder(os_name, os_version)
+    release_output_folder = f"{BASE_OUTPUT_FOLDER}/{sub_folder}"
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
     assert len(os.listdir(release_output_folder)) == package_counts[platform]
