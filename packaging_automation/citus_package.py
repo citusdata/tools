@@ -36,6 +36,7 @@ class PostgresVersionDockerImage:
 
 platform_postgres_version_source = {
     "el": PostgresVersionDockerImage.multiple,
+    "ol": PostgresVersionDockerImage.multiple,
     "debian": PostgresVersionDockerImage.single,
     "ubuntu": PostgresVersionDockerImage.single,
     "pgxn": PostgresVersionDockerImage.single
