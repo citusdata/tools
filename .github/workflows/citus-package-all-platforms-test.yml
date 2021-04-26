@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        platform: [ el/7, el/8, ol/7, debian/stretch,  ubuntu/xenial, ubuntu/bionic,ubuntu/focal ]
+        platform: [ el/7, el/8, ol/7, debian/stretch ]
     env:
       PLATFORM:  ${{ matrix.platform }}
 
