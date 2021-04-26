@@ -1,5 +1,5 @@
 adal==1.2.2
-appdirs==1.4.3
+appdirs==1.4.4
 attrs==19.3.0
 Automat==0.8.0
 blinker==1.4
@@ -14,11 +14,15 @@ constantly==15.1.0
 cryptography==2.8
 dbus-python==1.2.16
 Deprecated==1.2.12
-distlib==0.3.0
+devscripts===2.20.2ubuntu2
+distlib==0.3.1
 distro==1.4.0
 distro-info===0.23ubuntu1
 entrypoints==0.3
 filelock==3.0.12
+gitdb==4.0.7
+GitPython==3.1.14
+gpg===1.13.1-unknown
 httplib2==0.14.0
 hyperlink==19.0.0
 idna==2.8
@@ -65,7 +69,10 @@ pytest==6.2.3
 python-apt==2.0.0+ubuntu0.20.4.4
 python-dateutil==2.7.3
 python-debian===0.1.36ubuntu1
+python-gnupg==0.4.7
+python-magic==0.4.16
 python-string-utils==1.0.0
+pyxdg==0.26
 PyYAML==5.3.1
 requests==2.22.0
 requests-unixsocket==0.2.0
@@ -73,7 +80,8 @@ SecretStorage==2.3.1
 service-identity==18.1.0
 simplejson==3.16.0
 six==1.14.0
-sos==4.0
+smmap==4.0.0
+sos==4.1
 ssh-import-id==5.10
 systemd-python==234
 testresources==2.0.1
@@ -81,8 +89,10 @@ toml==0.10.2
 Twisted==18.9.0
 ubuntu-advantage-tools==20.3
 ufw==0.36
+unidiff==0.5.5
 urllib3==1.25.8
-virtualenv==20.0.17
+virtualenv==20.0.23
+virtualenv-clone==0.5.4
 wadllib==1.3.3
 wrapt==1.12.1
 zipp==1.0.0
