@@ -36,4 +36,7 @@ jobs:
       - name: Unit tests for "Update Pgxn"
         run: python -m pytest -q packaging_automation/tests/test_update_pgxn.py
 
+      - name: Citus Package Tests
+        run: python -m pytest -q packaging_automation/tests/test_citus_package_side_methods.py
+
 

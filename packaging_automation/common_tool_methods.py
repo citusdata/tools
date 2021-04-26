@@ -1,3 +1,4 @@
+import os
 import subprocess
 import re
 from datetime import datetime
@@ -5,6 +6,10 @@ from typing import Dict, List
 
 from github import Repository, PullRequest
 from jinja2 import Environment, FileSystemLoader
+import gnupg
+import base64
+
+import pexpect
 
 from . import common_validations
 
@@ -173,30 +178,30 @@ def write_to_file(content: str, dest_file_name: str):
         writer.write(content)
 
 
-def get_gpg_key_from_email(email: str):
+def get_gpg_fingerprint_from_name(name: str):
     result = subprocess.run(f"gpg --list-keys ", check=True, shell=True, stdout=subprocess.PIPE)
     lines = result.stdout.decode("ascii").splitlines()
     counter = 0
     line_found = False
     for line in lines:
-        if line.startswith("uid") and email in line:
+        if line.startswith("uid") and name in line:
             line_found = True
             break
         counter = counter + 1
     if not line_found:
-        raise ValueError(f"Key with the  email address {email} could not be found ")
+        raise ValueError(f"Key with the  name {name} could not be found ")
     else:
         return lines[counter - 1].strip()
 
 
-def delete_gpg_key_by_email(email: str):
+def delete_gpg_key_by_name(name: str):
     try:
         while True:
-            key_id = get_gpg_key_from_email(email)
+            key_id = get_gpg_fingerprint_from_name(name)
             run(f"gpg --batch --yes --delete-secret-key {key_id}")
             run(f"gpg --batch --yes --delete-key {key_id}")
     except ValueError:
-        print(f"Key for the email {email} does not exist")
+        print(f"Key for the name {name} does not exist")
 
 
 def get_secret_key_by_fingerprint(fingerprint: str) -> str:
@@ -209,3 +214,62 @@ def get_secret_key_by_fingerprint(fingerprint: str) -> str:
         raise ValueError(
             f"Error while getting key. Most probably packaging key is stored with password. "
             f"Please remove the password when storing key with fingerprint {fingerprint}")
+
+
+def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: str) -> str:
+    try:
+        gpg = gnupg.GPG()
+        private_key = gpg.export_keys(fingerprint, True,
+                                      passphrase=passphrase)
+
+        return base64.b64encode(private_key.encode("ascii")).decode("ascii")
+    except subprocess.TimeoutExpired:
+        raise ValueError(
+            f"Error while getting key. Most probably packaging key is stored with password. "
+            f"Please remove the password when storing key with fingerprint {fingerprint}")
+
+
+def get_public_gpg_key(fingerprint: str) -> str:
+    gpg = gnupg.GPG()
+    ascii_armored_public_keys = gpg.export_keys(fingerprint)
+    return base64.b64encode(ascii_armored_public_keys.encode("ascii")).decode("ascii")
+
+
+def define_rpm_public_key_to_machine(fingerprint: str):
+    run(f"gpg --export -a {fingerprint} >rpm_public.key")
+    run("rpm --import rpm_public.key")
+    os.remove("rpm_public.key")
+
+
+def delete_rpm_key_by_name(key_name: str):
+    result = subprocess.run(["rpm", "-q gpg-pubkey", "--qf %{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n"],
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output = result.stdout.decode("ascii")
+    if output == "package gpg-pubkey is not installed":
+        print("There is not rpm public key to delete")
+    else:
+        key_lines = output.splitlines()
+        key_lines_filtered = filter(lambda line: key_name in line, key_lines)
+        for key_line in key_lines_filtered:
+            keys = key_line.split()
+            if len(keys) > 0:
+                run(f"rpm -e {keys[0]}")
+                print(f"{keys[0]} deleted")
+
+
+def is_rpm_file_signed(file_path: str) -> bool:
+    result = run_with_output(f"rpm -K {file_path}")
+    if result.returncode == 0:
+        return True
+    else:
+        return False
+
+
+def verify_rpm_signature_in_dir(rpm_dir_path: str):
+    files = list()
+    for (dirpath, dirnames, filenames) in os.walk(rpm_dir_path):
+        files += [os.path.join(dirpath, file) for file in filenames]
+    rpm_files = filter(lambda file_name: file_name.endswith("rpm"), files)
+    for file in rpm_files:
+        if not is_rpm_file_signed(f"{file}"):
+            raise ValueError(f"File {file} is not signed or there is a signature check problem")
