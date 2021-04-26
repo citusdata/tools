@@ -13,8 +13,8 @@ RPM_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages/rpm"
 DEB_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages/deb"
 
 package_counts = {
-    "el-7": 4, "el-8": 6, "ol/7": 4, "debian-stretch": 4, "debian-buster": 4, "ubuntu-xenial": 2, "ubuntu-bionic": 2,
-    "ubuntu-focal": 2
+    "el/7": 4, "el/8": 6, "ol/7": 4, "debian/stretch": 4, "debian/buster": 4, "ubuntu/xenial": 2, "ubuntu/bionic": 2,
+    "ubuntu/focal": 2
 }
 
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
@@ -49,4 +49,4 @@ def test_build_packages():
     output_dir = DEB_OUTPUT_FOLDER if os_name in ("debian", "ubuntu") else RPM_OUTPUT_FOLDER
     release_output_folder = get_release_package_folder(output_dir, os_name, os_version)
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
-    assert len(os.listdir(release_output_folder)) == package_counts[f"{os_name}-{os_version}"]
+    assert len(os.listdir(release_output_folder)) == package_counts[platform]
