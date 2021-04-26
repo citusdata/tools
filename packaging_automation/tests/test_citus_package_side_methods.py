@@ -12,8 +12,7 @@ PLATFORM = os.getenv("PLATFORM")
 
 PACKAGING_SOURCE_FOLDER = "packaging_test"
 PACKAGING_EXEC_FOLDER = f"{TEST_BASE_PATH}/{PACKAGING_SOURCE_FOLDER}"
-RPM_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages/rpm"
-DEB_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages/deb"
+OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
 
 
 def setup_module():
@@ -88,13 +87,13 @@ def test_get_postgres_versions():
 
 def test_build_package_debian():
     build_package(GH_TOKEN, BuildType.release,
-                  f"{DEB_OUTPUT_FOLDER}",
+                  f"{OUTPUT_FOLDER}/debian-stretch",
                   f"{PACKAGING_EXEC_FOLDER}", "debian-stretch", "all")
 
 
 def test_build_package_rpm():
     build_package(GH_TOKEN, BuildType.release,
-                  f"{RPM_OUTPUT_FOLDER}",
+                  f"{OUTPUT_FOLDER}/centos-8",
                   f"{PACKAGING_EXEC_FOLDER}", "centos-8", "13")
 
 
@@ -105,9 +104,9 @@ def test_sign_packages():
     gpg_fingerprint = get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME)
     secret_key = get_secret_key_by_fingerprint_with_password(gpg_fingerprint, TEST_GPG_KEY_PASSPHRASE)
     define_rpm_public_key_to_machine(gpg_fingerprint)
-    sign_packages(RPM_OUTPUT_FOLDER, DEB_OUTPUT_FOLDER, secret_key, TEST_GPG_KEY_PASSPHRASE)
-    verify_rpm_signature_in_dir(RPM_OUTPUT_FOLDER)
+    sign_packages(OUTPUT_FOLDER, "centos-8", secret_key, TEST_GPG_KEY_PASSPHRASE)
+    sign_packages(OUTPUT_FOLDER, "debian-stretch", secret_key, TEST_GPG_KEY_PASSPHRASE)
+    verify_rpm_signature_in_dir(OUTPUT_FOLDER)
 
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
-    run(f"rm -r {DEB_OUTPUT_FOLDER}")
-    run(f"rm -r {RPM_OUTPUT_FOLDER}")
+    run(f"rm -r {OUTPUT_FOLDER}")

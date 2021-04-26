@@ -103,15 +103,16 @@ def get_signing_credentials(packaging_secret_key: str) -> Tuple[str, str]:
     return secret_key, passphrase
 
 
-def sign_packages(rpm_output_path: str, deb_output_path: str, secret_key: str, passphrase: str):
-    deb_files = glob.glob(f"{deb_output_path}/*/*.deb")
-    rpm_files = glob.glob(f"{rpm_output_path}/*/*.rpm")
+def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passphrase: str):
+    output_path = f"{base_output_path}/{sub_folder}"
+    deb_files = glob.glob(f"{output_path}/*.deb", recursive=True)
+    rpm_files = glob.glob(f"{output_path}/*.rpm", recursive=True)
     os.environ["PACKAGING_PASSPHRASE"] = passphrase
     os.environ["PACKAGING_SECRET_KEY"] = secret_key
 
     if len(rpm_files) > 0:
         print("Started RPM Signing...")
-        result = run(f"docker run --rm -v  {rpm_output_path}:/packages/rpm -e PACKAGING_SECRET_KEY -e "
+        result = run(f"docker run --rm -v  {output_path}:/packages/{sub_folder} -e PACKAGING_SECRET_KEY -e "
                      f"PACKAGING_PASSPHRASE citusdata/packaging:rpmsigner")
         print("RPM signing finished successfully.")
         if result.returncode != 0:
@@ -122,7 +123,7 @@ def sign_packages(rpm_output_path: str, deb_output_path: str, secret_key: str, p
     if len(deb_files) > 0:
         print("Started DEB Signing...")
         result = subprocess.run(
-            ["docker", "run", "--rm", "-v", f"{deb_output_path}:/packages/deb",
+            ["docker", "run", "--rm", "-v", f"{output_path}:/packages/{sub_folder}",
              "-e", "PACKAGING_SECRET_KEY", "-e", "PACKAGING_PASSPHRASE", "citusdata/packaging:debsigner"],
             text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, input="Citus123")
         print(result.stdout)
@@ -170,8 +171,8 @@ def build_package(github_token: str, build_type: BuildType, output_dir: str, fil
         f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}")
 
 
-def get_release_package_folder(output_dir: str, os_name: str, os_version: str) -> str:
-    return f"{output_dir}/{os_name}-{os_version}"
+def get_release_package_folder(os_name: str, os_version: str) -> str:
+    return f"{os_name}-{os_version}"
 
 
 def get_docker_image_name(platform: str):
@@ -180,7 +181,7 @@ def get_docker_image_name(platform: str):
 
 
 def build_packages(github_token: str, platform: str, build_type: BuildType, packaging_secret_key: str,
-                   rpm_output_dir: str, deb_output_dir: str,
+                   base_output_dir: str,
                    file_sub_dir: str) -> None:
     os_name, os_version = decode_os_and_release(platform)
     release_versions, nightly_versions = get_postgres_versions(os_name, file_sub_dir)
@@ -188,12 +189,13 @@ def build_packages(github_token: str, platform: str, build_type: BuildType, pack
 
     postgres_versions = release_versions if build_type == BuildType.release else nightly_versions
     docker_image_name = get_docker_image_name(platform)
-    output_dir = deb_output_dir if os_name in ("debian", "ubuntu") else rpm_output_dir
+    output_sub_folder = get_release_package_folder(os_name, os_version)
+    output_dir = f"{base_output_dir}/{output_sub_folder}"
     for postgres_version in postgres_versions:
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} started... ")
-        build_package(github_token, build_type, get_release_package_folder(output_dir, os_name, os_version),
+        build_package(github_token, build_type, output_dir,
                       file_sub_dir, docker_image_name,
                       postgres_version)
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} finished ")
 
-    sign_packages(rpm_output_dir, deb_output_dir, secret_key, passphrase)
+    sign_packages(base_output_dir, output_sub_folder, secret_key, passphrase, )
