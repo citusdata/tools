@@ -48,14 +48,14 @@ def test_is_docker_running():
 
 
 def test_get_signing_credentials():
-    secret_key, passphrase = get_signing_credentials("verysecretkey")
+    secret_key, passphrase = get_signing_credentials("verysecretkey","123")
     assert secret_key == "verysecretkey" and passphrase == "123"
 
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
 
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging.gpg")
     os.environ["PACKAGING_PASSPHRASE"] = TEST_GPG_KEY_PASSPHRASE
-    secret_key, passphrase = get_signing_credentials("")
+    secret_key, passphrase = get_signing_credentials("", TEST_GPG_KEY_PASSPHRASE)
     expected_gpg_key = get_secret_key_by_fingerprint(
         get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME))
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)

@@ -2,6 +2,7 @@ name: Citus Package All Platforms Tests
 
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  PACKAGING_PASSPHRASE: ${{ secrets.PACKAGING_PASSPHRASE }}
 
 on:
   push:

@@ -17,7 +17,7 @@ package_counts = {
 }
 
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
-TEST_GPG_KEY_PASSPHRASE = "Citus123"
+TEST_GPG_KEY_PASSPHRASE = os.getenv("PACKAGING_PASSPHRASE")
 GH_TOKEN = os.getenv("GH_TOKEN")
 PLATFORM = os.getenv("PLATFORM")
 
@@ -28,20 +28,23 @@ def setup_module():
             f"git clone --branch all-citus https://github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}")
 
 
-# def teardown_module():
-#     if os.path.exists("packaging_test"):
-#         run("rm -r packaging_test")
+def teardown_module():
+    if os.path.exists("packaging_test"):
+        run("rm -r packaging_test")
 
 
 def test_build_packages():
     platform = os.getenv("PLATFORM")
+
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
+    delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_password.gpg")
     gpg_fingerprint = get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME)
     secret_key = get_secret_key_by_fingerprint_with_password(gpg_fingerprint, TEST_GPG_KEY_PASSPHRASE)
-    build_packages(GH_TOKEN, platform, BuildType.release, secret_key,
-                   BASE_OUTPUT_FOLDER, PACKAGING_EXEC_FOLDER)
     define_rpm_public_key_to_machine(gpg_fingerprint)
+
+    build_packages(GH_TOKEN, platform, BuildType.release, secret_key,
+                   TEST_GPG_KEY_PASSPHRASE, BASE_OUTPUT_FOLDER, PACKAGING_EXEC_FOLDER)
     verify_rpm_signature_in_dir(BASE_OUTPUT_FOLDER)
     os_name, os_version = decode_os_and_release(platform)
     sub_folder = get_release_package_folder(os_name, os_version)

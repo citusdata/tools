@@ -75,7 +75,9 @@ def is_docker_running() -> bool:
     return child.returncode == 0
 
 
-def get_signing_credentials(packaging_secret_key: str) -> Tuple[str, str]:
+def get_signing_credentials(packaging_secret_key: str, packaging_passphrase: str) -> Tuple[str, str]:
+    if packaging_passphrase is None or len(packaging_passphrase) == 0:
+        raise ValueError("packaging_passphrase should not be null")
     if packaging_secret_key is not None and len(packaging_secret_key) > 0:
         secret_key = packaging_secret_key
     else:
@@ -99,7 +101,7 @@ def get_signing_credentials(packaging_secret_key: str) -> Tuple[str, str]:
             raise ValueError(
                 "Error while getting key. Most probably packaging key is stored with password. "
                 "Please remove the password when storing key with email packaging@citusdata.com")
-    passphrase = os.getenv("PACKAGING_PASSPHRASE", default="123")
+    passphrase = packaging_passphrase
     return secret_key, passphrase
 
 
@@ -181,11 +183,15 @@ def get_docker_image_name(platform: str):
 
 
 def build_packages(github_token: str, platform: str, build_type: BuildType, packaging_secret_key: str,
+                   packaging_passphrase: str,
                    base_output_dir: str,
                    file_sub_dir: str) -> None:
     os_name, os_version = decode_os_and_release(platform)
     release_versions, nightly_versions = get_postgres_versions(os_name, file_sub_dir)
-    secret_key, passphrase = get_signing_credentials(packaging_secret_key)
+    secret_key, passphrase = get_signing_credentials(packaging_secret_key, packaging_passphrase)
+
+    if passphrase is None:
+        raise ValueError("PACKAGING_PASSPHRASE should be defined as environment parameter")
 
     postgres_versions = release_versions if build_type == BuildType.release else nightly_versions
     docker_image_name = get_docker_image_name(platform)
