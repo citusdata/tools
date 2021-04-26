@@ -1,3 +1,4 @@
+import os
 import pathlib2
 
 from .test_utils import generate_new_gpg_key
@@ -34,7 +35,7 @@ def teardown_module():
 
 
 def test_build_packages():
-    platform = "el/8"
+    platform = os.getenv("PLATFORM")
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_password.gpg")
     gpg_fingerprint = get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME)
