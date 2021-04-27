@@ -1,11 +1,12 @@
 import subprocess
 from typing import Tuple
-from .common_tool_methods import run
+from .common_tool_methods import run, run_with_output
 from enum import Enum
 from typing import List
 
 import os
 import glob
+import re
 
 supported_platforms = {
     "debian": ["buster", "stretch", "jessie", "wheezy"],
@@ -114,11 +115,12 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
 
     if len(rpm_files) > 0:
         print("Started RPM Signing...")
-        result = run(f"docker run --rm -v  {output_path}:/packages/{sub_folder} -e PACKAGING_SECRET_KEY -e "
-                     f"PACKAGING_PASSPHRASE citusdata/packaging:rpmsigner")
+        result = run_with_output(f"docker run --rm -v  {output_path}:/packages/{sub_folder} -e PACKAGING_SECRET_KEY -e "
+                                 f"PACKAGING_PASSPHRASE citusdata/packaging:rpmsigner")
         print("RPM signing finished successfully.")
         if result.returncode != 0:
             raise ValueError(f"Error while signing rpm files.Err:{result.stdout}")
+        print(result.stdout.decode("ascii"))
 
     os.environ["PACKAGING_PASSPHRASE"] = passphrase
     os.environ["PACKAGING_SECRET_KEY"] = secret_key
@@ -127,7 +129,7 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
         result = subprocess.run(
             ["docker", "run", "--rm", "-v", f"{output_path}:/packages/{sub_folder}",
              "-e", "PACKAGING_SECRET_KEY", "-e", "PACKAGING_PASSPHRASE", "citusdata/packaging:debsigner"],
-            text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, input="Citus123")
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, input=passphrase)
         print(result.stdout)
         print("DEB signing finished successfully.")
         if result.returncode != 0:
@@ -168,9 +170,10 @@ def build_package(github_token: str, build_type: BuildType, output_dir: str, fil
     os.environ["GITHUB_TOKEN"] = github_token
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    run(f"docker run --rm -v {output_dir}:/packages -v {file_sub_dir}:/buildfiles:ro -e "
-        f"GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE "
-        f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}")
+    output = run_with_output(f"docker run --rm -v {output_dir}:/packages -v {file_sub_dir}:/buildfiles:ro -e "
+                             f"GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE "
+                             f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}")
+    print(output.stdout.decode("ascii"))
 
 
 def get_release_package_folder(os_name: str, os_version: str) -> str:
@@ -204,4 +207,4 @@ def build_packages(github_token: str, platform: str, build_type: BuildType, pack
                       postgres_version)
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} finished ")
 
-    sign_packages(base_output_dir, output_sub_folder, secret_key, passphrase, )
+    sign_packages(base_output_dir, output_sub_folder, secret_key, passphrase)

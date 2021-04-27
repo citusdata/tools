@@ -1,0 +1,162 @@
+tar: Removing leading `//' from member names
++ umask 022
++ cd //citus-rpm-build
++ cd /citus-rpm-build
++ rm -rf pg_cron-1.3.1
++ /usr/bin/gzip -dc /citus-rpm-build/36d47bf9f7eb569f43cd98ff426764f59c286508
++ /usr/bin/tar -xof -
++ STATUS=0
++ '[' 0 -ne 0 ']'
++ cd pg_cron-1.3.1
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w .
++ exit 0
++ umask 022
++ cd //citus-rpm-build
++ cd pg_cron-1.3.1
++ PATH=/usr/pgsql-10/bin:/scripts:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ make -j2
++ exit 0
++ umask 022
++ cd //citus-rpm-build
++ '[' /root/rpmbuild/BUILDROOT/pg_cron_10-1.3.1-1.el8.x86_64 '!=' / ']'
++ rm -rf /root/rpmbuild/BUILDROOT/pg_cron_10-1.3.1-1.el8.x86_64
+++ dirname /root/rpmbuild/BUILDROOT/pg_cron_10-1.3.1-1.el8.x86_64
++ mkdir -p /root/rpmbuild/BUILDROOT
++ mkdir /root/rpmbuild/BUILDROOT/pg_cron_10-1.3.1-1.el8.x86_64
++ cd pg_cron-1.3.1
++ PATH=/usr/pgsql-10/bin:/scripts:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ /usr/bin/make install DESTDIR=/root/rpmbuild/BUILDROOT/pg_cron_10-1.3.1-1.el8.x86_64 'INSTALL=/usr/bin/install -p'
++ /usr/bin/mkdir -p /root/rpmbuild/BUILDROOT/pg_cron_10-1.3.1-1.el8.x86_64/usr/pgsql-10/doc/extension
++ /usr/bin/cp README.md /root/rpmbuild/BUILDROOT/pg_cron_10-1.3.1-1.el8.x86_64/usr/pgsql-10/doc/extension/README-pg_cron.md
++ /usr/lib/rpm/find-debuginfo.sh -j2 --strict-build-id -m -i --build-id-seed 1.3.1-1.el8 --unique-debug-suffix -1.3.1-1.el8.x86_64 --unique-debug-src-base pg_cron_10-1.3.1-1.el8.x86_64 --run-dwz --dwz-low-mem-die-limit 10000000 --dwz-max-die-limit 110000000 -S debugsourcefiles.list //citus-rpm-build/pg_cron-1.3.1
+224 blocks
++ /usr/lib/rpm/check-buildroot
++ /usr/lib/rpm/redhat/brp-ldconfig
+/sbin/ldconfig: Warning: ignoring configuration file that cannot be opened: /etc/ld.so.conf: No such file or directory
+Warning: Unhandled
++ /usr/lib/rpm/brp-compress
++ /usr/lib/rpm/brp-strip-static-archive /usr/bin/strip
++ /usr/lib/rpm/brp-python-bytecompile '' 1
++ /usr/lib/rpm/brp-python-hardlink
++ PYTHON3=/usr/libexec/platform-python
++ /usr/lib/rpm/redhat/brp-mangle-shebangs
++ umask 022
++ cd //citus-rpm-build
++ cd pg_cron-1.3.1
++ DOCDIR=/root/rpmbuild/BUILDROOT/pg_cron_10-1.3.1-1.el8.x86_64/usr/share/doc/pg_cron_10
++ export LC_ALL=C
++ LC_ALL=C
++ export DOCDIR
++ /usr/bin/mkdir -p /root/rpmbuild/BUILDROOT/pg_cron_10-1.3.1-1.el8.x86_64/usr/share/doc/pg_cron_10
++ cp -pr CHANGELOG.md /root/rpmbuild/BUILDROOT/pg_cron_10-1.3.1-1.el8.x86_64/usr/share/doc/pg_cron_10
++ exit 0
++ umask 022
++ cd //citus-rpm-build
++ cd pg_cron-1.3.1
++ /usr/bin/rm -rf /root/rpmbuild/BUILDROOT/pg_cron_10-1.3.1-1.el8.x86_64
++ exit 0
+tar: Removing leading `//' from member names
++ umask 022
++ cd //citus-rpm-build
++ cd /citus-rpm-build
++ rm -rf pg_cron-1.3.1
++ /usr/bin/gzip -dc /citus-rpm-build/36d47bf9f7eb569f43cd98ff426764f59c286508
++ /usr/bin/tar -xof -
++ STATUS=0
++ '[' 0 -ne 0 ']'
++ cd pg_cron-1.3.1
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w .
++ exit 0
++ umask 022
++ cd //citus-rpm-build
++ cd pg_cron-1.3.1
++ PATH=/usr/pgsql-11/bin:/scripts:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ make -j2
++ exit 0
++ umask 022
++ cd //citus-rpm-build
++ '[' /root/rpmbuild/BUILDROOT/pg_cron_11-1.3.1-1.el8.x86_64 '!=' / ']'
++ rm -rf /root/rpmbuild/BUILDROOT/pg_cron_11-1.3.1-1.el8.x86_64
+++ dirname /root/rpmbuild/BUILDROOT/pg_cron_11-1.3.1-1.el8.x86_64
++ mkdir -p /root/rpmbuild/BUILDROOT
++ mkdir /root/rpmbuild/BUILDROOT/pg_cron_11-1.3.1-1.el8.x86_64
++ cd pg_cron-1.3.1
++ PATH=/usr/pgsql-11/bin:/scripts:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ /usr/bin/make install DESTDIR=/root/rpmbuild/BUILDROOT/pg_cron_11-1.3.1-1.el8.x86_64 'INSTALL=/usr/bin/install -p'
++ /usr/bin/mkdir -p /root/rpmbuild/BUILDROOT/pg_cron_11-1.3.1-1.el8.x86_64/usr/pgsql-11/doc/extension
++ /usr/bin/cp README.md /root/rpmbuild/BUILDROOT/pg_cron_11-1.3.1-1.el8.x86_64/usr/pgsql-11/doc/extension/README-pg_cron.md
++ /usr/lib/rpm/find-debuginfo.sh -j2 --strict-build-id -m -i --build-id-seed 1.3.1-1.el8 --unique-debug-suffix -1.3.1-1.el8.x86_64 --unique-debug-src-base pg_cron_11-1.3.1-1.el8.x86_64 --run-dwz --dwz-low-mem-die-limit 10000000 --dwz-max-die-limit 110000000 -S debugsourcefiles.list //citus-rpm-build/pg_cron-1.3.1
+224 blocks
++ /usr/lib/rpm/check-buildroot
++ /usr/lib/rpm/redhat/brp-ldconfig
+/sbin/ldconfig: Warning: ignoring configuration file that cannot be opened: /etc/ld.so.conf: No such file or directory
++ /usr/lib/rpm/brp-compress
++ /usr/lib/rpm/brp-strip-static-archive /usr/bin/strip
++ /usr/lib/rpm/brp-python-bytecompile '' 1
++ /usr/lib/rpm/brp-python-hardlink
++ PYTHON3=/usr/libexec/platform-python
++ /usr/lib/rpm/redhat/brp-mangle-shebangs
++ umask 022
++ cd //citus-rpm-build
++ cd pg_cron-1.3.1
++ DOCDIR=/root/rpmbuild/BUILDROOT/pg_cron_11-1.3.1-1.el8.x86_64/usr/share/doc/pg_cron_11
++ export LC_ALL=C
++ LC_ALL=C
++ export DOCDIR
++ /usr/bin/mkdir -p /root/rpmbuild/BUILDROOT/pg_cron_11-1.3.1-1.el8.x86_64/usr/share/doc/pg_cron_11
++ cp -pr CHANGELOG.md /root/rpmbuild/BUILDROOT/pg_cron_11-1.3.1-1.el8.x86_64/usr/share/doc/pg_cron_11
++ exit 0
++ umask 022
++ cd //citus-rpm-build
++ cd pg_cron-1.3.1
++ /usr/bin/rm -rf /root/rpmbuild/BUILDROOT/pg_cron_11-1.3.1-1.el8.x86_64
+warning: line 345: multiple %files for package 'citus-enterprise100_11'
+/usr/lib/postgresql/12/lib/pgxs/src/makefiles/pgxs.mk:433: warning: ignoring old recipe for target 'check'
+sh: warning: setlocale: LC_ALL: cannot change locale (C.utf8): No such file or directory
+dpkg-buildpackage: warning: using a gain-root-command while being root
+/sbin/ldconfig: Warning: ignoring configuration file that cannot be opened: /etc/ld.so.conf: No such file or directory
+configure: WARNING: unrecognized options: --disable-dependency-tracking
+WARNING: If you run into issues during linking or bitcode compilation, you can use --without-security-flags.
+gpg: directory `/root/.gnupg' created
+gpg: new configuration file `/root/.gnupg/gpg.conf' created
+gpg: WARNING: options in `/root/.gnupg/gpg.conf' are not yet active during this run
+gpg: keyring `/root/.gnupg/secring.gpg' created
+gpg: keyring `/root/.gnupg/pubring.gpg' created
+gpg: key 3F95D6C6: secret key imported
+gpg: /root/.gnupg/trustdb.gpg: trustdb created
+gpg: key 3F95D6C6: public key "Citus Data <packaging@citusdata.com>" imported
+gpg: Total number processed: 1
+gpg:               imported: 1  (RSA: 1)
+gpg:       secret keys read: 1
+gpg:   secret keys imported: 1
+Warnings generated by release docker build :
+pg_cron_10-debugsource.x86_64: W: no-documentation
+pg_cron_11-debugsource.x86_64: W: no-documentation
+pg_cron_12-debugsource.x86_64: W: no-documentation
+pg_cron_13-debugsource.x86_64: W: no-documentation
+citus-enterprise100_11.x86_64: W: invalid-license Commercial
+citus-enterprise100_11.x86_64: W: invalid-date-format
+Removing centos-8/
+Removing citus_package.log
+Removing tools/.gitignore
+Removing tools/CHANGELOG.md
+Removing tools/HomebrewFormula/
+Removing tools/Makefile
+Removing tools/README.md
+Removing tools/automated_packaging/
+Removing tools/citus_dev/
+Removing tools/dashboard/
+Removing tools/packaging/Makefile
+Removing tools/packaging/README.md
+Removing tools/packaging/citus_package
+Removing tools/travis/
+Removing tools/uncrustify/Makefile
+Removing tools/uncrustify/README.md
+Removing tools/uncrustify/citus-style.cfg
+Removing tools/uncrustify/citus_indent
+Removing tools/valgrind/
+The command "build_new_release" exited with 0.
+Skipping a deployment with the packagecloud provider because this branch is not permitted: redhat-cron-1.3.1
+Skipping a deployment with the packagecloud provider because this branch is not permitted: redhat-cron-1.3.1
+Skipping a deployment with the packagecloud provider because a custom condition was not met
+Done. Your build exited with 0.
