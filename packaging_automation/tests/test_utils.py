@@ -1,5 +1,8 @@
 import difflib
 from ..common_tool_methods import *
+import pathlib2
+
+TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 
 
 def are_strings_equal(expected_string: str, actual_str: str) -> bool:

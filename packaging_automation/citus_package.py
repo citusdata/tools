@@ -1,12 +1,14 @@
+import argparse
+import glob
+import os
 import subprocess
-from typing import Tuple
-from .common_tool_methods import run, run_with_output
 from enum import Enum
 from typing import List
+from typing import Tuple
 
-import os
-import glob
-import re
+from .common_tool_methods import run_with_output
+from .packaging_warning_handler import validate_output
+from parameters_validation import no_whitespaces, non_blank, non_empty, non_negative, validate_parameters
 
 supported_platforms = {
     "debian": ["buster", "stretch", "jessie", "wheezy"],
@@ -106,7 +108,8 @@ def get_signing_credentials(packaging_secret_key: str, packaging_passphrase: str
     return secret_key, passphrase
 
 
-def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passphrase: str):
+def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passphrase: str, input_files_dir: str,
+                  output_validation: bool = False):
     output_path = f"{base_output_path}/{sub_folder}"
     deb_files = glob.glob(f"{output_path}/*.deb", recursive=True)
     rpm_files = glob.glob(f"{output_path}/*.rpm", recursive=True)
@@ -120,7 +123,12 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
         print("RPM signing finished successfully.")
         if result.returncode != 0:
             raise ValueError(f"Error while signing rpm files.Err:{result.stdout}")
-        print(result.stdout.decode("ascii"))
+
+        output = result.stdout.decode("ascii")
+        print(output)
+
+        if output_validation:
+            validate_output(output, f"{input_files_dir}/packaging_ignore.yml")
 
     os.environ["PACKAGING_PASSPHRASE"] = passphrase
     os.environ["PACKAGING_SECRET_KEY"] = secret_key
@@ -136,14 +144,14 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
             raise ValueError(f"Error while signing DEB files.Err:{result.stdout}")
 
 
-def get_postgres_versions(os_name: str, file_sub_dir: str) -> Tuple[List[str], List[str]]:
+def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str], List[str]]:
     release_versions = []
     nightly_versions = []
     if platform_postgres_version_source[os_name] == PostgresVersionDockerImage.single:
         release_versions = ["all"]
         nightly_versions = ["all"]
     else:
-        with open(f"{file_sub_dir}/pkgvars", "r") as reader:
+        with open(f"{input_files_dir}/pkgvars", "r") as reader:
             content = reader.read()
             lines = content.splitlines()
             for line in lines:
@@ -164,15 +172,17 @@ def get_postgres_versions(os_name: str, file_sub_dir: str) -> Tuple[List[str], L
     return release_versions, nightly_versions
 
 
-def build_package(github_token: str, build_type: BuildType, output_dir: str, file_sub_dir: str, docker_platform: str,
-                  postgres_version: str):
+def build_package(github_token: non_empty(non_blank(str)), build_type: BuildType, output_dir: str, input_files_dir: str,
+                  docker_platform: str, postgres_version: str, output_validation: bool = False):
     postgres_extension = "all" if postgres_version == "all" else f"pg{postgres_version}"
     os.environ["GITHUB_TOKEN"] = github_token
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    output = run_with_output(f"docker run --rm -v {output_dir}:/packages -v {file_sub_dir}:/buildfiles:ro -e "
+    output = run_with_output(f"docker run --rm -v {output_dir}:/packages -v {input_files_dir}:/buildfiles:ro -e "
                              f"GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE "
                              f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}")
+    if output_validation:
+        validate_output(output.stdout.decode("ascii"), f"{input_files_dir}/packaging_ignore.yml")
     print(output.stdout.decode("ascii"))
 
 
@@ -185,12 +195,13 @@ def get_docker_image_name(platform: str):
     return f'{docker_image_names[os_name]}-{os_version}'
 
 
-def build_packages(github_token: str, platform: str, build_type: BuildType, packaging_secret_key: str,
-                   packaging_passphrase: str,
-                   base_output_dir: str,
-                   file_sub_dir: str) -> None:
+def build_packages(github_token: non_empty(non_blank(str)), platform: non_empty(non_blank(str)), build_type: BuildType,
+                   packaging_secret_key: non_empty(non_blank(str)),
+                   packaging_passphrase: non_empty(non_blank(str)),
+                   base_output_dir: non_empty(non_blank(str)),
+                   input_files_dir: non_empty(non_blank(str)), output_validation: bool = False) -> None:
     os_name, os_version = decode_os_and_release(platform)
-    release_versions, nightly_versions = get_postgres_versions(os_name, file_sub_dir)
+    release_versions, nightly_versions = get_postgres_versions(os_name, input_files_dir)
     secret_key, passphrase = get_signing_credentials(packaging_secret_key, packaging_passphrase)
 
     if passphrase is None:
@@ -203,8 +214,27 @@ def build_packages(github_token: str, platform: str, build_type: BuildType, pack
     for postgres_version in postgres_versions:
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} started... ")
         build_package(github_token, build_type, output_dir,
-                      file_sub_dir, docker_image_name,
-                      postgres_version)
+                      input_files_dir, docker_image_name,
+                      postgres_version, output_validation)
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} finished ")
 
-    sign_packages(base_output_dir, output_sub_folder, secret_key, passphrase)
+    sign_packages(base_output_dir, output_sub_folder, secret_key, passphrase, input_files_dir, output_validation)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--gh_token')
+    parser.add_argument('--platform')
+    parser.add_argument('--build_type')
+    parser.add_argument('--secret_key')
+    parser.add_argument('--passphrase')
+    parser.add_argument('--output_dir')
+    parser.add_argument('--input_files_dir')
+    parser.add_argument('--output_validation')
+
+    args = parser.parse_args()
+
+    output_validation = False if args.output_validation is None or args.output_validation.lower() == "false" else True
+
+    build_packages(args.gh_token, args.platform, BuildType[args.build_type], args.secret_key, args.passphrase,
+                   args.output_dir, args.input_files_dir, output_validation)
