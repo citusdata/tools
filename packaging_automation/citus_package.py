@@ -6,7 +6,7 @@ from enum import Enum
 from typing import List
 from typing import Tuple
 
-from .common_tool_methods import run_with_output
+from .common_tool_methods import run_with_output, PackageType
 from .packaging_warning_handler import validate_output
 from parameters_validation import no_whitespaces, non_blank, non_empty, non_negative, validate_parameters
 
@@ -25,6 +25,10 @@ docker_image_names = {
     "ubuntu": "ubuntu",
     "pgxn": "pgxn"
 }
+
+
+def get_package_type_by_docker_image_name(docker_image_name: str) -> PackageType:
+    return PackageType.deb if docker_image_name in ("debian", "ubuntu") else PackageType.rpm
 
 
 class BuildType(Enum):
@@ -128,7 +132,7 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
         print(output)
 
         if output_validation:
-            validate_output(output, f"{input_files_dir}/packaging_ignore.yml")
+            validate_output(output, f"{input_files_dir}/packaging_ignore.yml", PackageType.rpm)
 
     os.environ["PACKAGING_PASSPHRASE"] = passphrase
     os.environ["PACKAGING_SECRET_KEY"] = secret_key
@@ -139,9 +143,13 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
              "-e", "PACKAGING_SECRET_KEY", "-e", "PACKAGING_PASSPHRASE", "citusdata/packaging:debsigner"],
             text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, input=passphrase)
         print(result.stdout)
-        print("DEB signing finished successfully.")
+
         if result.returncode != 0:
             raise ValueError(f"Error while signing DEB files.Err:{result.stdout}")
+
+        if output_validation:
+            validate_output(result.stdout, f"{input_files_dir}/packaging_ignore.yml", PackageType.deb)
+        print("DEB signing finished successfully.")
 
 
 def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str], List[str]]:
@@ -181,9 +189,10 @@ def build_package(github_token: non_empty(non_blank(str)), build_type: BuildType
     output = run_with_output(f"docker run --rm -v {output_dir}:/packages -v {input_files_dir}:/buildfiles:ro -e "
                              f"GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE "
                              f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}")
-    if output_validation:
-        validate_output(output.stdout.decode("ascii"), f"{input_files_dir}/packaging_ignore.yml")
     print(output.stdout.decode("ascii"))
+    if output_validation:
+        validate_output(output.stdout.decode("ascii"), f"{input_files_dir}/packaging_ignore.yml",
+                        get_package_type_by_docker_image_name(docker_platform))
 
 
 def get_release_package_folder(os_name: str, os_version: str) -> str:

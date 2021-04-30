@@ -10,3 +10,6 @@ base:
 debian:
   - ".*: W: invalid-license Commercial"
   - ".*: W: no-documentation"
+rpm:
+  - ".*: W: invalid-license Commercial"
+  - ".*: W: no-documentation"

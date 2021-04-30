@@ -1,17 +1,20 @@
+import base64
 import os
-import subprocess
 import re
+import subprocess
 from datetime import datetime
 from typing import Dict, List
-
+from enum import Enum
+import gnupg
 from github import Repository, PullRequest
 from jinja2 import Environment, FileSystemLoader
-import gnupg
-import base64
-
-import pexpect
 
 from . import common_validations
+
+
+class PackageType(Enum):
+    deb = 1,
+    rpm = 2
 
 
 def get_spec_file_name(project_name: str) -> str:
