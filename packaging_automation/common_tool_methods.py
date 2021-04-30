@@ -1,11 +1,10 @@
+import os
 import subprocess
 import re
-import subprocess
 from datetime import datetime
 from typing import Dict, List
-import os
-
-from github import Repository, PullRequest, Commit
+from enum import Enum
+from github import Repository, PullRequest
 from jinja2 import Environment, FileSystemLoader
 import gnupg
 import base64
@@ -19,6 +18,11 @@ from typing import Tuple
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
+
+
+class PackageType(Enum):
+    deb = 1,
+    rpm = 2
 
 
 def get_spec_file_name(project_name: str) -> str:
