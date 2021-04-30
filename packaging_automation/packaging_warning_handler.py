@@ -12,14 +12,19 @@ class PackagingWarningIgnoreType(Enum):
 
 
 def validate_output(output: str, ignore_file_path: str, package_type: PackageType):
-    base_ignore_list, deb_ignore_list, rpm_ignore_list = parse_ignore_lists(ignore_file_path)
+    base_ignore_list, package_type_specific_ignore_list = parse_ignore_lists(ignore_file_path, package_type)
 
     output_lines = output.splitlines()
     warning_lines, package_type_specific_warning_lines = filter_warning_lines(output_lines, package_type)
+    print("Package Type:" + package_type.name)
+    print(f"Package type specific warnings:{package_type_specific_warning_lines}")
 
     base_warnings_to_be_raised = get_warnings_to_be_raised(base_ignore_list, warning_lines)
-    package_type_specific_warnings_to_be_raised = get_warnings_to_be_raised(deb_ignore_list,
+    package_type_specific_warnings_to_be_raised = get_warnings_to_be_raised(package_type_specific_ignore_list,
                                                                             package_type_specific_warning_lines)
+
+    print(f"Package type specific ignore list:{package_type_specific_ignore_list}")
+    print(f"Package type specific warnings to be raises:{package_type_specific_warnings_to_be_raised}")
 
     if len(base_warnings_to_be_raised) > 0 or len(package_type_specific_warnings_to_be_raised) > 0:
         error_message = get_error_message(base_warnings_to_be_raised, package_type_specific_warnings_to_be_raised,
@@ -64,20 +69,19 @@ def filter_warning_lines(output_lines: List[str], package_type: PackageType) -> 
     return base_warning_lines, package_specific_warning_lines
 
 
-def parse_ignore_lists(ignore_file_path):
+def parse_ignore_lists(ignore_file_path: str, package_type: PackageType):
     base_ignore_list = []
-    deb_ignore_list = []
-    rpm_ignore_list = []
+    packaging_warning_type = PackagingWarningIgnoreType.debian if package_type == PackageType.deb \
+        else PackagingWarningIgnoreType.rpm
+    package_type_specific_ignore_list = []
     with open(ignore_file_path, "r") as reader:
         yaml_content = yaml.load(reader, yaml.BaseLoader)
     if PackagingWarningIgnoreType.base.name in yaml_content:
         base_ignore_list = yaml_content[PackagingWarningIgnoreType.base.name]
-    if PackagingWarningIgnoreType.debian.name in yaml_content:
-        deb_ignore_list = yaml_content[PackagingWarningIgnoreType.debian.name]
-    if PackagingWarningIgnoreType.rpm.name in yaml_content:
-        rpm_ignore_list = yaml_content[PackagingWarningIgnoreType.rpm.name]
+    if packaging_warning_type.name in yaml_content:
+        package_type_specific_ignore_list = yaml_content[packaging_warning_type.name]
 
-    return base_ignore_list, deb_ignore_list, rpm_ignore_list
+    return base_ignore_list, package_type_specific_ignore_list
 
 
 def get_warnings_to_be_raised(ignore_list: List[str], warning_lines: List[str]) -> List[str]:
@@ -100,7 +104,8 @@ def get_error_message(base_warnings_to_be_raised: List[str], package_specific_wa
         else "Rpm Warning lines:\n"
     error_message = f"{error_message}Warning lines:\n{''.join(base_warnings_to_be_raised)}" if len(
         base_warnings_to_be_raised) > 0 else error_message
-    error_message = f"{error_message}\n{package_type_specific_header}{''.join(package_specific_warnings_to_be_raised)}\n" \
+    error_message = f"{error_message}\n{package_type_specific_header}" \
+                    f"{''.join(package_specific_warnings_to_be_raised)}\n" \
         if len(package_specific_warnings_to_be_raised) > 0 else error_message
 
     return error_message
