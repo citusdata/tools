@@ -28,7 +28,8 @@ docker_image_names = {
 
 
 def get_package_type_by_docker_image_name(docker_image_name: str) -> PackageType:
-    return PackageType.deb if docker_image_name in ("debian", "ubuntu") else PackageType.rpm
+    return PackageType.deb if docker_image_name.startswith("ubuntu") or docker_image_name.startswith(
+        "debian") else PackageType.rpm
 
 
 class BuildType(Enum):
