@@ -228,7 +228,7 @@ def build_packages(github_token: non_empty(non_blank(str)), platform: non_empty(
                       postgres_version, output_validation)
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} finished ")
 
-    sign_packages(base_output_dir, output_sub_folder, secret_key, passphrase, input_files_dir, output_validation)
+    # sign_packages(base_output_dir, output_sub_folder, secret_key, passphrase, input_files_dir, output_validation)
 
 
 if __name__ == "__main__":
