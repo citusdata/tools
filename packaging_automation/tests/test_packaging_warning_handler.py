@@ -65,6 +65,19 @@ def test_get_error_message():
         assert error_message == "Warning lines:\nWarning: Unhandled\nDebian Warning lines:\n" \
                                 "citus-enterprise100_11.x86_64: W: invalid-date-format\n"
 
+def test_get_error_message_empty_package_specific_errors():
+    with open(f"{TEST_BASE_PATH}/files/packaging_warning/sample_warning_build_output_deb_only_base.txt", "r") as reader:
+        lines = reader.read().splitlines()
+        base_warning_lines, debian_warning_lines = filter_warning_lines(lines, PackageType.deb)
+        base_ignore_list, debian_ignore_list = parse_ignore_lists(
+            f"{TEST_BASE_PATH}/files/packaging_warning/packaging_ignore.yml", PackageType.deb)
+        base_warnings_to_be_raised = get_warnings_to_be_raised(base_ignore_list,
+                                                               base_warning_lines)
+        debian_warnings_to_be_raised = get_warnings_to_be_raised(debian_ignore_list,
+                                                                 debian_warning_lines)
+        error_message = get_error_message(base_warnings_to_be_raised, debian_warnings_to_be_raised, PackageType.deb)
+        assert error_message == "Warning lines:\nWarning: Unhandled\n"
+
 
 def test_validate_output_deb():
     with open(f"{TEST_BASE_PATH}/files/packaging_warning/sample_warning_build_output_deb.txt", "r") as reader:
