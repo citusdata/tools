@@ -17,6 +17,7 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
 
     output_lines = output.splitlines()
     warning_lines, package_type_specific_warning_lines = filter_warning_lines(output_lines, package_type)
+    print("Checking build output for warnings")
     print("Package Type:" + package_type.name)
     print(f"Package type specific warnings:{package_type_specific_warning_lines}")
 
@@ -25,12 +26,14 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
                                                                             package_type_specific_warning_lines)
 
     print(f"Package type specific ignore list:{package_type_specific_ignore_list}")
-    print(f"Package type specific warnings to be raises:{package_type_specific_warnings_to_be_raised}")
+    print(f"Package type specific warnings to be raised:{package_type_specific_warnings_to_be_raised}")
+    print(f"Base warnings to be raised:{base_warnings_to_be_raised}")
 
     if len(base_warnings_to_be_raised) > 0 or len(package_type_specific_warnings_to_be_raised) > 0:
         error_message = get_error_message(base_warnings_to_be_raised, package_type_specific_warnings_to_be_raised,
                                           package_type)
         raise ValueError(error_message)
+    print("Build output check  completed succesfully. No warnings")
 
 
 def filter_warning_lines(output_lines: List[str], package_type: PackageType) -> Tuple[List[str], List[str]]:
