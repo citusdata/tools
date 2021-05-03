@@ -32,6 +32,7 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
     if len(base_warnings_to_be_raised) > 0 or len(package_type_specific_warnings_to_be_raised) > 0:
         error_message = get_error_message(base_warnings_to_be_raised, package_type_specific_warnings_to_be_raised,
                                           package_type)
+        print("Remove Later" + error_message)
         raise ValueError(error_message)
     print("Build output check  completed succesfully. No warnings")
 
