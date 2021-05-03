@@ -215,7 +215,7 @@ def build_packages(github_token: non_empty(non_blank(str)), platform: non_empty(
     secret_key, passphrase = get_signing_credentials(packaging_secret_key, packaging_passphrase)
 
     if passphrase is None:
-        raise ValueError("PACKAGING_PASSPHRASE should be defined as environment parameter")
+        raise ValueError("PACKAGING_PASSPHRASE should not be null")
 
     postgres_versions = release_versions if build_type == BuildType.release else nightly_versions
     docker_image_name = get_docker_image_name(platform)
@@ -228,7 +228,7 @@ def build_packages(github_token: non_empty(non_blank(str)), platform: non_empty(
                       postgres_version, output_validation)
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} finished ")
 
-    # sign_packages(base_output_dir, output_sub_folder, secret_key, passphrase, input_files_dir, output_validation)
+    sign_packages(base_output_dir, output_sub_folder, secret_key, passphrase, input_files_dir, output_validation)
 
 
 if __name__ == "__main__":
@@ -244,7 +244,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    output_validation = False if args.output_validation is None or args.output_validation.lower() == "false" else True
+    validate_output = False if args.output_validation is None or args.output_validation.lower() == "false" else True
 
     build_packages(args.gh_token, args.platform, BuildType[args.build_type], args.secret_key, args.passphrase,
-                   args.output_dir, args.input_files_dir, output_validation)
+                   args.output_dir, args.input_files_dir, validate_output)
