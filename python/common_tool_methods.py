@@ -41,14 +41,12 @@ def find_nth_overlapping(subject_string, search_string, n) -> int:
 def find_nth_overlapping_line_by_regex(subject_string, regex_pattern, n) -> int:
     lines = subject_string.splitlines()
     counter = 0
-    index = -1
     for i in range(len(lines)):
         if re.match(regex_pattern, lines[i]):
             counter = counter + 1
         if counter == n:
-            index = i
-            break
-    return index
+            return i
+    return -1
 
 
 def remove_string_inside_parentheses(param: str) -> str:
