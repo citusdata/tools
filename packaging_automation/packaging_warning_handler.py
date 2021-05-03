@@ -3,6 +3,7 @@ import yaml
 import re
 from typing import List, Tuple
 from .common_tool_methods import PackageType
+import os
 
 
 class PackagingWarningIgnoreType(Enum):
@@ -102,10 +103,10 @@ def get_error_message(base_warnings_to_be_raised: List[str], package_specific_wa
     error_message = ""
     package_type_specific_header = "Debian Warning lines:\n" if package_type == PackageType.deb \
         else "Rpm Warning lines:\n"
-    error_message = f"{error_message}Warning lines:\n{''.join(base_warnings_to_be_raised)}" if len(
+    error_message = f'{error_message}Warning lines:\n{os.linesep.join(base_warnings_to_be_raised)}' if len(
         base_warnings_to_be_raised) > 0 else error_message
     error_message = f"{error_message}\n{package_type_specific_header}" \
-                    f"{''.join(package_specific_warnings_to_be_raised)}\n" \
+                    f"{os.linesep.join(package_specific_warnings_to_be_raised)}\n" \
         if len(package_specific_warnings_to_be_raised) > 0 else error_message
 
     return error_message
