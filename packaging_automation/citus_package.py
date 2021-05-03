@@ -244,7 +244,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    validate_output = False if args.output_validation is None or args.output_validation.lower() == "false" else True
+    output_validation_enabled = False if args.output_validation is None or args.output_validation.lower() == "false" \
+        else True
 
     build_packages(args.gh_token, args.platform, BuildType[args.build_type], args.secret_key, args.passphrase,
-                   args.output_dir, args.input_files_dir, validate_output)
+                   args.output_dir, args.input_files_dir, output_validation_enabled)
