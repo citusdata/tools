@@ -33,33 +33,33 @@ def test_major_release():
 
         run(f"git checkout {release_branch}")
 
-        assert has_file_include_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT, " 10.2devel")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE_IN, "AC_INIT([Citus], [10.2devel])")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2devel'")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_STRING='Citus 10.2devel'")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE,
-                                     r"\`configure' configures Citus 10.2devel to adapt to many kinds of systems.")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE,
-                                     '     short | recursive ) echo "Configuration of Citus 10.2devel:";;')
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2devel'")
+        assert file_include_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT, " 10.2devel")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE_IN, "AC_INIT([Citus], [10.2devel])")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2devel'")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_STRING='Citus 10.2devel'")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE,
+                                 r"\`configure' configures Citus 10.2devel to adapt to many kinds of systems.")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE,
+                                 '     short | recursive ) echo "Configuration of Citus 10.2devel:";;')
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2devel'")
 
         run(f"git checkout {upcoming_version_branch}")
 
-        assert has_file_include_line(TEST_BASE_PATH, CITUS_CONTROL, "default_version = '10.2-1'")
-        assert has_file_include_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT,
-                                     "ALTER EXTENSION citus UPDATE TO '10.2-1';")
-        assert has_file_include_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT, " 10.2devel")
+        assert file_include_line(TEST_BASE_PATH, CITUS_CONTROL, "default_version = '10.2-1'")
+        assert file_include_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT,
+                                 "ALTER EXTENSION citus UPDATE TO '10.2-1';")
+        assert file_include_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT, " 10.2devel")
         assert line_count_in_file(TEST_BASE_PATH, MULTI_EXTENSION_SQL,
                                   "ALTER EXTENSION citus UPDATE TO '10.2-1';") == 2
-        assert has_file_include_line(TEST_BASE_PATH, CONFIG_PY, "MASTER_VERSION = '10.2'")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE_IN, "AC_INIT([Citus], [10.2devel])")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2devel'")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_STRING='Citus 10.2devel'")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE,
-                                     r"\`configure' configures Citus 10.2devel to adapt to many kinds of systems.")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE,
-                                     '     short | recursive ) echo "Configuration of Citus 10.2devel:";;')
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2devel'")
+        assert file_include_line(TEST_BASE_PATH, CONFIG_PY, "MASTER_VERSION = '10.2'")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE_IN, "AC_INIT([Citus], [10.2devel])")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2devel'")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_STRING='Citus 10.2devel'")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE,
+                                 r"\`configure' configures Citus 10.2devel to adapt to many kinds of systems.")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE,
+                                 '     short | recursive ) echo "Configuration of Citus 10.2devel:";;')
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2devel'")
         assert os.path.exists(f"{TEST_BASE_PATH}/{newly_created_sql_file}")
         #
         run(f"git checkout {MAIN_BRANCH}")
@@ -93,15 +93,15 @@ def test_patch_release():
             main_branch=MAIN_BRANCH,
             earliest_pr_date=datetime.strptime('2021.03.25 00:00', '%Y.%m.%d %H:%M'),
             exec_path=TEST_BASE_PATH, is_test=True)
-        assert has_file_include_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT, " 10.2.1")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE_IN, "AC_INIT([Citus], [10.2.1])")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2.1'")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_STRING='Citus 10.2.1'")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE,
-                                     r"\`configure' configures Citus 10.2.1 to adapt to many kinds of systems.")
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE,
-                                     '     short | recursive ) echo "Configuration of Citus 10.2.1:";;')
-        assert has_file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2.1'")
+        assert file_include_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT, " 10.2.1")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE_IN, "AC_INIT([Citus], [10.2.1])")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2.1'")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_STRING='Citus 10.2.1'")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE,
+                                 r"\`configure' configures Citus 10.2.1 to adapt to many kinds of systems.")
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE,
+                                 '     short | recursive ) echo "Configuration of Citus 10.2.1:";;')
+        assert file_include_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2.1'")
         run(f"git checkout {MAIN_BRANCH}")
 
         clear_branches(release_branch, resource_status, upcoming_version_branch)
