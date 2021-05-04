@@ -2,6 +2,7 @@ import re
 import subprocess
 from datetime import datetime
 from typing import Dict, List
+import os
 
 from github import Repository, PullRequest
 from jinja2 import Environment, FileSystemLoader
@@ -71,16 +72,24 @@ def get_version_details(version: is_version(str)) -> Dict[str, str]:
     return {"major": version_parts[0], "minor": version_parts[1], "patch": version_parts[2]}
 
 
+def get_default_upcoming_version(version: is_version(str)) -> str:
+    project_version_details = get_version_details(version)
+    return f'{project_version_details["major"]}.{project_version_details["minor"]}.' \
+           f'{str(int(project_version_details["patch"]) + 1)}'
+
+
+def get_upcoming_minor_version(version: is_version(str)) -> str:
+    upcoming_version_details = get_version_details(version)
+    return f'{upcoming_version_details["major"]}.{upcoming_version_details["minor"]}'
+
+
 def is_major_release(version: is_version(str)) -> bool:
     version_info = get_version_details(version)
     return version_info["patch"] == "0"
 
 
 def str_array_to_str(str_array: List[str]) -> str:
-    result_str = ""
-    for i in range(len(str_array)):
-        result_str = result_str + str_array[i] + "\n"
-    return result_str
+    return f"{os.linesep.join(str_array)}{os.linesep}"
 
 
 def get_prs(repo: Repository.Repository, earliest_date: datetime, base_branch: str, last_date: datetime = None):
@@ -89,20 +98,17 @@ def get_prs(repo: Repository.Repository, earliest_date: datetime, base_branch: s
     for pull in pulls:
         if not pull.is_merged():
             continue
-        if last_date is not None and pull.created_at > last_date:
-            continue
         if pull.created_at < earliest_date:
             break
-        if pull.merged_at is not None and pull.merged_at > earliest_date:
+        if pull.merged_at is not None and earliest_date < pull.merged_at < last_date:
             picked_pulls.append(pull)
     return picked_pulls
 
 
-def get_pr_issues_by_label(prs: List[PullRequest.PullRequest], label_name: str):
+def get_prs_by_label(prs: List[PullRequest.PullRequest], label_name: str):
     filtered_prs = []
     for pr in prs:
-        filtered_labels = filter(lambda label: label.name == label_name, pr.labels)
-        if len(list(filtered_labels)) > 0:
+        if any(label.name == label_name for label in pr.labels):
             filtered_prs.append(pr)
     return filtered_prs
 
@@ -111,37 +117,28 @@ def has_file_include_line(base_path: str, relative_file_path: str, line_content:
     with open(f"{base_path}/{relative_file_path}", "r") as reader:
         content = reader.read()
         lines = content.splitlines()
-        found = False
         for line in lines:
             if line == line_content:
-                found = True
-                break
-    return found
+                return True
+    return False
 
 
-def line_count_in_file(base_path: str, relative_file_path: str, line_content: str) -> int:
+def line_count_in_file(base_path: str, relative_file_path: str, search_line: str) -> int:
     with open(f"{base_path}/{relative_file_path}", "r") as reader:
         content = reader.read()
         lines = content.splitlines()
-        counter = 0
-        for line in lines:
-            if line == line_content:
-                counter = counter + 1
-
-    return counter
+    return len(list(filter(lambda line: line == search_line, lines)))
 
 
 def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
     with open(file, "r") as reader:
         file_content = reader.read()
         lines = file_content.splitlines()
-        line_counter = 0
         has_match = False
-        for line in lines:
+        for line_number, line in enumerate(lines):
             if re.match(match_regex, line):
                 has_match = True
-                lines[line_counter] = replace_str
-            line_counter = line_counter + 1
+                lines[line_number] = replace_str
         edited_content = str_array_to_str(lines)
     with open(file, "w") as writer:
         writer.write(edited_content)

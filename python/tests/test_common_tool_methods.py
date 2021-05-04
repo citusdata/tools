@@ -72,7 +72,7 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         repository = g.get_repo(f"citusdata/citus")
         prs = get_prs(repository, datetime.strptime('2021.02.20', '%Y.%m.%d'), "master",
                       datetime.strptime('2021.02.27', '%Y.%m.%d'))
-        prs_backlog = get_pr_issues_by_label(prs, "backport")
+        prs_backlog = get_prs_by_label(prs, "backport")
         self.assertEqual(1, len(prs_backlog))
         self.assertEqual(4746, prs_backlog[0].number)
 
