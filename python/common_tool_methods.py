@@ -113,7 +113,7 @@ def get_prs_by_label(prs: List[PullRequest.PullRequest], label_name: str):
     return filtered_prs
 
 
-def has_file_include_line(base_path: str, relative_file_path: str, line_content: str) -> bool:
+def file_include_line(base_path: str, relative_file_path: str, line_content: str) -> bool:
     with open(f"{base_path}/{relative_file_path}", "r") as reader:
         content = reader.read()
         lines = content.splitlines()

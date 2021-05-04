@@ -64,8 +64,8 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         repository = g.get_repo(f"citusdata/citus")
         prs = get_prs(repository, datetime.strptime('2021.02.26', '%Y.%m.%d'), "master",
                       datetime.strptime('2021.03.02', '%Y.%m.%d'))
-        self.assertEqual(5, len(prs))
-        self.assertEqual(4760, prs[0].number)
+        self.assertEqual(1, len(prs))
+        self.assertEqual(4751, prs[0].number)
 
     def test_getprs_with_backlog_label(self):
         g = Github(GITHUB_TOKEN)
