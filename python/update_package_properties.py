@@ -76,11 +76,13 @@ class ChangelogParams:
         self.__changelog_date = param
         return self
 
+
 def get_rpm_version(project_name: str, version: str) -> str:
     return f"{version}.{project_name}"
 
+
 def get_last_changelog_content(all_changelog_content: str) -> str:
-    second_changelog_index = find_nth_overlapping(all_changelog_content, "###", 3)
+    second_changelog_index = find_nth_occurrence_position(all_changelog_content, "###", 3)
     changelogs = all_changelog_content[:second_changelog_index]
     lines = changelogs.splitlines()
     if len(lines) < 1:
@@ -92,7 +94,7 @@ def get_last_changelog_content(all_changelog_content: str) -> str:
 
 
 def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
-    second_changelog_index = find_nth_overlapping_line_by_regex(all_changelog_content, "^[a-zA-Z]", 2)
+    second_changelog_index = find_nth_matching_line_number(all_changelog_content, "^[a-zA-Z]", 2)
     lines = all_changelog_content.splitlines()
     changelogs = "\n".join(lines[:second_changelog_index - 1]) + "\n"
     if len(lines) < 1:
@@ -102,7 +104,7 @@ def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
 
 @parameter_validation
 def is_project_changelog_header(header: str):
-    if header is None or not header:
+    if not header:
         raise ValueError("header should be non-empty and should not be None")
     if not re.match(r"^### \w+\sv\d+\.\d+\.\d+\s\(\w+\s\d+,\s\d+\)\s###$", header):
         raise ValueError(
@@ -117,7 +119,7 @@ def get_changelog_for_tag(github_token: str, project_name: str, tag_name: str) -
     return last_changelog_content
 
 
-# truncates # chars , get the version an put parentheses around version number adds 'stable; urgency=low' at the end
+# truncates # chars, get the version an put parentheses around version number adds 'stable; urgency=low' at the end
 # changelog_header=> ### citus v8.3.3 (March 23, 2021) ###
 # debian header =>   citus (10.0.3.citus-1) stable; urgency=low
 @validate_parameters
@@ -167,7 +169,7 @@ def update_pkgvars(project_name: str, version: is_version(non_empty(no_whitespac
                    fancy_release_count: non_negative(int), templates_path: str, pkgvars_path: str) -> None:
     env = get_template_environment(templates_path)
 
-    version_str = get_version_number_with_project_name(project_name,version, fancy, fancy_release_count)
+    version_str = get_version_number_with_project_name(project_name, version, fancy, fancy_release_count)
 
     template = env.get_template('pkgvars.tmpl')
 

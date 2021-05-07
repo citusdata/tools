@@ -26,7 +26,7 @@ def test_get_version_number_with_project_name():
 
 
 def test_find_nth_overlapping():
-    assert find_nth_overlapping("foofoo foofoo", "foofoo", 2) == 7
+    assert find_nth_occurrence_position("foofoo foofoo", "foofoo", 2) == 7
 
 
 def test_get_changelog_for_tag():

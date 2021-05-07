@@ -19,13 +19,13 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         self.assertEqual(get_version_number_with_project_name("citus", "10.0.3", True, 1), "10.0.3.citus-1")
 
     def test_find_nth_overlapping(self):
-        self.assertEqual(find_nth_overlapping("foofoo foofoo", "foofoo", 2), 7)
+        self.assertEqual(find_nth_occurrence_position("foofoo foofoo", "foofoo", 2), 7)
 
     def test_find_nth_overlapping_line_by_regex(self):
         # Two match case
-        self.assertEqual(find_nth_overlapping_line_by_regex("citusx\n citusx\ncitusx", "^citusx$", 2), 2)
+        self.assertEqual(find_nth_matching_line_number("citusx\n citusx\ncitusx", "^citusx$", 2), 2)
         # No match case
-        self.assertEqual(find_nth_overlapping_line_by_regex("citusx\n citusx\ncitusx", "^citusy$", 2), -1)
+        self.assertEqual(find_nth_matching_line_number("citusx\n citusx\ncitusx", "^citusy$", 2), -1)
 
     def test_is_major_release(self):
         self.assertEqual(True, is_major_release("10.0.0"))
@@ -72,7 +72,7 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         repository = g.get_repo(f"citusdata/citus")
         prs = get_prs(repository, datetime.strptime('2021.02.20', '%Y.%m.%d'), "master",
                       datetime.strptime('2021.02.27', '%Y.%m.%d'))
-        prs_backlog = get_prs_by_label(prs, "backport")
+        prs_backlog = filter_prs_by_label(prs, "backport")
         self.assertEqual(1, len(prs_backlog))
         self.assertEqual(4746, prs_backlog[0].number)
 
