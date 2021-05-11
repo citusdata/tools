@@ -1,0 +1,16 @@
+name: Tool Tests
+
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+on: push
+
+jobs:
+  make-install:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Install all scripts
+        run: make && sudo make install
