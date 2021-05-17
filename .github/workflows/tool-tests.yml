@@ -42,4 +42,5 @@ jobs:
       - name: Packaging Warning Handler
         run: python -m pytest -q packaging_automation/tests/test_packaging_warning_handler.py
 
-
+      - name: Build and Publish Docker images
+        run: python -m pytest -q packaging_automation/tests/test_publish_docker.py
