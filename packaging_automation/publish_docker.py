@@ -92,7 +92,7 @@ def get_image_tag(tag_prefix: str, docker_image_type: DockerImageType) -> str:
     return f"{tag_prefix}{tag_suffix}"
 
 
-def publish_docker_image_on_push(github_ref: str, exec_path: str, docker_image_type: DockerImageType):
+def publish_docker_image_on_push(docker_image_type: DockerImageType, github_ref: str, exec_path: str, ):
     triggering_event_info, resource_name = decode_triggering_event_info(github_ref)
     for docker_image_type in regular_images_to_be_built(docker_image_type):
         if triggering_event_info == GithubTriggerEventSource.branch_push:
@@ -108,9 +108,8 @@ def publish_docker_image_on_push(github_ref: str, exec_path: str, docker_image_t
     #     raise ValueError("Unsupported Trigger Type")
 
 
-def publish_docker_image_on_schedule(schedule_type_param: ScheduleType, exec_path: str,
-                                     docker_image_type: DockerImageType):
-    if schedule_type_param == ScheduleType.nightly:
+def publish_docker_image_on_schedule(docker_image_type: DockerImageType, exec_path: str, ):
+    if docker_image_type == DockerImageType.nightly:
         publish_nightly_docker_image()
     else:
         for docker_image_type in regular_images_to_be_built(docker_image_type):
@@ -204,18 +203,8 @@ def validate_and_extract_manual_exec_params(manual_trigger_type_param: str, tag_
     return manual_trigger_type_param
 
 
-def validate_and_extract_schedule_params(schedule_type_param: str) -> ScheduleType:
-    try:
-        schedule_type_param = ScheduleType[schedule_type_param]
-    except KeyError:
-        raise ValueError(
-            f"schedule_type parameter is invalid. Valid ones are {','.join([d.name for d in ScheduleType])}.")
-    return schedule_type_param
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--schedule_type')
     parser.add_argument('--github_ref')
     parser.add_argument('--pipeline_trigger_type')
     parser.add_argument('--tag_name')
@@ -232,7 +221,6 @@ if __name__ == "__main__":
         publish_docker_image_manually(manual_trigger_type_param=manual_trigger_type, exec_path=args.exec_path,
                                       docker_image_type=image_type, tag_name=args.tag_name)
     elif pipeline_trigger_type == GithubPipelineTriggerType.push:
-        publish_docker_image_on_push(args.github_ref, args.exec_path, image_type)
+        publish_docker_image_on_push(image_type, args.github_ref, args.exec_path)
     else:
-        schedule_type = validate_and_extract_schedule_params(args.schedule_type)
-        publish_docker_image_on_schedule(schedule_type, args.exec_path, image_type)
+        publish_docker_image_on_schedule(image_type, args.exec_path)
