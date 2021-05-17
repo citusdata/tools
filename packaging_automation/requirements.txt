@@ -14,7 +14,6 @@ constantly==15.1.0
 cryptography==2.8
 dbus-python==1.2.16
 Deprecated==1.2.12
-devscripts===2.20.2ubuntu2
 distlib==0.3.1
 distro==1.4.0
 distro-info===0.23ubuntu1
