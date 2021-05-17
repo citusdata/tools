@@ -13,9 +13,11 @@ constantly==15.1.0
 cryptography==2.8
 dbus-python==1.2.16
 Deprecated==1.2.12
+devscripts===2.20.2ubuntu2
 distlib==0.3.1
 distro==1.4.0
 distro-info===0.23ubuntu1
+docker==5.0.0
 entrypoints==0.3
 filelock==3.0.12
 gitdb==4.0.7
@@ -91,6 +93,7 @@ urllib3==1.25.8
 virtualenv==20.0.23
 virtualenv-clone==0.5.4
 wadllib==1.3.3
+websocket-client==0.59.0
 wrapt==1.12.1
 zipp==1.0.0
 zope.interface==4.7.1

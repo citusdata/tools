@@ -8,6 +8,8 @@ from enum import Enum
 import gnupg
 from github import Repository, PullRequest
 from jinja2 import Environment, FileSystemLoader
+import pathlib2
+from git import Repo
 
 from . import common_validations
 
@@ -15,6 +17,9 @@ from . import common_validations
 class PackageType(Enum):
     deb = 1,
     rpm = 2
+
+
+BASE_PATH = pathlib2.Path(__file__).parents[1]
 
 
 def get_spec_file_name(project_name: str) -> str:
@@ -276,3 +281,12 @@ def verify_rpm_signature_in_dir(rpm_dir_path: str):
     for file in rpm_files:
         if not is_rpm_file_signed(f"{file}"):
             raise ValueError(f"File {file} is not signed or there is a signature check problem")
+
+
+def get_current_branch(exec_path: str):
+    repo = Repo(exec_path)
+    return repo.active_branch
+
+
+def remove_prefix(text, prefix):
+    return text[text.startswith(prefix) and len(prefix):]
