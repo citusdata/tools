@@ -13,8 +13,8 @@ TAG_NAME = os.getenv("TAG_NAME", default="v10.0.3")
 PROJECT_NAME = os.getenv("PROJECT_NAME", default="citus")
 MICROSOFT_EMAIL = os.getenv("MICROSOFT_EMAIL", default="gindibay@microsoft.com")
 NAME_SURNAME = os.getenv("NAME_SURNAME", default="Gurkan Indibay")
-CHANGELOG_DATE = datetime.strptime('Thu, 18 Mar 2021 01:40:08 +0000', '%a, %d %b %Y %H:%M:%S %z') if os.getenv(
-    "CHANGELOG_DATE") is None else datetime.strptime(os.getenv("CHANGELOG_DATE"), '%a, %d %b %Y %H:%M:%S %z')
+CHANGELOG_DATE_STR = os.getenv("CHANGELOG_DATE", 'Thu, 18 Mar 2021 01:40:08 +0000')
+CHANGELOG_DATE = datetime.strptime(CHANGELOG_DATE_STR, '%a, %d %b %Y %H:%M:%S %z')
 
 
 def default_changelog_param_for_test(latest_changelog, changelog_date):
