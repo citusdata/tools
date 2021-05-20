@@ -30,4 +30,3 @@
   an open tuple store
 
 * Relaxes the locks when adding an existing node
-
