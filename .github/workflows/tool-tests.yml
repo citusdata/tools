@@ -3,7 +3,11 @@ name: Tool Tests
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-on: push
+on:
+  push:
+    branches: "**"
+
+  workflow_dispatch:
 
 jobs:
   make-install:
@@ -14,3 +18,17 @@ jobs:
         uses: actions/checkout@v2
       - name: Install all scripts
         run: make && sudo make install
+
+  unit_test_execution:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install package dependencies
+        run: sudo apt install libcurl4-openssl-dev libssl-dev
+      - name: Install python requirements
+        run: python -m pip install -r python/requirements.txt
+      - name: Execute unit tests
+        run:  python -m pytest -q python/tests/test_update_package_properties.py
+
