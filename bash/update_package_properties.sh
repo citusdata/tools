@@ -1,13 +1,13 @@
 #!/bin/bash
 
 set -euxo pipefail
-
+# example parameters are as below
 #PRJ_NAME="citus"
 #PRJ_VER="10.0.3"
 #TAG_NAME="v${PRJ_VER}"
 #FANCY="True"
 #FANCY_VERSION_NO=2
-#MICROSOFT_EMAIL="gindibay@gmail.com"
+#MICROSOFT_EMAIL="gindibay@microsoft.com"
 #NAME="Gurkan Indibay"
 
 [ -z "${PRJ_NAME:-}" ] && echo "PRJ_NAME should be non-empty value" && exit 1

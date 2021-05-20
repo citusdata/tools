@@ -1,6 +1,6 @@
 import os
 import sys
-import ntpath;
+import ntpath
 from dataclasses import dataclass
 from typing import List
 
@@ -73,7 +73,8 @@ def upload_files_in_directory_to_packagecloud(directoryName: str, distro_name: s
         else:
             filename = firstLevelFileItem
             if filename.lower().endswith((".rpm", ".deb")):
-                ret_val = upload_to_packagecloud(distro_name, os.path.join(directoryName, filename), package_cloud_token,
+                ret_val = upload_to_packagecloud(distro_name, os.path.join(directoryName, filename),
+                                                 package_cloud_token,
                                                  repo_name)
                 ret_status.append(ret_val)
 
@@ -94,10 +95,12 @@ print(multiple_return_value.return_values)
 for rv in multiple_return_value.return_values:
     if not rv.success_status:
         print(
-            f'Error occured while uploading file on package cloud. Error: {rv.message} Distro: {rv.distro} File Name: {ntpath.basename(rv.file_name)} Repo Name: {rv.repo}')
+            f'Error occured while uploading file on package cloud. Error: {rv.message} Distro: {rv.distro} '
+            f'File Name: {ntpath.basename(rv.file_name)} Repo Name: {rv.repo}')
     else:
         print(
-            f'File successfully uploaded. Distro: {rv.distro} File Name: {ntpath.basename(rv.file_name)} Repo Name: {rv.repo}')
+            f'File successfully uploaded. Distro: {rv.distro} File Name: {ntpath.basename(rv.file_name)} '
+            f'Repo Name: {rv.repo}')
 if multiple_return_value.success_status():
     sys.exit(0)
 else:

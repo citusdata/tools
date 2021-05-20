@@ -17,27 +17,38 @@ CHANGELOG_DATE = datetime.strptime('Thu, 18 Mar 2021 01:40:08 +0000', '%a, %d %b
     "CHANGELOG_DATE") is None else datetime.strptime(os.getenv("CHANGELOG_DATE"), '%a, %d %b %Y %H:%M:%S %z')
 
 
+def default_changelog_param_for_test(latest_changelog, changelog_date):
+    changelog_param = PackagePropertiesParams(project_name=PROJECT_NAME, project_version=PROJECT_VERSION, fancy=True,
+                                              fancy_version_number=1, microsoft_email=MICROSOFT_EMAIL,
+                                              name_surname=NAME_SURNAME, changelog_date=changelog_date,
+                                              latest_changelog=latest_changelog)
+    return changelog_param
+
+
+DEFAULT_CHANGELOG_PARAM_FOR_TEST = default_changelog_param_for_test("", CHANGELOG_DATE)
+
+
 def test_get_version_number():
-    assert get_version_number("10.0.3", True, 1) == "10.0.3-1"
+    assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number() == "10.0.3-1"
 
 
 def test_get_version_number_with_project_name():
-    assert get_version_number_with_project_name("citus", "10.0.3", True, 1) == "10.0.3.citus-1"
+    assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number_with_project_name() == "10.0.3.citus-1"
 
 
 def test_find_nth_overlapping():
-    assert find_nth_occurrence_position("foofoo foofoo", "foofoo", 2) == 7
+    assert find_nth_overlapping("foofoo foofoo", "foofoo", 2) == 7
 
 
 def test_get_changelog_for_tag():
-    changelog = get_changelog_for_tag(GITHUB_TOKEN, "citus", "v10.0.3")
+    changelog = changelog_for_tag(GITHUB_TOKEN, "citus", "v10.0.3")
     with open(f"{TEST_BASE_PATH}/files/verify/expected_changelog_10.0.3.txt", "r") as reader:
         expected_changelog = reader.read()
     assert expected_changelog == changelog
 
 
 def test_get_debian_changelog_header():
-    header = get_debian_changelog_header("### citus v10.0.3 (March 16, 2021) ###", True, 2)
+    header = debian_changelog_header("### citus v10.0.3 (March 16, 2021) ###", True, 2)
     assert header == "citus (10.0.3.citus-2) stable; urgency=low"
 
 
@@ -59,13 +70,10 @@ def test_prepend_latest_changelog_into_debian_changelog():
     refer_file_path = f"{TEST_BASE_PATH}/files/debian.changelog.refer"
     changelog_file_path = f"{TEST_BASE_PATH}/files/debian.changelog"
     copyfile(refer_file_path, changelog_file_path)
-    latest_changelog = get_changelog_for_tag(GITHUB_TOKEN, PROJECT_NAME, TAG_NAME)
+    latest_changelog = changelog_for_tag(GITHUB_TOKEN, PROJECT_NAME, TAG_NAME)
 
-    changelog_param = ChangelogParams()
-    changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
-        MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
-        1).set_changelog_date(CHANGELOG_DATE).set_fancy(True).set_latest_changelog(
-        latest_changelog)
+    changelog_param = default_changelog_param_for_test(latest_changelog, CHANGELOG_DATE)
+
     try:
         prepend_latest_changelog_into_debian_changelog(changelog_param, changelog_file_path)
         verify_prepend_debian_changelog(changelog_file_path)
@@ -77,12 +85,8 @@ def test_prepend_latest_changelog_into_debian_changelog_10_0_3_already_included(
     refer_file_path = f"{TEST_BASE_PATH}/files/debian.changelog_include_10_0_3.refer"
     changelog_file_path = f"{TEST_BASE_PATH}/files/debian.changelog"
     copyfile(refer_file_path, changelog_file_path)
-    latest_changelog = get_changelog_for_tag(GITHUB_TOKEN, PROJECT_NAME, TAG_NAME)
-    changelog_param = ChangelogParams()
-    changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
-        MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
-        1).set_changelog_date(datetime.now()).set_fancy(True).set_latest_changelog(
-        latest_changelog)
+    latest_changelog = changelog_for_tag(GITHUB_TOKEN, PROJECT_NAME, TAG_NAME)
+    changelog_param = default_changelog_param_for_test(latest_changelog, datetime.now())
     try:
 
         with pytest.raises(ValueError):
@@ -101,10 +105,7 @@ def verify_prepend_debian_changelog(changelog_file_path):
 
 
 def test_convert_citus_changelog_into_rpm_changelog():
-    changelog_param = ChangelogParams()
-    changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
-        MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
-        1).set_changelog_date(CHANGELOG_DATE).set_fancy(True).set_latest_changelog("")
+    changelog_param = default_changelog_param_for_test("", CHANGELOG_DATE)
     changelog = convert_citus_changelog_into_rpm_changelog(changelog_param)
     with open(f"{TEST_BASE_PATH}/files/verify/rpm_latest_changelog_reference.txt", "r") as reader:
         content = reader.read()
@@ -113,16 +114,13 @@ def test_convert_citus_changelog_into_rpm_changelog():
 
 def test_update_rpm_spec():
     project_name = "citus"
-    spec_file = f"{TEST_BASE_PATH}/files/{get_spec_file_name(project_name)}"
-    spec_file_copy = f"{os.getcwd()}/{get_spec_file_name(project_name)}_copy"
+    spec_file = f"{TEST_BASE_PATH}/files/{spec_file_name(project_name)}"
+    spec_file_copy = f"{os.getcwd()}/{spec_file_name(project_name)}_copy"
     spec_file_reference = f"{TEST_BASE_PATH}/files/citus_include_10_0_3.spec"
     templates_path = f"{BASE_PATH}/templates"
     copyfile(spec_file, spec_file_copy)
     try:
-        changelog_param = ChangelogParams()
-        changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
-            MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
-            1).set_changelog_date(CHANGELOG_DATE).set_fancy(True).set_latest_changelog("")
+        changelog_param = default_changelog_param_for_test("", CHANGELOG_DATE)
         update_rpm_spec(changelog_param, spec_file, templates_path)
         verify_rpm_spec(spec_file_reference, spec_file)
     finally:
@@ -133,14 +131,11 @@ def test_update_rpm_spec():
 def test_update_rpm_spec_include_10_0_3():
     project_name = "citus"
     spec_file = f"{TEST_BASE_PATH}/files/citus_include_10_0_3.spec"
-    spec_file_copy = f"{os.getcwd()}/{get_spec_file_name(project_name)}_copy"
+    spec_file_copy = f"{os.getcwd()}/{spec_file_name(project_name)}_copy"
     templates_path = f"{BASE_PATH}/templates"
     copyfile(spec_file, spec_file_copy)
     try:
-        changelog_param = ChangelogParams()
-        changelog_param.set_project_version(PROJECT_VERSION).set_project_name(PROJECT_NAME).set_microsoft_email(
-            MICROSOFT_EMAIL).set_name_surname(NAME_SURNAME).set_fancy_version_number(
-            1).set_changelog_date(CHANGELOG_DATE).set_fancy(True).set_latest_changelog("")
+        changelog_param = default_changelog_param_for_test("", CHANGELOG_DATE)
         with pytest.raises(ValueError):
             update_rpm_spec(changelog_param, spec_file, templates_path)
     finally:
@@ -179,9 +174,9 @@ def verify_pkgvars(pkgvars_path):
 def test_update_all_changes():
     pkgvars_path = f"{TEST_BASE_PATH}/files/pkgvars"
     pkgvars_copy_path = f"{pkgvars_path}_copy"
-    spec_file = f"{TEST_BASE_PATH}/files/{get_spec_file_name(PROJECT_NAME)}"
+    spec_file = f"{TEST_BASE_PATH}/files/{spec_file_name(PROJECT_NAME)}"
     spec_file_copy = f"{spec_file}_copy"
-    spec_file_reference = f"{TEST_BASE_PATH}/files/{get_spec_file_name(PROJECT_NAME)}"
+    spec_file_reference = f"{TEST_BASE_PATH}/files/{spec_file_name(PROJECT_NAME)}"
 
     changelog_file_path = f"{TEST_BASE_PATH}/files/debian/changelog"
     changelog_file_copy_path = f"{changelog_file_path}_copy"
@@ -190,9 +185,12 @@ def test_update_all_changes():
     copyfile(spec_file, spec_file_copy)
 
     try:
-        update_all_changes(GITHUB_TOKEN, PROJECT_NAME, PROJECT_VERSION, TAG_NAME, True, 1, MICROSOFT_EMAIL,
-                           NAME_SURNAME,
-                           CHANGELOG_DATE, f"{TEST_BASE_PATH}/files")
+        package_properties_param = PackagePropertiesParams(project_name=PROJECT_NAME,
+                                                           project_version=PROJECT_VERSION, fancy=True,
+                                                           fancy_version_number=1,
+                                                           name_surname=NAME_SURNAME, microsoft_email=MICROSOFT_EMAIL,
+                                                           changelog_date=CHANGELOG_DATE)
+        update_all_changes(GITHUB_TOKEN, package_properties_param, TAG_NAME, f"{TEST_BASE_PATH}/files")
         verify_prepend_debian_changelog(changelog_file_path)
         verify_pkgvars(pkgvars_path)
         verify_rpm_spec(spec_file_reference, spec_file)
