@@ -77,7 +77,6 @@ systemd-python==234
 testresources==2.0.1
 toml==0.10.2
 Twisted==18.9.0
-ubuntu-advantage-tools==20.3
 ufw==0.36
 urllib3==1.25.8
 virtualenv==20.0.17
