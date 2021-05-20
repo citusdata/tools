@@ -207,7 +207,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--github_ref')
     parser.add_argument('--pipeline_trigger_type')
-    parser.add_argument('--tag_name', default="")
+    parser.add_argument('--tag_name', nargs='?', default="")
     parser.add_argument('--exec_path')
     parser.add_argument('--manual_trigger_type')
     parser.add_argument('--image_type')
