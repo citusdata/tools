@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - name: Define git credentails
+        run: git config --global user.email "gindibay@microsoft.com"&& git config --global user.name "Gurkan Indibay"
       - name: Install package dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev
       - name: Install python requirements
