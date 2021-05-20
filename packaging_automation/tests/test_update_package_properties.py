@@ -36,8 +36,6 @@ def test_get_version_number_with_project_name():
     assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number_with_project_name() == "10.0.3.citus-1"
 
 
-def test_find_nth_overlapping():
-    assert find_nth_overlapping("foofoo foofoo", "foofoo", 2) == 7
 
 
 def test_get_changelog_for_tag():

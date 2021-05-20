@@ -10,6 +10,8 @@ from parameters_validation import (no_whitespaces, non_blank, non_empty, non_neg
                                    parameter_validation)
 from dataclasses import dataclass
 
+from .common_tool_methods import (find_nth_matching_line, find_nth_matching_line_number, find_nth_occurrence_position)
+
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
 project_name_suffix_dict = {"citus": "citus", "citus-enterprise": "citus",
@@ -98,30 +100,8 @@ def get_template_environment(template_dir: str) -> Environment:
     return env
 
 
-def find_nth_overlapping(subject_string, search_string, n) -> int:
-    start = subject_string.find(search_string)
-
-    while start >= 0 and n > 1:
-        start = subject_string.find(search_string, start + 1)
-        n -= 1
-    return start
-
-
-def find_nth_overlapping_line_by_regex(subject_string, regex_pattern, n) -> int:
-    lines = subject_string.splitlines()
-    counter = 0
-    index = -1
-    for i in range(len(lines)):
-        if re.match(regex_pattern, lines[i]):
-            counter = counter + 1
-        if counter == n:
-            index = i
-            break
-    return index
-
-
 def get_last_changelog_content(all_changelog_content: str) -> str:
-    second_changelog_index = find_nth_overlapping(all_changelog_content, "###", 3)
+    second_changelog_index = find_nth_occurrence_position(all_changelog_content, "###", 3)
     changelogs = all_changelog_content[:second_changelog_index]
     lines = changelogs.splitlines()
     if len(lines) < 1:
@@ -133,7 +113,7 @@ def get_last_changelog_content(all_changelog_content: str) -> str:
 
 
 def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
-    second_changelog_index = find_nth_overlapping_line_by_regex(all_changelog_content, "^[a-zA-Z]", 2)
+    second_changelog_index = find_nth_matching_line_number(all_changelog_content, "^[a-zA-Z]", 2)
     lines = all_changelog_content.splitlines()
     changelogs = "\n".join(lines[:second_changelog_index - 1]) + "\n"
     if len(lines) < 1:

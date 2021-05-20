@@ -18,10 +18,10 @@ class CommonToolMethodsTestCases(unittest.TestCase):
     def test_get_version_number_with_project_name(self):
         self.assertEqual(get_version_number_with_project_name("citus", "10.0.3", True, 1), "10.0.3.citus-1")
 
-    def test_find_nth_overlapping(self):
+    def test_find_nth_occurrence_position(self):
         self.assertEqual(find_nth_occurrence_position("foofoo foofoo", "foofoo", 2), 7)
 
-    def test_find_nth_overlapping_line_by_regex(self):
+    def test_find_nth_matching_line_number_by_regex(self):
         # Two match case
         self.assertEqual(find_nth_matching_line_number("citusx\n citusx\ncitusx", "^citusx$", 2), 2)
         # No match case
