@@ -4,8 +4,13 @@ from shutil import copyfile
 
 import pathlib2
 from github import Github
+from datetime import datetime
 
-from ..common_tool_methods import *
+from ..common_tool_methods import (get_version_number, get_version_number_with_project_name,
+                                   find_nth_occurrence_position, find_nth_matching_line_number, is_major_release,
+                                   str_array_to_str, run, remove_string_inside_parentheses, get_version_details,
+                                   replace_line_in_file, get_prs, filter_prs_by_label,
+                                   get_project_version_from_tag_name)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -30,6 +35,10 @@ class CommonToolMethodsTestCases(unittest.TestCase):
     def test_is_major_release(self):
         self.assertEqual(True, is_major_release("10.0.0"))
         self.assertEqual(False, is_major_release("10.0.1"))
+
+    def test_get_project_version_from_tag_name(self):
+        tag_name = "v10.0.3"
+        self.assertEqual("10.0.3", get_project_version_from_tag_name(tag_name))
 
     def test_str_array_to_str(self):
         self.assertEqual("1\n2\n3\n4\n", str_array_to_str(["1", "2", "3", "4"]))

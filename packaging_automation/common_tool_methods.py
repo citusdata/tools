@@ -23,6 +23,10 @@ def get_version_number(version: str, fancy: bool, fancy_release_count: int) -> s
     return f"{version}{fancy_suffix}"
 
 
+def get_project_version_from_tag_name(tag_name: is_tag(str)) -> str:
+    return tag_name[1:]
+
+
 def get_version_number_with_project_name(project_name: str, version: str, fancy: bool, fancy_release_count: int) -> str:
     fancy_suffix = f"-{fancy_release_count}" if fancy else ""
     return f"{version}.{project_name}{fancy_suffix}"

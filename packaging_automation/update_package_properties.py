@@ -10,7 +10,8 @@ from parameters_validation import (no_whitespaces, non_blank, non_empty, non_neg
                                    parameter_validation)
 from dataclasses import dataclass
 
-from .common_tool_methods import (find_nth_matching_line, find_nth_matching_line_number, find_nth_occurrence_position)
+from .common_tool_methods import (find_nth_matching_line, find_nth_matching_line_number, find_nth_occurrence_position,
+                                  get_project_version_from_tag_name)
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
@@ -271,7 +272,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token')
     parser.add_argument('--prj_name')
-    parser.add_argument('--prj_ver')
     parser.add_argument('--tag_name')
     parser.add_argument('--fancy')
     parser.add_argument('--fancy_ver_no')
@@ -285,9 +285,11 @@ if __name__ == "__main__":
         raise ValueError(f"fancy_ver_no is expected to be numeric actual value {arguments.fancy_ver_no}")
 
     exec_date = datetime.strptime(arguments.date, '%Y.%m.%d %H:%M:%S %z')
+    is_tag(arguments.tag_name)
+    prj_ver = get_project_version_from_tag_name(arguments.tag_name)
 
     package_properties = PackagePropertiesParams(project_name=arguments.prj_name,
-                                                 project_version=arguments.prj_ver, fancy=arguments.fancy,
+                                                 project_version=prj_ver, fancy=arguments.fancy,
                                                  fancy_version_number=int(arguments.fancy_ver_no),
                                                  name_surname=arguments.name, microsoft_email=arguments.email,
                                                  changelog_date=exec_date)
