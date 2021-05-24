@@ -5,6 +5,8 @@ import urllib
 from dataclasses import dataclass
 from typing import List
 from requests.auth import HTTPBasicAuth
+from .common_tool_methods import (get_current_branch)
+import pathlib2
 
 import requests
 
@@ -40,6 +42,10 @@ class MultipleReturnValue:
         return len([r for r in self.return_values if not r.success_status]) == 0
 
 
+MAIN_BRANCH_NAME = os.getenv("MAIN_BRANCH")
+BASE_PATH = pathlib2.Path(__file__).parents[1]
+
+
 def upload_to_package_cloud(distro_name, package_name, packagecloud_token, repo_name) -> ReturnValue:
     distro_id = supported_distros[distro_name]
     files = {
@@ -57,6 +63,12 @@ def upload_to_package_cloud(distro_name, package_name, packagecloud_token, repo_
 
 def upload_files_in_directory_to_package_cloud(directoryName: str, distro_name: str, package_cloud_token: str,
                                                repo_name: str) -> MultipleReturnValue:
+    if not MAIN_BRANCH_NAME:
+        raise ValueError("MAIN_BRANCH environment variable should be defined")
+    current_branch = get_current_branch(BASE_PATH)
+    if MAIN_BRANCH_NAME != current_branch:
+        print(f"Package publishing skipped since current branch is not equal to {MAIN_BRANCH_NAME}")
+        return MultipleReturnValue(ret_vals=[])
     for key, value in supported_distros.items():
         print(key + "=>" + str(value))
     ret_status: List[ReturnValue] = []
