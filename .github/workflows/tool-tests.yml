@@ -2,6 +2,7 @@ name: Tool Tests
 
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  MAIN_BRANCH: "all-citus"
 
 on:
   push:
