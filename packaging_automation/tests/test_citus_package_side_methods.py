@@ -48,7 +48,7 @@ def test_is_docker_running():
 
 
 def test_get_signing_credentials():
-    secret_key, passphrase = get_signing_credentials("verysecretkey","123")
+    secret_key, passphrase = get_signing_credentials("verysecretkey", "123")
     assert secret_key == "verysecretkey" and passphrase == "123"
 
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
@@ -104,8 +104,8 @@ def test_sign_packages():
     gpg_fingerprint = get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME)
     secret_key = get_secret_key_by_fingerprint_with_password(gpg_fingerprint, TEST_GPG_KEY_PASSPHRASE)
     define_rpm_public_key_to_machine(gpg_fingerprint)
-    sign_packages(OUTPUT_FOLDER, "centos-8", secret_key, TEST_GPG_KEY_PASSPHRASE)
-    sign_packages(OUTPUT_FOLDER, "debian-stretch", secret_key, TEST_GPG_KEY_PASSPHRASE)
+    sign_packages(OUTPUT_FOLDER, "centos-8", secret_key, TEST_GPG_KEY_PASSPHRASE, PACKAGING_EXEC_FOLDER)
+    sign_packages(OUTPUT_FOLDER, "debian-stretch", secret_key, TEST_GPG_KEY_PASSPHRASE, PACKAGING_EXEC_FOLDER)
     verify_rpm_signature_in_dir(OUTPUT_FOLDER)
 
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
