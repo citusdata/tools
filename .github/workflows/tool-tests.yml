@@ -19,14 +19,14 @@ jobs:
       - name: install dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev
 
-      - name: Define git credentails
+      - name: Define git credentials
         run: git config --global user.email "gindibay@microsoft.com"&& git config --global user.name "Gurkan Indibay"
 
-      - name: install requirements
-        run: python -m pip install -r packaging_automation/requirements.txt
+      - name: Install python requirements
+        run: python -m pip install --upgrade pip&&python -m pip install -r packaging_automation/requirements.txt
 
       - name: Unit tests for "Update Package Properties"
-        run:  python -m pytest -q packaging_automation/tests/test_update_package_properties.py
+        run: python -m pytest -q packaging_automation/tests/test_update_package_properties.py
 
       - name: Unit tests for "Prepare Release"
         run: python -m pytest -q packaging_automation/tests/test_prepare_release.py
@@ -37,11 +37,14 @@ jobs:
       - name: Unit tests for "Update Pgxn"
         run: python -m pytest -q packaging_automation/tests/test_update_pgxn.py
 
-      - name: Citus Package Tests
+      - name: Citus package tests
         run: python -m pytest -q packaging_automation/tests/test_citus_package_side_methods.py
+
+      - name: Common tools tests
+        run: python -m pytest -q packaging_automation/tests/test_common_tool_methods.py
 
       - name: Packaging Warning Handler
         run: python -m pytest -q packaging_automation/tests/test_packaging_warning_handler.py
 
-      - name: Build and Publish Docker images
+      - name: Build and publish docker images tests
         run: python -m pytest -q packaging_automation/tests/test_publish_docker.py

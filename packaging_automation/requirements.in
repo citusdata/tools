@@ -1,0 +1,15 @@
+wheel
+docker
+GitPython
+Jinja2
+pathlib2
+pycurl
+PyGithub
+pytest
+python-string-utils
+requests
+urllib3
+gnupg
+parameters_validation
+PyYAML
+
