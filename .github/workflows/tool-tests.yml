@@ -38,17 +38,21 @@ jobs:
         run:  python -m pytest -q packaging_automation/tests/test_update_package_properties.py
       - name: Execute unit tests for "Prepare Release"
         run: python -m pytest -q packaging_automation/tests/test_prepare_release.py
+
       - name: Unit tests for "Update Docker"
         run: python -m pytest -q packaging_automation/tests/test_update_docker.py
 
       - name: Unit tests for "Update Pgxn"
         run: python -m pytest -q packaging_automation/tests/test_update_pgxn.py
 
-      - name: Citus Package Tests
+      - name: Citus package tests
         run: python -m pytest -q packaging_automation/tests/test_citus_package_side_methods.py
+
+      - name: Common tools tests
+        run: python -m pytest -q packaging_automation/tests/test_common_tool_methods.py
 
       - name: Packaging Warning Handler
         run: python -m pytest -q packaging_automation/tests/test_packaging_warning_handler.py
 
-      - name: Build and Publish Docker images
+      - name: Build and publish docker images tests
         run: python -m pytest -q packaging_automation/tests/test_publish_docker.py
