@@ -2,6 +2,8 @@ name: Tool Tests
 
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  MICROSOFT_EMAIL: gindibay@microsoft.com
+  USER_NAME: Gurkan Indibay
 
 on:
   push:
@@ -25,8 +27,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Define git credentails
-        run: git config --global user.email "gindibay@microsoft.com"&& git config --global user.name "Gurkan Indibay"
+      - name: Define git credentials
+        run: git config --global user.email "${MICROSOFT_EMAIL}"&& git config --global user.name "${USER_NAME}"
       - name: Install package dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev
       - name: Install python requirements

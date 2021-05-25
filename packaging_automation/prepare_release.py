@@ -1,14 +1,11 @@
-import uuid
 import os
-import re
-import datetime
-from enum import Enum
-from typing import Tuple
-from git import Repo
-import pathlib2
+import uuid
 from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
 
-from github import Github
+import pathlib2
+from github import Github, Repository
 
 from .common_tool_methods import (get_version_details, get_upcoming_patch_version, is_major_release, get_prs,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
@@ -41,11 +38,56 @@ class ResourceStatus(Enum):
     PULL_REQUEST_CREATED = 6
 
 
-@dataclass()
+@dataclass
 class UpdateReleaseReturnValue:
     release_branch_name: str
     upcoming_version_branch: str
     upgrade_path_sql_file: str
+
+
+@dataclass
+class MajorReleaseParams:
+    configure_in_path: str
+    devel_version: str
+    is_test: bool
+    main_branch: str
+    multi_extension_out_path: str
+    project_name: str
+    project_version: str
+    release_branch_name: str
+
+
+@dataclass
+class UpcomingVersionBranchParams:
+    citus_control_file_path: str
+    config_py_path: str
+    configure_in_path: str
+    devel_version: str
+    distributed_dir_path: str
+    is_test: bool
+    main_branch: str
+    multi_extension_out_path: str
+    multi_extension_sql_path: str
+    project_name: str
+    project_version: str
+    repository: Repository
+    upcoming_minor_version: str
+    upcoming_version: str
+    upcoming_version_branch: str
+
+
+@dataclass
+class PatchReleaseParams:
+    cherry_pick_enabled: bool
+    configure_in_path: str
+    earliest_pr_date: datetime
+    is_test: bool
+    main_branch: str
+    multi_extension_out_path: str
+    project_name: str
+    project_version: str
+    release_branch_name: str
+    repository: Repository
 
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
@@ -83,120 +125,132 @@ def update_release(github_token: str, project_name: str, project_version: is_ver
     # if major release
     if is_major_release(project_version):
         print(f"### {project_version} is a major release. Executing Major release flow### ")
-        prepare_release_branch_for_major_release(configure_in_path, devel_version, is_test, main_branch,
-                                                 multi_extension_out_path,
-                                                 project_name, project_version, release_branch_name)
+        major_release_params = MajorReleaseParams(configure_in_path=configure_in_path, devel_version=devel_version,
+                                                  is_test=is_test, main_branch=main_branch,
+                                                  multi_extension_out_path=multi_extension_out_path,
+                                                  project_name=project_name, project_version=project_version,
+                                                  release_branch_name=release_branch_name)
+        prepare_release_branch_for_major_release(major_release_params)
+        branch_params = UpcomingVersionBranchParams(project_version=project_version,
+                                                    project_name=project_name,
+                                                    upcoming_version=upcoming_version,
+                                                    upcoming_version_branch=upcoming_version_branch,
+                                                    devel_version=devel_version, is_test=is_test,
+                                                    main_branch=main_branch,
+                                                    citus_control_file_path=citus_control_file_path,
+                                                    config_py_path=config_py_path,
+                                                    configure_in_path=configure_in_path,
+                                                    distributed_dir_path=distributed_dir_path,
+                                                    repository=repository,
+                                                    upcoming_minor_version=upcoming_minor_version,
+                                                    multi_extension_out_path=multi_extension_out_path,
+                                                    multi_extension_sql_path=multi_extension_sql_path)
 
-        newly_created_sql_file = prepare_upcoming_version_branch(citus_control_file_path,
-                                                                 config_py_path, configure_in_path,
-                                                                 devel_version, distributed_dir_path,
-                                                                 is_test, main_branch,
-                                                                 multi_extension_out_path,
-                                                                 multi_extension_sql_path,
-                                                                 project_name,
-                                                                 project_version, repository,
-                                                                 upcoming_minor_version,
-                                                                 upcoming_version,
-                                                                 upcoming_version_branch)
+        newly_created_sql_file = prepare_upcoming_version_branch(branch_params)
         print(f"OK {project_version} Major release flow executed successfully")
     else:
-        prepare_release_branch_for_patch_release(cherry_pick_enabled, configure_in_path, earliest_pr_date, is_test,
-                                                 main_branch, multi_extension_out_path, project_name, project_version,
-                                                 release_branch_name, repository)
+        patch_release_params = PatchReleaseParams(cherry_pick_enabled=cherry_pick_enabled,
+                                                  configure_in_path=configure_in_path,
+                                                  earliest_pr_date=earliest_pr_date, is_test=is_test,
+                                                  main_branch=main_branch,
+                                                  multi_extension_out_path=multi_extension_out_path,
+                                                  project_name=project_name, project_version=project_version,
+                                                  release_branch_name=release_branch_name, repository=repository)
+        prepare_release_branch_for_patch_release(patch_release_params)
     return UpdateReleaseReturnValue(release_branch_name, upcoming_version_branch,
                                     f"{DISTRIBUTED_DIR_PATH}/{newly_created_sql_file}")
 
 
-def prepare_release_branch_for_patch_release(cherry_pick_enabled, configure_in_path, earliest_pr_date, is_test,
-                                             main_branch, multi_extension_out_path, project_name, project_version,
-                                             release_branch_name, repository):
-    print(f"### {project_version} is a patch release. Executing Patch release flow ### ")
+def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleaseParams):
+    print(f"### {patchReleaseParams.project_version} is a patch release. Executing Patch release flow ### ")
     # checkout release branch (release-X.Y)
-    checkout_branch(release_branch_name, is_test)
+    checkout_branch(patchReleaseParams.release_branch_name, patchReleaseParams.is_test)
     # change version info in configure.in file
-    update_version_in_configure_in(configure_in_path, project_version)
+    update_version_in_configure_in(patchReleaseParams.configure_in_path, patchReleaseParams.project_version)
     # execute "auto-conf "
     execute_autoconf_f()
     # change version info in multi_extension.out
-    update_version_in_multi_extension_out(multi_extension_out_path, project_version)
-    if cherry_pick_enabled:
+    update_version_in_multi_extension_out(patchReleaseParams.multi_extension_out_path,
+                                          patchReleaseParams.project_version)
+    if patchReleaseParams.cherry_pick_enabled:
         # cherry-pick the pr's with backport labels
-        cherrypick_prs_with_backport_labels(earliest_pr_date, main_branch, release_branch_name, repository)
+        cherrypick_prs_with_backport_labels(patchReleaseParams.earliest_pr_date, patchReleaseParams.main_branch,
+                                            patchReleaseParams.release_branch_name, patchReleaseParams.repository)
     # commit all changes
-    commit_changes_for_version_bump(project_name, project_version)
+    commit_changes_for_version_bump(patchReleaseParams.project_name, patchReleaseParams.project_version)
     # create and push release-$minor_version-push-$curTime branch
-    release_pr_branch = f"{release_branch_name}_{uuid.uuid4()}"
+    release_pr_branch = f"{patchReleaseParams.release_branch_name}_{uuid.uuid4()}"
     create_and_checkout_branch(release_pr_branch)
-    if not is_test:
+    if not patchReleaseParams.is_test:
         push_branch(release_pr_branch)
 
 
-def prepare_upcoming_version_branch(citus_control_file_path, config_py_path, configure_in_path, devel_version,
-                                    distributed_dir_path, is_test, main_branch, multi_extension_out_path,
-                                    multi_extension_sql_path, project_name, project_version,
-                                    repository, upcoming_minor_version, upcoming_version,
-                                    upcoming_version_branch):
-    print(f"### Preparing {upcoming_version_branch} branch that bumps master version.### ")
+def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams):
+    print(f"### Preparing {upcoming_params.upcoming_version_branch} branch that bumps master version.### ")
     # checkout master
-    checkout_branch(main_branch, is_test)
+    checkout_branch(upcoming_params.main_branch, upcoming_params.is_test)
     # create master-update-version-$curtime branch
-    create_and_checkout_branch(upcoming_version_branch)
+    create_and_checkout_branch(upcoming_params.upcoming_version_branch)
     # update version info with upcoming version on configure.in
-    update_version_in_configure_in(configure_in_path, devel_version)
+    update_version_in_configure_in(upcoming_params.configure_in_path, upcoming_params.devel_version)
     # update version info with upcoming version on config.py
-    update_version_with_upcoming_version_in_config_py(config_py_path, upcoming_minor_version)
+    update_version_with_upcoming_version_in_config_py(upcoming_params.config_py_path,
+                                                      upcoming_params.upcoming_minor_version)
     # execute autoconf -f
     execute_autoconf_f()
     # update version info with upcoming version on multiextension.out
-    update_version_in_multi_extension_out(multi_extension_out_path, devel_version)
+    update_version_in_multi_extension_out(upcoming_params.multi_extension_out_path, upcoming_params.devel_version)
     # get current schema version from citus.control
-    current_schema_version = get_current_schema_from_citus_control(citus_control_file_path)
+    current_schema_version = get_current_schema_from_citus_control(upcoming_params.citus_control_file_path)
     # find current schema version info and update it with upcoming version in multi_extension.sql file
     update_schema_version_with_upcoming_version_in_multi_extension_file(current_schema_version,
-                                                                        multi_extension_sql_path,
-                                                                        upcoming_minor_version, upcoming_version)
+                                                                        upcoming_params.multi_extension_sql_path,
+                                                                        upcoming_params.upcoming_minor_version,
+                                                                        upcoming_params.upcoming_version)
     # find current schema version info and update it with upcoming version in multi_extension.out file
     update_schema_version_with_upcoming_version_in_multi_extension_file(current_schema_version,
-                                                                        multi_extension_out_path,
-                                                                        upcoming_minor_version, upcoming_version)
+                                                                        upcoming_params.multi_extension_out_path,
+                                                                        upcoming_params.upcoming_minor_version,
+                                                                        upcoming_params.upcoming_version)
     # create a new sql file for upgrade path:
-    newly_created_sql_file = create_new_sql_for_upgrade_path(current_schema_version, distributed_dir_path,
-                                                             upcoming_minor_version)
+    newly_created_sql_file = create_new_sql_for_upgrade_path(current_schema_version,
+                                                             upcoming_params.distributed_dir_path,
+                                                             upcoming_params.upcoming_minor_version)
     # change version in citus.control file
-    update_version_with_upcoming_version_in_citus_control(citus_control_file_path, upcoming_minor_version)
+    update_version_with_upcoming_version_in_citus_control(upcoming_params.citus_control_file_path,
+                                                          upcoming_params.upcoming_minor_version)
     # commit and push changes on master-update-version-$curtime branch
-    commit_changes_for_version_bump(project_name, project_version)
-    if not is_test:
-        push_branch(upcoming_version_branch)
+    commit_changes_for_version_bump(upcoming_params.project_name, upcoming_params.project_version)
+    if not upcoming_params.is_test:
+        push_branch(upcoming_params.upcoming_version_branch)
 
         # create pull request
-        create_pull_request_for_upcoming_version_branch(repository, main_branch, upcoming_version_branch,
-                                                        upcoming_version)
+        create_pull_request_for_upcoming_version_branch(upcoming_params.repository, upcoming_params.main_branch,
+                                                        upcoming_params.upcoming_version_branch,
+                                                        upcoming_params.upcoming_version)
         resource_status = ResourceStatus.PULL_REQUEST_CREATED
-    print(f"### OK {upcoming_version_branch} prepared.### ")
+    print(f"### OK {upcoming_params.upcoming_version_branch} prepared.### ")
     return newly_created_sql_file
 
 
-def prepare_release_branch_for_major_release(configure_in_path, devel_version, is_test, main_branch,
-                                             multi_extension_out_path,
-                                             project_name, project_version, release_branch_name):
-    print(f"### Preparing {release_branch_name}...### ")
+def prepare_release_branch_for_major_release(majorReleaseParams: MajorReleaseParams):
+    print(f"### Preparing {majorReleaseParams.release_branch_name}...### ")
     # checkout master
-    checkout_branch(main_branch, is_test)
+    checkout_branch(majorReleaseParams.main_branch, majorReleaseParams.is_test)
     # create release branch in release-X.Y format
-    create_and_checkout_branch(release_branch_name)
+    create_and_checkout_branch(majorReleaseParams.release_branch_name)
     # change version info in configure.in file
-    update_version_in_configure_in(configure_in_path, devel_version)
+    update_version_in_configure_in(majorReleaseParams.configure_in_path, majorReleaseParams.devel_version)
     # execute "autoconf -f"
     execute_autoconf_f()
     # change version info in multi_extension.out
-    update_version_in_multi_extension_out(multi_extension_out_path, devel_version)
+    update_version_in_multi_extension_out(majorReleaseParams.multi_extension_out_path, majorReleaseParams.devel_version)
     # commit all changes
-    commit_changes_for_version_bump(project_name, project_version)
+    commit_changes_for_version_bump(majorReleaseParams.project_name, majorReleaseParams.project_version)
     # push release branch (No PR creation!!!)
-    if not is_test:
-        push_branch(release_branch_name)
-    print(f"### OK {release_branch_name} prepared.### ")
+    if not majorReleaseParams.is_test:
+        push_branch(majorReleaseParams.release_branch_name)
+    print(f"### OK {majorReleaseParams.release_branch_name} prepared.### ")
 
 
 def cherrypick_prs_with_backport_labels(earliest_pr_date, main_branch, release_branch_name, repository):

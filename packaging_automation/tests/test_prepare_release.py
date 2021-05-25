@@ -25,15 +25,9 @@ def test_major_release():
     os.chdir("citus")
     try:
         update_release_return_value = update_release(
-            github_token=github_token,
-            project_name="citus",
-            project_version="10.2.0",
-            main_branch=MAIN_BRANCH,
-            earliest_pr_date=datetime.strptime(
-                '2021.03.25 00:00',
-                '%Y.%m.%d %H:%M'),
-            exec_path=TEST_BASE_PATH,
-            is_test=True)
+            github_token=github_token, project_name="citus", project_version="10.2.0", main_branch=MAIN_BRANCH,
+            earliest_pr_date=datetime.strptime('2021.03.25 00:00', '%Y.%m.%d %H:%M'),
+            exec_path=TEST_BASE_PATH, is_test=True)
 
         run(f"git checkout {update_release_return_value.release_branch_name}")
 
@@ -102,5 +96,5 @@ def test_patch_release():
 def clear_env():
     if os.path.exists("../citus"):
         os.chdir("..")
-        run("chmod -R 777 citus")
+        # run("chmod -R 777 citus")
         run("sudo rm -rf citus")
