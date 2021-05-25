@@ -142,7 +142,7 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, exec_path: st
     current_branch = get_current_branch(exec_path)
     tag_parts = decode_tag_parts(tag_name)
     tag_version_part = ""
-    docker_image_name = f"{DOCKER_IMAGE_NAME}"
+    docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_type.name}"
     docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
                                tag=docker_image_name,
                                path=".")
