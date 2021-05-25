@@ -41,7 +41,7 @@ def test_decode_tag_parts():
 
 def test_get_image_tag():
     image_name = get_image_tag(remove_prefix(TAG_NAME, "v"), DockerImageType.latest)
-    assert image_name == "citusdata/citus:10.0.3"
+    assert image_name == "10.0.3"
 
     image_name = get_image_tag(remove_prefix(TAG_NAME, "v"), DockerImageType.postgres_12)
     assert image_name == "10.0.3-pg12"
