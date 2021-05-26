@@ -10,7 +10,7 @@ from parameters_validation import (no_whitespaces, non_blank, non_empty, non_neg
                                    parameter_validation)
 from dataclasses import dataclass
 
-from .common_tool_methods import (find_nth_matching_line, find_nth_matching_line_number, find_nth_occurrence_position,
+from .common_tool_methods import (find_nth_matching_line_and_line_number, find_nth_occurrence_position,
                                   get_project_version_from_tag_name)
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -114,7 +114,8 @@ def get_last_changelog_content(all_changelog_content: str) -> str:
 
 
 def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
-    second_changelog_index = find_nth_matching_line_number(all_changelog_content, "^[a-zA-Z]", 2)
+    second_changelog_index, second_changelog_line = find_nth_matching_line_and_line_number(all_changelog_content,
+                                                                                           "^[a-zA-Z]", 2)
     lines = all_changelog_content.splitlines()
     changelogs = "\n".join(lines[:second_changelog_index - 1]) + "\n"
     if len(lines) < 1:

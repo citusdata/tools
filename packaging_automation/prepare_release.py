@@ -2,14 +2,14 @@ import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
 
 import pathlib2
 from github import Github, Repository
 
-from .common_tool_methods import (get_version_details, get_upcoming_patch_version, is_major_release, get_prs,
+from .common_tool_methods import (get_version_details, get_upcoming_patch_version, is_major_release,
+                                  get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
-                                  find_nth_matching_line)
+                                  find_nth_matching_line_and_line_number)
 from .common_validations import CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -23,19 +23,10 @@ CITUS_CONTROL_SEARCH_PATTERN = r"^default_version*"
 
 MULTI_EXT_DEVEL_SEARCH_PATTERN = r"^\s*" + CITUS_MINOR_VERSION_PATTERN + "devel$"
 MULTI_EXT_PATCH_SEARCH_PATTERN = r"^\s*" + CITUS_PATCH_VERSION_PATTERN + r"$"
-CONFIG_PY_MASTER_VERSION_SEARCH_PATTERN = r"^MASTER_VERSION = '\d+.\d+'"
+CONFIG_PY_MASTER_VERSION_SEARCH_PATTERN = r"^MASTER_VERSION = '\d+\.\d+'"
 
 CONFIGURE_IN_SEARCH_PATTERN = "AC_INIT*"
 REPO_OWNER = "citusdata"
-
-
-class ResourceStatus(Enum):
-    INITIAL = 1
-    RELEASE_BRANCH_LOCAL = 2
-    RELEASE_BRANCH_REMOTE = 3
-    UPCOMING_VERSION_LOCAL = 4
-    UPCOMING_VERSION_REMOTE = 5
-    PULL_REQUEST_CREATED = 6
 
 
 @dataclass
@@ -124,7 +115,7 @@ def update_release(github_token: str, project_name: str, project_version: is_ver
 
     # if major release
     if is_major_release(project_version):
-        print(f"### {project_version} is a major release. Executing Major release flow### ")
+        print(f"### {project_version} is a major release. Executing Major release flow###")
         major_release_params = MajorReleaseParams(configure_in_path=configure_in_path, devel_version=devel_version,
                                                   is_test=is_test, main_branch=main_branch,
                                                   multi_extension_out_path=multi_extension_out_path,
@@ -162,7 +153,7 @@ def update_release(github_token: str, project_name: str, project_version: is_ver
 
 
 def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleaseParams):
-    print(f"### {patchReleaseParams.project_version} is a patch release. Executing Patch release flow ### ")
+    print(f"### {patchReleaseParams.project_version} is a patch release. Executing Patch release flow ###")
     # checkout release branch (release-X.Y)
     checkout_branch(patchReleaseParams.release_branch_name, patchReleaseParams.is_test)
     # change version info in configure.in file
@@ -186,7 +177,7 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
 
 
 def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams):
-    print(f"### Preparing {upcoming_params.upcoming_version_branch} branch that bumps master version.### ")
+    print(f"### Preparing {upcoming_params.upcoming_version_branch} branch that bumps master version.###")
     # checkout master
     checkout_branch(upcoming_params.main_branch, upcoming_params.is_test)
     # create master-update-version-$curtime branch
@@ -228,38 +219,38 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
         create_pull_request_for_upcoming_version_branch(upcoming_params.repository, upcoming_params.main_branch,
                                                         upcoming_params.upcoming_version_branch,
                                                         upcoming_params.upcoming_version)
-        resource_status = ResourceStatus.PULL_REQUEST_CREATED
-    print(f"### OK {upcoming_params.upcoming_version_branch} prepared.### ")
+    print(f"### OK {upcoming_params.upcoming_version_branch} prepared.###")
     return newly_created_sql_file
 
 
 def prepare_release_branch_for_major_release(majorReleaseParams: MajorReleaseParams):
-    print(f"### Preparing {majorReleaseParams.release_branch_name}...### ")
+    print(f"### Preparing {majorReleaseParams.release_branch_name}...###")
     # checkout master
     checkout_branch(majorReleaseParams.main_branch, majorReleaseParams.is_test)
     # create release branch in release-X.Y format
     create_and_checkout_branch(majorReleaseParams.release_branch_name)
     # change version info in configure.in file
-    update_version_in_configure_in(majorReleaseParams.configure_in_path, majorReleaseParams.devel_version)
+    update_version_in_configure_in(majorReleaseParams.configure_in_path, majorReleaseParams.project_version)
     # execute "autoconf -f"
     execute_autoconf_f()
     # change version info in multi_extension.out
-    update_version_in_multi_extension_out(majorReleaseParams.multi_extension_out_path, majorReleaseParams.devel_version)
+    update_version_in_multi_extension_out(majorReleaseParams.multi_extension_out_path,
+                                          majorReleaseParams.project_version)
     # commit all changes
     commit_changes_for_version_bump(majorReleaseParams.project_name, majorReleaseParams.project_version)
     # push release branch (No PR creation!!!)
     if not majorReleaseParams.is_test:
         push_branch(majorReleaseParams.release_branch_name)
-    print(f"### OK {majorReleaseParams.release_branch_name} prepared.### ")
+    print(f"### OK {majorReleaseParams.release_branch_name} prepared.###")
 
 
 def cherrypick_prs_with_backport_labels(earliest_pr_date, main_branch, release_branch_name, repository):
     print(
         f"### Getting all PR with backport label after {datetime.strftime(earliest_pr_date, '%Y.%m.%d %H:%M')}### ")
-    prs_with_earliest_date = get_prs(repository, earliest_pr_date, main_branch)
+    prs_with_earliest_date = get_prs_for_patch_release(repository, earliest_pr_date, main_branch)
     # get commits for selected prs with backport label
     prs_with_backport = filter_prs_by_label(prs_with_earliest_date, "backport")
-    print(f"### OK {len(prs_with_backport)} PRs with backport label found. PR list is as below### ")
+    print(f"### OK {len(prs_with_backport)} PRs with backport label found. PR list is as below###")
     for pr in prs_with_backport:
         print(f"\tNo:{pr.number} Title:{pr.title}")
     # cherrypick all commits with backport label
@@ -269,32 +260,32 @@ def cherrypick_prs_with_backport_labels(earliest_pr_date, main_branch, release_b
 
 
 def create_pull_request_for_upcoming_version_branch(repository, main_branch, upcoming_version_branch, upcoming_version):
-    print(f"### Creating pull request for {upcoming_version_branch}### ")
+    print(f"### Creating pull request for {upcoming_version_branch}###")
     pr_result = repository.create_pull(title=f"Bump Citus to {upcoming_version}", base=main_branch,
                                        head=upcoming_version_branch, body="")
-    print(f"### OK Pull request created. PR Number:{pr_result.number} PR URL: {pr_result.url}### ")
+    print(f"### OK Pull request created. PR Number:{pr_result.number} PR URL: {pr_result.url}###")
 
 
 def push_branch(upcoming_version_branch):
-    print(f"Pushing changes for {upcoming_version_branch} into remote origin...### ")
+    print(f"Pushing changes for {upcoming_version_branch} into remote origin...###")
     run(f"git push --set-upstream origin {upcoming_version_branch}")
-    print(f"### OK Changes pushed for {upcoming_version_branch}### ")
+    print(f"### OK Changes pushed for {upcoming_version_branch}###")
 
 
 def commit_changes_for_version_bump(project_name, project_version):
     current_branch = get_current_branch()
-    print(f"### Committing changes for branch {current_branch}...### ")
+    print(f"### Committing changes for branch {current_branch}...###")
 
     run(f' git commit -a -m "Bump {project_name} version to {project_version} "')
-    print(f"### OK Changes committed for {current_branch}### ")
+    print(f"### OK Changes committed for {current_branch}###")
 
 
 def update_version_with_upcoming_version_in_citus_control(citus_control_file_path, upcoming_minor_version):
-    print(f"### Updating {citus_control_file_path} file with the upcoming version {upcoming_minor_version}...### ")
+    print(f"### Updating {citus_control_file_path} file with the upcoming version {upcoming_minor_version}...###")
     if not replace_line_in_file(citus_control_file_path, CITUS_CONTROL_SEARCH_PATTERN,
                                 f"default_version = '{upcoming_minor_version}-1'"):
         raise ValueError(f"{citus_control_file_path} does not have match for version")
-    print(f"### OK {citus_control_file_path} file is updated with the upcoming version {upcoming_minor_version}...### ")
+    print(f"### OK {citus_control_file_path} file is updated with the upcoming version {upcoming_minor_version}...###")
 
 
 def update_schema_version_with_upcoming_version_in_multi_extension_file(current_schema_version,
@@ -308,19 +299,20 @@ def update_schema_version_with_upcoming_version_in_multi_extension_file(current_
                                 f"ALTER EXTENSION citus UPDATE TO '{current_schema_version}'",
                                 f"ALTER EXTENSION citus UPDATE TO '{upcoming_minor_version}-1';"):
         raise ValueError(f"{multi_extension_sql_path} does not have match for version")
-    print(f"### OK Current schema version updated on {multi_extension_sql_path} to {upcoming_minor_version}### ")
+    print(f"### OK Current schema version updated on {multi_extension_sql_path} to {upcoming_minor_version}###")
 
 
 def get_current_schema_from_citus_control(citus_control_file_path: str) -> str:
-    print(f"### Reading current schema version from {citus_control_file_path}...### ")
+    print(f"### Reading current schema version from {citus_control_file_path}...###")
     current_schema_version = ""
     with open(citus_control_file_path, "r") as cc_reader:
         cc_file_content = cc_reader.read()
-        cc_line = find_nth_matching_line(cc_file_content, CITUS_CONTROL_SEARCH_PATTERN, 1)
+        cc_line_number, cc_line = find_nth_matching_line_and_line_number(cc_file_content, CITUS_CONTROL_SEARCH_PATTERN,
+                                                                         1)
         schema_not_found = False
         if len(cc_line) > 0:
             line_parts = cc_line.split("=")
-            if len(line_parts) > 0:
+            if len(line_parts) == 2:
                 current_schema_version = line_parts[1]
             else:
                 schema_not_found = True
@@ -336,60 +328,59 @@ def get_current_schema_from_citus_control(citus_control_file_path: str) -> str:
 
 
 def update_version_with_upcoming_version_in_config_py(config_py_path, upcoming_minor_version):
-    print(f"### Updating {config_py_path} file with the upcoming version {upcoming_minor_version}...### ")
+    print(f"### Updating {config_py_path} file with the upcoming version {upcoming_minor_version}...###")
     if not replace_line_in_file(config_py_path, CONFIG_PY_MASTER_VERSION_SEARCH_PATTERN,
                                 f"MASTER_VERSION = '{upcoming_minor_version}'"):
         raise ValueError(f"{config_py_path} does not have match for version")
-    print(f"### {config_py_path} file updated with the upcoming version {upcoming_minor_version}...### ")
+    print(f"### {config_py_path} file updated with the upcoming version {upcoming_minor_version}...###")
 
 
 def update_version_in_multi_extension_out(multi_extension_out_path, project_version):
-    print(f"### Updating {multi_extension_out_path} file with the project version {project_version}...### ")
+    print(f"### Updating {multi_extension_out_path} file with the project version {project_version}...###")
     if not replace_line_in_file(multi_extension_out_path, MULTI_EXT_DEVEL_SEARCH_PATTERN,
                                 f" {project_version}"):
         raise ValueError(
             f"{multi_extension_out_path} does not contain the version with pattern {CONFIGURE_IN_SEARCH_PATTERN}")
-    print(f"### OK {multi_extension_out_path} file is updated with project version {project_version}.### ")
+    print(f"### OK {multi_extension_out_path} file is updated with project version {project_version}.###")
 
 
 def execute_autoconf_f():
-    print(f"### Executing autoconf -f command...### ")
+    print(f"### Executing autoconf -f command...###")
     run("autoconf -f")
-    print(f"### OK autoconf -f executed.### ")
+    print(f"### OK autoconf -f executed.###")
 
 
 def update_version_in_configure_in(configure_in_path, project_version):
-    print(f"### Updating version on file {configure_in_path}...### ")
+    print(f"### Updating version on file {configure_in_path}...###")
     if not replace_line_in_file(configure_in_path, CONFIGURE_IN_SEARCH_PATTERN,
                                 f"AC_INIT([Citus], [{project_version}])"):
         raise ValueError(f"{configure_in_path} does not have match for version")
-    print(f"### OK {configure_in_path} file is updated with project version {project_version}.### ")
+    print(f"### OK {configure_in_path} file is updated with project version {project_version}.###")
 
 
 def create_and_checkout_branch(release_branch_name):
-    get_current_branch()
-    print(f"### Creating release branch with name {release_branch_name} from {get_current_branch()}...### ")
+    print(f"### Creating release branch with name {release_branch_name} from {get_current_branch()}...###")
     run(f'git checkout -b {release_branch_name}')
-    print(f"### OK {release_branch_name} created### ")
+    print(f"### OK {release_branch_name} created###")
 
 
 def checkout_branch(branch_name, is_test):
-    print(f"### Checking out {branch_name}...### ")
+    print(f"### Checking out {branch_name}...###")
     run(f"git checkout {branch_name}")
     if not is_test:
         run(f"git pull")
-    print(f"### OK {branch_name} checked out and pulled### ")
+    print(f"### OK {branch_name} checked out and pulled###")
 
 
 def create_new_sql_for_upgrade_path(current_schema_version, distributed_dir_path,
                                     upcoming_minor_version):
     newly_created_sql_file = f"citus--{current_schema_version}--{upcoming_minor_version}-1.sql"
-    print(f"### Creating file {newly_created_sql_file}...### ")
+    print(f"### Creating file {newly_created_sql_file}...###")
     with open(f"{distributed_dir_path}/{newly_created_sql_file}", "w") as f_writer:
         content = f"/* citus--{current_schema_version}--{upcoming_minor_version}-1 */"
         content = content + "\n\n"
         content = content + f"-- bump version to {upcoming_minor_version}-1" + "\n\n"
         f_writer.write(content)
-    run(f"git add {distributed_dir_path}/{newly_created_sql_file}")
+    # run(f"git add {distributed_dir_path}/{newly_created_sql_file}")
     print(f"### OK {newly_created_sql_file} created.")
     return newly_created_sql_file

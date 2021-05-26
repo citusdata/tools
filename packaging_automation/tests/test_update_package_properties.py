@@ -1,9 +1,16 @@
 import pytest
 import os
+import re
 from shutil import copyfile
+import pathlib2
+from datetime import datetime
 
 from .test_utils import are_strings_equal
-from ..update_package_properties import *
+from ..update_package_properties import (PackagePropertiesParams, changelog_for_tag,
+                                         get_last_changelog_content_from_debian, debian_changelog_header,
+                                         prepend_latest_changelog_into_debian_changelog,
+                                         convert_citus_changelog_into_rpm_changelog, spec_file_name, update_rpm_spec,
+                                         update_pkgvars, update_all_changes)
 
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[1])
@@ -34,8 +41,6 @@ def test_get_version_number():
 
 def test_get_version_number_with_project_name():
     assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number_with_project_name() == "10.0.3.citus-1"
-
-
 
 
 def test_get_changelog_for_tag():

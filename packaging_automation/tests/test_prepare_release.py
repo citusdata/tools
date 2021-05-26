@@ -2,7 +2,7 @@ import pathlib2
 import os
 from datetime import datetime
 
-from ..prepare_release import (update_release, ResourceStatus, MULTI_EXTENSION_OUT, MULTI_EXTENSION_SQL, CONFIGURE,
+from ..prepare_release import (update_release,  MULTI_EXTENSION_OUT, MULTI_EXTENSION_SQL, CONFIGURE,
                                CONFIGURE_IN, CITUS_CONTROL, CONFIG_PY)
 from ..common_tool_methods import file_includes_line, count_line_in_file, run
 
@@ -73,7 +73,7 @@ def test_patch_release():
                        earliest_pr_date=datetime.strptime('2021.03.25 00:00', '%Y.%m.%d %H:%M'),
                        exec_path=TEST_BASE_PATH, is_test=True)
 
-        update_release_return_value = update_release(
+        update_release(
             github_token=github_token, project_name="citus", project_version="10.2.1",
             main_branch=MAIN_BRANCH,
             earliest_pr_date=datetime.strptime('2021.03.25 00:00', '%Y.%m.%d %H:%M'),
@@ -96,5 +96,4 @@ def test_patch_release():
 def clear_env():
     if os.path.exists("../citus"):
         os.chdir("..")
-        # run("chmod -R 777 citus")
         run("sudo rm -rf citus")

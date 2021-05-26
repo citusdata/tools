@@ -7,9 +7,10 @@ import os
 from github import Repository, PullRequest
 from jinja2 import Environment, FileSystemLoader
 
-from .common_validations import *
+from .common_validations import (is_tag, is_version)
 from git import Repo
 import pathlib2
+from typing import Tuple
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 
@@ -18,18 +19,8 @@ def get_spec_file_name(project_name: str) -> str:
     return f"{project_name}.spec"
 
 
-def get_version_number(version: str, fancy: bool, fancy_release_count: int) -> str:
-    fancy_suffix = f"-{fancy_release_count}" if fancy else ""
-    return f"{version}{fancy_suffix}"
-
-
 def get_project_version_from_tag_name(tag_name: is_tag(str)) -> str:
     return tag_name[1:]
-
-
-def get_version_number_with_project_name(project_name: str, version: str, fancy: bool, fancy_release_count: int) -> str:
-    fancy_suffix = f"-{fancy_release_count}" if fancy else ""
-    return f"{version}.{project_name}{fancy_suffix}"
 
 
 def get_template_environment(template_dir: str) -> Environment:
@@ -47,7 +38,7 @@ def find_nth_occurrence_position(subject_string: str, search_string: str, n) -> 
     return start
 
 
-def find_nth_matching_line_number(subject_string: str, regex_pattern: str, n: int) -> int:
+def find_nth_matching_line_and_line_number(subject_string: str, regex_pattern: str, n: int) -> Tuple[int, str]:
     """Takes a subject string, regex param and the search index as parameter and returns line number of found match.
     If not found returns -1"""
     lines = subject_string.splitlines()
@@ -56,23 +47,12 @@ def find_nth_matching_line_number(subject_string: str, regex_pattern: str, n: in
         if re.match(regex_pattern, line):
             counter = counter + 1
         if counter == n:
-            return line_number
-    return -1
+            return line_number, lines[line_number]
+    return -1, ""
 
 
-def find_nth_matching_line(subject_string: str, regex_pattern: str, n: int) -> str:
-    """Takes a subject string, regex param and the search index as parameter and returns line content of found match.
-        If not found returns empty string"""
-    lines = subject_string.splitlines()
-
-    line_number = find_nth_matching_line_number(subject_string, regex_pattern, n)
-    if line_number != -1:
-        return lines[line_number]
-    else:
-        return ""
-
-
-def remove_string_inside_parentheses(param: str) -> str:
+def remove_text_with_parenthesis(param: str) -> str:
+    """Removes texts within parentheses i.e. outside parenthesis(inside parenthesis)-> outside parenthesis """
     return re.sub(r"[(\[].*?[)\]]", "", param)
 
 
@@ -114,12 +94,25 @@ def str_array_to_str(str_array: List[str]) -> str:
     return f"{os.linesep.join(str_array)}{os.linesep}"
 
 
-def get_prs(repo: Repository.Repository, earliest_date: datetime, base_branch: str, last_date: datetime = None):
-    pulls = repo.get_pulls(state="all", base=base_branch, sort="created", direction="desc")
-    filtered_pulls = [p for p in pulls if
-                      p.is_merged() and p.created_at > earliest_date and p.merged_at is not None and
-                      earliest_date < p.merged_at < last_date]
-    return filtered_pulls
+def get_prs_for_patch_release(repo: Repository.Repository, earliest_date: datetime, base_branch: str,
+                              last_date: datetime = None):
+    pull_requests = repo.get_pulls(state="closed", base=base_branch, sort="created", direction="desc")
+
+    # filter pull requests according to given time interval
+    filtered_pull_requests = list()
+    for pull_request in pull_requests:
+        if not pull_request.is_merged():
+            continue
+        if pull_request.merged_at < earliest_date:
+            continue
+        if last_date and pull_request.merged_at > last_date:
+            continue
+
+        filtered_pull_requests.append(pull_request)
+
+    # finally, sort the pr's by their merge date
+    sorted_pull_requests = sorted(filtered_pull_requests, key=lambda p: p.merged_at)
+    return sorted_pull_requests
 
 
 def filter_prs_by_label(prs: List[PullRequest.PullRequest], label_name: str):

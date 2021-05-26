@@ -6,31 +6,26 @@ import pathlib2
 from github import Github
 from datetime import datetime
 
-from ..common_tool_methods import (get_version_number, get_version_number_with_project_name,
-                                   find_nth_occurrence_position, find_nth_matching_line_number, is_major_release,
-                                   str_array_to_str, run, remove_string_inside_parentheses, get_version_details,
-                                   replace_line_in_file, get_prs, filter_prs_by_label,
-                                   get_project_version_from_tag_name)
+from ..common_tool_methods import (
+    find_nth_occurrence_position, is_major_release,
+    str_array_to_str, run, remove_text_with_paranthesis, get_version_details,
+    replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label,
+    get_project_version_from_tag_name, find_nth_matching_line_and_line_number)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
 
 class CommonToolMethodsTestCases(unittest.TestCase):
-    def test_get_version_number(self):
-        self.assertEqual(get_version_number("10.0.3", True, 1), "10.0.3-1")
-
-    def test_get_version_number_with_project_name(self):
-        self.assertEqual(get_version_number_with_project_name("citus", "10.0.3", True, 1), "10.0.3.citus-1")
 
     def test_find_nth_occurrence_position(self):
         self.assertEqual(find_nth_occurrence_position("foofoo foofoo", "foofoo", 2), 7)
 
     def test_find_nth_matching_line_number_by_regex(self):
         # Two match case
-        self.assertEqual(find_nth_matching_line_number("citusx\n citusx\ncitusx", "^citusx$", 2), 2)
+        self.assertEqual(find_nth_matching_line_and_line_number("citusx\n citusx\ncitusx", "^citusx$", 2)[0], 2)
         # No match case
-        self.assertEqual(find_nth_matching_line_number("citusx\n citusx\ncitusx", "^citusy$", 2), -1)
+        self.assertEqual(find_nth_matching_line_and_line_number("citusx\n citusx\ncitusx", "^citusy$", 2)[0], -1)
 
     def test_is_major_release(self):
         self.assertEqual(True, is_major_release("10.0.0"))
@@ -49,7 +44,7 @@ class CommonToolMethodsTestCases(unittest.TestCase):
 
     def test_remove_parentheses_from_string(self):
         self.assertEqual("out of parentheses ",
-                         remove_string_inside_parentheses("out of parentheses (inside parentheses)"))
+                         remove_text_with_paranthesis("out of parentheses (inside parentheses)"))
 
     def test_get_version_details(self):
         self.assertEqual({"major": "10", "minor": "0", "patch": "1"}, get_version_details("10.0.1"))
@@ -71,16 +66,16 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         # created at is not seen on Github. Should be checked on API result
         g = Github(GITHUB_TOKEN)
         repository = g.get_repo(f"citusdata/citus")
-        prs = get_prs(repository, datetime.strptime('2021.02.26', '%Y.%m.%d'), "master",
-                      datetime.strptime('2021.03.02', '%Y.%m.%d'))
+        prs = get_prs_for_patch_release(repository, datetime.strptime('2021.02.26', '%Y.%m.%d'), "master",
+                                        datetime.strptime('2021.03.02', '%Y.%m.%d'))
         self.assertEqual(1, len(prs))
         self.assertEqual(4751, prs[0].number)
 
     def test_getprs_with_backlog_label(self):
         g = Github(GITHUB_TOKEN)
         repository = g.get_repo(f"citusdata/citus")
-        prs = get_prs(repository, datetime.strptime('2021.02.20', '%Y.%m.%d'), "master",
-                      datetime.strptime('2021.02.27', '%Y.%m.%d'))
+        prs = get_prs_for_patch_release(repository, datetime.strptime('2021.02.20', '%Y.%m.%d'), "master",
+                                        datetime.strptime('2021.02.27', '%Y.%m.%d'))
         prs_backlog = filter_prs_by_label(prs, "backport")
         self.assertEqual(1, len(prs_backlog))
         self.assertEqual(4746, prs_backlog[0].number)
