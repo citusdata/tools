@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -24,6 +25,7 @@ CITUS_CONTROL_SEARCH_PATTERN = r"^default_version*"
 MULTI_EXT_DEVEL_SEARCH_PATTERN = r"^\s*" + CITUS_MINOR_VERSION_PATTERN + "devel$"
 MULTI_EXT_PATCH_SEARCH_PATTERN = r"^\s*" + CITUS_PATCH_VERSION_PATTERN + r"$"
 CONFIG_PY_MASTER_VERSION_SEARCH_PATTERN = r"^MASTER_VERSION = '\d+\.\d+'"
+
 
 CONFIGURE_IN_SEARCH_PATTERN = "AC_INIT*"
 REPO_OWNER = "citusdata"
@@ -84,9 +86,7 @@ class PatchReleaseParams:
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 
 
-def get_minor_version(version: str) -> str:
-    project_version_details = get_version_details(version)
-    return f'{project_version_details["major"]}.{project_version_details["minor"]}'
+
 
 
 def update_release(github_token: str, project_name: str, project_version: is_version(str), main_branch: str,
@@ -337,7 +337,8 @@ def update_version_with_upcoming_version_in_config_py(config_py_path, upcoming_m
 
 def update_version_in_multi_extension_out(multi_extension_out_path, project_version):
     print(f"### Updating {multi_extension_out_path} file with the project version {project_version}...###")
-    if not replace_line_in_file(multi_extension_out_path, MULTI_EXT_DEVEL_SEARCH_PATTERN,
+    if not replace_line_in_file(multi_extension_out_path,
+                                f"{re.escape(get_minor_version(project_version))}{PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX}",
                                 f" {project_version}"):
         raise ValueError(
             f"{multi_extension_out_path} does not contain the version with pattern {CONFIGURE_IN_SEARCH_PATTERN}")

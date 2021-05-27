@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Dict, List
 import os
 
-from github import Repository, PullRequest
+from github import Repository, PullRequest, Commit
 from jinja2 import Environment, FileSystemLoader
 
 from .common_validations import (is_tag, is_version)
@@ -13,6 +13,7 @@ import pathlib2
 from typing import Tuple
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
+PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
 
 
 def get_spec_file_name(project_name: str) -> str:
@@ -65,8 +66,23 @@ def cherry_pick_prs(prs: List[PullRequest.PullRequest]):
     for pr in prs:
         commits = pr.get_commits()
         for single_commit in commits:
-            cp_result = run(f"git cherry-pick {single_commit.commit.sha}")
-            print(f"Cherry pick result for PR no {pr.number} and commit sha {single_commit.commit.sha}: {cp_result}")
+            if not is_merge_commit(single_commit):
+                cp_result = run(f"git cherry-pick {single_commit.commit.sha}")
+                print(
+                    f"Cherry pick result for PR no {pr.number} and commit sha {single_commit.commit.sha}: {cp_result}")
+
+
+def get_minor_version(version: str) -> str:
+    project_version_details = get_version_details(version)
+    return f'{project_version_details["major"]}.{project_version_details["minor"]}'
+
+
+def get_patch_version_regex(version: is_version(str)):
+    return f"{re.escape(get_minor_version(version))}{PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX}"
+
+
+def is_merge_commit(commit: Commit):
+    return len(commit.parents) <= 1
 
 
 def get_version_details(version: is_version(str)) -> Dict[str, str]:
@@ -76,8 +92,7 @@ def get_version_details(version: is_version(str)) -> Dict[str, str]:
 
 def get_upcoming_patch_version(version: is_version(str)) -> str:
     project_version_details = get_version_details(version)
-    return f'{project_version_details["major"]}.{project_version_details["minor"]}.' \
-           f'{int(project_version_details["patch"]) + 1}'
+    return f'{get_upcoming_minor_version(version)}.{int(project_version_details["patch"]) + 1}'
 
 
 def get_upcoming_minor_version(version: is_version(str)) -> str:

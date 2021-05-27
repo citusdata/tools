@@ -8,9 +8,10 @@ from datetime import datetime
 
 from ..common_tool_methods import (
     find_nth_occurrence_position, is_major_release,
-    str_array_to_str, run, remove_text_with_paranthesis, get_version_details,
+    str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
     replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label,
-    get_project_version_from_tag_name, find_nth_matching_line_and_line_number)
+    get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
+    get_patch_version_regex)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -44,7 +45,7 @@ class CommonToolMethodsTestCases(unittest.TestCase):
 
     def test_remove_parentheses_from_string(self):
         self.assertEqual("out of parentheses ",
-                         remove_text_with_paranthesis("out of parentheses (inside parentheses)"))
+                         remove_text_with_parenthesis("out of parentheses (inside parentheses)"))
 
     def test_get_version_details(self):
         self.assertEqual({"major": "10", "minor": "0", "patch": "1"}, get_version_details("10.0.1"))
@@ -79,6 +80,12 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         prs_backlog = filter_prs_by_label(prs, "backport")
         self.assertEqual(1, len(prs_backlog))
         self.assertEqual(4746, prs_backlog[0].number)
+
+    def test_get_minor_version(self):
+        self.assertEqual("10.0", get_minor_version("10.0.3"))
+
+    def test_get_patch_version_regex(self):
+        self.assertEqual("10\.0\.\d{1,3}", get_patch_version_regex("10.0.3"))
 
 
 if __name__ == '__main__':
