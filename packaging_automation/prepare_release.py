@@ -10,7 +10,7 @@ from github import Github, Repository
 from .common_tool_methods import (get_version_details, get_upcoming_patch_version, is_major_release,
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
-                                  find_nth_matching_line_and_line_number)
+                                  find_nth_matching_line_and_line_number,get_minor_version)
 from .common_validations import CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
