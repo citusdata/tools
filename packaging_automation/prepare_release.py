@@ -10,7 +10,7 @@ from github import Github, Repository
 from .common_tool_methods import (get_version_details, get_upcoming_patch_version, is_major_release,
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
-                                  find_nth_matching_line_and_line_number,get_minor_version)
+                                  find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex)
 from .common_validations import CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -25,7 +25,6 @@ CITUS_CONTROL_SEARCH_PATTERN = r"^default_version*"
 MULTI_EXT_DEVEL_SEARCH_PATTERN = r"^\s*" + CITUS_MINOR_VERSION_PATTERN + "devel$"
 MULTI_EXT_PATCH_SEARCH_PATTERN = r"^\s*" + CITUS_PATCH_VERSION_PATTERN + r"$"
 CONFIG_PY_MASTER_VERSION_SEARCH_PATTERN = r"^MASTER_VERSION = '\d+\.\d+'"
-
 
 CONFIGURE_IN_SEARCH_PATTERN = "AC_INIT*"
 REPO_OWNER = "citusdata"
@@ -84,9 +83,6 @@ class PatchReleaseParams:
 
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
-
-
-
 
 
 def update_release(github_token: str, project_name: str, project_version: is_version(str), main_branch: str,
@@ -161,8 +157,8 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
     # execute "auto-conf "
     execute_autoconf_f()
     # change version info in multi_extension.out
-    update_version_in_multi_extension_out(patchReleaseParams.multi_extension_out_path,
-                                          patchReleaseParams.project_version)
+    update_version_in_multi_extension_out_for_patch(patchReleaseParams.multi_extension_out_path,
+                                                    patchReleaseParams.project_version)
     if patchReleaseParams.cherry_pick_enabled:
         # cherry-pick the pr's with backport labels
         cherrypick_prs_with_backport_labels(patchReleaseParams.earliest_pr_date, patchReleaseParams.main_branch,
@@ -337,8 +333,19 @@ def update_version_with_upcoming_version_in_config_py(config_py_path, upcoming_m
 
 def update_version_in_multi_extension_out(multi_extension_out_path, project_version):
     print(f"### Updating {multi_extension_out_path} file with the project version {project_version}...###")
+
+    if not replace_line_in_file(multi_extension_out_path, MULTI_EXT_DEVEL_SEARCH_PATTERN,
+                                f" {project_version}"):
+        raise ValueError(
+            f"{multi_extension_out_path} does not contain the version with pattern {CONFIGURE_IN_SEARCH_PATTERN}")
+    print(f"### OK {multi_extension_out_path} file is updated with project version {project_version}.###")
+
+
+def update_version_in_multi_extension_out_for_patch(multi_extension_out_path, project_version):
+    print(f"### Updating {multi_extension_out_path} file with the project version {project_version}...###")
+
     if not replace_line_in_file(multi_extension_out_path,
-                                f"{re.escape(get_minor_version(project_version))}{PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX}",
+                                get_patch_version_regex(project_version),
                                 f" {project_version}"):
         raise ValueError(
             f"{multi_extension_out_path} does not contain the version with pattern {CONFIGURE_IN_SEARCH_PATTERN}")

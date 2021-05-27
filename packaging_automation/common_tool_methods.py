@@ -78,7 +78,7 @@ def get_minor_version(version: str) -> str:
 
 
 def get_patch_version_regex(version: is_version(str)):
-    return f"{re.escape(get_minor_version(version))}{PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX}"
+    return fr"^{re.escape(get_minor_version(version))}{PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX}$"
 
 
 def is_merge_commit(commit: Commit):
@@ -161,7 +161,7 @@ def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
         lines = file_content.splitlines()
         has_match = False
         for line_number, line in enumerate(lines):
-            if re.match(match_regex, line):
+            if re.match(match_regex, line.strip()):
                 has_match = True
                 lines[line_number] = replace_str
         edited_content = str_array_to_str(lines)
