@@ -70,6 +70,7 @@ def test_major_release():
 
 
 def test_patch_release():
+    print(os.getcwd())
     initialize_env()
     os.chdir(TEST_CHECKOUT_DIR)
     try:
@@ -100,4 +101,5 @@ def test_patch_release():
 
 def clear_env():
     if os.path.exists(f"../{TEST_CHECKOUT_DIR}"):
-        run(f"sudo rm -rf ../{TEST_CHECKOUT_DIR}")
+        os.chdir("..")
+        run(f"sudo rm -rf {TEST_CHECKOUT_DIR}")
