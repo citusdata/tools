@@ -53,7 +53,7 @@ def find_nth_matching_line_and_line_number(subject_string: str, regex_pattern: s
 
 
 def remove_text_with_parenthesis(param: str) -> str:
-    """Removes texts within parentheses i.e. outside parenthesis(inside parenthesis)-> outside parenthesis """
+    """Removes texts within parenthesis i.e. outside parenthesis(inside parenthesis)-> outside parenthesis """
     return re.sub(r"[(\[].*?[)\]]", "", param)
 
 
@@ -165,6 +165,31 @@ def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
                 has_match = True
                 lines[line_number] = replace_str
         edited_content = str_array_to_str(lines)
+    with open(file, "w") as writer:
+        writer.write(edited_content)
+
+    return has_match
+
+
+def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
+    with open(file, "r+") as reader:
+        file_content = reader.read()
+        lines = file_content.splitlines()
+        has_match = False
+        appended_lines = lines.copy()
+        appended_line_index = 0
+        for line_number, line in enumerate(lines):
+            if re.match(match_regex, line.strip()):
+                has_match = True
+
+                if line_number + 1 < len(lines):
+                    appended_lines[appended_line_index + 1] = append_str
+                    lines_to_be_shifted = lines[line_number + 1:]
+                    appended_lines.extend(lines_to_be_shifted)
+                else:
+                    appended_lines.append(append_str)
+            appended_line_index = appended_line_index + 1
+        edited_content = str_array_to_str(appended_lines)
     with open(file, "w") as writer:
         writer.write(edited_content)
 

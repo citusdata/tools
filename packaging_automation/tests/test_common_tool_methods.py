@@ -11,7 +11,7 @@ from ..common_tool_methods import (
     str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
     replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
-    get_patch_version_regex)
+    get_patch_version_regex, append_line_in_file)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -43,9 +43,9 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         result = run("echo 'Run' method is performing fine ")
         self.assertEqual(0, result.returncode)
 
-    def test_remove_parentheses_from_string(self):
-        self.assertEqual("out of parentheses ",
-                         remove_text_with_parenthesis("out of parentheses (inside parentheses)"))
+    def test_remove_paranthesis_from_string(self):
+        self.assertEqual("out of paranthesis ",
+                         remove_text_with_parenthesis("out of paranthesis (inside paranthesis)"))
 
     def test_get_version_details(self):
         self.assertEqual({"major": "10", "minor": "0", "patch": "1"}, get_version_details("10.0.1"))
@@ -86,6 +86,26 @@ class CommonToolMethodsTestCases(unittest.TestCase):
 
     def test_get_patch_version_regex(self):
         self.assertEqual("10\.0\.\d{1,3}", get_patch_version_regex("10.0.3"))
+
+    def test_append_line_in_file(self):
+        try:
+            with open("test_append.txt", "a") as writer:
+                writer.write("Test line 1\n")
+                writer.write("Test line 2\n")
+            append_line_in_file("test_append.txt", "^Test line 1", "Test line 1.5")
+            append_line_in_file("test_append.txt", "^Test line 2", "Test line 2.5")
+
+            with open("test_append.txt", "r") as reader:
+                line1 = reader.readline()
+                line2 = reader.readline()
+                line3 = reader.readline()
+                line4 = reader.readline()
+                self.assertEqual(line1, "Test line 1\n")
+                self.assertEqual(line2, "Test line 1.5\n")
+                self.assertEqual(line3, "Test line 2\n")
+                self.assertEqual(line4, "Test line 2.5\n")
+        finally:
+            os.remove("test_append.txt")
 
 
 if __name__ == '__main__':

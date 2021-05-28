@@ -46,8 +46,12 @@ def test_major_release():
 
         assert file_includes_line(TEST_BASE_PATH, CITUS_CONTROL, "default_version = '10.2-1'")
         assert file_includes_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT,
+                                  "ALTER EXTENSION citus UPDATE TO '10.1-1';")
+        assert file_includes_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT,
                                   "ALTER EXTENSION citus UPDATE TO '10.2-1';")
         assert file_includes_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT, " 10.2devel")
+        assert file_includes_line(TEST_BASE_PATH, MULTI_EXTENSION_SQL,
+                                  "ALTER EXTENSION citus UPDATE TO '10.2-1';")
         assert count_line_in_file(TEST_BASE_PATH, MULTI_EXTENSION_SQL,
                                   "ALTER EXTENSION citus UPDATE TO '10.2-1';") == 2
         assert file_includes_line(TEST_BASE_PATH, CONFIG_PY, "MASTER_VERSION = '10.2'")
@@ -96,5 +100,4 @@ def test_patch_release():
 
 def clear_env():
     if os.path.exists(f"../{TEST_CHECKOUT_DIR}"):
-        os.chdir("..")
-        run(f"sudo rm -rf {TEST_CHECKOUT_DIR}")
+        run(f"sudo rm -rf ../{TEST_CHECKOUT_DIR}")

@@ -123,7 +123,7 @@ def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
     return changelogs
 
 
-def remove_parentheses_from_string(param: str) -> str:
+def remove_paranthesis_from_string(param: str) -> str:
     return re.sub(r"[(\[].*?[)\]]", "", param)
 
 
@@ -135,15 +135,15 @@ def changelog_for_tag(github_token: str, project_name: str, tag_name: str) -> st
     return last_changelog_content
 
 
-# truncates # chars , get the version an put parentheses around version number adds 'stable; urgency=low' at the end
+# truncates # chars , get the version an put paranthesis around version number adds 'stable; urgency=low' at the end
 # changelog_header=> ### citus v8.3.3 (March 23, 2021) ###
 # debian header =>   citus (10.0.3.citus-1) stable; urgency=low
 @validate_parameters
 def debian_changelog_header(changelog_header: is_project_changelog_header(str), fancy: bool,
                             fancy_version_number: int) -> str:
     hash_removed_string = changelog_header.lstrip("### ").rstrip(" ###")
-    parentheses_removed_string = remove_parentheses_from_string(hash_removed_string)
-    words = parentheses_removed_string.strip().split(" ")
+    paranthesis_removed_string = remove_paranthesis_from_string(hash_removed_string)
+    words = paranthesis_removed_string.strip().split(" ")
     if len(words) != 2:
         raise ValueError("Two words should be included in striped version header")
     project_name = words[0]

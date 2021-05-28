@@ -10,7 +10,7 @@ from github import Github, Repository
 from .common_tool_methods import (get_version_details, get_upcoming_patch_version, is_major_release,
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
-                                  find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex)
+                                  find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,append_line_in_file)
 from .common_validations import CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -22,8 +22,8 @@ CONFIGURE_IN = "configure.in"
 CONFIGURE = "configure"
 CITUS_CONTROL_SEARCH_PATTERN = r"^default_version*"
 
-MULTI_EXT_DEVEL_SEARCH_PATTERN = r"^\s*" + CITUS_MINOR_VERSION_PATTERN + "devel$"
-MULTI_EXT_PATCH_SEARCH_PATTERN = r"^\s*" + CITUS_PATCH_VERSION_PATTERN + r"$"
+MULTI_EXT_DEVEL_SEARCH_PATTERN = rf"^\s*{CITUS_MINOR_VERSION_PATTERN}devel$"
+MULTI_EXT_PATCH_SEARCH_PATTERN = rf"^\s*{CITUS_PATCH_VERSION_PATTERN}$"
 CONFIG_PY_MASTER_VERSION_SEARCH_PATTERN = r"^MASTER_VERSION = '\d+\.\d+'"
 
 CONFIGURE_IN_SEARCH_PATTERN = "AC_INIT*"
@@ -109,7 +109,7 @@ def update_release(github_token: str, project_name: str, project_version: is_ver
     repository = g.get_repo(f"{REPO_OWNER}/{project_name}")
     newly_created_sql_file = ""
 
-    # if major release
+    # major release
     if is_major_release(project_version):
         print(f"### {project_version} is a major release. Executing Major release flow###")
         major_release_params = MajorReleaseParams(configure_in_path=configure_in_path, devel_version=devel_version,
@@ -135,6 +135,7 @@ def update_release(github_token: str, project_name: str, project_version: is_ver
 
         newly_created_sql_file = prepare_upcoming_version_branch(branch_params)
         print(f"OK {project_version} Major release flow executed successfully")
+    # patch release
     else:
         patch_release_params = PatchReleaseParams(cherry_pick_enabled=cherry_pick_enabled,
                                                   configure_in_path=configure_in_path,
@@ -291,7 +292,7 @@ def update_schema_version_with_upcoming_version_in_multi_extension_file(current_
         f"### Updating schema version {current_schema_version} on {multi_extension_sql_path} "
         f"file with the upcoming version {upcoming_version}...### ")
     # TODO Append instead of replace may require
-    if not replace_line_in_file(multi_extension_sql_path,
+    if not append_line_in_file(multi_extension_sql_path,
                                 f"ALTER EXTENSION citus UPDATE TO '{current_schema_version}'",
                                 f"ALTER EXTENSION citus UPDATE TO '{upcoming_minor_version}-1';"):
         raise ValueError(f"{multi_extension_sql_path} does not have match for version")
@@ -389,6 +390,5 @@ def create_new_sql_for_upgrade_path(current_schema_version, distributed_dir_path
         content = content + "\n\n"
         content = content + f"-- bump version to {upcoming_minor_version}-1" + "\n\n"
         f_writer.write(content)
-    # run(f"git add {distributed_dir_path}/{newly_created_sql_file}")
     print(f"### OK {newly_created_sql_file} created.")
     return newly_created_sql_file
