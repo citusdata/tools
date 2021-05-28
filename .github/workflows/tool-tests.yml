@@ -4,6 +4,7 @@ env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
   MICROSOFT_EMAIL: gindibay@microsoft.com
   USER_NAME: Gurkan Indibay
+  MAIN_BRANCH: all-citus
 
 on:
   push:
