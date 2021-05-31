@@ -1,18 +1,19 @@
 import os
-import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+import argparse
 
 import pathlib2
 from github import Github, Repository
+from parameters_validation import (non_blank, non_empty)
 
 from .common_tool_methods import (get_version_details, get_upcoming_patch_version, is_major_release,
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
                                   find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,
                                   append_line_in_file)
-from .common_validations import CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version
+from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
 CITUS_CONTROL = "src/backend/distributed/citus.control"
@@ -86,8 +87,9 @@ class PatchReleaseParams:
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 
 
-def update_release(github_token: str, project_name: str, project_version: is_version(str), main_branch: str,
-                   earliest_pr_date: datetime, exec_path: str, is_test: bool = False,
+def update_release(github_token: non_blank(non_empty(str)), project_name: non_blank(non_empty(str)),
+                   project_version: is_version(str), main_branch: non_blank(non_empty(str)),
+                   earliest_pr_date: datetime, exec_path: non_blank(non_empty(str)), is_test: bool = False,
                    cherry_pick_enabled: bool = False) -> UpdateReleaseReturnValue:
     multi_extension_sql_path = f"{exec_path}/{MULTI_EXTENSION_SQL}"
     citus_control_file_path = f"{exec_path}/{CITUS_CONTROL}"
@@ -394,3 +396,22 @@ def create_new_sql_for_upgrade_path(current_schema_version, distributed_dir_path
         f_writer.write(content)
     print(f"### Done {newly_created_sql_file} created. ###")
     return newly_created_sql_file
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--gh_token')
+    parser.add_argument('--prj_name')
+    parser.add_argument('--prj_ver')
+    parser.add_argument('--main_branch')
+    parser.add_argument('--earliest_pr_date')
+    parser.add_argument('--exec_path')
+    parser.add_argument('--cherry_pick_enabled', nargs='?', default="True")
+    parser.add_argument('--is_test', nargs='?', default="False")
+    arguments = parser.parse_args()
+
+    update_release(github_token=arguments.gh_token, project_name=arguments.prj_name, project_version=arguments.prj_ver,
+                   main_branch=arguments.main_branch,
+                   earliest_pr_date=datetime.strptime(arguments.earliest_pr_date, '%Y.%m.%d %H:%M:%S %z'),
+                   is_test=arguments.is_test.lower() == "true",
+                   cherry_pick_enabled=arguments.cherry_pick_enabled.lower() == "true", exec_path=arguments.exec_path)
