@@ -12,24 +12,40 @@ from .common_tool_methods import (get_version_details, get_upcoming_patch_versio
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
                                   find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,
-                                  append_line_in_file)
+                                  append_line_in_file, prepend_line_in_file, get_template_environment)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
 CITUS_CONTROL = "src/backend/distributed/citus.control"
 MULTI_EXTENSION_OUT = "src/test/regress/expected/multi_extension.out"
 CONFIG_PY = "src/test/regress/upgrade/config.py"
-DISTRIBUTED_DIR_PATH = "src/backend/distributed"
+DISTRIBUTED_SQL_DIR_PATH = "src/backend/distributed/sql"
+DOWNGRADES_DIR_PATH = f"{DISTRIBUTED_SQL_DIR_PATH}/downgrades"
 CONFIGURE_IN = "configure.in"
 CONFIGURE = "configure"
 CITUS_CONTROL_SEARCH_PATTERN = r"^default_version*"
 
 MULTI_EXT_DEVEL_SEARCH_PATTERN = rf"^\s*{CITUS_MINOR_VERSION_PATTERN}devel$"
 MULTI_EXT_PATCH_SEARCH_PATTERN = rf"^\s*{CITUS_PATCH_VERSION_PATTERN}$"
+
+MULTI_EXT_DETAIL_PREFIX = rf"DETAIL:  Loaded library requires "
+MULTI_EXT_DETAIL1_SUFFIX = rf", but 8.0-1 was specified."
+MULTI_EXT_DETAIL2_SUFFIX = rf", but the installed extension version is 8.1-1."
+MULTI_EXT_DETAIL1_PATTERN = rf"^{MULTI_EXT_DETAIL_PREFIX}\d+\.\d+{MULTI_EXT_DETAIL1_SUFFIX}$"
+
+MULTI_EXT_DETAIL2_PATTERN = (
+    rf"^{MULTI_EXT_DETAIL_PREFIX}\d+\.\d+{MULTI_EXT_DETAIL2_SUFFIX}$")
+
 CONFIG_PY_MASTER_VERSION_SEARCH_PATTERN = r"^MASTER_VERSION = '\d+\.\d+'"
 
 CONFIGURE_IN_SEARCH_PATTERN = "AC_INIT*"
 REPO_OWNER = "citusdata"
+
+BASE_PATH = pathlib2.Path(__file__).parent.absolute()
+TEMPLATES_PATH = f"{BASE_PATH}/templates"
+
+MULTI_EXT_OUT_TEMPLATE_FILE = "multi_extension_out_prepare_release.tmpl"
+MULTI_EXT_SQL_TEMPLATE_FILE = "multi_extension_sql_prepare_release.tmpl"
 
 
 @dataclass
@@ -37,6 +53,7 @@ class UpdateReleaseReturnValue:
     release_branch_name: str
     upcoming_version_branch: str
     upgrade_path_sql_file: str
+    downgrade_path_sql_file: str
 
 
 @dataclass
@@ -58,6 +75,7 @@ class UpcomingVersionBranchParams:
     configure_in_path: str
     devel_version: str
     distributed_dir_path: str
+    downgrades_dir_path: str
     is_test: bool
     main_branch: str
     multi_extension_out_path: str
@@ -96,7 +114,8 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
     multi_extension_out_path = f"{exec_path}/{MULTI_EXTENSION_OUT}"
     configure_in_path = f"{exec_path}/{CONFIGURE_IN}"
     config_py_path = f"{exec_path}/{CONFIG_PY}"
-    distributed_dir_path = f"{exec_path}/{DISTRIBUTED_DIR_PATH}"
+    distributed_dir_path = f"{exec_path}/{DISTRIBUTED_SQL_DIR_PATH}"
+    downgrades_dir_path = f"{exec_path}/{DOWNGRADES_DIR_PATH}"
 
     project_version_details = get_version_details(project_version)
     default_upcoming_version = get_upcoming_patch_version(project_version)
@@ -110,7 +129,8 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
 
     g = Github(github_token)
     repository = g.get_repo(f"{REPO_OWNER}/{project_name}")
-    newly_created_sql_file = ""
+    upgrade_file = ""
+    downgrade_file = ""
 
     # major release
     if is_major_release(project_version):
@@ -131,12 +151,13 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
                                                     config_py_path=config_py_path,
                                                     configure_in_path=configure_in_path,
                                                     distributed_dir_path=distributed_dir_path,
+                                                    downgrades_dir_path=downgrades_dir_path,
                                                     repository=repository,
                                                     upcoming_minor_version=upcoming_minor_version,
                                                     multi_extension_out_path=multi_extension_out_path,
                                                     multi_extension_sql_path=multi_extension_sql_path)
 
-        newly_created_sql_file = prepare_upcoming_version_branch(branch_params)
+        upgrade_file, downgrade_file = prepare_upcoming_version_branch(branch_params)
         print(f"### Done {project_version} Major release flow executed successfully. ###")
     # patch release
     else:
@@ -149,7 +170,8 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
                                                   release_branch_name=release_branch_name, repository=repository)
         prepare_release_branch_for_patch_release(patch_release_params)
     return UpdateReleaseReturnValue(release_branch_name, upcoming_version_branch,
-                                    f"{DISTRIBUTED_DIR_PATH}/{newly_created_sql_file}")
+                                    f"{DISTRIBUTED_SQL_DIR_PATH}/{upgrade_file}",
+                                    f"{DOWNGRADES_DIR_PATH}/{downgrade_file}")
 
 
 def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleaseParams):
@@ -193,22 +215,28 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
     execute_autoconf_f()
     # update version info with upcoming version on multiextension.out
     update_version_in_multi_extension_out(upcoming_params.multi_extension_out_path, upcoming_params.devel_version)
+    # update detail lines with minor version
+    update_detail_strings_in_multi_extension_out(upcoming_params.multi_extension_out_path,
+                                                 upcoming_params.upcoming_minor_version)
     # get current schema version from citus.control
     current_schema_version = get_current_schema_from_citus_control(upcoming_params.citus_control_file_path)
-    # find current schema version info and update it with upcoming version in multi_extension.sql file
-    update_schema_version_with_upcoming_version_in_multi_extension_file(current_schema_version,
-                                                                        upcoming_params.multi_extension_sql_path,
-                                                                        upcoming_params.upcoming_minor_version,
-                                                                        upcoming_params.upcoming_version)
-    # find current schema version info and update it with upcoming version in multi_extension.out file
-    update_schema_version_with_upcoming_version_in_multi_extension_file(current_schema_version,
-                                                                        upcoming_params.multi_extension_out_path,
-                                                                        upcoming_params.upcoming_minor_version,
-                                                                        upcoming_params.upcoming_version)
+    # add downgrade script in multi_extension.sql file
+    add_downgrade_script_in_multi_extension_file(current_schema_version,
+                                                 upcoming_params.multi_extension_sql_path,
+                                                 upcoming_params.upcoming_minor_version, MULTI_EXT_SQL_TEMPLATE_FILE)
+    # add downgrade script in multi_extension.out file
+    add_downgrade_script_in_multi_extension_file(current_schema_version,
+                                                 upcoming_params.multi_extension_out_path,
+                                                 upcoming_params.upcoming_minor_version, MULTI_EXT_OUT_TEMPLATE_FILE)
     # create a new sql file for upgrade path:
-    newly_created_sql_file = create_new_sql_for_upgrade_path(current_schema_version,
-                                                             upcoming_params.distributed_dir_path,
-                                                             upcoming_params.upcoming_minor_version)
+    upgrade_file = create_new_sql_for_upgrade_path(current_schema_version,
+                                                   upcoming_params.distributed_dir_path,
+                                                   upcoming_params.upcoming_minor_version)
+    # create a new sql file for downgrade path:
+    downgrade_file = create_new_sql_for_downgrade_path(current_schema_version,
+                                                       upcoming_params.downgrades_dir_path,
+                                                       upcoming_params.upcoming_minor_version)
+
     # change version in citus.control file
     update_version_with_upcoming_version_in_citus_control(upcoming_params.citus_control_file_path,
                                                           upcoming_params.upcoming_minor_version)
@@ -222,7 +250,7 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
                                                         upcoming_params.upcoming_version_branch,
                                                         upcoming_params.upcoming_version)
     print(f"### Done {upcoming_params.upcoming_version_branch} flow executed. ###")
-    return newly_created_sql_file
+    return upgrade_file, downgrade_file
 
 
 def prepare_release_branch_for_major_release(majorReleaseParams: MajorReleaseParams):
@@ -277,8 +305,8 @@ def push_branch(upcoming_version_branch):
 def commit_changes_for_version_bump(project_name, project_version):
     current_branch = get_current_branch()
     print(f"### Committing changes for branch {current_branch}... ###")
-
-    run(f' git commit -a -m "Bump {project_name} version to {project_version} "')
+    run("git add .")
+    run(f' git commit  -m "Bump {project_name} version to {project_version} "')
     print(f"### Done Changes committed for {current_branch}. ###")
 
 
@@ -290,17 +318,23 @@ def update_version_with_upcoming_version_in_citus_control(citus_control_file_pat
     print(f"### Done {citus_control_file_path} file is updated with the upcoming version {upcoming_minor_version}. ###")
 
 
-def update_schema_version_with_upcoming_version_in_multi_extension_file(current_schema_version,
-                                                                        multi_extension_sql_path,
-                                                                        upcoming_minor_version, upcoming_version):
-    print(f"### Updating schema version {current_schema_version} on {multi_extension_sql_path} "
-          f"file with the upcoming version {upcoming_version}... ### ")
-    # TODO Append instead of replace may require
-    if not append_line_in_file(multi_extension_sql_path,
-                               f"ALTER EXTENSION citus UPDATE TO '{current_schema_version}'",
-                               f"ALTER EXTENSION citus UPDATE TO '{upcoming_minor_version}-1';"):
-        raise ValueError(f"{multi_extension_sql_path} does not have match for version")
-    print(f"### Done Current schema version updated on {multi_extension_sql_path} to {upcoming_minor_version}. ###")
+def add_downgrade_script_in_multi_extension_file(current_schema_version,
+                                                 multi_extension_out_path,
+                                                 upcoming_minor_version, template_file: str):
+    print(f"### Adding downgrade scripts from version  {current_schema_version} to  "
+          f"{upcoming_minor_version} on {multi_extension_out_path}... ### ")
+    env = get_template_environment(TEMPLATES_PATH)
+    template = env.get_template(
+        template_file)  # multi_extension_out_prepare_release.tmpl multi_extension_sql_prepare_release.tmpl
+    string_to_prepend = (
+        f"{template.render(current_schema_version=current_schema_version, upcoming_minor_version=f'{upcoming_minor_version}-1')}\n")
+
+    if not prepend_line_in_file(multi_extension_out_path,
+                                f"DROP TABLE prev_objects, extension_diff;",
+                                string_to_prepend):
+        raise ValueError(f"Downgrade scripts could not be added in {multi_extension_out_path} since "
+                         f"'DROP TABLE prev_objects, extension_diff;' script could not be found  ")
+    print(f"### Done Test downgrade scripts successfully  added in {multi_extension_out_path}. ###")
 
 
 def get_current_schema_from_citus_control(citus_control_file_path: str) -> str:
@@ -346,6 +380,22 @@ def update_version_in_multi_extension_out(multi_extension_out_path, project_vers
     print(f"### Done {multi_extension_out_path} file is updated with project version {project_version}. ###")
 
 
+def update_detail_strings_in_multi_extension_out(multi_extension_out_path, minor_version):
+    print(f"### Updating {multi_extension_out_path} detail lines file with the project version {minor_version}... ###")
+
+    if not replace_line_in_file(multi_extension_out_path, MULTI_EXT_DETAIL1_PATTERN,
+                                f"{MULTI_EXT_DETAIL_PREFIX}{minor_version}{MULTI_EXT_DETAIL1_SUFFIX}"):
+        raise ValueError(
+            f"{multi_extension_out_path} does not contain the version with pattern {MULTI_EXT_DETAIL1_PATTERN}")
+
+    if not replace_line_in_file(multi_extension_out_path, MULTI_EXT_DETAIL2_PATTERN,
+                                f"{MULTI_EXT_DETAIL_PREFIX}{minor_version}{MULTI_EXT_DETAIL2_SUFFIX}"):
+        raise ValueError(
+            f"{multi_extension_out_path} does not contain the version with pattern {MULTI_EXT_DETAIL2_PATTERN}")
+
+    print(f"### Done {multi_extension_out_path} detail lines updated with project version {minor_version}. ###")
+
+
 def update_version_in_multi_extension_out_for_patch(multi_extension_out_path, project_version):
     print(f"### Updating {multi_extension_out_path} file with the project version {project_version}... ###")
 
@@ -385,14 +435,34 @@ def checkout_branch(branch_name, is_test):
     print(f"### Done {branch_name} checked out and pulled. ###")
 
 
+def upgrade_sql_file_name(current_schema_version, upcoming_minor_version):
+    return f"citus--{current_schema_version}--{upcoming_minor_version}-1.sql"
+
+
 def create_new_sql_for_upgrade_path(current_schema_version, distributed_dir_path,
                                     upcoming_minor_version):
-    newly_created_sql_file = f"citus--{current_schema_version}--{upcoming_minor_version}-1.sql"
-    print(f"### Creating file {newly_created_sql_file}... ###")
+    newly_created_sql_file = upgrade_sql_file_name(current_schema_version, upcoming_minor_version)
+    print(f"### Creating upgrade file {newly_created_sql_file}... ###")
     with open(f"{distributed_dir_path}/{newly_created_sql_file}", "w") as f_writer:
         content = f"/* citus--{current_schema_version}--{upcoming_minor_version}-1 */"
         content = content + "\n\n"
         content = content + f"-- bump version to {upcoming_minor_version}-1" + "\n\n"
+        f_writer.write(content)
+    print(f"### Done {newly_created_sql_file} created. ###")
+    return newly_created_sql_file
+
+
+def create_new_sql_for_downgrade_path(current_schema_version, distributed_dir_path,
+                                      upcoming_minor_version):
+    newly_created_sql_file = f"citus--{upcoming_minor_version}--{current_schema_version}-1.sql"
+    print(f"### Creating downgrade file {newly_created_sql_file}... ###")
+    with open(f"{distributed_dir_path}/{newly_created_sql_file}", "w") as f_writer:
+        content = f"/* citus--{upcoming_minor_version}--{current_schema_version}-1 */"
+        content = content + "\n"
+        content = (
+                content + f"-- this is an empty downgrade path since "
+                          f"{upgrade_sql_file_name(current_schema_version, distributed_dir_path)} "
+                          f"is empty for now" + "\n\n")
         f_writer.write(content)
     print(f"### Done {newly_created_sql_file} created. ###")
     return newly_created_sql_file
@@ -409,6 +479,9 @@ if __name__ == "__main__":
     parser.add_argument('--cherry_pick_enabled', nargs='?', default="True")
     parser.add_argument('--is_test', nargs='?', default="False")
     arguments = parser.parse_args()
+    if not arguments.exec_path:
+        raise ValueError("Exec path should not be empty or null")
+    os.chdir(arguments.exec_path)
 
     update_release(github_token=arguments.gh_token, project_name=arguments.prj_name, project_version=arguments.prj_ver,
                    main_branch=arguments.main_branch,

@@ -24,6 +24,10 @@ def initialize_env():
 def test_major_release():
     initialize_env()
     os.chdir(TEST_CHECKOUT_DIR)
+
+    previous_print_extension_changes = count_line_in_file(TEST_BASE_PATH, MULTI_EXTENSION_OUT,
+                                                          "SELECT * FROM print_extension_changes();")
+
     try:
         update_release_return_value = update_release(
             github_token=github_token, project_name="citus", project_version="10.2.0", main_branch=MAIN_BRANCH,
@@ -46,12 +50,19 @@ def test_major_release():
 
         assert file_includes_line(TEST_BASE_PATH, CITUS_CONTROL, "default_version = '10.2-1'")
         assert file_includes_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT,
-                                  "ALTER EXTENSION citus UPDATE TO '10.1-1';")
+                                  "-- Test downgrade to 10.1-1 from 10.2-1")
         assert file_includes_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT,
-                                  "ALTER EXTENSION citus UPDATE TO '10.2-1';")
+                                  "ALTER EXTENSION citus UPDATE TO '10.1-1';")
+        assert count_line_in_file(TEST_BASE_PATH, MULTI_EXTENSION_OUT,
+                                  "ALTER EXTENSION citus UPDATE TO '10.2-1';") == 2
+        assert file_includes_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT,
+                                  "-- Should be empty result since upgrade+downgrade should be a no-op")
+        assert count_line_in_file(TEST_BASE_PATH, MULTI_EXTENSION_OUT,
+                                  "SELECT * FROM print_extension_changes();") - previous_print_extension_changes == 2
+        assert file_includes_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT,
+                                  "-- Snapshot of state at 10.2-1")
         assert file_includes_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT, " 10.2devel")
-        assert file_includes_line(TEST_BASE_PATH, MULTI_EXTENSION_SQL,
-                                  "ALTER EXTENSION citus UPDATE TO '10.2-1';")
+
         assert count_line_in_file(TEST_BASE_PATH, MULTI_EXTENSION_SQL,
                                   "ALTER EXTENSION citus UPDATE TO '10.2-1';") == 2
         assert file_includes_line(TEST_BASE_PATH, CONFIG_PY, "MASTER_VERSION = '10.2'")
@@ -64,9 +75,11 @@ def test_major_release():
                                   '     short | recursive ) echo "Configuration of Citus 10.2devel:";;')
         assert file_includes_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2devel'")
         assert os.path.exists(f"{TEST_BASE_PATH}/{update_release_return_value.upgrade_path_sql_file}")
+        assert os.path.exists(f"{TEST_BASE_PATH}/{update_release_return_value.downgrade_path_sql_file}")
         run(f"git checkout {MAIN_BRANCH}")
     finally:
         clear_env()
+        print("test")
 
 
 def test_patch_release():

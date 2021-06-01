@@ -176,20 +176,41 @@ def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
         file_content = reader.read()
         lines = file_content.splitlines()
         has_match = False
-        appended_lines = lines.copy()
+        copy_lines = lines.copy()
         appended_line_index = 0
         for line_number, line in enumerate(lines):
             if re.match(match_regex, line.strip()):
                 has_match = True
 
                 if line_number + 1 < len(lines):
-                    appended_lines[appended_line_index + 1] = append_str
+                    copy_lines[appended_line_index + 1] = append_str
                     lines_to_be_shifted = lines[line_number + 1:]
-                    appended_lines.extend(lines_to_be_shifted)
+                    copy_lines = copy_lines[0:appended_line_index + 2] + lines_to_be_shifted
                 else:
-                    appended_lines.append(append_str)
+                    copy_lines.append(append_str)
             appended_line_index = appended_line_index + 1
-        edited_content = str_array_to_str(appended_lines)
+        edited_content = str_array_to_str(copy_lines)
+    with open(file, "w") as writer:
+        writer.write(edited_content)
+
+    return has_match
+
+
+def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
+    with open(file, "r+") as reader:
+        file_content = reader.read()
+        lines = file_content.splitlines()
+        has_match = False
+        copy_lines = lines.copy()
+        prepended_line_index = 0
+        for line_number, line in enumerate(lines):
+            if re.match(match_regex, line.strip()):
+                has_match = True
+                copy_lines[prepended_line_index] = append_str
+                lines_to_be_shifted = lines[line_number:]
+                copy_lines = copy_lines[0:prepended_line_index + 1] + lines_to_be_shifted
+            prepended_line_index = prepended_line_index + 1
+        edited_content = str_array_to_str(copy_lines)
     with open(file, "w") as writer:
         writer.write(edited_content)
 
@@ -199,3 +220,9 @@ def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
 def get_current_branch() -> str:
     repo = Repo(BASE_GIT_PATH)
     return repo.active_branch
+
+
+def get_template_environment(template_dir: str) -> Environment:
+    file_loader = FileSystemLoader(template_dir)
+    env = Environment(loader=file_loader)
+    return env

@@ -1,17 +1,16 @@
 import argparse
 import re
-from datetime import date, datetime
+from dataclasses import dataclass
+from datetime import datetime
 
 import pathlib2
 import string_utils
 from github import Github
-from jinja2 import Environment, FileSystemLoader
 from parameters_validation import (no_whitespaces, non_blank, non_empty, non_negative, validate_parameters,
                                    parameter_validation)
-from dataclasses import dataclass
 
 from .common_tool_methods import (find_nth_matching_line_and_line_number, find_nth_occurrence_position,
-                                  get_project_version_from_tag_name)
+                                  get_project_version_from_tag_name, get_template_environment)
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
@@ -93,12 +92,6 @@ class PackagePropertiesParams:
 
 def spec_file_name(project_name: str) -> str:
     return f"{project_name}.spec"
-
-
-def get_template_environment(template_dir: str) -> Environment:
-    file_loader = FileSystemLoader(template_dir)
-    env = Environment(loader=file_loader)
-    return env
 
 
 def get_last_changelog_content(all_changelog_content: str) -> str:

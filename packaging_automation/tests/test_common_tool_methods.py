@@ -11,7 +11,7 @@ from ..common_tool_methods import (
     str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
     replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
-    get_patch_version_regex, append_line_in_file)
+    get_patch_version_regex, append_line_in_file, prepend_line_in_file)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -88,24 +88,56 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         self.assertEqual("10\.0\.\d{1,3}", get_patch_version_regex("10.0.3"))
 
     def test_append_line_in_file(self):
+        test_file = "test_append.txt"
         try:
-            with open("test_append.txt", "a") as writer:
+            with open(test_file, "a") as writer:
                 writer.write("Test line 1\n")
                 writer.write("Test line 2\n")
-            append_line_in_file("test_append.txt", "^Test line 1", "Test line 1.5")
-            append_line_in_file("test_append.txt", "^Test line 2", "Test line 2.5")
+                writer.write("Test line 3\n")
+                writer.write("Test line 4\n")
+                writer.write("Test line 5\n")
+                writer.write("Test line 6\n")
+                writer.write("Test line 7\n")
+                writer.write("Test line 8\n")
+            append_line_in_file(test_file, "^Test line 1", "Test line 1.5")
+            append_line_in_file(test_file, "^Test line 2", "Test line 2.5")
+            append_line_in_file(test_file, "^Test line 5", "Test line 5.5")
 
-            with open("test_append.txt", "r") as reader:
-                line1 = reader.readline()
-                line2 = reader.readline()
-                line3 = reader.readline()
-                line4 = reader.readline()
-                self.assertEqual(line1, "Test line 1\n")
-                self.assertEqual(line2, "Test line 1.5\n")
-                self.assertEqual(line3, "Test line 2\n")
-                self.assertEqual(line4, "Test line 2.5\n")
+            with open(test_file, "r") as reader:
+                lines = reader.readlines()
+                self.assertEqual(11, len(lines))
+                self.assertEqual(lines[0], "Test line 1\n")
+                self.assertEqual(lines[1], "Test line 1.5\n")
+                self.assertEqual(lines[2], "Test line 2\n")
+                self.assertEqual(lines[3], "Test line 2.5\n")
         finally:
-            os.remove("test_append.txt")
+            os.remove(test_file)
+
+    def test_prepend_line_in_file(self):
+        test_file = "test_prepend.txt"
+        try:
+            with open(test_file, "a") as writer:
+                writer.write("Test line 1\n")
+                writer.write("Test line 2\n")
+                writer.write("Test line 3\n")
+                writer.write("Test line 4\n")
+                writer.write("Test line 5\n")
+                writer.write("Test line 6\n")
+                writer.write("Test line 7\n")
+                writer.write("Test line 8\n")
+            prepend_line_in_file(test_file, "^Test line 1", "Test line 0.5")
+            prepend_line_in_file(test_file, "^Test line 2", "Test line 1.5")
+            prepend_line_in_file(test_file, "^Test line 5", "Test line 4.5")
+
+            with open(test_file, "r") as reader:
+                lines = reader.readlines()
+                self.assertEqual(11, len(lines))
+                self.assertEqual(lines[0], "Test line 0.5\n")
+                self.assertEqual(lines[1], "Test line 1\n")
+                self.assertEqual(lines[2], "Test line 1.5\n")
+                self.assertEqual(lines[3], "Test line 2\n")
+        finally:
+            os.remove(test_file)
 
 
 if __name__ == '__main__':
