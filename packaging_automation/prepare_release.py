@@ -319,7 +319,7 @@ def push_branch(upcoming_version_branch):
 
 
 def commit_changes_for_version_bump(project_name, project_version):
-    current_branch = get_current_branch()
+    current_branch = get_current_branch(os.getcwd())
     print(f"### Committing changes for branch {current_branch}... ###")
     run("git add .")
     run(f' git commit  -m "Bump {project_name} version to {project_version} "')
@@ -438,7 +438,7 @@ def update_version_in_configure_in(configure_in_path, project_version):
 
 
 def create_and_checkout_branch(release_branch_name):
-    print(f"### Creating release branch with name {release_branch_name} from {get_current_branch()}... ###")
+    print(f"### Creating release branch with name {release_branch_name} from {get_current_branch(os.getcwd())}... ###")
     run(f'git checkout -b {release_branch_name}')
     print(f"### Done {release_branch_name} created. ###")
 
@@ -488,14 +488,16 @@ def create_new_sql_for_downgrade_path(current_schema_version, distributed_dir_pa
 CHECKOUT_DIR = "citus_temp"
 
 
-def remove_cloned_code():
-    if os.path.exists(f"../{CHECKOUT_DIR}"):
+def remove_cloned_code(exec_path: str):
+    if os.path.exists(f"{exec_path}"):
+        print("Deleting cloned code ...")
         os.chdir("..")
-        run(f"sudo rm -rf {CHECKOUT_DIR}")
+        run(f"sudo rm -rf {os.path.basename(exec_path)}")
+        print("Done. Code deleted successfully.")
 
 
-def initialize_env():
-    remove_cloned_code()
+def initialize_env(exec_path: str):
+    remove_cloned_code(exec_path)
     if not os.path.exists(CHECKOUT_DIR):
         run(f"git clone https://github.com/citusdata/citus.git {CHECKOUT_DIR}")
 
@@ -513,22 +515,23 @@ if __name__ == "__main__":
     parser.add_argument('--schema_version', nargs='?')
     arguments = parser.parse_args()
     is_test = False
+    execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
     try:
-        initialize_env()
-        execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
+        initialize_env(execution_path)
         major_release = is_major_release(arguments.prj_ver)
-
+        is_cherry_pick_enabled = arguments.cherry_pick_enabled.lower() == "true"
         if not arguments.prj_ver and major_release and arguments.cherry_pick_enabled.lower() == "true":
             raise ValueError("Cherry-Pick could be enabled only for patch release")
         elif not major_release and arguments.cherry_pick_enabled.lower() == "true" \
                 and not arguments.earliest_pr_date:
             raise ValueError(
                 "Earliest PR date parameter should not be empty when cherry pick is enabled and release is major.")
-        earliest_pr_date = None if major_release else datetime.strptime(arguments.earliest_pr_date,
-                                                                        '%Y.%m.%d %H:%M:%S %z')
+        earliest_pr_date = None if major_release or not is_cherry_pick_enabled else datetime.strptime(
+            arguments.earliest_pr_date,
+            '%Y.%m.%d %H:%M:%S %z')
 
         os.chdir(execution_path)
-
+        print(f"Executing in path {execution_path}")
         is_test = arguments.is_test.lower() == "true"
 
         update_release(github_token=arguments.gh_token, project_name=arguments.prj_name,
@@ -536,8 +539,9 @@ if __name__ == "__main__":
                        main_branch=arguments.main_branch,
                        earliest_pr_date=earliest_pr_date,
                        is_test=is_test,
-                       cherry_pick_enabled=arguments.cherry_pick_enabled.lower() == "true", exec_path=execution_path,
+                       cherry_pick_enabled=is_cherry_pick_enabled, exec_path=execution_path,
                        schema_version=arguments.schema_version)
     finally:
         if not is_test:
-            remove_cloned_code()
+            remove_cloned_code(execution_path)
+            print("waiting")

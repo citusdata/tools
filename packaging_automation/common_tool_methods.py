@@ -217,8 +217,8 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
     return has_match
 
 
-def get_current_branch() -> str:
-    repo = Repo(BASE_GIT_PATH)
+def get_current_branch(working_dir: str) -> str:
+    repo = Repo(working_dir)
     return repo.active_branch
 
 

@@ -82,7 +82,7 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         self.assertEqual(4746, prs_backlog[0].number)
 
     def test_does_branch_exist(self):
-        current_branch_name = get_current_branch()
+        current_branch_name = get_current_branch(os.getcwd())
         self.assertTrue(does_branch_exist("develop"))
         self.assertFalse(does_branch_exist("develop2"))
         try:
