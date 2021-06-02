@@ -12,7 +12,8 @@ from .common_tool_methods import (get_version_details, get_upcoming_patch_versio
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
                                   find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,
-                                  append_line_in_file, prepend_line_in_file, get_template_environment)
+                                  append_line_in_file, prepend_line_in_file, get_template_environment,
+                                  does_branch_exist)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -95,10 +96,12 @@ class PatchReleaseParams:
     earliest_pr_date: datetime
     is_test: bool
     main_branch: str
+    citus_control_file_path: str
     multi_extension_out_path: str
     project_name: str
     project_version: str
     release_branch_name: str
+    schema_version: str
     repository: Repository
 
 
@@ -107,8 +110,8 @@ BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 
 def update_release(github_token: non_blank(non_empty(str)), project_name: non_blank(non_empty(str)),
                    project_version: is_version(str), main_branch: non_blank(non_empty(str)),
-                   earliest_pr_date: datetime, exec_path: non_blank(non_empty(str)), is_test: bool = False,
-                   cherry_pick_enabled: bool = False) -> UpdateReleaseReturnValue:
+                   earliest_pr_date: datetime, exec_path: non_blank(non_empty(str)), schema_version: str = "",
+                   is_test: bool = False, cherry_pick_enabled: bool = False) -> UpdateReleaseReturnValue:
     multi_extension_sql_path = f"{exec_path}/{MULTI_EXTENSION_SQL}"
     citus_control_file_path = f"{exec_path}/{CITUS_CONTROL}"
     multi_extension_out_path = f"{exec_path}/{MULTI_EXTENSION_OUT}"
@@ -167,6 +170,8 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
                                                   main_branch=main_branch,
                                                   multi_extension_out_path=multi_extension_out_path,
                                                   project_name=project_name, project_version=project_version,
+                                                  schema_version=schema_version,
+                                                  citus_control_file_path=citus_control_file_path,
                                                   release_branch_name=release_branch_name, repository=repository)
         prepare_release_branch_for_patch_release(patch_release_params)
     return UpdateReleaseReturnValue(release_branch_name, upcoming_version_branch,
@@ -176,8 +181,14 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
 
 def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleaseParams):
     print(f"### {patchReleaseParams.project_version} is a patch release. Executing Patch release flow... ###")
-    # checkout release branch (release-X.Y)
-    checkout_branch(patchReleaseParams.release_branch_name, patchReleaseParams.is_test)
+    # checkout release branch (release-X.Y) In test case release branch for test may not be exist.
+    # In this case create one
+    if patchReleaseParams.is_test:
+        non_test_release_branch = patchReleaseParams.release_branch_name.rstrip("-test")
+        run(f"git checkout {non_test_release_branch}")
+        run(f"git checkout -b {patchReleaseParams.release_branch_name}")
+    else:
+        checkout_branch(patchReleaseParams.release_branch_name, patchReleaseParams.is_test)
     # change version info in configure.in file
     update_version_in_configure_in(patchReleaseParams.configure_in_path, patchReleaseParams.project_version)
     # execute "auto-conf "
@@ -185,6 +196,10 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
     # change version info in multi_extension.out
     update_version_in_multi_extension_out_for_patch(patchReleaseParams.multi_extension_out_path,
                                                     patchReleaseParams.project_version)
+    # if schema version is not empty update citus.control schema version
+    if patchReleaseParams.schema_version:
+        update_schema_version_in_citus_control(citus_control_file_path=patchReleaseParams.citus_control_file_path,
+                                               schema_version=patchReleaseParams.schema_version)
     if patchReleaseParams.cherry_pick_enabled:
         # cherry-pick the pr's with backport labels
         cherrypick_prs_with_backport_labels(patchReleaseParams.earliest_pr_date, patchReleaseParams.main_branch,
@@ -238,8 +253,9 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
                                                        upcoming_params.upcoming_minor_version)
 
     # change version in citus.control file
-    update_version_with_upcoming_version_in_citus_control(upcoming_params.citus_control_file_path,
-                                                          upcoming_params.upcoming_minor_version)
+    default_upcoming_schema_version = f"{upcoming_params.upcoming_minor_version}-1"
+    update_schema_version_in_citus_control(upcoming_params.citus_control_file_path,
+                                           default_upcoming_schema_version)
     # commit and push changes on master-update-version-$curtime branch
     commit_changes_for_version_bump(upcoming_params.project_name, upcoming_params.project_version)
     if not upcoming_params.is_test:
@@ -310,12 +326,12 @@ def commit_changes_for_version_bump(project_name, project_version):
     print(f"### Done Changes committed for {current_branch}. ###")
 
 
-def update_version_with_upcoming_version_in_citus_control(citus_control_file_path, upcoming_minor_version):
-    print(f"### Updating {citus_control_file_path} file with the upcoming version {upcoming_minor_version}... ###")
+def update_schema_version_in_citus_control(citus_control_file_path, schema_version):
+    print(f"### Updating {citus_control_file_path} file with the  version {schema_version}... ###")
     if not replace_line_in_file(citus_control_file_path, CITUS_CONTROL_SEARCH_PATTERN,
-                                f"default_version = '{upcoming_minor_version}-1'"):
+                                f"default_version = '{schema_version}'"):
         raise ValueError(f"{citus_control_file_path} does not have match for version")
-    print(f"### Done {citus_control_file_path} file is updated with the upcoming version {upcoming_minor_version}. ###")
+    print(f"### Done {citus_control_file_path} file is updated with the schema version {schema_version}. ###")
 
 
 def add_downgrade_script_in_multi_extension_file(current_schema_version,
@@ -432,6 +448,7 @@ def checkout_branch(branch_name, is_test):
     run(f"git checkout {branch_name}")
     if not is_test:
         run(f"git pull")
+
     print(f"### Done {branch_name} checked out and pulled. ###")
 
 
@@ -468,6 +485,21 @@ def create_new_sql_for_downgrade_path(current_schema_version, distributed_dir_pa
     return newly_created_sql_file
 
 
+CHECKOUT_DIR = "citus_temp"
+
+
+def remove_cloned_code():
+    if os.path.exists(f"../{CHECKOUT_DIR}"):
+        os.chdir("..")
+        run(f"sudo rm -rf {CHECKOUT_DIR}")
+
+
+def initialize_env():
+    remove_cloned_code()
+    if not os.path.exists(CHECKOUT_DIR):
+        run(f"git clone https://github.com/citusdata/citus.git {CHECKOUT_DIR}")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token')
@@ -476,15 +508,36 @@ if __name__ == "__main__":
     parser.add_argument('--main_branch')
     parser.add_argument('--earliest_pr_date')
     parser.add_argument('--exec_path')
-    parser.add_argument('--cherry_pick_enabled', nargs='?', default="True")
+    parser.add_argument('--cherry_pick_enabled', nargs='?', default="False")
     parser.add_argument('--is_test', nargs='?', default="False")
+    parser.add_argument('--schema_version', nargs='?')
     arguments = parser.parse_args()
-    if not arguments.exec_path:
-        raise ValueError("Exec path should not be empty or null")
-    os.chdir(arguments.exec_path)
+    is_test = False
+    try:
+        initialize_env()
+        execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
+        major_release = is_major_release(arguments.prj_ver)
 
-    update_release(github_token=arguments.gh_token, project_name=arguments.prj_name, project_version=arguments.prj_ver,
-                   main_branch=arguments.main_branch,
-                   earliest_pr_date=datetime.strptime(arguments.earliest_pr_date, '%Y.%m.%d %H:%M:%S %z'),
-                   is_test=arguments.is_test.lower() == "true",
-                   cherry_pick_enabled=arguments.cherry_pick_enabled.lower() == "true", exec_path=arguments.exec_path)
+        if not arguments.prj_ver and major_release and arguments.cherry_pick_enabled.lower() == "true":
+            raise ValueError("Cherry-Pick could be enabled only for patch release")
+        elif not major_release and arguments.cherry_pick_enabled.lower() == "true" \
+                and not arguments.earliest_pr_date:
+            raise ValueError(
+                "Earliest PR date parameter should not be empty when cherry pick is enabled and release is major.")
+        earliest_pr_date = None if major_release else datetime.strptime(arguments.earliest_pr_date,
+                                                                        '%Y.%m.%d %H:%M:%S %z')
+
+        os.chdir(execution_path)
+
+        is_test = arguments.is_test.lower() == "true"
+
+        update_release(github_token=arguments.gh_token, project_name=arguments.prj_name,
+                       project_version=arguments.prj_ver,
+                       main_branch=arguments.main_branch,
+                       earliest_pr_date=earliest_pr_date,
+                       is_test=is_test,
+                       cherry_pick_enabled=arguments.cherry_pick_enabled.lower() == "true", exec_path=execution_path,
+                       schema_version=arguments.schema_version)
+    finally:
+        if not is_test:
+            remove_cloned_code()

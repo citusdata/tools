@@ -11,7 +11,7 @@ from ..common_tool_methods import (
     str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
     replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
-    get_patch_version_regex, append_line_in_file, prepend_line_in_file)
+    get_patch_version_regex, append_line_in_file, prepend_line_in_file, does_branch_exist, get_current_branch)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -80,6 +80,19 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         prs_backlog = filter_prs_by_label(prs, "backport")
         self.assertEqual(1, len(prs_backlog))
         self.assertEqual(4746, prs_backlog[0].number)
+
+    def test_does_branch_exist(self):
+        current_branch_name = get_current_branch()
+        self.assertTrue(does_branch_exist("develop"))
+        self.assertFalse(does_branch_exist("develop2"))
+        try:
+            run("git checkout -b develop-test")
+            self.assertTrue(does_branch_exist("develop-test"))
+            run(f"git checkout {current_branch_name} ")
+        finally:
+            run(f"git branch -D develop-test ")
+
+        self.assertFalse(does_branch_exist("develop_test"))
 
     def test_get_minor_version(self):
         self.assertEqual("10.0", get_minor_version("10.0.3"))

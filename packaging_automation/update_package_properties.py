@@ -24,7 +24,7 @@ def is_version(version: str):
         raise ValueError("version should be non-empty and should not be None")
     if not re.match(r"\d+\.\d+\.\d+$", version):
         raise ValueError(
-            "version should include 3 levels of versions consists of numbers  separated with dots. e.g: 10.0.1")
+            "version should include 3 levels giof versions consists of numbers  separated with dots. e.g: 10.0.1")
 
 
 @parameter_validation

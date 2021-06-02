@@ -222,6 +222,11 @@ def get_current_branch() -> str:
     return repo.active_branch
 
 
+def does_branch_exist(branch_name: str) -> bool:
+    repo = Repo(BASE_GIT_PATH)
+    return branch_name in repo.references
+
+
 def get_template_environment(template_dir: str) -> Environment:
     file_loader = FileSystemLoader(template_dir)
     env = Environment(loader=file_loader)

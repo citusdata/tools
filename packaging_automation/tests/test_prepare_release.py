@@ -96,7 +96,7 @@ def test_patch_release():
             github_token=github_token, project_name="citus", project_version="10.2.1",
             main_branch=MAIN_BRANCH,
             earliest_pr_date=datetime.strptime('2021.03.25 00:00', '%Y.%m.%d %H:%M'),
-            exec_path=TEST_BASE_PATH, is_test=True)
+            exec_path=TEST_BASE_PATH, is_test=True,schema_version="10.2-2")
         assert file_includes_line(TEST_BASE_PATH, MULTI_EXTENSION_OUT, " 10.2.1")
         assert file_includes_line(TEST_BASE_PATH, CONFIGURE_IN, "AC_INIT([Citus], [10.2.1])")
         assert file_includes_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2.1'")
@@ -106,6 +106,7 @@ def test_patch_release():
         assert file_includes_line(TEST_BASE_PATH, CONFIGURE,
                                   '     short | recursive ) echo "Configuration of Citus 10.2.1:";;')
         assert file_includes_line(TEST_BASE_PATH, CONFIGURE, "PACKAGE_VERSION='10.2.1'")
+        assert file_includes_line(TEST_BASE_PATH, CITUS_CONTROL, "default_version = '10.2-2'")
         run(f"git checkout {MAIN_BRANCH}")
 
     finally:
