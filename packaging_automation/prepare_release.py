@@ -544,4 +544,3 @@ if __name__ == "__main__":
     finally:
         if not is_test:
             remove_cloned_code(execution_path)
-            print("waiting")
