@@ -540,14 +540,16 @@ if __name__ == "__main__":
     parser.add_argument('--prj_ver', required=True)
     parser.add_argument('--main_branch')
     parser.add_argument('--earliest_pr_date')
-    parser.add_argument('--cherry_pick_enabled', nargs='?', default="False")
-    parser.add_argument('--is_test', nargs='?', default="True")
+    parser.add_argument('--cherry_pick_enabled', action="store_true")
+    parser.add_argument('--is_test', action="store_true")
     parser.add_argument('--schema_version', nargs='?')
     arguments = parser.parse_args()
     is_test = False
     execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
     major_release = is_major_release(arguments.prj_ver)
+    print("Cherry pick enabled: " + str(arguments.cherry_pick_enabled))
     validate_parameters(major_release)
+
     try:
         initialize_env(execution_path, arguments.repo)
 
