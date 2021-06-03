@@ -3,6 +3,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 import argparse
+from enum import Enum
 
 import pathlib2
 from github import Github, Repository
@@ -12,8 +13,7 @@ from .common_tool_methods import (get_version_details, get_upcoming_patch_versio
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
                                   find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,
-                                  append_line_in_file, prepend_line_in_file, get_template_environment,
-                                  does_branch_exist)
+                                  prepend_line_in_file, get_template_environment)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -47,6 +47,14 @@ TEMPLATES_PATH = f"{BASE_PATH}/templates"
 
 MULTI_EXT_OUT_TEMPLATE_FILE = "multi_extension_out_prepare_release.tmpl"
 MULTI_EXT_SQL_TEMPLATE_FILE = "multi_extension_sql_prepare_release.tmpl"
+
+
+class SupportedGithubRepos(Enum):
+    CITUS = 1
+    CITUS_ENTERPRISE = 2
+
+
+default_project_branches = {"citus": "master", "citus-enterprise": "enterprise-master"}
 
 
 @dataclass
@@ -471,15 +479,15 @@ def create_new_sql_for_upgrade_path(current_schema_version, distributed_dir_path
 
 def create_new_sql_for_downgrade_path(current_schema_version, distributed_dir_path,
                                       upcoming_minor_version):
-    newly_created_sql_file = f"citus--{upcoming_minor_version}--{current_schema_version}-1.sql"
+    newly_created_sql_file = f"citus--{upcoming_minor_version}-1--{current_schema_version}.sql"
     print(f"### Creating downgrade file {newly_created_sql_file}... ###")
     with open(f"{distributed_dir_path}/{newly_created_sql_file}", "w") as f_writer:
-        content = f"/* citus--{upcoming_minor_version}--{current_schema_version}-1 */"
+        content = f"/* citus--{upcoming_minor_version}-1--{current_schema_version} */"
         content = content + "\n"
         content = (
                 content + f"-- this is an empty downgrade path since "
-                          f"{upgrade_sql_file_name(current_schema_version, distributed_dir_path)} "
-                          f"is empty for now" + "\n\n")
+                          f"{upgrade_sql_file_name(current_schema_version, upcoming_minor_version)} "
+                          f"is empty for now" + "\n")
         f_writer.write(content)
     print(f"### Done {newly_created_sql_file} created. ###")
     return newly_created_sql_file
@@ -490,53 +498,68 @@ CHECKOUT_DIR = "citus_temp"
 
 def remove_cloned_code(exec_path: str):
     if os.path.exists(f"{exec_path}"):
-        print("Deleting cloned code ...")
-        os.chdir("..")
-        run(f"sudo rm -rf {os.path.basename(exec_path)}")
+        print(f"Deleting cloned code {exec_path} ...")
+        # https://stackoverflow.com/questions/51819472/git-cant-delete-local-branch-operation-not-permitted
+        # https://askubuntu.com/questions/1049142/cannot-delete-git-directory
+        # since git directory is readonly first we need to give write permission to delete git directory
+        run(f"chmod -R 777 {exec_path}/.git")
+        run(f"sudo rm -rf {exec_path}")
         print("Done. Code deleted successfully.")
 
 
-def initialize_env(exec_path: str):
+def initialize_env(exec_path: str, repo_name: str):
     remove_cloned_code(exec_path)
     if not os.path.exists(CHECKOUT_DIR):
-        run(f"git clone https://github.com/citusdata/citus.git {CHECKOUT_DIR}")
+        run(f"git clone https://github.com/citusdata/{repo_name}.git {CHECKOUT_DIR}")
+
+
+def validate_parameters(major_release_flag: bool):
+    if major_release_flag and arguments.cherry_pick_enabled.lower() == "true":
+        raise ValueError("Cherry pick could be enabled only for patch release")
+
+    if major_release_flag and arguments.earliest_pr_date:
+        raise ValueError("earliest_pr_date could not be used for major releases")
+
+    if major_release_flag and arguments.schema_version:
+        raise ValueError("schema_version could not be set for major releases")
+
+    if not major_release_flag and arguments.cherry_pick_enabled.lower() == "true" \
+            and not arguments.earliest_pr_date:
+        raise ValueError(
+            "earliest_pr_date parameter could  not be empty when cherry pick is enabled and release is major.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gh_token')
-    parser.add_argument('--prj_name')
-    parser.add_argument('--prj_ver')
+    parser.add_argument('--gh_token', required=True)
+    parser.add_argument('--repo', choices=["citus", "citus-enterprise"], required=True)
+    parser.add_argument('--prj_name', required=True)
+    parser.add_argument('--prj_ver', required=True)
     parser.add_argument('--main_branch')
     parser.add_argument('--earliest_pr_date')
-    parser.add_argument('--exec_path')
     parser.add_argument('--cherry_pick_enabled', nargs='?', default="False")
-    parser.add_argument('--is_test', nargs='?', default="False")
+    parser.add_argument('--is_test', nargs='?', default="True")
     parser.add_argument('--schema_version', nargs='?')
     arguments = parser.parse_args()
     is_test = False
     execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
+    major_release = is_major_release(arguments.prj_ver)
+    validate_parameters(major_release)
     try:
-        initialize_env(execution_path)
-        major_release = is_major_release(arguments.prj_ver)
-        is_cherry_pick_enabled = arguments.cherry_pick_enabled.lower() == "true"
-        if not arguments.prj_ver and major_release and arguments.cherry_pick_enabled.lower() == "true":
-            raise ValueError("Cherry-Pick could be enabled only for patch release")
-        elif not major_release and arguments.cherry_pick_enabled.lower() == "true" \
-                and not arguments.earliest_pr_date:
-            raise ValueError(
-                "Earliest PR date parameter should not be empty when cherry pick is enabled and release is major.")
-        earliest_pr_date = None if major_release or not is_cherry_pick_enabled else datetime.strptime(
-            arguments.earliest_pr_date,
-            '%Y.%m.%d %H:%M:%S %z')
+        initialize_env(execution_path, arguments.repo)
 
+        is_cherry_pick_enabled = arguments.cherry_pick_enabled.lower() == "true"
+        main_branch = arguments.main_branch if arguments.main_branch else default_project_branches[arguments.repo]
+        print(f"Using main branch {main_branch} for the repo {arguments.repo}.")
         os.chdir(execution_path)
         print(f"Executing in path {execution_path}")
         is_test = arguments.is_test.lower() == "true"
-
+        earliest_pr_date = None if major_release or not is_cherry_pick_enabled else datetime.strptime(
+            arguments.earliest_pr_date,
+            '%Y.%m.%d')
         update_release(github_token=arguments.gh_token, project_name=arguments.prj_name,
                        project_version=arguments.prj_ver,
-                       main_branch=arguments.main_branch,
+                       main_branch=main_branch,
                        earliest_pr_date=earliest_pr_date,
                        is_test=is_test,
                        cherry_pick_enabled=is_cherry_pick_enabled, exec_path=execution_path,
