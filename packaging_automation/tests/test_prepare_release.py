@@ -83,7 +83,6 @@ def test_major_release():
 
 
 def test_patch_release():
-    print(os.getcwd())
     initialize_env()
     os.chdir(TEST_CHECKOUT_DIR)
     try:

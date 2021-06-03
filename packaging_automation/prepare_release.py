@@ -13,7 +13,7 @@ from .common_tool_methods import (get_version_details, get_upcoming_patch_versio
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
                                   find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,
-                                  prepend_line_in_file, get_template_environment)
+                                  does_branch_exist, prepend_line_in_file, get_template_environment)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -193,8 +193,11 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
     # In this case create one
     if patchReleaseParams.is_test:
         non_test_release_branch = patchReleaseParams.release_branch_name.rstrip("-test")
-        run(f"git checkout {non_test_release_branch}")
-        run(f"git checkout -b {patchReleaseParams.release_branch_name}")
+        if does_branch_exist(non_test_release_branch):
+            run(f"git checkout {non_test_release_branch}")
+            run(f"git checkout -b {patchReleaseParams.release_branch_name}")
+        else:
+            run(f"git checkout  {patchReleaseParams.release_branch_name}")
     else:
         checkout_branch(patchReleaseParams.release_branch_name, patchReleaseParams.is_test)
     # change version info in configure.in file
