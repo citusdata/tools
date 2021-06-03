@@ -547,7 +547,6 @@ if __name__ == "__main__":
     is_test = False
     execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
     major_release = is_major_release(arguments.prj_ver)
-    print("Cherry pick enabled: " + str(arguments.cherry_pick_enabled))
     validate_parameters(major_release)
 
     try:
