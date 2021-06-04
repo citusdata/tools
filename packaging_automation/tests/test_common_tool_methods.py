@@ -77,7 +77,7 @@ def test_does_local_branch_exist():
     current_branch_name = get_current_branch(os.getcwd())
     branch_name = "develop-local-test"
     assert does_remote_branch_exist("develop", os.getcwd())
-    assert does_remote_branch_exist("develop2", os.getcwd())
+    assert not does_remote_branch_exist("develop2", os.getcwd())
     try:
         run(f"git checkout -b {branch_name}")
         assert does_local_branch_exist(branch_name, os.getcwd())
