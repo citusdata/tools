@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Dict, List
 from enum import Enum
 import gnupg
-from github import Repository, PullRequest
+from github import Repository, PullRequest,Commit
 from jinja2 import Environment, FileSystemLoader
 import pathlib2
 from git import Repo
