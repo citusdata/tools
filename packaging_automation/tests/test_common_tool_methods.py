@@ -102,14 +102,20 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         current_branch_name = get_current_branch(os.getcwd())
         branch_name = "develop-remote-test"
         try:
+            try:
+                run(f"git branch -D {branch_name}")
+            except:
+                print(f"{branch_name} already deleted ")
             run(f"git checkout develop")
             run(f"git checkout -b {branch_name}")
             run(f"git push --set-upstream origin {branch_name}")
+            run(f"git checkout develop")
+            run(f"git branch -D {branch_name}")
             self.assertTrue(does_remote_branch_exist(branch_name, os.getcwd()))
             self.assertFalse(does_remote_branch_exist(f"{branch_name}{uuid.uuid4()}", os.getcwd()))
         finally:
             run(f"git checkout {current_branch_name} ")
-            run(f"git branch -D {branch_name}")
+            # run(f"git branch -D {branch_name}")
             run(f"git push origin --delete {branch_name}")
 
     def test_get_minor_version(self):
