@@ -10,7 +10,7 @@ github_token = os.getenv("GH_TOKEN")
 
 BASE_PATH = pathlib2.Path(__file__).parents[2] if os.getenv("BASE_PATH") is None else os.getenv("BASE_PATH")
 
-MAIN_BRANCH = "test-tools-scripts"
+MAIN_BRANCH = "enterprise-master"
 TEST_CHECKOUT_DIR = "citus_test"
 TEST_BASE_PATH = f"{BASE_PATH}/{TEST_CHECKOUT_DIR}"
 
@@ -18,7 +18,7 @@ TEST_BASE_PATH = f"{BASE_PATH}/{TEST_CHECKOUT_DIR}"
 def initialize_env():
     clear_env()
     if not os.path.exists(TEST_CHECKOUT_DIR):
-        run(f"git clone https://github.com/citusdata/citus.git {TEST_CHECKOUT_DIR}")
+        run(f"git clone https://github.com/citusdata/citus-enterprise.git {TEST_CHECKOUT_DIR}")
 
 
 def test_major_release():

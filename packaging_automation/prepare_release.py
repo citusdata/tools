@@ -13,7 +13,7 @@ from .common_tool_methods import (get_version_details, get_upcoming_patch_versio
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
                                   find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,
-                                  does_branch_exist, prepend_line_in_file, get_template_environment)
+                                  does_remote_branch_exist, prepend_line_in_file, get_template_environment)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -192,12 +192,21 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
     # checkout release branch (release-X.Y) In test case release branch for test may not be exist.
     # In this case create one
     if patchReleaseParams.is_test:
+
         non_test_release_branch = patchReleaseParams.release_branch_name.rstrip("-test")
-        if does_branch_exist(non_test_release_branch):
+        release_branch_exist = does_remote_branch_exist(non_test_release_branch, os.getcwd())
+        test_release_branch_exist = does_remote_branch_exist(patchReleaseParams.release_branch_name, os.getcwd())
+        print("Non test release branch " + non_test_release_branch)
+        print("Non test release branch exist" + str(release_branch_exist))
+        print("Non test release branch exist1" + str(release_branch_exist))
+        print ("where am i: ",os.getcwd())
+        if does_remote_branch_exist(non_test_release_branch, os.getcwd()):
             run(f"git checkout {non_test_release_branch}")
             run(f"git checkout -b {patchReleaseParams.release_branch_name}")
-        else:
+        elif test_release_branch_exist:
             run(f"git checkout  {patchReleaseParams.release_branch_name}")
+        else:
+            run(f"git checkout -b  {patchReleaseParams.release_branch_name}")
     else:
         checkout_branch(patchReleaseParams.release_branch_name, patchReleaseParams.is_test)
     # change version info in configure.in file
@@ -403,7 +412,7 @@ def update_version_in_multi_extension_out(multi_extension_out_path, project_vers
     if not replace_line_in_file(multi_extension_out_path, MULTI_EXT_DEVEL_SEARCH_PATTERN,
                                 f" {project_version}"):
         raise ValueError(
-            f"{multi_extension_out_path} does not contain the version with pattern {CONFIGURE_IN_SEARCH_PATTERN}")
+            f"{multi_extension_out_path} does not contain the version with pattern {MULTI_EXT_DEVEL_SEARCH_PATTERN}")
     print(f"### Done {multi_extension_out_path} file is updated with project version {project_version}. ###")
 
 
@@ -430,7 +439,7 @@ def update_version_in_multi_extension_out_for_patch(multi_extension_out_path, pr
                                 get_patch_version_regex(project_version),
                                 f" {project_version}"):
         raise ValueError(
-            f"{multi_extension_out_path} does not contain the version with pattern {CONFIGURE_IN_SEARCH_PATTERN}")
+            f"{multi_extension_out_path} does not contain the version with pattern {get_patch_version_regex(project_version)}")
     print(f"### Done {multi_extension_out_path} file is updated with project version {project_version}. ###")
 
 
@@ -510,14 +519,14 @@ def remove_cloned_code(exec_path: str):
         print("Done. Code deleted successfully.")
 
 
-def initialize_env(exec_path: str, repo_name: str):
+def initialize_env(exec_path: str, project_name: str):
     remove_cloned_code(exec_path)
     if not os.path.exists(CHECKOUT_DIR):
-        run(f"git clone https://github.com/citusdata/{repo_name}.git {CHECKOUT_DIR}")
+        run(f"git clone https://github.com/citusdata/{project_name}.git {CHECKOUT_DIR}")
 
 
 def validate_parameters(major_release_flag: bool):
-    if major_release_flag and arguments.cherry_pick_enabled.lower() == "true":
+    if major_release_flag and arguments.cherry_pick_enabled:
         raise ValueError("Cherry pick could be enabled only for patch release")
 
     if major_release_flag and arguments.earliest_pr_date:
@@ -526,7 +535,7 @@ def validate_parameters(major_release_flag: bool):
     if major_release_flag and arguments.schema_version:
         raise ValueError("schema_version could not be set for major releases")
 
-    if not major_release_flag and arguments.cherry_pick_enabled.lower() == "true" \
+    if not major_release_flag and arguments.cherry_pick_enabled \
             and not arguments.earliest_pr_date:
         raise ValueError(
             "earliest_pr_date parameter could  not be empty when cherry pick is enabled and release is major.")
@@ -535,8 +544,7 @@ def validate_parameters(major_release_flag: bool):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token', required=True)
-    parser.add_argument('--repo', choices=["citus", "citus-enterprise"], required=True)
-    parser.add_argument('--prj_name', required=True)
+    parser.add_argument('--prj_name', choices=["citus", "citus-enterprise"], required=True)
     parser.add_argument('--prj_ver', required=True)
     parser.add_argument('--main_branch')
     parser.add_argument('--earliest_pr_date')
@@ -550,14 +558,14 @@ if __name__ == "__main__":
     validate_parameters(major_release)
 
     try:
-        initialize_env(execution_path, arguments.repo)
+        initialize_env(execution_path, arguments.prj_name)
 
-        is_cherry_pick_enabled = arguments.cherry_pick_enabled.lower() == "true"
-        main_branch = arguments.main_branch if arguments.main_branch else default_project_branches[arguments.repo]
-        print(f"Using main branch {main_branch} for the repo {arguments.repo}.")
+        is_cherry_pick_enabled = arguments.cherry_pick_enabled
+        main_branch = arguments.main_branch if arguments.main_branch else default_project_branches[arguments.prj_name]
+        print(f"Using main branch {main_branch} for the repo {arguments.prj_name}.")
         os.chdir(execution_path)
         print(f"Executing in path {execution_path}")
-        is_test = arguments.is_test.lower() == "true"
+        is_test = arguments.is_test
         earliest_pr_date = None if major_release or not is_cherry_pick_enabled else datetime.strptime(
             arguments.earliest_pr_date,
             '%Y.%m.%d')
@@ -565,8 +573,8 @@ if __name__ == "__main__":
                        project_version=arguments.prj_ver,
                        main_branch=main_branch,
                        earliest_pr_date=earliest_pr_date,
-                       is_test=is_test,
-                       cherry_pick_enabled=is_cherry_pick_enabled, exec_path=execution_path,
+                       is_test=arguments.is_test,
+                       cherry_pick_enabled=arguments.cherry_pick_enabled, exec_path=execution_path,
                        schema_version=arguments.schema_version)
     finally:
         if not is_test:

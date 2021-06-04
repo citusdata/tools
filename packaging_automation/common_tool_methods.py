@@ -222,9 +222,24 @@ def get_current_branch(working_dir: str) -> str:
     return repo.active_branch
 
 
-def does_branch_exist(branch_name: str) -> bool:
-    repo = Repo(BASE_GIT_PATH)
-    return branch_name in repo.references
+def does_remote_branch_exist(branch_name: str, working_dir: str) -> bool:
+    repo = Repo(working_dir)
+    for rp in repo.references:
+        if rp.name.endswith(f"/{branch_name}"):
+            return True
+    return False
+
+
+def does_local_branch_exist(branch_name: str, working_dir: str) -> bool:
+    repo = Repo(working_dir)
+    for rp in repo.branches:
+        if rp.name == branch_name:
+            return True
+    return False
+
+
+def does_branch_exist(branch_name: str, working_dir: str) -> bool:
+    return does_local_branch_exist(branch_name, working_dir) or does_remote_branch_exist(branch_name, working_dir)
 
 
 def get_template_environment(template_dir: str) -> Environment:
