@@ -86,14 +86,15 @@ class CommonToolMethodsTestCases(unittest.TestCase):
 
     def test_does_local_branch_exist(self):
         current_branch_name = get_current_branch(os.getcwd())
+        branch_name = "develop-local-test"
         self.assertTrue(does_remote_branch_exist("develop", os.getcwd()))
         self.assertFalse(does_remote_branch_exist("develop2", os.getcwd()))
         try:
-            run("git checkout -b develop-test")
-            self.assertTrue(does_local_branch_exist("develop-test", os.getcwd()))
+            run(f"git checkout -b {branch_name}")
+            self.assertTrue(does_local_branch_exist(branch_name, os.getcwd()))
             run(f"git checkout {current_branch_name} ")
         finally:
-            run(f"git branch -D develop-test ")
+            run(f"git branch -D {branch_name}")
 
         self.assertFalse(does_remote_branch_exist("develop_test", os.getcwd()))
 
