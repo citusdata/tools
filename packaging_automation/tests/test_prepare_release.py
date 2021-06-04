@@ -10,7 +10,7 @@ github_token = os.getenv("GH_TOKEN")
 
 BASE_PATH = pathlib2.Path(__file__).parents[2] if os.getenv("BASE_PATH") is None else os.getenv("BASE_PATH")
 
-MAIN_BRANCH = "enterprise-master"
+MAIN_BRANCH = "test-tools-scripts"
 TEST_CHECKOUT_DIR = "citus_test"
 TEST_BASE_PATH = f"{BASE_PATH}/{TEST_CHECKOUT_DIR}"
 
