@@ -105,7 +105,6 @@ def test_does_remote_branch_exist():
         assert not does_remote_branch_exist(f"{branch_name}{uuid.uuid4()}", os.getcwd())
     finally:
         run(f"git checkout {current_branch_name} ")
-        # run(f"git branch -D {branch_name}")
         run(f"git push origin --delete {branch_name}")
 
 
