@@ -18,7 +18,7 @@ TEST_BASE_PATH = f"{BASE_PATH}/{TEST_CHECKOUT_DIR}"
 def initialize_env():
     clear_env()
     if not os.path.exists(TEST_CHECKOUT_DIR):
-        run(f"git clone https://github.com/citusdata/citus-enterprise.git {TEST_CHECKOUT_DIR}")
+        run(f"git clone https://github.com/citusdata/citus.git {TEST_CHECKOUT_DIR}")
 
 
 def test_major_release():
