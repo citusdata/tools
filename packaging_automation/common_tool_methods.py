@@ -255,7 +255,9 @@ def get_current_branch(working_dir: str) -> str:
 
 def does_remote_branch_exist(branch_name: str, working_dir: str) -> bool:
     repo = Repo(working_dir)
+    print("Remote Branches")
     for rp in repo.references:
+        print(rp.name)
         if rp.name.endswith(f"/{branch_name}"):
             return True
     return False
@@ -263,7 +265,9 @@ def does_remote_branch_exist(branch_name: str, working_dir: str) -> bool:
 
 def does_local_branch_exist(branch_name: str, working_dir: str) -> bool:
     repo = Repo(working_dir)
+    print("Local Branches")
     for rp in repo.branches:
+        print(rp.name)
         if rp.name == branch_name:
             return True
     return False
