@@ -9,7 +9,6 @@ pytest
 python-string-utils
 requests
 urllib3
-gnupg
+python-gnupg
 parameters_validation
 PyYAML
-

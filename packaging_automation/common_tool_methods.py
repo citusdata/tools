@@ -332,7 +332,7 @@ def get_secret_key_by_fingerprint(fingerprint: str) -> str:
 def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: str) -> str:
     try:
         gpg = gnupg.GPG()
-        private_key = gpg.export_keys(fingerprint, True)
+        private_key = gpg.export_keys(fingerprint, True, passphrase=passphrase)
 
         return base64.b64encode(private_key.encode("ascii")).decode("ascii")
     except subprocess.TimeoutExpired:
