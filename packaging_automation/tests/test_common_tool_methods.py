@@ -11,7 +11,7 @@ from ..common_tool_methods import (
     str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
     replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
-    get_patch_version_regex, append_line_in_file, prepend_line_in_file, does_remote_branch_exist, get_current_branch,
+    append_line_in_file, prepend_line_in_file, does_remote_branch_exist, get_current_branch,
     does_local_branch_exist)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
@@ -110,10 +110,6 @@ def test_does_remote_branch_exist():
 
 def test_get_minor_version():
     assert "10.0" == get_minor_version("10.0.3")
-
-
-def test_get_patch_version_regex():
-    assert "^10\.0\.\d{1,3}$" == get_patch_version_regex("10.0.3")
 
 
 def test_append_line_in_file():
