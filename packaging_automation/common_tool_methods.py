@@ -108,10 +108,6 @@ def get_minor_version(version: str) -> str:
     return f'{project_version_details["major"]}.{project_version_details["minor"]}'
 
 
-def get_patch_version_regex(version: is_version(str)):
-    return fr"^{re.escape(get_minor_version(version))}{PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX}$"
-
-
 def is_merge_commit(commit: Commit):
     return len(commit.parents) <= 1
 

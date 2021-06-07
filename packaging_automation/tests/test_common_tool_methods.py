@@ -113,7 +113,7 @@ def test_get_minor_version():
 
 
 def test_get_patch_version_regex():
-    assert "10\.0\.\d{1,3}" == get_patch_version_regex("10.0.3")
+    assert "^10\.0\.\d{1,3}$" == get_patch_version_regex("10.0.3")
 
 
 def test_append_line_in_file():
