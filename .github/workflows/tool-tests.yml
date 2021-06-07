@@ -53,8 +53,6 @@ jobs:
 
       - name: Common tools tests
         run: python -m pytest -q packaging_automation/tests/test_common_tool_methods.py
-        env:
-          - GH_TOKEN=${{ secrets.GH_TOKEN }}
 
       - name: Packaging Warning Handler
         run: python -m pytest -q packaging_automation/tests/test_packaging_warning_handler.py
