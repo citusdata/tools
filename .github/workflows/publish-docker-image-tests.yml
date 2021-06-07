@@ -1,0 +1,22 @@
+name: Docker image creation tests
+
+on:
+  push:
+    branches: "**"
+
+  workflow_dispatch:
+
+jobs:
+
+  unit_test_execution:
+    runs-on: ubuntu-latest
+
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build and publish docker images tests
+        run: python -m pytest -q packaging_automation/tests/test_publish_docker.py
+
+

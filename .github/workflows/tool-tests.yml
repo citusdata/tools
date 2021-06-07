@@ -59,10 +59,5 @@ jobs:
       - name: Packaging Warning Handler
         run: python -m pytest -q packaging_automation/tests/test_packaging_warning_handler.py
 
-      - name: Build and publish docker images tests
-        run: python -m pytest -q packaging_automation/tests/test_publish_docker.py
-
-      - name: Citus package tests
-        run: python -m pytest -q packaging_automation/tests/test_citus_package_side_methods.py
 
 
