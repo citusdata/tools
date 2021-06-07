@@ -11,7 +11,7 @@ from ..common_tool_methods import (
     str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
     replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
-    append_line_in_file, prepend_line_in_file, does_remote_branch_exist, get_current_branch,
+    append_line_in_file, prepend_line_in_file, does_remote_branch_exist, get_current_branch, get_patch_version_regex,
     does_local_branch_exist)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
@@ -70,9 +70,6 @@ def test_replace_line_in_file():
         os.remove(copy_file_path)
 
 
-
-
-
 def test_does_local_branch_exist():
     current_branch_name = get_current_branch(os.getcwd())
     branch_name = "develop-local-test"
@@ -110,6 +107,10 @@ def test_does_remote_branch_exist():
 
 def test_get_minor_version():
     assert "10.0" == get_minor_version("10.0.3")
+
+
+def test_get_patch_version_regex():
+    assert "^10\.0\.\d{1,3}$" == get_patch_version_regex("10.0.3")
 
 
 def test_append_line_in_file():
@@ -164,6 +165,7 @@ def test_prepend_line_in_file():
             assert lines[3] == "Test line 2\n"
     finally:
         os.remove(test_file)
+
 
 def test_getprs():
     # created at is not seen on Github. Should be checked on API result
