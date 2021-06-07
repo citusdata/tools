@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-     - name: Install package dependencies
+      - name: Install package dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev
 
       - name: Install python requirements
