@@ -31,14 +31,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
       - name: Define git credentials
         run: git config --global user.email "${MICROSOFT_EMAIL}"&& git config --global user.name "${USER_NAME}"
+
       - name: Install package dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev
+
       - name: Install python requirements
         run: python -m pip install -r packaging_automation/requirements.txt
+
       - name: Execute unit tests for "Update Package Properties"
         run:  python -m pytest -q packaging_automation/tests/test_update_package_properties.py
+
       - name: Execute unit tests for "Prepare Release"
         run: python -m pytest -q packaging_automation/tests/test_prepare_release.py
 
@@ -48,9 +53,6 @@ jobs:
       - name: Unit tests for "Update Pgxn"
         run: python -m pytest -q packaging_automation/tests/test_update_pgxn.py
 
-      - name: Citus package tests
-        run: python -m pytest -q packaging_automation/tests/test_citus_package_side_methods.py
-
       - name: Common tools tests
         run: python -m pytest -q packaging_automation/tests/test_common_tool_methods.py
 
@@ -59,3 +61,8 @@ jobs:
 
       - name: Build and publish docker images tests
         run: python -m pytest -q packaging_automation/tests/test_publish_docker.py
+
+      - name: Citus package tests
+        run: python -m pytest -q packaging_automation/tests/test_citus_package_side_methods.py
+
+
