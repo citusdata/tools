@@ -71,6 +71,7 @@ def test_replace_line_in_file():
 
 
 def test_does_local_branch_exist():
+    run("git fetch")
     current_branch_name = get_current_branch(os.getcwd())
     branch_name = "develop-local-test"
     assert does_remote_branch_exist("develop", os.getcwd())
@@ -86,6 +87,7 @@ def test_does_local_branch_exist():
 
 
 def test_does_remote_branch_exist():
+    run("git fetch")
     assert does_remote_branch_exist("develop", os.getcwd())
     assert not does_remote_branch_exist(f"develop{uuid.uuid4()}", os.getcwd())
 
