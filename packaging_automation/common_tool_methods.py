@@ -2,24 +2,18 @@ import base64
 import os
 import re
 import subprocess
-import re
 from datetime import datetime
-from typing import Dict, List
 from enum import Enum
+from typing import Dict, List
+from typing import Tuple
+
 import gnupg
-from github import Repository, PullRequest,Commit
-from jinja2 import Environment, FileSystemLoader
 import pathlib2
 from git import Repo
-import gnupg
-import base64
-
-import pexpect
+from github import Repository, PullRequest, Commit
+from jinja2 import Environment, FileSystemLoader
 
 from .common_validations import (is_tag, is_version)
-from git import Repo
-import pathlib2
-from typing import Tuple
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
@@ -50,6 +44,8 @@ def get_version_number(version: str, fancy: bool, fancy_release_count: int) -> s
 def get_version_number_with_project_name(project_name: str, version: str, fancy: bool, fancy_release_count: int) -> str:
     fancy_suffix = f"-{fancy_release_count}" if fancy else ""
     return f"{version}.{project_name}{fancy_suffix}"
+
+
 def get_project_version_from_tag_name(tag_name: is_tag(str)) -> str:
     return tag_name[1:]
 
@@ -336,8 +332,7 @@ def get_secret_key_by_fingerprint(fingerprint: str) -> str:
 def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: str) -> str:
     try:
         gpg = gnupg.GPG()
-        private_key = gpg.export_keys(fingerprint, True,
-                                      passphrase=passphrase)
+        private_key = gpg.export_keys(fingerprint, True)
 
         return base64.b64encode(private_key.encode("ascii")).decode("ascii")
     except subprocess.TimeoutExpired:
