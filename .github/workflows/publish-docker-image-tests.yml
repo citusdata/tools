@@ -16,6 +16,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+     - name: Install package dependencies
+        run: sudo apt install libcurl4-openssl-dev libssl-dev
+
+      - name: Install python requirements
+        run: python -m pip install -r packaging_automation/requirements.txt
+
       - name: Build and publish docker images tests
         run: python -m pytest -q packaging_automation/tests/test_publish_docker.py
 
