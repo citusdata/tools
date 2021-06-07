@@ -1,8 +1,10 @@
-name: Citus Package All Platforms Tests
+name: Citus package all platforms tests
 
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
   PACKAGING_PASSPHRASE: ${{ secrets.PACKAGING_PASSPHRASE }}
+  MICROSOFT_EMAIL: gindibay@microsoft.com
+  USER_NAME: Gurkan Indibay
   MAIN_BRANCH: all-citus
 
 on:
@@ -19,7 +21,8 @@ jobs:
       matrix:
         platform: [ el/7, el/8, ol/7, debian/stretch, debian/buster, ubuntu/xenial, ubuntu/bionic,ubuntu/focal ]
     env:
-      PLATFORM:  ${{ matrix.platform }}
+      PLATFORM: ${{ matrix.platform }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
     steps:
       - name: Checkout repository
