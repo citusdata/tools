@@ -11,10 +11,10 @@ import uuid
 from ..common_tool_methods import (
     find_nth_occurrence_position, is_major_release,
     str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
-    replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label,
+    replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label,get_upcoming_minor_version,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
     get_patch_version_regex, append_line_in_file, prepend_line_in_file, does_remote_branch_exist, get_current_branch,
-    does_local_branch_exist)
+    does_local_branch_exist,get_last_commit_message)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -46,6 +46,8 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         result = run("echo 'Run' method is performing fine ")
         self.assertEqual(0, result.returncode)
 
+
+
     def test_remove_paranthesis_from_string(self):
         self.assertEqual("out of paranthesis ",
                          remove_text_with_parenthesis("out of paranthesis (inside paranthesis)"))
@@ -65,6 +67,25 @@ class CommonToolMethodsTestCases(unittest.TestCase):
                 self.assertEqual(lines[5], replace_str)
         finally:
             os.remove(copy_file_path)
+
+    def test_get_upcoming_minor_version(self):
+        assert get_upcoming_minor_version("10.1.0") == "10.2"
+
+    def test_get_last_commit_message(self):
+        current_branch_name = get_current_branch(os.getcwd())
+        test_branch_name = f"test{uuid.uuid4()}"
+        run(f"git checkout -b {test_branch_name}")
+        try:
+            with open(test_branch_name,"w") as writer:
+                writer.write("Test content")
+            run(f"git add .")
+            commit_message = f"Test message for {test_branch_name}"
+            run(f"git commit -m '{commit_message}'")
+            assert get_last_commit_message(os.getcwd()) == f"{commit_message}\n"
+        finally:
+            run(f"git checkout {current_branch_name}")
+            run(f"git branch -D {test_branch_name}")
+
 
     def test_getprs(self):
         # created at is not seen on Github. Should be checked on API result

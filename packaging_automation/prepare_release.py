@@ -14,7 +14,7 @@ from .common_tool_methods import (get_version_details, get_upcoming_patch_versio
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
                                   find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,
                                   does_remote_branch_exist, does_local_branch_exist, prepend_line_in_file,
-                                  get_template_environment)
+                                  get_template_environment, get_upcoming_minor_version)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -83,7 +83,7 @@ class UpcomingVersionBranchParams:
     citus_control_file_path: str
     config_py_path: str
     configure_in_path: str
-    devel_version: str
+    upcoming_devel_version: str
     distributed_dir_path: str
     downgrades_dir_path: str
     is_test: bool
@@ -94,7 +94,6 @@ class UpcomingVersionBranchParams:
     project_version: str
     repository: Repository
     upcoming_minor_version: str
-    upcoming_version: str
     upcoming_version_branch: str
 
 
@@ -130,10 +129,8 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
     downgrades_dir_path = f"{exec_path}/{DOWNGRADES_DIR_PATH}"
 
     project_version_details = get_version_details(project_version)
-    default_upcoming_version = get_upcoming_patch_version(project_version)
-    upcoming_version = os.getenv("UPCOMING_VERSION", default=default_upcoming_version)
-    upcoming_minor_version = get_minor_version(upcoming_version)
-    devel_version = f"{upcoming_minor_version}devel"
+    upcoming_minor_version = get_upcoming_minor_version(project_version)
+    upcoming_devel_version = f"{upcoming_minor_version}devel"
 
     release_branch_name = f'release-{project_version_details["major"]}.{project_version_details["minor"]}'
     release_branch_name = f"{release_branch_name}-test" if is_test else release_branch_name
@@ -147,7 +144,8 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
     # major release
     if is_major_release(project_version):
         print(f"### {project_version} is a major release. Executing Major release flow... ###")
-        major_release_params = MajorReleaseParams(configure_in_path=configure_in_path, devel_version=devel_version,
+        major_release_params = MajorReleaseParams(configure_in_path=configure_in_path,
+                                                  devel_version=upcoming_devel_version,
                                                   is_test=is_test, main_branch=main_branch,
                                                   multi_extension_out_path=multi_extension_out_path,
                                                   project_name=project_name, project_version=project_version,
@@ -155,9 +153,8 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
         prepare_release_branch_for_major_release(major_release_params)
         branch_params = UpcomingVersionBranchParams(project_version=project_version,
                                                     project_name=project_name,
-                                                    upcoming_version=upcoming_version,
                                                     upcoming_version_branch=upcoming_version_branch,
-                                                    devel_version=devel_version, is_test=is_test,
+                                                    upcoming_devel_version=upcoming_devel_version, is_test=is_test,
                                                     main_branch=main_branch,
                                                     citus_control_file_path=citus_control_file_path,
                                                     config_py_path=config_py_path,
@@ -240,14 +237,15 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
     # create master-update-version-$curtime branch
     create_and_checkout_branch(upcoming_params.upcoming_version_branch)
     # update version info with upcoming version on configure.in
-    update_version_in_configure_in(upcoming_params.configure_in_path, upcoming_params.devel_version)
+    update_version_in_configure_in(upcoming_params.configure_in_path, upcoming_params.upcoming_devel_version)
     # update version info with upcoming version on config.py
     update_version_with_upcoming_version_in_config_py(upcoming_params.config_py_path,
                                                       upcoming_params.upcoming_minor_version)
     # execute autoconf -f
     execute_autoconf_f()
-    # update version info with upcoming version on multiextension.out
-    update_version_in_multi_extension_out(upcoming_params.multi_extension_out_path, upcoming_params.devel_version)
+    # update version info with upcoming version on multi_extension.out
+    update_version_in_multi_extension_out(upcoming_params.multi_extension_out_path,
+                                          upcoming_params.upcoming_devel_version)
     # update detail lines with minor version
     update_detail_strings_in_multi_extension_out(upcoming_params.multi_extension_out_path,
                                                  upcoming_params.upcoming_minor_version)
@@ -275,14 +273,14 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
     update_schema_version_in_citus_control(upcoming_params.citus_control_file_path,
                                            default_upcoming_schema_version)
     # commit and push changes on master-update-version-$curtime branch
-    commit_changes_for_version_bump(upcoming_params.project_name, upcoming_params.project_version)
+    commit_changes_for_version_bump(upcoming_params.project_name, upcoming_params.upcoming_devel_version)
     if not upcoming_params.is_test:
         push_branch(upcoming_params.upcoming_version_branch)
 
         # create pull request
         create_pull_request_for_upcoming_version_branch(upcoming_params.repository, upcoming_params.main_branch,
                                                         upcoming_params.upcoming_version_branch,
-                                                        upcoming_params.upcoming_version)
+                                                        upcoming_params.upcoming_devel_version)
     print(f"### Done {upcoming_params.upcoming_version_branch} flow executed. ###")
     return upgrade_file, downgrade_file
 

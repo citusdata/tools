@@ -96,8 +96,14 @@ def get_upcoming_patch_version(version: is_version(str)) -> str:
 
 
 def get_upcoming_minor_version(version: is_version(str)) -> str:
-    upcoming_version_details = get_version_details(version)
-    return f'{upcoming_version_details["major"]}.{upcoming_version_details["minor"]}'
+    project_version_details = get_version_details(version)
+    return f'{project_version_details["major"]}.{int(project_version_details["minor"]) + 1}'
+
+
+def get_last_commit_message(path: str) -> str:
+    repo = Repo("/vagrant/release/tools")
+    commit = repo.head.commit
+    return commit.message
 
 
 def is_major_release(version: is_version(str)) -> bool:
