@@ -248,11 +248,6 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
     return has_match
 
 
-def get_current_branch(working_dir: str) -> str:
-    repo = Repo(working_dir)
-    return repo.active_branch
-
-
 def does_remote_branch_exist(branch_name: str, working_dir: str) -> bool:
     repo = Repo(working_dir)
     print("Remote Branches")
@@ -306,7 +301,7 @@ def get_gpg_fingerprint_from_name(name: str):
             break
         counter = counter + 1
     if not line_found:
-        raise ValueError(f"Key with the  name {name} could not be found ")
+        raise ValueError(f"Key with the name {name} could not be found ")
     else:
         return lines[counter - 1].strip()
 

@@ -4,11 +4,12 @@ import os
 import urllib
 from dataclasses import dataclass
 from typing import List
-from requests.auth import HTTPBasicAuth
-from .common_tool_methods import (get_current_branch)
-import pathlib2
 
+import pathlib2
 import requests
+from requests.auth import HTTPBasicAuth
+
+from .common_tool_methods import (get_current_branch)
 
 supported_distros = {
     "el/7": 140,
@@ -20,6 +21,9 @@ supported_distros = {
     "ubuntu/bionic": 190,
     "ubuntu/xenial": 165
 }
+
+supported_repos = ["sample", "citusdata/enterprise", "citusdata/community", "citusdata/community-nightlies",
+                   "citusdata/enterprise-nightlies", "citusdata/azure"]
 
 
 @dataclass
@@ -65,7 +69,7 @@ def upload_files_in_directory_to_package_cloud(directoryName: str, distro_name: 
                                                repo_name: str) -> MultipleReturnValue:
     if not MAIN_BRANCH_NAME:
         raise ValueError("MAIN_BRANCH environment variable should be defined")
-    current_branch = get_current_branch(BASE_PATH)
+    current_branch = get_current_branch(BASE_PATH.absolute())
     if MAIN_BRANCH_NAME != current_branch:
         print(f"Package publishing skipped since current branch is not equal to {MAIN_BRANCH_NAME}")
         return MultipleReturnValue(ret_vals=[])
@@ -104,10 +108,10 @@ def does_package_exist(package_cloud_token: str, repo_owner: str, repo_name: str
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--platform')
-    parser.add_argument('--package_cloud_api_token')
-    parser.add_argument('--repository_name')
-    parser.add_argument('--output_file_path')
+    parser.add_argument('--platform', choices=[e for e in supported_distros])
+    parser.add_argument('--package_cloud_api_token', required=True)
+    parser.add_argument('--repository_name', required=True, choices=supported_repos)
+    parser.add_argument('--output_file_path', required=True)
 
     args = parser.parse_args()
 

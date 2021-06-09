@@ -1,6 +1,3 @@
-import os
-import pathlib2
-
 from .test_utils import generate_new_gpg_key
 from ..citus_package import *
 from ..common_tool_methods import *
@@ -14,7 +11,13 @@ PACKAGING_EXEC_FOLDER = f"{TEST_BASE_PATH}/{PACKAGING_SOURCE_FOLDER}"
 BASE_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
 
 package_counts = {
-    "el/7": 4, "el/8": 6, "ol/7": 4, "debian/stretch": 4, "debian/buster": 4, "ubuntu/xenial": 2, "ubuntu/bionic": 2,
+    "el/7": 4,
+    "el/8": 6,
+    "ol/7": 4,
+    "debian/stretch": 4,
+    "debian/buster": 4,
+    "ubuntu/xenial": 2,
+    "ubuntu/bionic": 2,
     "ubuntu/focal": 2
 }
 

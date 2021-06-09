@@ -1,8 +1,9 @@
+import pathlib2
+import pytest
+
+from .test_utils import generate_new_gpg_key
 from ..citus_package import *
 from ..common_tool_methods import *
-from .test_utils import generate_new_gpg_key
-import pytest
-import pathlib2
 
 TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
@@ -16,7 +17,7 @@ OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
 
 def setup_module():
     if not os.path.exists("packaging_test"):
-        run(            f"git clone --branch all-citus https://github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}")
+        run(f"git clone --branch all-citus https://github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}")
 
 
 def teardown_module():
@@ -35,10 +36,10 @@ def test_decode_os_and_release():
     assert os_name == "pgxn" and os_version == ""
 
     with pytest.raises(ValueError):
-        os_name, os_version = decode_os_and_release("debian")
+        decode_os_and_release("debian")
 
     with pytest.raises(ValueError):
-        os_name, os_version = decode_os_and_release("debian/anders")
+        decode_os_and_release("debian/anders")
 
 
 def test_is_docker_running():

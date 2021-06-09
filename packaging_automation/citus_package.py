@@ -71,7 +71,7 @@ def decode_os_and_release(platform_name: str) -> Tuple[str, str]:
                 f"{os_name} is not among supported operating systems. Supported operating systems are as below:\n "
                 f"{','.join(supported_platforms.keys())}")
         if os_release not in supported_platforms[os_name]:
-            raise ValueError(f"{os_release} is not among supported releases for {os_name}. "
+            raise ValueError(f"{os_release} is not among supported releases for {os_name}."
                              f"Supported releases are as below:\n {','.join(supported_platforms[os_name])}")
     return os_name, os_release
 
@@ -84,17 +84,17 @@ def is_docker_running() -> bool:
 
 
 def get_signing_credentials(packaging_secret_key: str, packaging_passphrase: str) -> Tuple[str, str]:
-    if packaging_passphrase is None or len(packaging_passphrase) == 0:
+    if not packaging_passphrase or len(packaging_passphrase) == 0:
         raise ValueError("packaging_passphrase should not be null")
-    if packaging_secret_key is not None and len(packaging_secret_key) > 0:
+    if not packaging_secret_key and len(packaging_secret_key) > 0:
         secret_key = packaging_secret_key
     else:
         child = subprocess.Popen(["gpg", "--batch", "--fingerprint", "packaging@citusdata.com"], stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
-        streamdata = child.communicate()
+        stream_data = child.communicate()
         if child.returncode != 0:
             raise ValueError("Gpg key for 'packaging@citusdata.com' does not exist")
-        gpg_result = streamdata[0].decode("ascii")
+        gpg_result = stream_data[0].decode("ascii")
         gpg_result_lines = gpg_result.splitlines()
         if len(gpg_result_lines) != 5:
             raise ValueError(f"GPG Key result is not in desired format. It should have "
@@ -123,7 +123,7 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
 
     if len(rpm_files) > 0:
         print("Started RPM Signing...")
-        result = run_with_output(f"docker run --rm -v  {output_path}:/packages/{sub_folder} -e PACKAGING_SECRET_KEY -e "
+        result = run_with_output(f"docker run --rm -v {output_path}:/packages/{sub_folder} -e PACKAGING_SECRET_KEY -e "
                                  f"PACKAGING_PASSPHRASE citusdata/packaging:rpmsigner")
         print("RPM signing finished successfully.")
         if result.returncode != 0:
@@ -214,8 +214,8 @@ def build_packages(github_token: non_empty(non_blank(str)), platform: non_empty(
     release_versions, nightly_versions = get_postgres_versions(os_name, input_files_dir)
     secret_key, passphrase = get_signing_credentials(packaging_secret_key, packaging_passphrase)
 
-    if passphrase is None:
-        raise ValueError("PACKAGING_PASSPHRASE should not be null")
+    if not passphrase:
+        raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")
 
     postgres_versions = release_versions if build_type == BuildType.release else nightly_versions
     docker_image_name = get_docker_image_name(platform)
@@ -244,7 +244,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    output_validation_enabled = False if args.output_validation is None or args.output_validation.lower() == "false" \
+    output_validation_enabled = False if not args.output_validation or args.output_validation.lower() == "false" \
         else True
 
     build_packages(args.gh_token, args.platform, BuildType[args.build_type], args.secret_key, args.passphrase,

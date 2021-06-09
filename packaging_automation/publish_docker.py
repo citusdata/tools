@@ -3,12 +3,12 @@ import os.path
 from enum import Enum
 from typing import Tuple, List
 
+import docker
 import pathlib2
 from parameters_validation import validate_parameters
 
 from .common_tool_methods import get_current_branch, remove_prefix
 from .common_validations import is_tag
-import docker
 
 BASE_PATH = pathlib2.Path(__file__).parents[1]
 
@@ -67,7 +67,7 @@ def regular_images_to_be_built(docker_image_type: DockerImageType = None) -> Lis
 
 # When pipeline triggered, if the event source is
 # triggered by branch push or a schedule on pipeline, github_ref format is : refs/heads/{branch_name}
-# tiggered by tag push, github_ref format is: refs/heads/{tag_name}
+# if tiggered by tag push, github_ref format is: refs/heads/{tag_name}
 def decode_triggering_event_info(github_ref: str) -> Tuple[GithubTriggerEventSource, str]:
     parts = github_ref.split("/")
     if len(parts) != 3 or parts[1] not in ("tags", "heads"):
@@ -99,13 +99,6 @@ def publish_docker_image_on_push(docker_image_type: DockerImageType, github_ref:
             publish_main_docker_images(docker_image_type, exec_path)
         else:
             publish_tagged_docker_images(docker_image_type, resource_name, exec_path)
-    # elif github_pipeline_trigger_type == GithubPipelineTriggerType.schedule:
-    #     if docker_image_type == DockerImageType.nightly:
-    #         publish_nightly_docker_image()
-    #     else:
-    #         publish_main_docker_images(docker_image_type, exec_path)
-    # else:
-    #     raise ValueError("Unsupported Trigger Type")
 
 
 def publish_docker_image_on_schedule(docker_image_type: DockerImageType, exec_path: str, ):
@@ -206,11 +199,11 @@ def validate_and_extract_manual_exec_params(manual_trigger_type_param: str, tag_
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--github_ref')
-    parser.add_argument('--pipeline_trigger_type')
+    parser.add_argument('--pipeline_trigger_type', choices=[e.name for e in GithubPipelineTriggerType], required=True)
     parser.add_argument('--tag_name', nargs='?', default="")
     parser.add_argument('--exec_path')
-    parser.add_argument('--manual_trigger_type')
-    parser.add_argument('--image_type')
+    parser.add_argument('--manual_trigger_type', choices=[e.name for e in ManualTriggerType])
+    parser.add_argument('--image_type', choices=[e.name for e in DockerImageType])
     args = parser.parse_args()
 
     pipeline_trigger_type, image_type = validate_and_extract_general_parameters(args.image_type,

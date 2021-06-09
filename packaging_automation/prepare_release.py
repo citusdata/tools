@@ -202,9 +202,9 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
             run(f"git checkout {non_test_release_branch}")
             run(f"git checkout -b {patchReleaseParams.release_branch_name}")
         elif test_release_branch_exist:
-            run(f"git checkout  {patchReleaseParams.release_branch_name}")
+            run(f"git checkout {patchReleaseParams.release_branch_name}")
         else:
-            run(f"git checkout -b  {patchReleaseParams.release_branch_name}")
+            run(f"git checkout -b {patchReleaseParams.release_branch_name}")
     else:
         checkout_branch(patchReleaseParams.release_branch_name, patchReleaseParams.is_test)
     # change version info in configure.in file
@@ -340,12 +340,12 @@ def commit_changes_for_version_bump(project_name, project_version):
     current_branch = get_current_branch(os.getcwd())
     print(f"### Committing changes for branch {current_branch}... ###")
     run("git add .")
-    run(f' git commit  -m "Bump {project_name} version to {project_version} "')
+    run(f' git commit -m "Bump {project_name} version to {project_version} "')
     print(f"### Done Changes committed for {current_branch}. ###")
 
 
 def update_schema_version_in_citus_control(citus_control_file_path, schema_version):
-    print(f"### Updating {citus_control_file_path} file with the  version {schema_version}... ###")
+    print(f"### Updating {citus_control_file_path} file with the version {schema_version}... ###")
     if not replace_line_in_file(citus_control_file_path, CITUS_CONTROL_SEARCH_PATTERN,
                                 f"default_version = '{schema_version}'"):
         raise ValueError(f"{citus_control_file_path} does not have match for version")
@@ -355,7 +355,7 @@ def update_schema_version_in_citus_control(citus_control_file_path, schema_versi
 def add_downgrade_script_in_multi_extension_file(current_schema_version,
                                                  multi_extension_out_path,
                                                  upcoming_minor_version, template_file: str):
-    print(f"### Adding downgrade scripts from version  {current_schema_version} to  "
+    print(f"### Adding downgrade scripts from version {current_schema_version} to "
           f"{upcoming_minor_version} on {multi_extension_out_path}... ### ")
     env = get_template_environment(TEMPLATES_PATH)
     template = env.get_template(
@@ -367,8 +367,8 @@ def add_downgrade_script_in_multi_extension_file(current_schema_version,
                                 f"DROP TABLE prev_objects, extension_diff;",
                                 string_to_prepend):
         raise ValueError(f"Downgrade scripts could not be added in {multi_extension_out_path} since "
-                         f"'DROP TABLE prev_objects, extension_diff;' script could not be found  ")
-    print(f"### Done Test downgrade scripts successfully  added in {multi_extension_out_path}. ###")
+                         f"'DROP TABLE prev_objects, extension_diff;' script could not be found ")
+    print(f"### Done Test downgrade scripts successfully added in {multi_extension_out_path}. ###")
 
 
 def get_current_schema_from_citus_control(citus_control_file_path: str) -> str:
@@ -536,7 +536,7 @@ def validate_parameters(major_release_flag: bool):
     if not major_release_flag and arguments.cherry_pick_enabled \
             and not arguments.earliest_pr_date:
         raise ValueError(
-            "earliest_pr_date parameter could  not be empty when cherry pick is enabled and release is major.")
+            "earliest_pr_date parameter could not be empty when cherry pick is enabled and release is major.")
 
 
 if __name__ == "__main__":
