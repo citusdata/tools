@@ -15,6 +15,8 @@ from .common_validations import (is_tag, is_version)
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
 
+# When using GitPython library Repo objects should be closed to be able to delete cloned sources
+# referenced by Repo objects. References are stored below array to be able to close all resources after code execution
 referenced_repos:List[Repo] = []
 
 

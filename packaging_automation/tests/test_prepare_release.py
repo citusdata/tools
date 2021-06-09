@@ -1,10 +1,8 @@
 import os
 import uuid
 from datetime import datetime
-import time
 
 import pathlib2
-import shutil
 
 from ..common_tool_methods import (file_includes_line, count_line_in_file, run, get_last_commit_message,
                                    remove_cloned_code)
