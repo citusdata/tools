@@ -14,7 +14,7 @@ from .common_tool_methods import (get_version_details, get_upcoming_patch_versio
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
                                   find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,
                                   does_remote_branch_exist, does_local_branch_exist, prepend_line_in_file,
-                                  get_template_environment, get_upcoming_minor_version)
+                                  get_template_environment, get_upcoming_minor_version,remove_cloned_code)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -575,3 +575,4 @@ if __name__ == "__main__":
     finally:
         if not is_test:
             remove_cloned_code(execution_path)
+

@@ -1,19 +1,32 @@
+import os
 import re
 import subprocess
 from datetime import datetime
 from typing import Dict, List
-import os
+from typing import Tuple
 
+import pathlib2
+from git import Repo
 from github import Repository, PullRequest, Commit
 from jinja2 import Environment, FileSystemLoader
 
 from .common_validations import (is_tag, is_version)
-from git import Repo
-import pathlib2
-from typing import Tuple
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
+
+referenced_repos:List[Repo] = []
+
+
+def get_new_repo(working_dir: str) -> Repo:
+    repo = Repo(working_dir)
+    referenced_repos.append(repo)
+    return repo
+
+
+def release_all_repos():
+    for repo in referenced_repos:
+        repo.close()
 
 
 def get_spec_file_name(project_name: str) -> str:
@@ -101,7 +114,7 @@ def get_upcoming_minor_version(version: is_version(str)) -> str:
 
 
 def get_last_commit_message(path: str) -> str:
-    repo = Repo("/vagrant/release/tools")
+    repo = get_new_repo(path)
     commit = repo.head.commit
     return commit.message
 
@@ -224,12 +237,12 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
 
 
 def get_current_branch(working_dir: str) -> str:
-    repo = Repo(working_dir)
+    repo = get_new_repo(working_dir)
     return repo.active_branch
 
 
 def does_remote_branch_exist(branch_name: str, working_dir: str) -> bool:
-    repo = Repo(working_dir)
+    repo = get_new_repo(working_dir)
     for rp in repo.references:
         if rp.name.endswith(f"/{branch_name}"):
             return True
@@ -237,7 +250,7 @@ def does_remote_branch_exist(branch_name: str, working_dir: str) -> bool:
 
 
 def does_local_branch_exist(branch_name: str, working_dir: str) -> bool:
-    repo = Repo(working_dir)
+    repo = get_new_repo(working_dir)
     for rp in repo.branches:
         if rp.name == branch_name:
             return True
@@ -252,3 +265,20 @@ def get_template_environment(template_dir: str) -> Environment:
     file_loader = FileSystemLoader(template_dir)
     env = Environment(loader=file_loader)
     return env
+
+
+def remove_cloned_code(exec_path: str):
+    release_all_repos()
+    if os.path.exists(f"{exec_path}"):
+        print(f"Deleting cloned code {exec_path} ...")
+        # https://stackoverflow.com/questions/51819472/git-cant-delete-local-branch-operation-not-permitted
+        # https://askubuntu.com/questions/1049142/cannot-delete-git-directory
+        # since git directory is readonly first we need to give write permission to delete git directory
+        if os.path.exists(f"{exec_path}/.git"):
+            run(f"chmod -R 777 {exec_path}/.git")
+        try:
+            run(f"sudo rm -rf {exec_path}")
+            print("Done. Code deleted successfully.")
+        except:
+            print(f"Some files could not be deleted in directory {exec_path}. "
+                  f"Please delete them manually or they will be deleted before next execution")
