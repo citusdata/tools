@@ -49,13 +49,13 @@ TEMPLATES_PATH = f"{BASE_PATH}/templates"
 MULTI_EXT_OUT_TEMPLATE_FILE = "multi_extension_out_prepare_release.tmpl"
 MULTI_EXT_SQL_TEMPLATE_FILE = "multi_extension_sql_prepare_release.tmpl"
 
-
-class SupportedGithubRepos(Enum):
-    CITUS = 1
-    CITUS_ENTERPRISE = 2
-
-
-default_project_branches = {"citus": "master", "citus-enterprise": "enterprise-master"}
+repo_details = {
+    "citus": {
+        "configure-in-str": "Citus",
+        "branch": "master"},
+    "citus-enterprise": {
+        "configure-in-str": "Citus Enterprise",
+        "branch": "enterprise master"}}
 
 
 @dataclass
@@ -205,7 +205,8 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
     else:
         checkout_branch(patchReleaseParams.release_branch_name, patchReleaseParams.is_test)
     # change version info in configure.in file
-    update_version_in_configure_in(patchReleaseParams.configure_in_path, patchReleaseParams.project_version)
+    update_version_in_configure_in(patchReleaseParams.project_name, patchReleaseParams.configure_in_path,
+                                   patchReleaseParams.project_version)
     # execute "auto-conf "
     execute_autoconf_f()
     # change version info in multi_extension.out
@@ -237,7 +238,8 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
     # create master-update-version-$curtime branch
     create_and_checkout_branch(upcoming_params.upcoming_version_branch)
     # update version info with upcoming version on configure.in
-    update_version_in_configure_in(upcoming_params.configure_in_path, upcoming_params.upcoming_devel_version)
+    update_version_in_configure_in(upcoming_params.project_name, upcoming_params.configure_in_path,
+                                   upcoming_params.upcoming_devel_version)
     # update version info with upcoming version on config.py
     update_version_with_upcoming_version_in_config_py(upcoming_params.config_py_path,
                                                       upcoming_params.upcoming_minor_version)
@@ -292,7 +294,8 @@ def prepare_release_branch_for_major_release(majorReleaseParams: MajorReleasePar
     # create release branch in release-X.Y format
     create_and_checkout_branch(majorReleaseParams.release_branch_name)
     # change version info in configure.in file
-    update_version_in_configure_in(majorReleaseParams.configure_in_path, majorReleaseParams.project_version)
+    update_version_in_configure_in(majorReleaseParams.project_name, majorReleaseParams.configure_in_path,
+                                   majorReleaseParams.project_version)
     # execute "autoconf -f"
     execute_autoconf_f()
     # change version info in multi_extension.out
@@ -445,10 +448,10 @@ def execute_autoconf_f():
     print(f"### Done autoconf -f executed. ###")
 
 
-def update_version_in_configure_in(configure_in_path, project_version):
+def update_version_in_configure_in(project_name,configure_in_path, project_version):
     print(f"### Updating version on file {configure_in_path}... ###")
     if not replace_line_in_file(configure_in_path, CONFIGURE_IN_SEARCH_PATTERN,
-                                f"AC_INIT([Citus], [{project_version}])"):
+                                f"AC_INIT([{repo_details[project_name]['configure-in-str']}], [{project_version}])"):
         raise ValueError(f"{configure_in_path} does not have match for version")
     print(f"### Done {configure_in_path} file is updated with project version {project_version}. ###")
 
@@ -557,7 +560,7 @@ if __name__ == "__main__":
         initialize_env(execution_path, arguments.prj_name)
 
         is_cherry_pick_enabled = arguments.cherry_pick_enabled
-        main_branch = arguments.main_branch if arguments.main_branch else default_project_branches[arguments.prj_name]
+        main_branch = arguments.main_branch if arguments.main_branch else repo_details[arguments.prj_name]["branch"]
         print(f"Using main branch {main_branch} for the repo {arguments.prj_name}.")
         os.chdir(execution_path)
         print(f"Executing in path {execution_path}")
@@ -575,4 +578,3 @@ if __name__ == "__main__":
     finally:
         if not is_test:
             remove_cloned_code(execution_path)
-
