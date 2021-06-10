@@ -16,7 +16,8 @@ BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
 
 # When using GitPython library Repo objects should be closed to be able to delete cloned sources
-# referenced by Repo objects. References are stored below array to be able to close all resources after code execution
+# referenced by Repo objects.References are stored in below array to be able to close
+# all resources after the code execution.
 referenced_repos:List[Repo] = []
 
 
@@ -82,7 +83,7 @@ def cherry_pick_prs(prs: List[PullRequest.PullRequest]):
         commits = pr.get_commits()
         for single_commit in commits:
             if not is_merge_commit(single_commit):
-                cp_result = run(f"git cherry-pick {single_commit.commit.sha}")
+                cp_result = run(f"git cherry-pick -x {single_commit.commit.sha}")
                 print(
                     f"Cherry pick result for PR no {pr.number} and commit sha {single_commit.commit.sha}: {cp_result}")
 
@@ -205,6 +206,9 @@ def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
 
                 if line_number + 1 < len(lines):
                     copy_lines[appended_line_index + 1] = append_str
+                    # Since line is added after matched string, shift index start with line_number+1
+                    # increment of appended_line_index is 2 since copy_lines appended_line_index+1 includes
+                    # append_str
                     lines_to_be_shifted = lines[line_number + 1:]
                     copy_lines = copy_lines[0:appended_line_index + 2] + lines_to_be_shifted
                 else:
@@ -228,6 +232,8 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
             if re.match(match_regex, line.strip()):
                 has_match = True
                 copy_lines[prepended_line_index] = append_str
+                # Since line is added before  matched string shift index start with line_number
+                # increment of prepend_line_index is 1 line after prepended_line_index should be shifted
                 lines_to_be_shifted = lines[line_number:]
                 copy_lines = copy_lines[0:prepended_line_index + 1] + lines_to_be_shifted
             prepended_line_index = prepended_line_index + 1
@@ -243,7 +249,7 @@ def get_current_branch(working_dir: str) -> str:
     return repo.active_branch
 
 
-def does_remote_branch_exist(branch_name: str, working_dir: str) -> bool:
+def remote_branch_exists(branch_name: str, working_dir: str) -> bool:
     repo = get_new_repo(working_dir)
     for rp in repo.references:
         if rp.name.endswith(f"/{branch_name}"):
@@ -251,7 +257,7 @@ def does_remote_branch_exist(branch_name: str, working_dir: str) -> bool:
     return False
 
 
-def does_local_branch_exist(branch_name: str, working_dir: str) -> bool:
+def local_branch_exists(branch_name: str, working_dir: str) -> bool:
     repo = get_new_repo(working_dir)
     for rp in repo.branches:
         if rp.name == branch_name:
@@ -260,7 +266,7 @@ def does_local_branch_exist(branch_name: str, working_dir: str) -> bool:
 
 
 def does_branch_exist(branch_name: str, working_dir: str) -> bool:
-    return does_local_branch_exist(branch_name, working_dir) or does_remote_branch_exist(branch_name, working_dir)
+    return local_branch_exists(branch_name, working_dir) or remote_branch_exists(branch_name, working_dir)
 
 
 def get_template_environment(template_dir: str) -> Environment:

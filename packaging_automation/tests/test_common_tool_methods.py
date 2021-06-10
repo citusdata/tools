@@ -11,10 +11,10 @@ import uuid
 from ..common_tool_methods import (
     find_nth_occurrence_position, is_major_release,
     str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
-    replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label,get_upcoming_minor_version,
+    replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label, get_upcoming_minor_version,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
-    get_patch_version_regex, append_line_in_file, prepend_line_in_file, does_remote_branch_exist, get_current_branch,
-    does_local_branch_exist,get_last_commit_message)
+    get_patch_version_regex, append_line_in_file, prepend_line_in_file, remote_branch_exists, get_current_branch,
+    local_branch_exists, get_last_commit_message)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -105,21 +105,21 @@ class CommonToolMethodsTestCases(unittest.TestCase):
         self.assertEqual(1, len(prs_backlog))
         self.assertEqual(4746, prs_backlog[0].number)
 
-    def test_does_local_branch_exist(self):
+    def test_local_branch_exists(self):
         current_branch_name = get_current_branch(os.getcwd())
         branch_name = "develop-local-test"
-        self.assertTrue(does_remote_branch_exist("develop", os.getcwd()))
-        self.assertFalse(does_remote_branch_exist("develop2", os.getcwd()))
+        self.assertTrue(remote_branch_exists("develop", os.getcwd()))
+        self.assertFalse(remote_branch_exists("develop2", os.getcwd()))
         try:
             run(f"git checkout -b {branch_name}")
-            self.assertTrue(does_local_branch_exist(branch_name, os.getcwd()))
+            self.assertTrue(local_branch_exists(branch_name, os.getcwd()))
             run(f"git checkout {current_branch_name} ")
         finally:
             run(f"git branch -D {branch_name}")
 
-        self.assertFalse(does_remote_branch_exist("develop_test", os.getcwd()))
+        self.assertFalse(remote_branch_exists("develop_test", os.getcwd()))
 
-    def test_does_remote_branch_exist(self):
+    def test_remote_branch_exists(self):
         current_branch_name = get_current_branch(os.getcwd())
         branch_name = "develop-remote-test"
         try:
@@ -132,8 +132,8 @@ class CommonToolMethodsTestCases(unittest.TestCase):
             run(f"git push --set-upstream origin {branch_name}")
             run(f"git checkout develop")
             run(f"git branch -D {branch_name}")
-            self.assertTrue(does_remote_branch_exist(branch_name, os.getcwd()))
-            self.assertFalse(does_remote_branch_exist(f"{branch_name}{uuid.uuid4()}", os.getcwd()))
+            self.assertTrue(remote_branch_exists(branch_name, os.getcwd()))
+            self.assertFalse(remote_branch_exists(f"{branch_name}{uuid.uuid4()}", os.getcwd()))
         finally:
             run(f"git checkout {current_branch_name} ")
             # run(f"git branch -D {branch_name}")

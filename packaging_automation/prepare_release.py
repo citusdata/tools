@@ -13,8 +13,8 @@ from .common_tool_methods import (get_version_details, get_upcoming_patch_versio
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
                                   find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,
-                                  does_remote_branch_exist, does_local_branch_exist, prepend_line_in_file,
-                                  get_template_environment, get_upcoming_minor_version,remove_cloned_code)
+                                  remote_branch_exists, local_branch_exists, prepend_line_in_file,
+                                  get_template_environment, get_upcoming_minor_version, remove_cloned_code)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -192,8 +192,8 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
     if patchReleaseParams.is_test:
 
         non_test_release_branch = patchReleaseParams.release_branch_name.rstrip("-test")
-        release_branch_exist = does_remote_branch_exist(non_test_release_branch, os.getcwd())
-        test_release_branch_exist = does_local_branch_exist(patchReleaseParams.release_branch_name, os.getcwd())
+        release_branch_exist = remote_branch_exists(non_test_release_branch, os.getcwd())
+        test_release_branch_exist = local_branch_exists(patchReleaseParams.release_branch_name, os.getcwd())
 
         if release_branch_exist:
             run(f"git checkout {non_test_release_branch}")
