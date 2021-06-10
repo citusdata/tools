@@ -86,7 +86,7 @@ def is_docker_running() -> bool:
 def get_signing_credentials(packaging_secret_key: str, packaging_passphrase: str) -> Tuple[str, str]:
     if not packaging_passphrase or len(packaging_passphrase) == 0:
         raise ValueError("packaging_passphrase should not be null")
-    if not packaging_secret_key and len(packaging_secret_key) > 0:
+    if  packaging_secret_key and len(packaging_secret_key) > 0:
         secret_key = packaging_secret_key
     else:
         child = subprocess.Popen(["gpg", "--batch", "--fingerprint", "packaging@citusdata.com"], stdout=subprocess.PIPE,

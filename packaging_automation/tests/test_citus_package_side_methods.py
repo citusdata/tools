@@ -1,4 +1,3 @@
-import pathlib2
 import pytest
 
 from .test_utils import generate_new_gpg_key
