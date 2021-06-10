@@ -285,7 +285,7 @@ def remove_cloned_code(exec_path: str):
         if os.path.exists(f"{exec_path}/.git"):
             run(f"chmod -R 777 {exec_path}/.git")
         try:
-            run(f"sudo rm -rf {exec_path}")
+            run(f"rm -rf {exec_path}")
             print("Done. Code deleted successfully.")
         except:
             print(f"Some files could not be deleted in directory {exec_path}. "
