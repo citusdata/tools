@@ -2,6 +2,9 @@ name: Tool Tests
 
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  MICROSOFT_EMAIL: gindibay@microsoft.com
+  USER_NAME: Gurkan Indibay
+  MAIN_BRANCH: all-citus
 
 on:
   push:
@@ -25,10 +28,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - name: Define git credentials
+        run: git config --global user.email "${MICROSOFT_EMAIL}"&& git config --global user.name "${USER_NAME}"
       - name: Install package dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev
       - name: Install python requirements
-        run: python -m pip install -r python/requirements.txt
-      - name: Execute unit tests
-        run:  python -m pytest -q python/tests/test_update_package_properties.py
+        run: python -m pip install -r packaging_automation/requirements.txt
+      - name: Execute unit tests for "Update Package Properties"
+        run:  python -m pytest -q packaging_automation/tests/test_update_package_properties.py
+      - name: Execute unit tests for "Prepare Release"
+        run: python -m pytest -q packaging_automation/tests/test_prepare_release.py
 

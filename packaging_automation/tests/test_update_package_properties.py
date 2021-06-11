@@ -1,9 +1,16 @@
 import pytest
 import os
+import re
 from shutil import copyfile
+import pathlib2
+from datetime import datetime
 
 from .test_utils import are_strings_equal
-from ..update_package_properties import *
+from ..update_package_properties import (PackagePropertiesParams, changelog_for_tag,
+                                         get_last_changelog_content_from_debian, debian_changelog_header,
+                                         prepend_latest_changelog_into_debian_changelog,
+                                         convert_citus_changelog_into_rpm_changelog, spec_file_name, update_rpm_spec,
+                                         update_pkgvars, update_all_changes)
 
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[1])
@@ -13,8 +20,8 @@ TAG_NAME = os.getenv("TAG_NAME", default="v10.0.3")
 PROJECT_NAME = os.getenv("PROJECT_NAME", default="citus")
 MICROSOFT_EMAIL = os.getenv("MICROSOFT_EMAIL", default="gindibay@microsoft.com")
 NAME_SURNAME = os.getenv("NAME_SURNAME", default="Gurkan Indibay")
-CHANGELOG_DATE = datetime.strptime('Thu, 18 Mar 2021 01:40:08 +0000', '%a, %d %b %Y %H:%M:%S %z') if os.getenv(
-    "CHANGELOG_DATE") is None else datetime.strptime(os.getenv("CHANGELOG_DATE"), '%a, %d %b %Y %H:%M:%S %z')
+CHANGELOG_DATE_STR = os.getenv("CHANGELOG_DATE", 'Thu, 18 Mar 2021 01:40:08 +0000')
+CHANGELOG_DATE = datetime.strptime(CHANGELOG_DATE_STR, '%a, %d %b %Y %H:%M:%S %z')
 
 
 def default_changelog_param_for_test(latest_changelog, changelog_date):
@@ -34,10 +41,6 @@ def test_get_version_number():
 
 def test_get_version_number_with_project_name():
     assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number_with_project_name() == "10.0.3.citus-1"
-
-
-def test_find_nth_overlapping():
-    assert find_nth_overlapping("foofoo foofoo", "foofoo", 2) == 7
 
 
 def test_get_changelog_for_tag():

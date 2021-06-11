@@ -1,14 +1,16 @@
 import argparse
 import re
-from datetime import date, datetime
+from dataclasses import dataclass
+from datetime import datetime
 
 import pathlib2
 import string_utils
 from github import Github
-from jinja2 import Environment, FileSystemLoader
 from parameters_validation import (no_whitespaces, non_blank, non_empty, non_negative, validate_parameters,
                                    parameter_validation)
-from dataclasses import dataclass
+
+from .common_tool_methods import (find_nth_matching_line_and_line_number, find_nth_occurrence_position,
+                                  get_project_version_from_tag_name, get_template_environment)
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
@@ -22,7 +24,7 @@ def is_version(version: str):
         raise ValueError("version should be non-empty and should not be None")
     if not re.match(r"\d+\.\d+\.\d+$", version):
         raise ValueError(
-            "version should include 3 levels of versions consists of numbers  separated with dots. e.g: 10.0.1")
+            "version should include 3 levels giof versions consists of numbers  separated with dots. e.g: 10.0.1")
 
 
 @parameter_validation
@@ -92,36 +94,8 @@ def spec_file_name(project_name: str) -> str:
     return f"{project_name}.spec"
 
 
-def get_template_environment(template_dir: str) -> Environment:
-    file_loader = FileSystemLoader(template_dir)
-    env = Environment(loader=file_loader)
-    return env
-
-
-def find_nth_overlapping(subject_string, search_string, n) -> int:
-    start = subject_string.find(search_string)
-
-    while start >= 0 and n > 1:
-        start = subject_string.find(search_string, start + 1)
-        n -= 1
-    return start
-
-
-def find_nth_overlapping_line_by_regex(subject_string, regex_pattern, n) -> int:
-    lines = subject_string.splitlines()
-    counter = 0
-    index = -1
-    for i in range(len(lines)):
-        if re.match(regex_pattern, lines[i]):
-            counter = counter + 1
-        if counter == n:
-            index = i
-            break
-    return index
-
-
 def get_last_changelog_content(all_changelog_content: str) -> str:
-    second_changelog_index = find_nth_overlapping(all_changelog_content, "###", 3)
+    second_changelog_index = find_nth_occurrence_position(all_changelog_content, "###", 3)
     changelogs = all_changelog_content[:second_changelog_index]
     lines = changelogs.splitlines()
     if len(lines) < 1:
@@ -133,7 +107,8 @@ def get_last_changelog_content(all_changelog_content: str) -> str:
 
 
 def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
-    second_changelog_index = find_nth_overlapping_line_by_regex(all_changelog_content, "^[a-zA-Z]", 2)
+    second_changelog_index, second_changelog_line = find_nth_matching_line_and_line_number(all_changelog_content,
+                                                                                           "^[a-zA-Z]", 2)
     lines = all_changelog_content.splitlines()
     changelogs = "\n".join(lines[:second_changelog_index - 1]) + "\n"
     if len(lines) < 1:
@@ -141,7 +116,7 @@ def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
     return changelogs
 
 
-def remove_parentheses_from_string(param: str) -> str:
+def remove_paranthesis_from_string(param: str) -> str:
     return re.sub(r"[(\[].*?[)\]]", "", param)
 
 
@@ -153,15 +128,15 @@ def changelog_for_tag(github_token: str, project_name: str, tag_name: str) -> st
     return last_changelog_content
 
 
-# truncates # chars , get the version an put parentheses around version number adds 'stable; urgency=low' at the end
+# truncates # chars , get the version an put paranthesis around version number adds 'stable; urgency=low' at the end
 # changelog_header=> ### citus v8.3.3 (March 23, 2021) ###
 # debian header =>   citus (10.0.3.citus-1) stable; urgency=low
 @validate_parameters
 def debian_changelog_header(changelog_header: is_project_changelog_header(str), fancy: bool,
                             fancy_version_number: int) -> str:
     hash_removed_string = changelog_header.lstrip("### ").rstrip(" ###")
-    parentheses_removed_string = remove_parentheses_from_string(hash_removed_string)
-    words = parentheses_removed_string.strip().split(" ")
+    paranthesis_removed_string = remove_paranthesis_from_string(hash_removed_string)
+    words = paranthesis_removed_string.strip().split(" ")
     if len(words) != 2:
         raise ValueError("Two words should be included in striped version header")
     project_name = words[0]
@@ -291,7 +266,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token')
     parser.add_argument('--prj_name')
-    parser.add_argument('--prj_ver')
     parser.add_argument('--tag_name')
     parser.add_argument('--fancy')
     parser.add_argument('--fancy_ver_no')
@@ -305,9 +279,11 @@ if __name__ == "__main__":
         raise ValueError(f"fancy_ver_no is expected to be numeric actual value {arguments.fancy_ver_no}")
 
     exec_date = datetime.strptime(arguments.date, '%Y.%m.%d %H:%M:%S %z')
+    is_tag(arguments.tag_name)
+    prj_ver = get_project_version_from_tag_name(arguments.tag_name)
 
     package_properties = PackagePropertiesParams(project_name=arguments.prj_name,
-                                                 project_version=arguments.prj_ver, fancy=arguments.fancy,
+                                                 project_version=prj_ver, fancy=arguments.fancy,
                                                  fancy_version_number=int(arguments.fancy_ver_no),
                                                  name_surname=arguments.name, microsoft_email=arguments.email,
                                                  changelog_date=exec_date)
