@@ -1,4 +1,3 @@
-import os
 import base64
 import os
 import re
@@ -15,9 +14,6 @@ from github import Repository, PullRequest, Commit
 from jinja2 import Environment, FileSystemLoader
 
 from .common_validations import (is_tag, is_version)
-from git import Repo
-import pathlib2
-from typing import Tuple
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
