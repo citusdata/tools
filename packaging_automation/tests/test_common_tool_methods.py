@@ -1,12 +1,11 @@
 import os
 import unittest
 import uuid
+from datetime import datetime
 from shutil import copyfile
 
 import pathlib2
 from github import Github
-from datetime import datetime
-import uuid
 
 from ..common_tool_methods import (
     find_nth_occurrence_position, is_major_release,

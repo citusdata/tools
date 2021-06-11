@@ -265,7 +265,7 @@ def local_branch_exists(branch_name: str, working_dir: str) -> bool:
     return False
 
 
-def does_branch_exist(branch_name: str, working_dir: str) -> bool:
+def branch_exists(branch_name: str, working_dir: str) -> bool:
     return local_branch_exists(branch_name, working_dir) or remote_branch_exists(branch_name, working_dir)
 
 
