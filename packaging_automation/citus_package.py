@@ -6,9 +6,10 @@ from enum import Enum
 from typing import List
 from typing import Tuple
 
+from parameters_validation import non_blank, non_empty
+
 from .common_tool_methods import run_with_output, PackageType
 from .packaging_warning_handler import validate_output
-from parameters_validation import no_whitespaces, non_blank, non_empty, non_negative, validate_parameters
 
 supported_platforms = {
     "debian": ["buster", "stretch", "jessie", "wheezy"],
