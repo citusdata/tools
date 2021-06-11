@@ -1,10 +1,13 @@
+import base64
 import os
 import re
 import subprocess
 from datetime import datetime
+from enum import Enum
 from typing import Dict, List
 from typing import Tuple
 
+import gnupg
 import pathlib2
 from git import Repo
 from github import Repository, PullRequest, Commit
@@ -18,7 +21,7 @@ PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
 # When using GitPython library Repo objects should be closed to be able to delete cloned sources
 # referenced by Repo objects.References are stored in below array to be able to close
 # all resources after the code execution.
-referenced_repos:List[Repo] = []
+referenced_repos: List[Repo] = []
 
 
 def get_new_repo(working_dir: str) -> Repo:
@@ -32,8 +35,31 @@ def release_all_repos():
         repo.close()
 
 
+class PackageType(Enum):
+    deb = 1,
+    rpm = 2
+
+
+BASE_PATH = pathlib2.Path(__file__).parents[1]
+
+
 def get_spec_file_name(project_name: str) -> str:
     return f"{project_name}.spec"
+
+
+def get_minor_project_version(project_version: str) -> str:
+    project_version_details = get_version_details(project_version)
+    return f'{project_version_details["major"]}.{project_version_details["minor"]}'
+
+
+def get_version_number(version: str, fancy: bool, fancy_release_count: int) -> str:
+    fancy_suffix = f"-{fancy_release_count}" if fancy else ""
+    return f"{version}{fancy_suffix}"
+
+
+def get_version_number_with_project_name(project_name: str, version: str, fancy: bool, fancy_release_count: int) -> str:
+    fancy_suffix = f"-{fancy_release_count}" if fancy else ""
+    return f"{version}.{project_name}{fancy_suffix}"
 
 
 def get_project_version_from_tag_name(tag_name: is_tag(str)) -> str:
@@ -75,6 +101,11 @@ def remove_text_with_parenthesis(param: str) -> str:
 
 def run(command, *args, **kwargs):
     result = subprocess.run(command, *args, check=True, shell=True, **kwargs)
+    return result
+
+
+def run_with_output(command, *args, **kwargs):
+    result = subprocess.run(command, *args, check=True, shell=True, stdout=subprocess.PIPE, **kwargs)
     return result
 
 
@@ -290,3 +321,120 @@ def remove_cloned_code(exec_path: str):
         except:
             print(f"Some files could not be deleted in directory {exec_path}. "
                   f"Please delete them manually or they will be deleted before next execution")
+
+
+def process_docker_template_file(project_version: str, templates_path: str, template_file_path: str):
+    minor_version = get_minor_project_version(project_version)
+    env = get_template_environment(templates_path)
+    template = env.get_template(template_file_path)
+    return f"{template.render(project_version=project_version, project_minor_version=minor_version)}\n"
+
+
+def write_to_file(content: str, dest_file_name: str):
+    with open(dest_file_name, "w") as writer:
+        writer.write(content)
+
+
+def get_gpg_fingerprint_from_name(name: str):
+    result = subprocess.run(f"gpg --list-keys ", check=True, shell=True, stdout=subprocess.PIPE)
+    lines = result.stdout.decode("ascii").splitlines()
+    counter = 0
+    line_found = False
+    for line in lines:
+        if line.startswith("uid") and name in line:
+            line_found = True
+            break
+        counter = counter + 1
+    if not line_found:
+        raise ValueError(f"Key with the name {name} could not be found ")
+    else:
+        return lines[counter - 1].strip()
+
+
+def delete_gpg_key_by_name(name: str):
+    try:
+        while True:
+            key_id = get_gpg_fingerprint_from_name(name)
+            run(f"gpg --batch --yes --delete-secret-key {key_id}")
+            run(f"gpg --batch --yes --delete-key {key_id}")
+    except ValueError:
+        print(f"Key for the name {name} does not exist")
+
+
+def get_secret_key_by_fingerprint(fingerprint: str) -> str:
+    try:
+        cmd = f'gpg --batch --export-secret-keys -a "{fingerprint}" | base64'
+        ps = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=2)
+        secret_key = ps.stdout.decode("ascii")
+        return secret_key
+    except subprocess.TimeoutExpired:
+        raise ValueError(
+            f"Error while getting key. Most probably packaging key is stored with password. "
+            f"Please remove the password when storing key with fingerprint {fingerprint}")
+
+
+def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: str) -> str:
+    try:
+        gpg = gnupg.GPG()
+        private_key = gpg.export_keys(fingerprint, True, passphrase=passphrase)
+
+        return base64.b64encode(private_key.encode("ascii")).decode("ascii")
+    except subprocess.TimeoutExpired:
+        raise ValueError(
+            f"Error while getting key. Most probably packaging key is stored with password. "
+            f"Please remove the password when storing key with fingerprint {fingerprint}")
+
+
+def get_public_gpg_key(fingerprint: str) -> str:
+    gpg = gnupg.GPG()
+    ascii_armored_public_keys = gpg.export_keys(fingerprint)
+    return base64.b64encode(ascii_armored_public_keys.encode("ascii")).decode("ascii")
+
+
+def define_rpm_public_key_to_machine(fingerprint: str):
+    run(f"gpg --export -a {fingerprint} >rpm_public.key")
+    run("rpm --import rpm_public.key")
+    os.remove("rpm_public.key")
+
+
+def delete_rpm_key_by_name(key_name: str):
+    result = subprocess.run(["rpm", "-q gpg-pubkey", "--qf %{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n"],
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output = result.stdout.decode("ascii")
+    if output == "package gpg-pubkey is not installed":
+        print("There is not rpm public key to delete")
+    else:
+        key_lines = output.splitlines()
+        key_lines_filtered = filter(lambda line: key_name in line, key_lines)
+        for key_line in key_lines_filtered:
+            keys = key_line.split()
+            if len(keys) > 0:
+                run(f"rpm -e {keys[0]}")
+                print(f"{keys[0]} deleted")
+
+
+def is_rpm_file_signed(file_path: str) -> bool:
+    result = run_with_output(f"rpm -K {file_path}")
+    if result.returncode == 0:
+        return True
+    else:
+        return False
+
+
+def verify_rpm_signature_in_dir(rpm_dir_path: str):
+    files = list()
+    for (dirpath, dirnames, filenames) in os.walk(rpm_dir_path):
+        files += [os.path.join(dirpath, file) for file in filenames]
+    rpm_files = filter(lambda file_name: file_name.endswith("rpm"), files)
+    for file in rpm_files:
+        if not is_rpm_file_signed(f"{file}"):
+            raise ValueError(f"File {file} is not signed or there is a signature check problem")
+
+
+def get_current_branch(exec_path: str):
+    repo = Repo(exec_path)
+    return repo.active_branch
+
+
+def remove_prefix(text, prefix):
+    return text[text.startswith(prefix) and len(prefix):]
