@@ -1,7 +1,7 @@
 from ..publish_docker import (decode_triggering_event_info, GithubTriggerEventSource, decode_tag_parts,
                               get_image_tag, DockerImageType, publish_main_docker_images, publish_tagged_docker_images,
                               publish_nightly_docker_image)
-from ..common_tool_methods import remove_prefix, run, run_with_output
+from ..common_tool_methods import (remove_prefix, run, run_with_output)
 import pytest
 import os
 import docker

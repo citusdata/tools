@@ -1,7 +1,8 @@
 import pathlib2
 import pytest
 
-from ..packaging_warning_handler import *
+from ..packaging_warning_handler import (parse_ignore_lists, PackageType, filter_warning_lines,
+                                         get_warnings_to_be_raised, get_error_message, validate_output)
 
 TEST_BASE_PATH = pathlib2.Path(__file__).parent
 
@@ -64,6 +65,7 @@ def test_get_error_message():
         error_message = get_error_message(base_warnings_to_be_raised, debian_warnings_to_be_raised, PackageType.deb)
         assert error_message == "Warning lines:\nWarning: Unhandled\nDebian Warning lines:\n" \
                                 "citus-enterprise100_11.x86_64: W: invalid-date-format\n"
+
 
 def test_get_error_message_empty_package_specific_errors():
     with open(f"{TEST_BASE_PATH}/files/packaging_warning/sample_warning_build_output_deb_only_base.txt", "r") as reader:

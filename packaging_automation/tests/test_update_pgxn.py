@@ -1,7 +1,7 @@
 import pathlib2
 import os
 from ..update_pgxn import update_meta_json, update_pkgvars
-from .. import common_tool_methods
+from ..common_tool_methods import (run)
 
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 TEST_BASE_PATH = f"{BASE_PATH}/packaging_test"
@@ -12,13 +12,13 @@ TEMPLATE_PATH = f"{BASE_PATH}/packaging_automation/templates/pgxn"
 
 def setup_module():
     if not os.path.exists("packaging_test"):
-        common_tool_methods.run(
+        run(
             "git clone --branch pgxn-citus https://github.com/citusdata/packaging.git packaging_test")
 
 
 def teardown_module():
     if os.path.exists("packaging_test"):
-        common_tool_methods.run("rm -r packaging_test")
+        run("rm -r packaging_test")
 
 
 def test_update_meta_json():
