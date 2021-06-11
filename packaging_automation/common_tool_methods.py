@@ -1,3 +1,4 @@
+import os
 import base64
 import os
 import re
@@ -14,9 +15,28 @@ from github import Repository, PullRequest, Commit
 from jinja2 import Environment, FileSystemLoader
 
 from .common_validations import (is_tag, is_version)
+from git import Repo
+import pathlib2
+from typing import Tuple
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
+
+# When using GitPython library Repo objects should be closed to be able to delete cloned sources
+# referenced by Repo objects.References are stored in below array to be able to close
+# all resources after the code execution.
+referenced_repos:List[Repo] = []
+
+
+def get_new_repo(working_dir: str) -> Repo:
+    repo = Repo(working_dir)
+    referenced_repos.append(repo)
+    return repo
+
+
+def release_all_repos():
+    for repo in referenced_repos:
+        repo.close()
 
 
 class PackageType(Enum):
@@ -98,7 +118,7 @@ def cherry_pick_prs(prs: List[PullRequest.PullRequest]):
         commits = pr.get_commits()
         for single_commit in commits:
             if not is_merge_commit(single_commit):
-                cp_result = run(f"git cherry-pick {single_commit.commit.sha}")
+                cp_result = run(f"git cherry-pick -x {single_commit.commit.sha}")
                 print(
                     f"Cherry pick result for PR no {pr.number} and commit sha {single_commit.commit.sha}: {cp_result}")
 
@@ -127,8 +147,14 @@ def get_upcoming_patch_version(version: is_version(str)) -> str:
 
 
 def get_upcoming_minor_version(version: is_version(str)) -> str:
-    upcoming_version_details = get_version_details(version)
-    return f'{upcoming_version_details["major"]}.{upcoming_version_details["minor"]}'
+    project_version_details = get_version_details(version)
+    return f'{project_version_details["major"]}.{int(project_version_details["minor"]) + 1}'
+
+
+def get_last_commit_message(path: str) -> str:
+    repo = get_new_repo(path)
+    commit = repo.head.commit
+    return commit.message
 
 
 def is_major_release(version: is_version(str)) -> bool:
@@ -215,6 +241,9 @@ def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
 
                 if line_number + 1 < len(lines):
                     copy_lines[appended_line_index + 1] = append_str
+                    # Since line is added after matched string, shift index start with line_number+1
+                    # increment of appended_line_index is 2 since copy_lines appended_line_index+1 includes
+                    # append_str
                     lines_to_be_shifted = lines[line_number + 1:]
                     copy_lines = copy_lines[0:appended_line_index + 2] + lines_to_be_shifted
                 else:
@@ -238,6 +267,8 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
             if re.match(match_regex, line.strip()):
                 has_match = True
                 copy_lines[prepended_line_index] = append_str
+                # Since line is added before  matched string shift index start with line_number
+                # increment of prepend_line_index is 1 line after prepended_line_index should be shifted
                 lines_to_be_shifted = lines[line_number:]
                 copy_lines = copy_lines[0:prepended_line_index + 1] + lines_to_be_shifted
             prepended_line_index = prepended_line_index + 1
@@ -248,34 +279,52 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
     return has_match
 
 
-def does_remote_branch_exist(branch_name: str, working_dir: str) -> bool:
-    repo = Repo(working_dir)
-    print("Remote Branches")
+def get_current_branch(working_dir: str) -> str:
+    repo = get_new_repo(working_dir)
+    return repo.active_branch
+
+
+def remote_branch_exists(branch_name: str, working_dir: str) -> bool:
+    repo = get_new_repo(working_dir)
     for rp in repo.references:
-        print(rp.name)
         if rp.name.endswith(f"/{branch_name}"):
             return True
     return False
 
 
-def does_local_branch_exist(branch_name: str, working_dir: str) -> bool:
-    repo = Repo(working_dir)
-    print("Local Branches")
+def local_branch_exists(branch_name: str, working_dir: str) -> bool:
+    repo = get_new_repo(working_dir)
     for rp in repo.branches:
-        print(rp.name)
         if rp.name == branch_name:
             return True
     return False
 
 
 def does_branch_exist(branch_name: str, working_dir: str) -> bool:
-    return does_local_branch_exist(branch_name, working_dir) or does_remote_branch_exist(branch_name, working_dir)
+    return local_branch_exists(branch_name, working_dir) or remote_branch_exists(branch_name, working_dir)
 
 
 def get_template_environment(template_dir: str) -> Environment:
     file_loader = FileSystemLoader(template_dir)
     env = Environment(loader=file_loader)
     return env
+
+
+def remove_cloned_code(exec_path: str):
+    release_all_repos()
+    if os.path.exists(f"{exec_path}"):
+        print(f"Deleting cloned code {exec_path} ...")
+        # https://stackoverflow.com/questions/51819472/git-cant-delete-local-branch-operation-not-permitted
+        # https://askubuntu.com/questions/1049142/cannot-delete-git-directory
+        # since git directory is readonly first we need to give write permission to delete git directory
+        if os.path.exists(f"{exec_path}/.git"):
+            run(f"chmod -R 777 {exec_path}/.git")
+        try:
+            run(f"rm -rf {exec_path}")
+            print("Done. Code deleted successfully.")
+        except:
+            print(f"Some files could not be deleted in directory {exec_path}. "
+                  f"Please delete them manually or they will be deleted before next execution")
 
 
 def process_docker_template_file(project_version: str, templates_path: str, template_file_path: str):

@@ -12,9 +12,9 @@ from parameters_validation import (non_blank, non_empty)
 from .common_tool_methods import (get_version_details, get_upcoming_patch_version, is_major_release,
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
-                                  find_nth_matching_line_and_line_number, get_minor_version,
-                                  does_remote_branch_exist, does_local_branch_exist, prepend_line_in_file,
-                                  get_template_environment, get_patch_version_regex)
+                                  find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,
+                                  remote_branch_exists, local_branch_exists, prepend_line_in_file,
+                                  get_template_environment, get_upcoming_minor_version, remove_cloned_code)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -49,13 +49,13 @@ TEMPLATES_PATH = f"{BASE_PATH}/templates"
 MULTI_EXT_OUT_TEMPLATE_FILE = "multi_extension_out_prepare_release.tmpl"
 MULTI_EXT_SQL_TEMPLATE_FILE = "multi_extension_sql_prepare_release.tmpl"
 
-
-class SupportedGithubRepos(Enum):
-    CITUS = 1
-    CITUS_ENTERPRISE = 2
-
-
-default_project_branches = {"citus": "master", "citus-enterprise": "enterprise-master"}
+repo_details = {
+    "citus": {
+        "configure-in-str": "Citus",
+        "branch": "master"},
+    "citus-enterprise": {
+        "configure-in-str": "Citus Enterprise",
+        "branch": "enterprise master"}}
 
 
 @dataclass
@@ -83,7 +83,7 @@ class UpcomingVersionBranchParams:
     citus_control_file_path: str
     config_py_path: str
     configure_in_path: str
-    devel_version: str
+    upcoming_devel_version: str
     distributed_dir_path: str
     downgrades_dir_path: str
     is_test: bool
@@ -94,7 +94,6 @@ class UpcomingVersionBranchParams:
     project_version: str
     repository: Repository
     upcoming_minor_version: str
-    upcoming_version: str
     upcoming_version_branch: str
 
 
@@ -130,10 +129,8 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
     downgrades_dir_path = f"{exec_path}/{DOWNGRADES_DIR_PATH}"
 
     project_version_details = get_version_details(project_version)
-    default_upcoming_version = get_upcoming_patch_version(project_version)
-    upcoming_version = os.getenv("UPCOMING_VERSION", default=default_upcoming_version)
-    upcoming_minor_version = get_minor_version(upcoming_version)
-    devel_version = f"{upcoming_minor_version}devel"
+    upcoming_minor_version = get_upcoming_minor_version(project_version)
+    upcoming_devel_version = f"{upcoming_minor_version}devel"
 
     release_branch_name = f'release-{project_version_details["major"]}.{project_version_details["minor"]}'
     release_branch_name = f"{release_branch_name}-test" if is_test else release_branch_name
@@ -147,7 +144,8 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
     # major release
     if is_major_release(project_version):
         print(f"### {project_version} is a major release. Executing Major release flow... ###")
-        major_release_params = MajorReleaseParams(configure_in_path=configure_in_path, devel_version=devel_version,
+        major_release_params = MajorReleaseParams(configure_in_path=configure_in_path,
+                                                  devel_version=upcoming_devel_version,
                                                   is_test=is_test, main_branch=main_branch,
                                                   multi_extension_out_path=multi_extension_out_path,
                                                   project_name=project_name, project_version=project_version,
@@ -155,9 +153,8 @@ def update_release(github_token: non_blank(non_empty(str)), project_name: non_bl
         prepare_release_branch_for_major_release(major_release_params)
         branch_params = UpcomingVersionBranchParams(project_version=project_version,
                                                     project_name=project_name,
-                                                    upcoming_version=upcoming_version,
                                                     upcoming_version_branch=upcoming_version_branch,
-                                                    devel_version=devel_version, is_test=is_test,
+                                                    upcoming_devel_version=upcoming_devel_version, is_test=is_test,
                                                     main_branch=main_branch,
                                                     citus_control_file_path=citus_control_file_path,
                                                     config_py_path=config_py_path,
@@ -195,20 +192,21 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
     if patchReleaseParams.is_test:
 
         non_test_release_branch = patchReleaseParams.release_branch_name.rstrip("-test")
-        release_branch_exist = does_remote_branch_exist(non_test_release_branch, os.getcwd())
-        test_release_branch_exist = does_local_branch_exist(patchReleaseParams.release_branch_name, os.getcwd())
+        release_branch_exist = remote_branch_exists(non_test_release_branch, os.getcwd())
+        test_release_branch_exist = local_branch_exists(patchReleaseParams.release_branch_name, os.getcwd())
 
         if release_branch_exist:
             run(f"git checkout {non_test_release_branch}")
             run(f"git checkout -b {patchReleaseParams.release_branch_name}")
         elif test_release_branch_exist:
-            run(f"git checkout {patchReleaseParams.release_branch_name}")
+            run(f"git checkout  {patchReleaseParams.release_branch_name}")
         else:
-            run(f"git checkout -b {patchReleaseParams.release_branch_name}")
+            run(f"git checkout -b  {patchReleaseParams.release_branch_name}")
     else:
         checkout_branch(patchReleaseParams.release_branch_name, patchReleaseParams.is_test)
     # change version info in configure.in file
-    update_version_in_configure_in(patchReleaseParams.configure_in_path, patchReleaseParams.project_version)
+    update_version_in_configure_in(patchReleaseParams.project_name, patchReleaseParams.configure_in_path,
+                                   patchReleaseParams.project_version)
     # execute "auto-conf "
     execute_autoconf_f()
     # change version info in multi_extension.out
@@ -240,14 +238,16 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
     # create master-update-version-$curtime branch
     create_and_checkout_branch(upcoming_params.upcoming_version_branch)
     # update version info with upcoming version on configure.in
-    update_version_in_configure_in(upcoming_params.configure_in_path, upcoming_params.devel_version)
+    update_version_in_configure_in(upcoming_params.project_name, upcoming_params.configure_in_path,
+                                   upcoming_params.upcoming_devel_version)
     # update version info with upcoming version on config.py
     update_version_with_upcoming_version_in_config_py(upcoming_params.config_py_path,
                                                       upcoming_params.upcoming_minor_version)
     # execute autoconf -f
     execute_autoconf_f()
-    # update version info with upcoming version on multiextension.out
-    update_version_in_multi_extension_out(upcoming_params.multi_extension_out_path, upcoming_params.devel_version)
+    # update version info with upcoming version on multi_extension.out
+    update_version_in_multi_extension_out(upcoming_params.multi_extension_out_path,
+                                          upcoming_params.upcoming_devel_version)
     # update detail lines with minor version
     update_detail_strings_in_multi_extension_out(upcoming_params.multi_extension_out_path,
                                                  upcoming_params.upcoming_minor_version)
@@ -275,14 +275,14 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
     update_schema_version_in_citus_control(upcoming_params.citus_control_file_path,
                                            default_upcoming_schema_version)
     # commit and push changes on master-update-version-$curtime branch
-    commit_changes_for_version_bump(upcoming_params.project_name, upcoming_params.project_version)
+    commit_changes_for_version_bump(upcoming_params.project_name, upcoming_params.upcoming_devel_version)
     if not upcoming_params.is_test:
         push_branch(upcoming_params.upcoming_version_branch)
 
         # create pull request
         create_pull_request_for_upcoming_version_branch(upcoming_params.repository, upcoming_params.main_branch,
                                                         upcoming_params.upcoming_version_branch,
-                                                        upcoming_params.upcoming_version)
+                                                        upcoming_params.upcoming_devel_version)
     print(f"### Done {upcoming_params.upcoming_version_branch} flow executed. ###")
     return upgrade_file, downgrade_file
 
@@ -294,7 +294,8 @@ def prepare_release_branch_for_major_release(majorReleaseParams: MajorReleasePar
     # create release branch in release-X.Y format
     create_and_checkout_branch(majorReleaseParams.release_branch_name)
     # change version info in configure.in file
-    update_version_in_configure_in(majorReleaseParams.configure_in_path, majorReleaseParams.project_version)
+    update_version_in_configure_in(majorReleaseParams.project_name, majorReleaseParams.configure_in_path,
+                                   majorReleaseParams.project_version)
     # execute "autoconf -f"
     execute_autoconf_f()
     # change version info in multi_extension.out
@@ -340,12 +341,12 @@ def commit_changes_for_version_bump(project_name, project_version):
     current_branch = get_current_branch(os.getcwd())
     print(f"### Committing changes for branch {current_branch}... ###")
     run("git add .")
-    run(f' git commit -m "Bump {project_name} version to {project_version} "')
+    run(f' git commit  -m "Bump {project_name} version to {project_version} "')
     print(f"### Done Changes committed for {current_branch}. ###")
 
 
 def update_schema_version_in_citus_control(citus_control_file_path, schema_version):
-    print(f"### Updating {citus_control_file_path} file with the version {schema_version}... ###")
+    print(f"### Updating {citus_control_file_path} file with the  version {schema_version}... ###")
     if not replace_line_in_file(citus_control_file_path, CITUS_CONTROL_SEARCH_PATTERN,
                                 f"default_version = '{schema_version}'"):
         raise ValueError(f"{citus_control_file_path} does not have match for version")
@@ -355,7 +356,7 @@ def update_schema_version_in_citus_control(citus_control_file_path, schema_versi
 def add_downgrade_script_in_multi_extension_file(current_schema_version,
                                                  multi_extension_out_path,
                                                  upcoming_minor_version, template_file: str):
-    print(f"### Adding downgrade scripts from version {current_schema_version} to "
+    print(f"### Adding downgrade scripts from version  {current_schema_version} to  "
           f"{upcoming_minor_version} on {multi_extension_out_path}... ### ")
     env = get_template_environment(TEMPLATES_PATH)
     template = env.get_template(
@@ -367,8 +368,8 @@ def add_downgrade_script_in_multi_extension_file(current_schema_version,
                                 f"DROP TABLE prev_objects, extension_diff;",
                                 string_to_prepend):
         raise ValueError(f"Downgrade scripts could not be added in {multi_extension_out_path} since "
-                         f"'DROP TABLE prev_objects, extension_diff;' script could not be found ")
-    print(f"### Done Test downgrade scripts successfully added in {multi_extension_out_path}. ###")
+                         f"'DROP TABLE prev_objects, extension_diff;' script could not be found  ")
+    print(f"### Done Test downgrade scripts successfully  added in {multi_extension_out_path}. ###")
 
 
 def get_current_schema_from_citus_control(citus_control_file_path: str) -> str:
@@ -447,10 +448,10 @@ def execute_autoconf_f():
     print(f"### Done autoconf -f executed. ###")
 
 
-def update_version_in_configure_in(configure_in_path, project_version):
+def update_version_in_configure_in(project_name,configure_in_path, project_version):
     print(f"### Updating version on file {configure_in_path}... ###")
     if not replace_line_in_file(configure_in_path, CONFIGURE_IN_SEARCH_PATTERN,
-                                f"AC_INIT([Citus], [{project_version}])"):
+                                f"AC_INIT([{repo_details[project_name]['configure-in-str']}], [{project_version}])"):
         raise ValueError(f"{configure_in_path} does not have match for version")
     print(f"### Done {configure_in_path} file is updated with project version {project_version}. ###")
 
@@ -536,7 +537,7 @@ def validate_parameters(major_release_flag: bool):
     if not major_release_flag and arguments.cherry_pick_enabled \
             and not arguments.earliest_pr_date:
         raise ValueError(
-            "earliest_pr_date parameter could not be empty when cherry pick is enabled and release is major.")
+            "earliest_pr_date parameter could  not be empty when cherry pick is enabled and release is major.")
 
 
 if __name__ == "__main__":
@@ -559,7 +560,7 @@ if __name__ == "__main__":
         initialize_env(execution_path, arguments.prj_name)
 
         is_cherry_pick_enabled = arguments.cherry_pick_enabled
-        main_branch = arguments.main_branch if arguments.main_branch else default_project_branches[arguments.prj_name]
+        main_branch = arguments.main_branch if arguments.main_branch else repo_details[arguments.prj_name]["branch"]
         print(f"Using main branch {main_branch} for the repo {arguments.prj_name}.")
         os.chdir(execution_path)
         print(f"Executing in path {execution_path}")

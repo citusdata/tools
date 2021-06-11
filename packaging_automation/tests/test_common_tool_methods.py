@@ -9,10 +9,10 @@ import uuid
 from ..common_tool_methods import (
     find_nth_occurrence_position, is_major_release,
     str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
-    replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label,
+    replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label, get_upcoming_minor_version,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
-    append_line_in_file, prepend_line_in_file, does_remote_branch_exist, get_current_branch, get_patch_version_regex,
-    does_local_branch_exist)
+    get_patch_version_regex, append_line_in_file, prepend_line_in_file, remote_branch_exists, get_current_branch,
+    local_branch_exists, get_last_commit_message)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -69,27 +69,47 @@ def test_replace_line_in_file():
     finally:
         os.remove(copy_file_path)
 
+def test_get_upcoming_minor_version():
+    assert get_upcoming_minor_version("10.1.0") == "10.2"
+
+def test_get_last_commit_message():
+    current_branch_name = get_current_branch(os.getcwd())
+    test_branch_name = f"test{uuid.uuid4()}"
+    run(f"git checkout -b {test_branch_name}")
+    try:
+        with open(test_branch_name,"w") as writer:
+            writer.write("Test content")
+        run(f"git add .")
+        commit_message = f"Test message for {test_branch_name}"
+        run(f"git commit -m '{commit_message}'")
+        assert get_last_commit_message(os.getcwd()) == f"{commit_message}\n"
+    finally:
+        run(f"git checkout {current_branch_name}")
+        run(f"git branch -D {test_branch_name}")
+
+
+
 
 def test_does_local_branch_exist():
     run("git fetch")
     current_branch_name = get_current_branch(os.getcwd())
     branch_name = "develop-local-test"
-    assert does_remote_branch_exist("develop", os.getcwd())
-    assert not does_remote_branch_exist("develop2", os.getcwd())
+    assert remote_branch_exists("develop", os.getcwd())
+    assert not remote_branch_exists("develop2", os.getcwd())
     try:
         run(f"git checkout -b {branch_name}")
-        assert does_local_branch_exist(branch_name, os.getcwd())
+        assert local_branch_exists(branch_name, os.getcwd())
         run(f"git checkout {current_branch_name} ")
     finally:
         run(f"git branch -D {branch_name}")
 
-    assert not does_remote_branch_exist("develop_test", os.getcwd())
+    assert not remote_branch_exists("develop_test", os.getcwd())
 
 
-def test_does_remote_branch_exist():
+def test_remote_branch_exist():
     run("git fetch")
-    assert does_remote_branch_exist("develop", os.getcwd())
-    assert not does_remote_branch_exist(f"develop{uuid.uuid4()}", os.getcwd())
+    assert remote_branch_exists("develop", os.getcwd())
+    assert not remote_branch_exists(f"develop{uuid.uuid4()}", os.getcwd())
 
 
 def test_get_minor_version():
