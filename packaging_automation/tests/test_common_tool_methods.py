@@ -1,15 +1,13 @@
 import os
-from datetime import datetime
+import uuid
 from shutil import copyfile
 
 import pathlib2
-from github import Github
-import uuid
 
 from ..common_tool_methods import (
     find_nth_occurrence_position, is_major_release,
     str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
-    replace_line_in_file, get_prs_for_patch_release, filter_prs_by_label, get_upcoming_minor_version,
+    replace_line_in_file, get_upcoming_minor_version,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
     get_patch_version_regex, append_line_in_file, prepend_line_in_file, remote_branch_exists, get_current_branch,
     local_branch_exists, get_last_commit_message)
@@ -23,9 +21,7 @@ def test_find_nth_occurrence_position():
 
 
 def test_find_nth_matching_line_number_by_regex():
-    # Two match case
     assert find_nth_matching_line_and_line_number("citusx\n citusx\ncitusx", "^citusx$", 2)[0] == 2
-    # No match case
     assert find_nth_matching_line_and_line_number("citusx\n citusx\ncitusx", "^citusy$", 2)[0] == -1
 
 
