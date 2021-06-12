@@ -86,7 +86,7 @@ def test_get_last_commit_message():
 
 
 
-def test_does_local_branch_exist():
+def test_local_branch_exist():
     run("git fetch")
     current_branch_name = get_current_branch(os.getcwd())
     branch_name = "develop-local-test"
