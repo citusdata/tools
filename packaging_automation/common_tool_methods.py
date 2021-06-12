@@ -430,11 +430,5 @@ def verify_rpm_signature_in_dir(rpm_dir_path: str):
         if not is_rpm_file_signed(f"{file}"):
             raise ValueError(f"File {file} is not signed or there is a signature check problem")
 
-
-def get_current_branch(exec_path: str):
-    repo = Repo(exec_path)
-    return repo.active_branch
-
-
 def remove_prefix(text, prefix):
     return text[text.startswith(prefix) and len(prefix):]
