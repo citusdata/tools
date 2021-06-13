@@ -1,6 +1,8 @@
 import os
 import uuid
 from shutil import copyfile
+from github import Github
+from datetime import datetime
 
 import pathlib2
 
@@ -10,7 +12,7 @@ from ..common_tool_methods import (
     replace_line_in_file, get_upcoming_minor_version,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
     get_patch_version_regex, append_line_in_file, prepend_line_in_file, remote_branch_exists, get_current_branch,
-    local_branch_exists, get_last_commit_message)
+    local_branch_exists, get_last_commit_message,get_prs_for_patch_release,filter_prs_by_label)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -170,21 +172,21 @@ def test_prepend_line_in_file():
         os.remove(test_file)
 
 # TODO Commented out since code block performs too much requests which causes API Rate Limit Error
-# def test_getprs():
-#     # created at is not seen on Github. Should be checked on API result
-#     g = Github(GITHUB_TOKEN)
-#     repository = g.get_repo(f"citusdata/citus")
-#     prs = get_prs_for_patch_release(repository, datetime.strptime('2021.02.26', '%Y.%m.%d'), "master",
-#                                     datetime.strptime('2021.03.02', '%Y.%m.%d'))
-#     assert 1 == len(prs)
-#     assert 4751 == prs[0].number
-#
-#
-# def test_getprs_with_backlog_label():
-#     g = Github(GITHUB_TOKEN)
-#     repository = g.get_repo(f"citusdata/citus")
-#     prs = get_prs_for_patch_release(repository, datetime.strptime('2021.02.20', '%Y.%m.%d'), "master",
-#                                     datetime.strptime('2021.02.27', '%Y.%m.%d'))
-#     prs_backlog = filter_prs_by_label(prs, "backport")
-#     assert 1 == len(prs_backlog)
-#     assert 4746 == prs_backlog[0].number
+def test_getprs():
+    # created at is not seen on Github. Should be checked on API result
+    g = Github(GITHUB_TOKEN)
+    repository = g.get_repo(f"citusdata/citus")
+    prs = get_prs_for_patch_release(repository, datetime.strptime('2021.02.26', '%Y.%m.%d'), "master",
+                                    datetime.strptime('2021.03.02', '%Y.%m.%d'))
+    assert 6 == len(prs)
+    assert 4748 == prs[0].number
+
+
+def test_getprs_with_backlog_label():
+    g = Github(GITHUB_TOKEN)
+    repository = g.get_repo(f"citusdata/citus")
+    prs = get_prs_for_patch_release(repository, datetime.strptime('2021.02.20', '%Y.%m.%d'), "master",
+                                    datetime.strptime('2021.02.27', '%Y.%m.%d'))
+    prs_backlog = filter_prs_by_label(prs, "backport")
+    assert 1 == len(prs_backlog)
+    assert 4746 == prs_backlog[0].number
