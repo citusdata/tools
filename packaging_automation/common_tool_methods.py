@@ -169,7 +169,7 @@ def get_prs_for_patch_release(repo: Repository.Repository, earliest_date: dateti
     # filter pull requests according to given time interval
     filtered_pull_requests = list()
     for pull_request in pull_requests:
-        if not pull_request.is_merged():
+        if not pull_request.merged_at:
             continue
         if pull_request.merged_at < earliest_date:
             continue
@@ -429,12 +429,6 @@ def verify_rpm_signature_in_dir(rpm_dir_path: str):
     for file in rpm_files:
         if not is_rpm_file_signed(f"{file}"):
             raise ValueError(f"File {file} is not signed or there is a signature check problem")
-
-
-def get_current_branch(exec_path: str):
-    repo = Repo(exec_path)
-    return repo.active_branch
-
 
 def remove_prefix(text, prefix):
     return text[text.startswith(prefix) and len(prefix):]
