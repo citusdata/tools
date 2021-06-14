@@ -1,10 +1,11 @@
 import os
 import uuid
-from shutil import copyfile
-from github import Github
 from datetime import datetime
+from shutil import copyfile
+import subprocess
 
 import pathlib2
+from github import Github
 
 from ..common_tool_methods import (
     find_nth_occurrence_position, is_major_release,
@@ -12,11 +13,15 @@ from ..common_tool_methods import (
     replace_line_in_file, get_upcoming_minor_version,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
     get_patch_version_regex, append_line_in_file, prepend_line_in_file, remote_branch_exists, get_current_branch,
-    local_branch_exists, get_last_commit_message,get_prs_for_patch_release,filter_prs_by_label)
+    local_branch_exists, get_last_commit_message, get_prs_for_patch_release, filter_prs_by_label, process_template_file,
+    remove_prefix, delete_gpg_key_by_name,  define_rpm_public_key_to_machine,
+    delete_rpm_key_by_name, get_gpg_fingerprint_from_name,run_with_output,get_public_gpg_key)
+from .test_utils import generate_new_gpg_key
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
+BASE_PATH = pathlib2.Path(__file__).parents[1]
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
-
+TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
 
 def test_find_nth_occurrence_position():
     assert find_nth_occurrence_position("foofoo foofoo", "foofoo", 2) == 7
@@ -67,15 +72,17 @@ def test_replace_line_in_file():
     finally:
         os.remove(copy_file_path)
 
+
 def test_get_upcoming_minor_version():
     assert get_upcoming_minor_version("10.1.0") == "10.2"
+
 
 def test_get_last_commit_message():
     current_branch_name = get_current_branch(os.getcwd())
     test_branch_name = f"test{uuid.uuid4()}"
     run(f"git checkout -b {test_branch_name}")
     try:
-        with open(test_branch_name,"w") as writer:
+        with open(test_branch_name, "w") as writer:
             writer.write("Test content")
         run(f"git add .")
         commit_message = f"Test message for {test_branch_name}"
@@ -84,8 +91,6 @@ def test_get_last_commit_message():
     finally:
         run(f"git checkout {current_branch_name}")
         run(f"git branch -D {test_branch_name}")
-
-
 
 
 def test_local_branch_exist():
@@ -171,7 +176,7 @@ def test_prepend_line_in_file():
     finally:
         os.remove(test_file)
 
-# TODO Commented out since code block performs too much requests which causes API Rate Limit Error
+
 def test_getprs():
     # created at is not seen on Github. Should be checked on API result
     g = Github(GITHUB_TOKEN)
@@ -190,3 +195,28 @@ def test_getprs_with_backlog_label():
     prs_backlog = filter_prs_by_label(prs, "backport")
     assert 1 == len(prs_backlog)
     assert 4746 == prs_backlog[0].number
+
+
+def test_process_template_file():
+    content = process_template_file("10.0.3", f"{BASE_PATH}/templates", "docker/alpine/alpine.tmpl.dockerfile")
+    with open(f"{TEST_BASE_PATH}/files/verify/expected_alpine_10.0.3.txt") as reader:
+        expected_content = reader.read()
+        assert content == expected_content
+
+
+def test_remove_prefix():
+    assert remove_prefix("test_prefix", "test_") == "prefix"
+
+
+def test_delete_rpm_key_by_name():
+    delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
+    generate_new_gpg_key(f"{TEST_BASE_PATH}/files/gpg/packaging_with_password.gpg")
+    fingerprint = get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME)
+    define_rpm_public_key_to_machine(fingerprint)
+    delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
+    output = run_with_output("rpm -q gpg-pubkey --qf %{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n")
+
+    assert TEST_GPG_KEY_NAME not in output.stdout.decode("ascii") and output.returncode > 0
+
+def test_get_public_gpg_key():
+    get_public_gpg_key("C788014CC576B366EEAD5DFC09F16DEDA597B8F6")
