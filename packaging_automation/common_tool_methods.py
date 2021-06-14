@@ -21,7 +21,7 @@ PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
 # When using GitPython library Repo objects should be closed to be able to delete cloned sources
 # referenced by Repo objects.References are stored in below array to be able to close
 # all resources after the code execution.
-referenced_repos:List[Repo] = []
+referenced_repos: List[Repo] = []
 
 
 def get_new_repo(working_dir: str) -> Repo:
@@ -385,12 +385,6 @@ def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: st
             f"Please remove the password when storing key with fingerprint {fingerprint}")
 
 
-def get_public_gpg_key(fingerprint: str) -> str:
-    gpg = gnupg.GPG()
-    ascii_armored_public_keys = gpg.export_keys(fingerprint)
-    return base64.b64encode(ascii_armored_public_keys.encode("ascii")).decode("ascii")
-
-
 def define_rpm_public_key_to_machine(fingerprint: str):
     run(f"gpg --export -a {fingerprint} >rpm_public.key")
     run("rpm --import rpm_public.key")
@@ -429,6 +423,7 @@ def verify_rpm_signature_in_dir(rpm_dir_path: str):
     for file in rpm_files:
         if not is_rpm_file_signed(f"{file}"):
             raise ValueError(f"File {file} is not signed or there is a signature check problem")
+
 
 def remove_prefix(text, prefix):
     return text[text.startswith(prefix) and len(prefix):]

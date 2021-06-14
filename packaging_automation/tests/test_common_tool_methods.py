@@ -12,7 +12,7 @@ from ..common_tool_methods import (
     replace_line_in_file, get_upcoming_minor_version,
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
     get_patch_version_regex, append_line_in_file, prepend_line_in_file, remote_branch_exists, get_current_branch,
-    local_branch_exists, get_last_commit_message,get_prs_for_patch_release,filter_prs_by_label)
+    local_branch_exists, get_last_commit_message, get_prs_for_patch_release, filter_prs_by_label)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -67,15 +67,17 @@ def test_replace_line_in_file():
     finally:
         os.remove(copy_file_path)
 
+
 def test_get_upcoming_minor_version():
     assert get_upcoming_minor_version("10.1.0") == "10.2"
+
 
 def test_get_last_commit_message():
     current_branch_name = get_current_branch(os.getcwd())
     test_branch_name = f"test{uuid.uuid4()}"
     run(f"git checkout -b {test_branch_name}")
     try:
-        with open(test_branch_name,"w") as writer:
+        with open(test_branch_name, "w") as writer:
             writer.write("Test content")
         run(f"git add .")
         commit_message = f"Test message for {test_branch_name}"
@@ -84,8 +86,6 @@ def test_get_last_commit_message():
     finally:
         run(f"git checkout {current_branch_name}")
         run(f"git branch -D {test_branch_name}")
-
-
 
 
 def test_local_branch_exist():
@@ -170,6 +170,7 @@ def test_prepend_line_in_file():
             assert lines[3] == "Test line 2\n"
     finally:
         os.remove(test_file)
+
 
 # TODO Commented out since code block performs too much requests which causes API Rate Limit Error
 def test_getprs():
