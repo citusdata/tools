@@ -183,7 +183,7 @@ def get_prs_for_patch_release(repo: Repository.Repository, earliest_date: dateti
     # filter pull requests according to given time interval
     filtered_pull_requests = list()
     for pull_request in pull_requests:
-        if not pull_request.merged:
+        if not pull_request.merged_at:
             continue
         if pull_request.merged_at < earliest_date:
             continue
