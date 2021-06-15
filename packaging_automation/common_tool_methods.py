@@ -404,33 +404,33 @@ def delete_all_gpg_keys_by_name(name: str):
     delete_public_gpg_key_by_name(name)
 
 
-def get_secret_key_by_fingerprint(fingerprint: str) -> str:
-    cmd = f'gpg --batch --export-secret-keys -a "{fingerprint}" | base64'
-    try:
-        # When getting gpg key if gpg key is stored with password and this api which should be used to get keys
-        # without password is called, timeout expired exception is thrown.
-        ps = subprocess.run(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=2)
+def get_secret_key_by_fingerprint_without_password(fingerprint: str) -> str:
+    # gpg.export_keys needs to get password. Otherwise it gives error. Dummy password is only to bypass parameter
+    # error
+    dummy_password = "123"
 
-    except subprocess.TimeoutExpired:
-        raise ValueError(
-            f"Error while getting key. Most probably packaging key is stored with password. "
-            f"Please remove the password when storing key with fingerprint {fingerprint}")
-
-    secret_key = ps.stdout.decode("ascii")
-    return secret_key
+    return get_secret_key_by_fingerprint_with_password(fingerprint, dummy_password)
 
 
 def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: str) -> str:
     # When getting gpg key if gpg key is stored with password and if given passphrase is wrong, timeout exception is
     # thrown.
     gpg = gnupg.GPG()
-    try:
-        private_key = gpg.export_keys(fingerprint, secret=True, passphrase=passphrase)
-    except subprocess.TimeoutExpired:
+
+    private_key = gpg.export_keys(fingerprint, secret=True, passphrase=passphrase)
+    if private_key:
+
+        return private_key
+    else:
         raise ValueError(
             f"Error while getting key. Most probably packaging key is stored with password. "
             f"Please check the password and try again")
-    return base64.b64encode(private_key.encode("ascii")).decode("ascii")
+
+
+def transform_key_into_base64_str(key: str) -> str:
+    # while signing packages base64 encoded string is required. So first we encode key with ascii and create a
+    # byte array than encode it with base64 and decode it with ascii to get the required output
+    return base64.b64encode(key.encode("ascii")).decode("ascii")
 
 
 def define_rpm_public_key_to_machine(fingerprint: str):
