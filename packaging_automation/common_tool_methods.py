@@ -9,6 +9,7 @@ from typing import Tuple
 
 import gnupg
 import pathlib2
+import shlex
 from git import Repo
 from github import Repository, PullRequest, Commit
 from jinja2 import Environment, FileSystemLoader
@@ -40,6 +41,11 @@ class PackageType(Enum):
     rpm = 2
 
 
+class GpgKeyType(Enum):
+    private = 1
+    public = 2
+
+
 BASE_PATH = pathlib2.Path(__file__).parents[1]
 
 
@@ -52,15 +58,21 @@ def get_minor_project_version(project_version: str) -> str:
     return f'{project_version_details["major"]}.{project_version_details["minor"]}'
 
 
-def get_version_number(version: str, fancy: bool, fancy_release_count: int) -> str:
-    fancy_suffix = f"-{fancy_release_count}" if fancy else ""
-    return f"{version}{fancy_suffix}"
+def get_version_number(version: str) -> str:
+    return f"{version}"
 
 
-def get_version_number_with_project_name(project_name: str, version: str, fancy: bool,
-                                         fancy_release_number: int) -> str:
-    fancy_suffix = f"-{fancy_release_number}" if fancy else ""
-    return f"{version}.{project_name}{fancy_suffix}"
+def get_fancy_version(version: str, fancy_release_number: int) -> str:
+    return f"{version}-{fancy_release_number}"
+
+
+def get_version_number_with_project_name(project_name: str, version: str) -> str:
+    return f"{version}.{project_name}"
+
+
+def get_fancy_version_with_project_name(project_name: str, version: str,
+                                        fancy_release_number: int) -> str:
+    return f"{get_version_number_with_project_name(project_name, version)}-{fancy_release_number}"
 
 
 def get_project_version_from_tag_name(tag_name: is_tag(str)) -> str:
@@ -101,12 +113,12 @@ def remove_text_with_parenthesis(param: str) -> str:
 
 
 def run(command, *args, **kwargs):
-    result = subprocess.run(command, *args, check=True, shell=True, **kwargs)
+    result = subprocess.run(shlex.split(command), *args, check=True, **kwargs)
     return result
 
 
 def run_with_output(command, *args, **kwargs):
-    result = subprocess.run(command, *args, shell=True, capture_output=True,
+    result = subprocess.run(shlex.split(command), *args, capture_output=True,
                             **kwargs)
     return result
 
@@ -171,7 +183,7 @@ def get_prs_for_patch_release(repo: Repository.Repository, earliest_date: dateti
     # filter pull requests according to given time interval
     filtered_pull_requests = list()
     for pull_request in pull_requests:
-        if not pull_request.merged_at:
+        if not pull_request.merged:
             continue
         if pull_request.merged_at < earliest_date:
             continue
@@ -326,7 +338,12 @@ def remove_cloned_code(exec_path: str):
 
 
 def process_template_file(project_version: str, templates_path: str, template_file_path: str):
-    '''Process template files and return the processed template '''
+    ''' This function gets the template files, changes tha parameters inside the file and return the output.
+        Template files are stored under packaging_automation/templates and these files includes parametric items in the
+        format of {{parameter_name}} This function is used creating while docker files, pgxn files which includes
+        project_name as parameter. Example usage is in test_common_tool_methods/test_process_template_file.
+        Jinja2 is used as template engine and render function gets the file change parameters in the file with the given
+        parameters as input and returns the output '''
     minor_version = get_minor_project_version(project_version)
     env = get_template_environment(templates_path)
     template = env.get_template(template_file_path)
@@ -338,77 +355,51 @@ def write_to_file(content: str, dest_file_name: str):
         writer.write(content)
 
 
-def get_gpg_fingerprint_from_name(name: str):
-    '''Gets gpg key fingerprint from the key name. GPG fingerprint is unique parameter. However,
-    It is hard to track and reference in the code. When signing packages, gpg keys are referenced by name
-    and this function is used to get the unique identifier so fingerprint from name'''
-    result = subprocess.run(f"gpg --list-keys ", check=True, shell=True, stdout=subprocess.PIPE)
+def get_gpg_fingerprints_by_name(name: str) -> List[str]:
+    '''Returns GPG fingerprint by its unique key name. We use this function to determine the fingerprint that
+       we should use when signing packages'''
+    result = subprocess.run(shlex.split(f"gpg --list-keys "), check=True, stdout=subprocess.PIPE)
     lines = result.stdout.decode("ascii").splitlines()
-    counter = 0
-    line_found = False
+    finger_prints = []
+    previous_line = ""
     for line in lines:
         if line.startswith("uid") and name in line:
-            line_found = True
+            finger_prints.append(previous_line.strip())
+            continue
+        previous_line = line
+    return finger_prints
+
+
+def delete_gpg_key_by_name(name: str, key_type: GpgKeyType):
+    keys = get_gpg_fingerprints_by_name(name)
+
+    # There could be more than one key with the same name. While statement is used to delete all the public keys
+    # until no key remains (i.e. key_id is empty).
+    # Public and private keys are stored with the same fingerprint. In some cases one of them may not be exist.
+    # Therefore non-existence case is possible
+    for key_id in keys:
+        delete_command = f"gpg --batch --yes --delete-key {key_id}" if key_type == GpgKeyType.public \
+            else f"gpg --batch --yes --delete-secret-key {key_id}"
+        output = run_with_output(delete_command)
+        if output.returncode == 0:
+            print(f"{key_type.name.capitalize()} key with the id {key_id} deleted")
+        #
+        elif output.returncode == 2:  # Key does not exist in keyring
+            continue
+        else:
+            print(f"Error {output.stderr.decode('ascii')}")
             break
-        counter = counter + 1
-    if not line_found:
-        return ""
-    else:
-        return lines[counter - 1].strip()
 
 
 def delete_public_gpg_key_by_name(name: str):
-    counter = 0
-
-    key_id = get_gpg_fingerprint_from_name(name)
-
-    if not key_id:
-        print(f"There is no key with name {name}. No need to delete ")
-        return
-
-    # There could be more than one key with the same name. While statement is used to delete all the public keys
-    # until no key remains (i.e. until exception arises)
-    while True:
-        output = run_with_output(f"gpg --batch --yes --delete-key {key_id}")
-        if output.returncode == 0:
-            print(f"Public key with the name {name} deleted")
-            counter = counter + 1
-        elif output.returncode == 2:  # key not exist
-            print(f"Key for the name {name} does not exist")
-            break
-        else:
-            print(f"Error {output.stderr.decode('ascii')}")
-            break
-        if counter > 0:
-            print(f"{counter} public  keys deleted")
+    delete_gpg_key_by_name(name, GpgKeyType.public)
 
 
 def delete_private_gpg_key_by_name(name: str):
-    counter = 0
-
-    key_id = get_gpg_fingerprint_from_name(name)
-
-    if not key_id:
-        print(f"There is no key with name {name}. No need to delete ")
-        return
-    # There could be more than one key with the same name. While statement is used to delete all the private keys
-    # until no key remains (i.e. until exception arises)
-    while True:
-        output = run_with_output(f"gpg --batch --yes --delete-secret-key {key_id}")
-        if output.returncode == 0:
-            print(f"Private key with the name {name} deleted")
-            counter = counter + 1
-        elif output.returncode == 2:  # key not exist
-            print(f"Key for the name {name} does not exist")
-            break
-        else:
-            print(f"Error {output.stderr.decode('ascii')}")
-            break
-        if counter > 0:
-            print(f"{counter} private  keys deleted")
+    delete_gpg_key_by_name(name, GpgKeyType.private)
 
 
-def delete_gpg_key_by_name(name: str):
+def delete_all_gpg_keys_by_name(name: str):
     delete_private_gpg_key_by_name(name)
     delete_public_gpg_key_by_name(name)
 
@@ -418,7 +409,7 @@ def get_secret_key_by_fingerprint(fingerprint: str) -> str:
     try:
         # When getting gpg key if gpg key is stored with password and this api which should be used to get keys
         # without password is called, timeout expired exception is thrown.
-        ps = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=2)
+        ps = subprocess.run(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=2)
 
     except subprocess.TimeoutExpired:
         raise ValueError(
@@ -443,7 +434,8 @@ def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: st
 
 
 def define_rpm_public_key_to_machine(fingerprint: str):
-    run(f"gpg --export -a {fingerprint} >rpm_public.key")
+    with open("rpm_public.key", "w") as writer:
+        subprocess.run(shlex.split(f"gpg --export -a {fingerprint}"), stdout=writer)
     run("rpm --import rpm_public.key")
     os.remove("rpm_public.key")
 
@@ -470,10 +462,7 @@ def delete_rpm_key_by_name(key_name: str):
 
 def is_rpm_file_signed(file_path: str) -> bool:
     result = run_with_output(f"rpm -K {file_path}")
-    if result.returncode == 0:
-        return True
-    else:
-        return False
+    return result.returncode == 0
 
 
 def verify_rpm_signature_in_dir(rpm_dir_path: str):

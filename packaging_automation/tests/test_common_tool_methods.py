@@ -14,13 +14,14 @@ from ..common_tool_methods import (
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
     get_patch_version_regex, append_line_in_file, prepend_line_in_file, remote_branch_exists, get_current_branch,
     local_branch_exists, get_last_commit_message, get_prs_for_patch_release, filter_prs_by_label, process_template_file,
-    remove_prefix, delete_gpg_key_by_name, define_rpm_public_key_to_machine,
-    delete_rpm_key_by_name, get_gpg_fingerprint_from_name, run_with_output)
+    remove_prefix, delete_all_gpg_keys_by_name, define_rpm_public_key_to_machine,
+    delete_rpm_key_by_name, get_gpg_fingerprints_by_name, run_with_output)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 BASE_PATH = pathlib2.Path(__file__).parents[1]
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
+
 
 def test_find_nth_occurrence_position():
     assert find_nth_occurrence_position("foofoo foofoo", "foofoo", 2) == 7
@@ -209,10 +210,11 @@ def test_remove_prefix():
 
 
 def test_delete_rpm_key_by_name():
-    delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
+    delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     generate_new_gpg_key(f"{TEST_BASE_PATH}/files/gpg/packaging_with_password.gpg")
-    fingerprint = get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME)
-    define_rpm_public_key_to_machine(fingerprint)
+    fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
+    assert len(fingerprints) > 0
+    define_rpm_public_key_to_machine(fingerprints[0])
     delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
     output = run_with_output("rpm -q gpg-pubkey --qf %{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n")
 
