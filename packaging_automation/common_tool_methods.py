@@ -441,19 +441,22 @@ def define_rpm_public_key_to_machine(fingerprint: str):
 
 
 def delete_rpm_key_by_name(key_name: str):
-    result = run_with_output("rpm -q gpg-pubkey --qf %{NAME}-%{VERSION}-%{RELEASE}__%{SUMMARY}-!!")
+    line_separator = "!!"
+    key_separator = "__"
+    result = run_with_output(
+        "rpm -q gpg-pubkey --qf %{NAME}-%{VERSION}-%{RELEASE}" + key_separator + "%{SUMMARY}-" + line_separator)
     output = result.stdout.decode("ascii")
     if result.stderr:
-        print(f"Error!!!{output}")
+        print(f"Error!!!{result.stderr.decode('ascii')}")
     else:
         # Get all the lines which includes rpm keys and get the first item which is rpm key to be used to delete
         # the key .Example line gpg-pubkey-fd431d51-4ae0493b__gpg(Red Hat, Inc. (release key 2) <security@redhat.com>)
         # and key to be used to delete is gpg-pubkey-fd431d51-4ae0493b (key[0])
         #
-        key_lines = output.split("!!")
+        key_lines = output.split(line_separator)
         key_lines_filtered = filter(lambda line: key_name in line, key_lines)
         for key_line in key_lines_filtered:
-            keys = key_line.split("__")
+            keys = key_line.split(key_separator)
             if len(keys) > 0:
                 key_id = keys[0]
                 run(f"rpm -e {key_id}")
