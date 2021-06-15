@@ -205,6 +205,7 @@ def test_process_template_file():
 
 def test_remove_prefix():
     assert remove_prefix("test_prefix", "test_") == "prefix"
+    assert remove_prefix("test_prefix", "part") == "test_prefix"
 
 
 def test_delete_rpm_key_by_name():

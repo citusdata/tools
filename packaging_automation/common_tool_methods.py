@@ -487,4 +487,7 @@ def verify_rpm_signature_in_dir(rpm_dir_path: str):
 
 
 def remove_prefix(text, prefix):
-    return text[text.startswith(prefix) and len(prefix):]
+    if text.startswith(prefix):
+        return text[len(prefix):]
+    else:
+        return text
