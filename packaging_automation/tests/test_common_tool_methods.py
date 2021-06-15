@@ -2,11 +2,11 @@ import os
 import uuid
 from datetime import datetime
 from shutil import copyfile
-import subprocess
 
 import pathlib2
 from github import Github
 
+from .test_utils import generate_new_gpg_key
 from ..common_tool_methods import (
     find_nth_occurrence_position, is_major_release,
     str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
@@ -14,9 +14,8 @@ from ..common_tool_methods import (
     get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
     get_patch_version_regex, append_line_in_file, prepend_line_in_file, remote_branch_exists, get_current_branch,
     local_branch_exists, get_last_commit_message, get_prs_for_patch_release, filter_prs_by_label, process_template_file,
-    remove_prefix, delete_gpg_key_by_name,  define_rpm_public_key_to_machine,
-    delete_rpm_key_by_name, get_gpg_fingerprint_from_name,run_with_output,get_public_gpg_key)
-from .test_utils import generate_new_gpg_key
+    remove_prefix, delete_gpg_key_by_name, define_rpm_public_key_to_machine,
+    delete_rpm_key_by_name, get_gpg_fingerprint_from_name, run_with_output)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 BASE_PATH = pathlib2.Path(__file__).parents[1]
@@ -217,6 +216,3 @@ def test_delete_rpm_key_by_name():
     output = run_with_output("rpm -q gpg-pubkey --qf %{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n")
 
     assert TEST_GPG_KEY_NAME not in output.stdout.decode("ascii") and output.returncode > 0
-
-def test_get_public_gpg_key():
-    get_public_gpg_key("C788014CC576B366EEAD5DFC09F16DEDA597B8F6")
