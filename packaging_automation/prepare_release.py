@@ -55,7 +55,7 @@ repo_details = {
         "branch": "master"},
     "citus-enterprise": {
         "configure-in-str": "Citus Enterprise",
-        "branch": "enterprise master"}}
+        "branch": "enterprise-master"}}
 
 
 @dataclass
