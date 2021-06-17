@@ -58,21 +58,15 @@ def get_minor_project_version(project_version: str) -> str:
     return f'{project_version_details["major"]}.{project_version_details["minor"]}'
 
 
-def get_version_number(version: str) -> str:
-    return f"{version}"
+def get_version_number(version: str, fancy: bool, fancy_release_count: int) -> str:
+    fancy_suffix = f"-{fancy_release_count}" if fancy else ""
+    return f"{version}{fancy_suffix}"
 
 
-def get_fancy_version(version: str, fancy_release_number: int) -> str:
-    return f"{version}-{fancy_release_number}"
-
-
-def get_version_number_with_project_name(project_name: str, version: str) -> str:
-    return f"{version}.{project_name}"
-
-
-def get_fancy_version_with_project_name(project_name: str, version: str,
-                                        fancy_release_number: int) -> str:
-    return f"{get_version_number_with_project_name(project_name, version)}-{fancy_release_number}"
+def get_version_number_with_project_name(project_name: str, version: str, fancy: bool,
+                                         fancy_release_number: int) -> str:
+    fancy_suffix = f"-{fancy_release_number}" if fancy else ""
+    return f"{version}.{project_name}{fancy_suffix}"
 
 
 def get_project_version_from_tag_name(tag_name: is_tag(str)) -> str:
@@ -314,7 +308,6 @@ def branch_exists(branch_name: str, working_dir: str) -> bool:
     return local_branch_exists(branch_name, working_dir) or remote_branch_exists(branch_name, working_dir)
 
 
-
 def remove_cloned_code(exec_path: str):
     release_all_repos()
     if os.path.exists(f"{exec_path}"):
@@ -436,26 +429,24 @@ def define_rpm_public_key_to_machine(fingerprint: str):
 
 
 def delete_rpm_key_by_name(key_name: str):
-    line_separator = "!!"
-    key_separator = "__"
+    key_separator = "\t"
+    # List all imported signing archive keys with their names (Summary Field)
+    # https://linuxconfig.org/how-to-list-import-and-remove-archive-signing-keys-on-centos-7
     result = run_with_output(
-        "rpm -q gpg-pubkey --qf %{NAME}-%{VERSION}-%{RELEASE}" + key_separator + "%{SUMMARY}-" + line_separator)
+        "rpm -q gpg-pubkey --qf '%{NAME}-%{VERSION}-%{RELEASE}" + key_separator + "%{SUMMARY}\n'")
     output = result.stdout.decode("ascii")
-    if result.stderr:
-        print(f"Error!!!{result.stderr.decode('ascii')}")
-    else:
-        # Get all the lines which includes rpm keys and get the first item which is rpm key to be used to delete
-        # the key .Example line gpg-pubkey-fd431d51-4ae0493b__gpg(Red Hat, Inc. (release key 2) <security@redhat.com>)
-        # and key to be used to delete is gpg-pubkey-fd431d51-4ae0493b (key[0])
-        #
-        key_lines = output.split(line_separator)
-        key_lines_filtered = filter(lambda line: key_name in line, key_lines)
-        for key_line in key_lines_filtered:
-            keys = key_line.split(key_separator)
-            if len(keys) > 0:
-                key_id = keys[0]
-                run(f"rpm -e {key_id}")
-                print(f"{key_id} deleted")
+
+    # Get all the lines which includes rpm keys and get the first item which is rpm key to be used to delete
+    # the key .Example line gpg-pubkey-fd431d51-4ae0493b__gpg(Red Hat, Inc. (release key 2) <security@redhat.com>)
+    # and key to be used to delete is gpg-pubkey-fd431d51-4ae0493b (key[0])
+    #
+    key_lines = output.splitlines()
+    key_lines_filtered = filter(lambda line: key_name in line, key_lines)
+    for key_line in key_lines_filtered:
+        keys = key_line.split(key_separator)
+        if len(keys) > 0:
+            key_id = keys[0]
+            run(f"rpm -e {key_id}")
 
 
 def is_rpm_file_signed(file_path: str) -> bool:

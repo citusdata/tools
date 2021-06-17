@@ -216,6 +216,6 @@ def test_delete_rpm_key_by_name():
     assert len(fingerprints) > 0
     define_rpm_public_key_to_machine(fingerprints[0])
     delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
-    output = run_with_output("rpm -q gpg-pubkey --qf %{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n")
+    output = run_with_output("rpm -q gpg-pubkey --qf '%{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n'")
 
     assert TEST_GPG_KEY_NAME not in output.stdout.decode("ascii") and output.returncode > 0
