@@ -314,11 +314,6 @@ def branch_exists(branch_name: str, working_dir: str) -> bool:
     return local_branch_exists(branch_name, working_dir) or remote_branch_exists(branch_name, working_dir)
 
 
-def get_template_environment(template_dir: str) -> Environment:
-    file_loader = FileSystemLoader(template_dir)
-    env = Environment(loader=file_loader)
-    return env
-
 
 def remove_cloned_code(exec_path: str):
     release_all_repos()
