@@ -12,4 +12,5 @@ urllib3
 gnupg
 parameters_validation
 PyYAML
+psycopg2
 
