@@ -15,7 +15,7 @@ from ..common_tool_methods import (
     get_patch_version_regex, append_line_in_file, prepend_line_in_file, remote_branch_exists, get_current_branch,
     local_branch_exists, get_last_commit_message, get_prs_for_patch_release, filter_prs_by_label, process_template_file,
     remove_prefix, delete_all_gpg_keys_by_name, define_rpm_public_key_to_machine,
-    delete_rpm_key_by_name, get_gpg_fingerprints_by_name, run_with_output, has_rpm_key_given_summary)
+    delete_rpm_key_by_name, get_gpg_fingerprints_by_name, run_with_output, rpm_key_matches_summary)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 BASE_PATH = pathlib2.Path(__file__).parents[1]
@@ -220,4 +220,4 @@ def test_delete_rpm_key_by_name():
     output = result.stdout.decode("ascii")
     key_lines = output.splitlines()
     for key_line in key_lines:
-        assert not has_rpm_key_given_summary(key_line, TEST_GPG_KEY_NAME)
+        assert not rpm_key_matches_summary(key_line, TEST_GPG_KEY_NAME)

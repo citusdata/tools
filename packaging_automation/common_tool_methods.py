@@ -58,15 +58,13 @@ def get_minor_project_version(project_version: str) -> str:
     return f'{project_version_details["major"]}.{project_version_details["minor"]}'
 
 
-def get_version_number(version: str, fancy: bool, fancy_release_count: int) -> str:
-    fancy_suffix = f"-{fancy_release_count}" if fancy else ""
+def append_fancy_suffix_to_version(version: str, fancy_release_number: int) -> str:
+    fancy_suffix = f"-{fancy_release_number}"
     return f"{version}{fancy_suffix}"
 
 
-def get_version_number_with_project_name(project_name: str, version: str, fancy: bool,
-                                         fancy_release_number: int) -> str:
-    fancy_suffix = f"-{fancy_release_number}" if fancy else ""
-    return f"{version}.{project_name}{fancy_suffix}"
+def append_project_name_to_version(project_name: str, version: str) -> str:
+    return f"{version}.{project_name}"
 
 
 def get_project_version_from_tag_name(tag_name: is_tag(str)) -> str:
@@ -346,7 +344,7 @@ def write_to_file(content: str, dest_file_name: str):
 def get_gpg_fingerprints_by_name(name: str) -> List[str]:
     '''Returns GPG fingerprint by its unique key name. We use this function to determine the fingerprint that
        we should use when signing packages'''
-    result = subprocess.run(shlex.split(f"gpg --list-keys "), check=True, stdout=subprocess.PIPE)
+    result = subprocess.run(shlex.split(f"gpg --list-keys"), check=True, stdout=subprocess.PIPE)
     lines = result.stdout.decode("ascii").splitlines()
     finger_prints = []
     previous_line = ""
@@ -361,18 +359,22 @@ def get_gpg_fingerprints_by_name(name: str) -> List[str]:
 def delete_gpg_key_by_name(name: str, key_type: GpgKeyType):
     keys = get_gpg_fingerprints_by_name(name)
 
-    # There could be more than one key with the same name. While statement is used to delete all the public keys
+    # There could be more than one key with the same name. For statement is used to delete all the public keys
     # until no key remains (i.e. key_id is empty).
     # Public and private keys are stored with the same fingerprint. In some cases one of them may not be exist.
     # Therefore non-existence case is possible
     for key_id in keys:
-        delete_command = f"gpg --batch --yes --delete-key {key_id}" if key_type == GpgKeyType.public \
-            else f"gpg --batch --yes --delete-secret-key {key_id}"
+        if key_type == GpgKeyType.public:
+            delete_command = f"gpg --batch --yes --delete-key {key_id}"
+        elif key_type == GpgKeyType.private:
+            delete_command = f"gpg --batch --yes --delete-secret-key {key_id}"
+        else:
+            raise ValueError("Unsupported Gpg key type")
         output = run_with_output(delete_command)
         if output.returncode == 0:
             print(f"{key_type.name.capitalize()} key with the id {key_id} deleted")
-        #
-        elif output.returncode == 2:  # Key does not exist in keyring
+        elif output.returncode == 2:
+            # Key does not exist in keyring
             continue
         else:
             print(f"Error {output.stderr.decode('ascii')}")
@@ -432,7 +434,7 @@ def define_rpm_public_key_to_machine(fingerprint: str):
 def delete_rpm_key_by_name(summary: str):
     rpm_keys = get_rpm_keys()
     for key in rpm_keys:
-        if has_rpm_key_given_summary(key, summary):
+        if rpm_key_matches_summary(key, summary):
             run(f"rpm -e {key}")
             print(f"RPM key with id {key} was deleted")
 
@@ -446,8 +448,8 @@ def get_rpm_keys():
     return key_lines
 
 
-def has_rpm_key_given_summary(key: str, summary: str):
-    result = run_with_output("rpm -q " + key + " --qf  '%{SUMMARY}' ")
+def rpm_key_matches_summary(key: str, summary: str):
+    result = run_with_output("rpm -q " + key + " --qf  '%{SUMMARY}'")
     if result.stderr:
         raise ValueError(f"Error:{result.stderr.decode('ascii')}")
     output = result.stdout.decode("ascii")
