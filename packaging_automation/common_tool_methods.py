@@ -326,12 +326,12 @@ def remove_cloned_code(exec_path: str):
 
 
 def process_template_file(project_version: str, templates_path: str, template_file_path: str):
-    ''' This function gets the template files, changes tha parameters inside the file and return the output.
-        Template files are stored under packaging_automation/templates and these files includes parametric items in the
-        format of {{parameter_name}} This function is used creating while docker files, pgxn files which includes
-        project_name as parameter. Example usage is in test_common_tool_methods/test_process_template_file.
-        Jinja2 is used as template engine and render function gets the file change parameters in the file with the given
-        parameters as input and returns the output '''
+    ''' This function gets the template files, changes tha parameters inside the file and returns the output.
+        Template files are stored under packaging_automation/templates and these files include parametric items in the
+        format of {{parameter_name}}. This function is used while creating docker files and pgxn files which include
+        "project_name" as parameter. Example usage is in "test_common_tool_methods/test_process_template_file".
+        Jinja2 is used as th the template engine and render function gets the file change parameters in the file
+         with the given input parameters and returns the output.'''
     minor_version = get_minor_project_version(project_version)
     env = get_template_environment(templates_path)
     template = env.get_template(template_file_path)
@@ -393,21 +393,22 @@ def delete_all_gpg_keys_by_name(name: str):
 
 
 def get_secret_key_by_fingerprint_without_password(fingerprint: str) -> str:
-    # gpg.export_keys needs to get password. Otherwise it gives error. Dummy password is only to bypass parameter
-    # error
-    dummy_password = "123"
+    gpg = gnupg.GPG()
 
-    return get_secret_key_by_fingerprint_with_password(fingerprint, dummy_password)
+    private_key = gpg.export_keys(fingerprint, secret=True, expect_passphrase=False)
+    if private_key:
+        return private_key
+    else:
+        raise ValueError(
+            f"Error while getting key. Most probably packaging key is stored with password. "
+            f"Please check the password and try again")
 
 
 def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: str) -> str:
-    # When getting gpg key if gpg key is stored with password and if given passphrase is wrong, timeout exception is
-    # thrown.
     gpg = gnupg.GPG()
 
     private_key = gpg.export_keys(fingerprint, secret=True, passphrase=passphrase)
     if private_key:
-
         return private_key
     else:
         raise ValueError(
@@ -428,25 +429,29 @@ def define_rpm_public_key_to_machine(fingerprint: str):
     os.remove("rpm_public.key")
 
 
-def delete_rpm_key_by_name(key_name: str):
-    key_separator = "\t"
-    # List all imported signing archive keys with their names (Summary Field)
-    # https://linuxconfig.org/how-to-list-import-and-remove-archive-signing-keys-on-centos-7
-    result = run_with_output(
-        "rpm -q gpg-pubkey --qf '%{NAME}-%{VERSION}-%{RELEASE}" + key_separator + "%{SUMMARY}\n'")
-    output = result.stdout.decode("ascii")
+def delete_rpm_key_by_name(summary: str):
+    rpm_keys = get_rpm_keys()
+    for key in rpm_keys:
+        if has_rpm_key_given_summary(key, summary):
+            run(f"rpm -e {key}")
+            print(f"RPM key with id {key} was deleted")
 
-    # Get all the lines which includes rpm keys and get the first item which is rpm key to be used to delete
-    # the key .Example line gpg-pubkey-fd431d51-4ae0493b__gpg(Red Hat, Inc. (release key 2) <security@redhat.com>)
-    # and key to be used to delete is gpg-pubkey-fd431d51-4ae0493b (key[0])
-    #
+
+def get_rpm_keys():
+    result = run_with_output("rpm -q gpg-pubkey")
+    if result.stderr:
+        raise ValueError(f"Error:{result.stderr.decode('ascii')}")
+    output = result.stdout.decode("ascii")
     key_lines = output.splitlines()
-    key_lines_filtered = filter(lambda line: key_name in line, key_lines)
-    for key_line in key_lines_filtered:
-        keys = key_line.split(key_separator)
-        if len(keys) > 0:
-            key_id = keys[0]
-            run(f"rpm -e {key_id}")
+    return key_lines
+
+
+def has_rpm_key_given_summary(key: str, summary: str):
+    result = run_with_output("rpm -q " + key + " --qf  '%{SUMMARY}' ")
+    if result.stderr:
+        raise ValueError(f"Error:{result.stderr.decode('ascii')}")
+    output = result.stdout.decode("ascii")
+    return summary in output
 
 
 def is_rpm_file_signed(file_path: str) -> bool:
