@@ -1,0 +1,31 @@
+name: Tool Tests
+
+
+on:
+  push:
+    branches: "**"
+
+  workflow_dispatch:
+
+jobs:
+  make-install:
+    runs-on: ubuntu-latest
+
+
+  unit_test_execution:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install package dependencies
+        run: sudo apt install libcurl4-openssl-dev libssl-dev
+
+      - name: Install python requirements
+        run: python -m pip install -r packaging_automation/requirements.txt
+
+      - name: Execute unit tests for "Docker statistics"
+        run:  python -m pytest -q packaging_automation/tests/test_docker_statistics_collector.py
+
+
