@@ -12,35 +12,12 @@ from parameters_validation import (no_whitespaces, non_blank, non_empty, non_neg
 from .common_tool_methods import (find_nth_matching_line_and_line_number, find_nth_occurrence_position,
                                   get_project_version_from_tag_name, get_template_environment)
 
+from .common_validations import (is_version, is_tag, is_email)
+
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
 project_name_suffix_dict = {"citus": "citus", "citus-enterprise": "citus",
                             "pg-auto-failover": "", "pg-auto-failover-enterprise": "", "pg-cron": "", "pg-xn": ""}
-
-
-@parameter_validation
-def is_version(version: str):
-    if not version:
-        raise ValueError("version should be non-empty and should not be None")
-    if not re.match(r"\d+\.\d+\.\d+$", version):
-        raise ValueError(
-            "version should include 3 levels giof versions consists of numbers  separated with dots. e.g: 10.0.1")
-
-
-@parameter_validation
-def is_tag(tag: str):
-    if not tag:
-        raise ValueError("tag  should be non-empty and should not be None")
-    if not re.match(r"v\d+\.\d+\.\d+$", tag):
-        raise ValueError(
-            "tag  should start with v and should include 3 levels of versions consists of numbers " +
-            "separated with dots. e.g: v10.0.1")
-
-
-@parameter_validation
-def is_email(email: str):
-    if not string_utils.is_email(email):
-        raise ValueError("Parameter is not in email format")
 
 
 @parameter_validation
