@@ -58,21 +58,13 @@ def get_minor_project_version(project_version: str) -> str:
     return f'{project_version_details["major"]}.{project_version_details["minor"]}'
 
 
-def get_version_number(version: str) -> str:
-    return f"{version}"
+def append_fancy_suffix_to_version(version: str, fancy_release_number: int) -> str:
+    fancy_suffix = f"-{fancy_release_number}"
+    return f"{version}{fancy_suffix}"
 
 
-def get_fancy_version(version: str, fancy_release_number: int) -> str:
-    return f"{version}-{fancy_release_number}"
-
-
-def get_version_number_with_project_name(project_name: str, version: str) -> str:
+def append_project_name_to_version(project_name: str, version: str) -> str:
     return f"{version}.{project_name}"
-
-
-def get_fancy_version_with_project_name(project_name: str, version: str,
-                                        fancy_release_number: int) -> str:
-    return f"{get_version_number_with_project_name(project_name, version)}-{fancy_release_number}"
 
 
 def get_project_version_from_tag_name(tag_name: is_tag(str)) -> str:
@@ -315,12 +307,6 @@ def branch_exists(branch_name: str, working_dir: str) -> bool:
     return local_branch_exists(branch_name, working_dir) or remote_branch_exists(branch_name, working_dir)
 
 
-def get_template_environment(template_dir: str) -> Environment:
-    file_loader = FileSystemLoader(template_dir)
-    env = Environment(loader=file_loader)
-    return env
-
-
 def remove_cloned_code(exec_path: str):
     release_all_repos()
     if os.path.exists(f"{exec_path}"):
@@ -339,12 +325,12 @@ def remove_cloned_code(exec_path: str):
 
 
 def process_template_file(project_version: str, templates_path: str, template_file_path: str):
-    ''' This function gets the template files, changes tha parameters inside the file and return the output.
-        Template files are stored under packaging_automation/templates and these files includes parametric items in the
-        format of {{parameter_name}} This function is used creating while docker files, pgxn files which includes
-        project_name as parameter. Example usage is in test_common_tool_methods/test_process_template_file.
-        Jinja2 is used as template engine and render function gets the file change parameters in the file with the given
-        parameters as input and returns the output '''
+    ''' This function gets the template files, changes tha parameters inside the file and returns the output.
+        Template files are stored under packaging_automation/templates and these files include parametric items in the
+        format of {{parameter_name}}. This function is used while creating docker files and pgxn files which include
+        "project_name" as parameter. Example usage is in "test_common_tool_methods/test_process_template_file".
+        Jinja2 is used as th the template engine and render function gets the file change parameters in the file
+         with the given input parameters and returns the output.'''
     minor_version = get_minor_project_version(project_version)
     env = get_template_environment(templates_path)
     template = env.get_template(template_file_path)
@@ -359,7 +345,7 @@ def write_to_file(content: str, dest_file_name: str):
 def get_gpg_fingerprints_by_name(name: str) -> List[str]:
     '''Returns GPG fingerprint by its unique key name. We use this function to determine the fingerprint that
        we should use when signing packages'''
-    result = subprocess.run(shlex.split(f"gpg --list-keys "), check=True, stdout=subprocess.PIPE)
+    result = subprocess.run(shlex.split(f"gpg --list-keys"), check=True, stdout=subprocess.PIPE)
     lines = result.stdout.decode("ascii").splitlines()
     finger_prints = []
     previous_line = ""
@@ -374,18 +360,22 @@ def get_gpg_fingerprints_by_name(name: str) -> List[str]:
 def delete_gpg_key_by_name(name: str, key_type: GpgKeyType):
     keys = get_gpg_fingerprints_by_name(name)
 
-    # There could be more than one key with the same name. While statement is used to delete all the public keys
+    # There could be more than one key with the same name. For statement is used to delete all the public keys
     # until no key remains (i.e. key_id is empty).
     # Public and private keys are stored with the same fingerprint. In some cases one of them may not be exist.
     # Therefore non-existence case is possible
     for key_id in keys:
-        delete_command = f"gpg --batch --yes --delete-key {key_id}" if key_type == GpgKeyType.public \
-            else f"gpg --batch --yes --delete-secret-key {key_id}"
+        if key_type == GpgKeyType.public:
+            delete_command = f"gpg --batch --yes --delete-key {key_id}"
+        elif key_type == GpgKeyType.private:
+            delete_command = f"gpg --batch --yes --delete-secret-key {key_id}"
+        else:
+            raise ValueError("Unsupported Gpg key type")
         output = run_with_output(delete_command)
         if output.returncode == 0:
             print(f"{key_type.name.capitalize()} key with the id {key_id} deleted")
-        #
-        elif output.returncode == 2:  # Key does not exist in keyring
+        elif output.returncode == 2:
+            # Key does not exist in keyring
             continue
         else:
             print(f"Error {output.stderr.decode('ascii')}")
@@ -406,21 +396,22 @@ def delete_all_gpg_keys_by_name(name: str):
 
 
 def get_secret_key_by_fingerprint_without_password(fingerprint: str) -> str:
-    # gpg.export_keys needs to get password. Otherwise it gives error. Dummy password is only to bypass parameter
-    # error
-    dummy_password = "123"
+    gpg = gnupg.GPG()
 
-    return get_secret_key_by_fingerprint_with_password(fingerprint, dummy_password)
+    private_key = gpg.export_keys(fingerprint, secret=True, expect_passphrase=False)
+    if private_key:
+        return private_key
+    else:
+        raise ValueError(
+            f"Error while getting key. Most probably packaging key is stored with password. "
+            f"Please check the password and try again")
 
 
 def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: str) -> str:
-    # When getting gpg key if gpg key is stored with password and if given passphrase is wrong, timeout exception is
-    # thrown.
     gpg = gnupg.GPG()
 
     private_key = gpg.export_keys(fingerprint, secret=True, passphrase=passphrase)
     if private_key:
-
         return private_key
     else:
         raise ValueError(
@@ -441,27 +432,29 @@ def define_rpm_public_key_to_machine(fingerprint: str):
     os.remove("rpm_public.key")
 
 
-def delete_rpm_key_by_name(key_name: str):
-    line_separator = "!!"
-    key_separator = "__"
-    result = run_with_output(
-        "rpm -q gpg-pubkey --qf %{NAME}-%{VERSION}-%{RELEASE}" + key_separator + "%{SUMMARY}-" + line_separator)
-    output = result.stdout.decode("ascii")
+def delete_rpm_key_by_name(summary: str):
+    rpm_keys = get_rpm_keys()
+    for key in rpm_keys:
+        if rpm_key_matches_summary(key, summary):
+            run(f"rpm -e {key}")
+            print(f"RPM key with id {key} was deleted")
+
+
+def get_rpm_keys():
+    result = run_with_output("rpm -q gpg-pubkey")
     if result.stderr:
-        print(f"Error!!!{result.stderr.decode('ascii')}")
-    else:
-        # Get all the lines which includes rpm keys and get the first item which is rpm key to be used to delete
-        # the key .Example line gpg-pubkey-fd431d51-4ae0493b__gpg(Red Hat, Inc. (release key 2) <security@redhat.com>)
-        # and key to be used to delete is gpg-pubkey-fd431d51-4ae0493b (key[0])
-        #
-        key_lines = output.split(line_separator)
-        key_lines_filtered = filter(lambda line: key_name in line, key_lines)
-        for key_line in key_lines_filtered:
-            keys = key_line.split(key_separator)
-            if len(keys) > 0:
-                key_id = keys[0]
-                run(f"rpm -e {key_id}")
-                print(f"{key_id} deleted")
+        raise ValueError(f"Error:{result.stderr.decode('ascii')}")
+    output = result.stdout.decode("ascii")
+    key_lines = output.splitlines()
+    return key_lines
+
+
+def rpm_key_matches_summary(key: str, summary: str):
+    result = run_with_output("rpm -q " + key + " --qf  '%{SUMMARY}'")
+    if result.stderr:
+        raise ValueError(f"Error:{result.stderr.decode('ascii')}")
+    output = result.stdout.decode("ascii")
+    return summary in output
 
 
 def is_rpm_file_signed(file_path: str) -> bool:

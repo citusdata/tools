@@ -30,6 +30,7 @@ def initialize_env() -> str:
 def test_major_release():
     test_base_path_major = initialize_env()
     os.chdir(test_base_path_major)
+    run(f"git checkout {MAIN_BRANCH}")
     resources_to_be_deleted.append(test_base_path_major)
 
     previous_print_extension_changes = count_line_in_file(test_base_path_major, MULTI_EXTENSION_OUT,
