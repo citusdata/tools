@@ -2,8 +2,7 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy] [--init-with=<sql_file>]
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy] [--init-with=<sql_file>] [--with-pgbouncer]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer]
   citus_dev restart <name> [--watch] [--port=<port>]
   citus_dev (start|stop) <name> [--port=<port>] [--force]
 
@@ -16,6 +15,7 @@ Options:
   --mx                     Enable metadata sync for all workers
   --destroy                Destroy any old cluster with the same name
   --init-with=<sql_file>   A SQL script to run after creation of the cluster to set up any necessary tables and data
+  --init-worker-with=<sql_file>   A SQL script to run after creation of the cluster on the workers
   --with-pgbouncer         Setup pgbouncers between worker and coordinator (requires citus enterprise)
   --force                  Forceful shutdown
 
@@ -184,7 +184,11 @@ def main(arguments):
 
 
         if arguments['--init-with']:
-            run(f'psql -p {cport} -f {initfile} -v ON_ERROR_STOP=1')
+            run(f'psql -p {cport} -f {arguments["--init-with"]} -v ON_ERROR_STOP=1')
+        if arguments['--init-worker-with']:
+            for i in range(size):
+                workerport = port + 1 + i
+                run(f'psql -p {workerport} -f {arguments["--init-worker-with"]} -v ON_ERROR_STOP=1')
 
     elif arguments["stop"]:
         clusterName = arguments["<name>"]
