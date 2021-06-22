@@ -1,11 +1,15 @@
+import base64
 import os
 import re
 import subprocess
 from datetime import datetime
+from enum import Enum
 from typing import Dict, List
 from typing import Tuple
 
+import gnupg
 import pathlib2
+import shlex
 from git import Repo
 from github import Repository, PullRequest, Commit
 from jinja2 import Environment, FileSystemLoader
@@ -18,7 +22,7 @@ PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
 # When using GitPython library Repo objects should be closed to be able to delete cloned sources
 # referenced by Repo objects.References are stored in below array to be able to close
 # all resources after the code execution.
-referenced_repos:List[Repo] = []
+referenced_repos: List[Repo] = []
 
 
 def get_new_repo(working_dir: str) -> Repo:
@@ -32,8 +36,35 @@ def release_all_repos():
         repo.close()
 
 
+class PackageType(Enum):
+    deb = 1,
+    rpm = 2
+
+
+class GpgKeyType(Enum):
+    private = 1
+    public = 2
+
+
+BASE_PATH = pathlib2.Path(__file__).parents[1]
+
+
 def get_spec_file_name(project_name: str) -> str:
     return f"{project_name}.spec"
+
+
+def get_minor_project_version(project_version: str) -> str:
+    project_version_details = get_version_details(project_version)
+    return f'{project_version_details["major"]}.{project_version_details["minor"]}'
+
+
+def append_fancy_suffix_to_version(version: str, fancy_release_number: int) -> str:
+    fancy_suffix = f"-{fancy_release_number}"
+    return f"{version}{fancy_suffix}"
+
+
+def append_project_name_to_version(project_name: str, version: str) -> str:
+    return f"{version}.{project_name}"
 
 
 def get_project_version_from_tag_name(tag_name: is_tag(str)) -> str:
@@ -74,7 +105,13 @@ def remove_text_with_parenthesis(param: str) -> str:
 
 
 def run(command, *args, **kwargs):
-    result = subprocess.run(command, *args, check=True, shell=True, **kwargs)
+    result = subprocess.run(shlex.split(command), *args, check=True, **kwargs)
+    return result
+
+
+def run_with_output(command, *args, **kwargs):
+    result = subprocess.run(shlex.split(command), *args, capture_output=True,
+                            **kwargs)
     return result
 
 
@@ -138,7 +175,7 @@ def get_prs_for_patch_release(repo: Repository.Repository, earliest_date: dateti
     # filter pull requests according to given time interval
     filtered_pull_requests = list()
     for pull_request in pull_requests:
-        if not pull_request.is_merged():
+        if not pull_request.merged_at:
             continue
         if pull_request.merged_at < earliest_date:
             continue
@@ -269,12 +306,6 @@ def branch_exists(branch_name: str, working_dir: str) -> bool:
     return local_branch_exists(branch_name, working_dir) or remote_branch_exists(branch_name, working_dir)
 
 
-def get_template_environment(template_dir: str) -> Environment:
-    file_loader = FileSystemLoader(template_dir)
-    env = Environment(loader=file_loader)
-    return env
-
-
 def remove_cloned_code(exec_path: str):
     release_all_repos()
     if os.path.exists(f"{exec_path}"):
@@ -290,3 +321,158 @@ def remove_cloned_code(exec_path: str):
         except:
             print(f"Some files could not be deleted in directory {exec_path}. "
                   f"Please delete them manually or they will be deleted before next execution")
+
+
+def process_template_file(project_version: str, templates_path: str, template_file_path: str):
+    ''' This function gets the template files, changes tha parameters inside the file and returns the output.
+        Template files are stored under packaging_automation/templates and these files include parametric items in the
+        format of {{parameter_name}}. This function is used while creating docker files and pgxn files which include
+        "project_name" as parameter. Example usage is in "test_common_tool_methods/test_process_template_file".
+        Jinja2 is used as th the template engine and render function gets the file change parameters in the file
+         with the given input parameters and returns the output.'''
+    minor_version = get_minor_project_version(project_version)
+    env = get_template_environment(templates_path)
+    template = env.get_template(template_file_path)
+    return f"{template.render(project_version=project_version, project_minor_version=minor_version)}\n"
+
+
+def write_to_file(content: str, dest_file_name: str):
+    with open(dest_file_name, "w") as writer:
+        writer.write(content)
+
+
+def get_gpg_fingerprints_by_name(name: str) -> List[str]:
+    '''Returns GPG fingerprint by its unique key name. We use this function to determine the fingerprint that
+       we should use when signing packages'''
+    result = subprocess.run(shlex.split(f"gpg --list-keys"), check=True, stdout=subprocess.PIPE)
+    lines = result.stdout.decode("ascii").splitlines()
+    finger_prints = []
+    previous_line = ""
+    for line in lines:
+        if line.startswith("uid") and name in line:
+            finger_prints.append(previous_line.strip())
+            continue
+        previous_line = line
+    return finger_prints
+
+
+def delete_gpg_key_by_name(name: str, key_type: GpgKeyType):
+    keys = get_gpg_fingerprints_by_name(name)
+
+    # There could be more than one key with the same name. For statement is used to delete all the public keys
+    # until no key remains (i.e. key_id is empty).
+    # Public and private keys are stored with the same fingerprint. In some cases one of them may not be exist.
+    # Therefore non-existence case is possible
+    for key_id in keys:
+        if key_type == GpgKeyType.public:
+            delete_command = f"gpg --batch --yes --delete-key {key_id}"
+        elif key_type == GpgKeyType.private:
+            delete_command = f"gpg --batch --yes --delete-secret-key {key_id}"
+        else:
+            raise ValueError("Unsupported Gpg key type")
+        output = run_with_output(delete_command)
+        if output.returncode == 0:
+            print(f"{key_type.name.capitalize()} key with the id {key_id} deleted")
+        elif output.returncode == 2:
+            # Key does not exist in keyring
+            continue
+        else:
+            print(f"Error {output.stderr.decode('ascii')}")
+            break
+
+
+def delete_public_gpg_key_by_name(name: str):
+    delete_gpg_key_by_name(name, GpgKeyType.public)
+
+
+def delete_private_gpg_key_by_name(name: str):
+    delete_gpg_key_by_name(name, GpgKeyType.private)
+
+
+def delete_all_gpg_keys_by_name(name: str):
+    delete_private_gpg_key_by_name(name)
+    delete_public_gpg_key_by_name(name)
+
+
+def get_secret_key_by_fingerprint_without_password(fingerprint: str) -> str:
+    gpg = gnupg.GPG()
+
+    private_key = gpg.export_keys(fingerprint, secret=True, expect_passphrase=False)
+    if private_key:
+        return private_key
+    else:
+        raise ValueError(
+            f"Error while getting key. Most probably packaging key is stored with password. "
+            f"Please check the password and try again")
+
+
+def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: str) -> str:
+    gpg = gnupg.GPG()
+
+    private_key = gpg.export_keys(fingerprint, secret=True, passphrase=passphrase)
+    if private_key:
+        return private_key
+    else:
+        raise ValueError(
+            f"Error while getting key. Most probably packaging key is stored with password. "
+            f"Please check the password and try again")
+
+
+def transform_key_into_base64_str(key: str) -> str:
+    # while signing packages base64 encoded string is required. So first we encode key with ascii and create a
+    # byte array than encode it with base64 and decode it with ascii to get the required output
+    return base64.b64encode(key.encode("ascii")).decode("ascii")
+
+
+def define_rpm_public_key_to_machine(fingerprint: str):
+    with open("rpm_public.key", "w") as writer:
+        subprocess.run(shlex.split(f"gpg --export -a {fingerprint}"), stdout=writer)
+    run("rpm --import rpm_public.key")
+    os.remove("rpm_public.key")
+
+
+def delete_rpm_key_by_name(summary: str):
+    rpm_keys = get_rpm_keys()
+    for key in rpm_keys:
+        if rpm_key_matches_summary(key, summary):
+            run(f"rpm -e {key}")
+            print(f"RPM key with id {key} was deleted")
+
+
+def get_rpm_keys():
+    result = run_with_output("rpm -q gpg-pubkey")
+    if result.stderr:
+        raise ValueError(f"Error:{result.stderr.decode('ascii')}")
+    output = result.stdout.decode("ascii")
+    key_lines = output.splitlines()
+    return key_lines
+
+
+def rpm_key_matches_summary(key: str, summary: str):
+    result = run_with_output("rpm -q " + key + " --qf  '%{SUMMARY}'")
+    if result.stderr:
+        raise ValueError(f"Error:{result.stderr.decode('ascii')}")
+    output = result.stdout.decode("ascii")
+    return summary in output
+
+
+def is_rpm_file_signed(file_path: str) -> bool:
+    result = run_with_output(f"rpm -K {file_path}")
+    return result.returncode == 0
+
+
+def verify_rpm_signature_in_dir(rpm_dir_path: str):
+    files = list()
+    for (dirpath, dirnames, filenames) in os.walk(rpm_dir_path):
+        files += [os.path.join(dirpath, file) for file in filenames]
+    rpm_files = filter(lambda file_name: file_name.endswith("rpm"), files)
+    for file in rpm_files:
+        if not is_rpm_file_signed(f"{file}"):
+            raise ValueError(f"File {file} is not signed or there is a signature check problem")
+
+
+def remove_prefix(text, prefix):
+    if text.startswith(prefix):
+        return text[len(prefix):]
+    else:
+        return text
