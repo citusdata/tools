@@ -1,10 +1,12 @@
 import os
+
 import pathlib2
+
 from .test_utils import generate_new_gpg_key
 from ..citus_package import (build_packages, BuildType, decode_os_and_release, get_release_package_folder)
-from ..common_tool_methods import (run, delete_gpg_key_by_name, delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
+from ..common_tool_methods import (run, delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
                                    get_secret_key_by_fingerprint_with_password, define_rpm_public_key_to_machine,
-                                   verify_rpm_signature_in_dir)
+                                   verify_rpm_signature_in_dir, delete_all_gpg_keys_by_name)
 from ..upload_to_package_cloud import (upload_files_in_directory_to_package_cloud, delete_package_from_package_cloud,
                                        does_package_exist)
 
@@ -47,7 +49,7 @@ def teardown_module():
 def test_build_packages():
     platform = os.getenv("PLATFORM")
 
-    delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
+    delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_password.gpg")
     gpg_fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
@@ -61,13 +63,12 @@ def test_build_packages():
     os_name, os_version = decode_os_and_release(platform)
     sub_folder = get_release_package_folder(os_name, os_version)
     release_output_folder = f"{BASE_OUTPUT_FOLDER}/{sub_folder}"
-    delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
+    delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     assert len(os.listdir(release_output_folder)) == package_counts[platform]
 
 
 def test_upload_to_package_cloud():
-    output = upload_files_in_directory_to_package_cloud(BASE_OUTPUT_FOLDER, PLATFORM, PACKAGECLOUD_API_TOKEN,
-                                                        "sample")
+    output = upload_files_in_directory_to_package_cloud(BASE_OUTPUT_FOLDER, PLATFORM, PACKAGECLOUD_API_TOKEN, "sample")
     distro_parts = PLATFORM.split("/")
     if len(distro_parts) != 2:
         raise ValueError("Platform should consist of 2 parts splitted with '/'")
