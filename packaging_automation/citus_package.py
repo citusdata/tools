@@ -5,11 +5,15 @@ import subprocess
 from enum import Enum
 from typing import List
 from typing import Tuple
+import gnupg
 
 from parameters_validation import non_blank, non_empty
 
-from .common_tool_methods import run_with_output, PackageType
+from .common_tool_methods import (run_with_output, PackageType, transform_key_into_base64_str,
+                                  get_gpg_fingerprints_by_name)
 from .packaging_warning_handler import validate_output
+
+GPG_KEY_NAME = "packaging@citusdata.com"
 
 supported_platforms = {
     "debian": ["buster", "stretch", "jessie", "wheezy"],
@@ -87,29 +91,18 @@ def is_docker_running() -> bool:
 def get_signing_credentials(packaging_secret_key: str, packaging_passphrase: str) -> Tuple[str, str]:
     if not packaging_passphrase or len(packaging_passphrase) == 0:
         raise ValueError("packaging_passphrase should not be null")
-    if  packaging_secret_key and len(packaging_secret_key) > 0:
+    if packaging_secret_key and len(packaging_secret_key) > 0:
         secret_key = packaging_secret_key
     else:
-        child = subprocess.Popen(["gpg", "--batch", "--fingerprint", "packaging@citusdata.com"], stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-        stream_data = child.communicate()
-        if child.returncode != 0:
-            raise ValueError("Gpg key for 'packaging@citusdata.com' does not exist")
-        gpg_result = stream_data[0].decode("ascii")
-        gpg_result_lines = gpg_result.splitlines()
-        if len(gpg_result_lines) != 5:
-            raise ValueError(f"GPG Key result is not in desired format. It should have "
-                             f"4 lines including pub, uid and sub. Result: {gpg_result} ")
-        fingerprint = gpg_result_lines[1].strip()
+        fingerprints = get_gpg_fingerprints_by_name(GPG_KEY_NAME)
+        if len(fingerprints) == 0:
+            raise ValueError(f"Key for {GPG_KEY_NAME} does not exist")
 
-        try:
-            cmd = f'gpg --batch --export-secret-keys -a "{fingerprint}" | base64'
-            ps = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=2)
-            secret_key = ps.stdout.decode("ascii")
-        except subprocess.TimeoutExpired:
-            raise ValueError(
-                "Error while getting key. Most probably packaging key is stored with password. "
-                "Please remove the password when storing key with email packaging@citusdata.com")
+        gpg = gnupg.GPG()
+
+        private_key = gpg.export_keys(fingerprints[0], secret=True, passphrase=packaging_passphrase)
+        secret_key = transform_key_into_base64_str(private_key)
+
     passphrase = packaging_passphrase
     return secret_key, passphrase
 

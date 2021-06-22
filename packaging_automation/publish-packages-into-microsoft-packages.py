@@ -54,10 +54,14 @@ def run(command, *args, **kwargs):
     return result
 
 
-def get_citus_repos():
-    result = run("repoclient repo list", stdout=PIPE)
+# Ubuntu focal repo id is not returned from repoclient list so we had to add this repo manually
+ubuntu_focal_repo_id = "6009d702435efdb9f7acd170"
 
-    all_repos = json.loads(result.stdout)
+
+def get_citus_repos():
+    repo_list = run("repoclient repo list", stdout=PIPE)
+
+    all_repos = json.loads(repo_list.stdout)
 
     repos = {}
     for repo in all_repos:
@@ -68,10 +72,11 @@ def get_citus_repos():
             # Suffix distribution
             name = name + "-" + repo["distribution"]
         else:
-            # Put dash before repo number
+            # Put dash before number
             name = re.sub(r"(\d+)", r"-\1", name)
         repos[name] = repo
-
+    # Adding ubuntu-focal manually because list does not include ubuntu-focal
+    repos["ubuntu-focal"] = {"url": "ubuntu-focal", "distribution": "focal", "id": ubuntu_focal_repo_id}
     return repos
 
 

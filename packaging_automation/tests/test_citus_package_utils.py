@@ -1,5 +1,6 @@
 import pytest
 import pathlib2
+import base64
 import os
 import subprocess
 from .test_utils import generate_new_gpg_key
@@ -64,7 +65,7 @@ def test_get_signing_credentials():
     assert len(fingerprints) > 0
     expected_gpg_key = get_secret_key_by_fingerprint_without_password(fingerprints[0])
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
-    assert secret_key == expected_gpg_key and passphrase == TEST_GPG_KEY_PASSPHRASE
+    assert secret_key == base64.b64encode(expected_gpg_key.encode("ascii")).decode("ascii") and passphrase == TEST_GPG_KEY_PASSPHRASE
 
 
 def test_delete_rpm_key_by_name():
@@ -91,10 +92,10 @@ def test_get_postgres_versions():
            len(nightly_versions) == 2
 
 
-def test_build_package_debian():
-    build_package(GH_TOKEN, BuildType.release,
-                  f"{OUTPUT_FOLDER}/debian-stretch",
-                  f"{PACKAGING_EXEC_FOLDER}", "debian-stretch", "all")
+# def test_build_package_debian():
+#     build_package(GH_TOKEN, BuildType.release,
+#                   f"{OUTPUT_FOLDER}/debian-stretch",
+#                   f"{PACKAGING_EXEC_FOLDER}", "debian-stretch", "all")
 
 
 def test_build_package_rpm():
