@@ -92,10 +92,10 @@ def test_get_postgres_versions():
            len(nightly_versions) == 2
 
 
-# def test_build_package_debian():
-#     build_package(GH_TOKEN, BuildType.release,
-#                   f"{OUTPUT_FOLDER}/debian-stretch",
-#                   f"{PACKAGING_EXEC_FOLDER}", "debian-stretch", "all")
+def test_build_package_debian():
+    build_package(GH_TOKEN, BuildType.release,
+                  f"{OUTPUT_FOLDER}/debian-stretch",
+                  f"{PACKAGING_EXEC_FOLDER}", "debian-stretch", "all")
 
 
 def test_build_package_rpm():
