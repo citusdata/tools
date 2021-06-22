@@ -1,6 +1,6 @@
 import argparse
 import uuid
-from .common_tool_methods import (process_docker_template_file, write_to_file, run)
+from .common_tool_methods import (process_template_file, write_to_file, run)
 from github import Github
 
 REPO_OWNER = "citusdata"
@@ -8,14 +8,14 @@ PROJECT_NAME = "packaging"
 
 
 def update_meta_json(project_version: str, template_path: str, exec_path: str):
-    content = process_docker_template_file(project_version, template_path,
+    content = process_template_file(project_version, template_path,
                                            "META.tmpl.json")
     dest_file_name = f"{exec_path}/META.json"
     write_to_file(content, dest_file_name)
 
 
 def update_pkgvars(project_version: str, template_path: str, exec_path: str):
-    content = process_docker_template_file(project_version, template_path,
+    content = process_template_file(project_version, template_path,
                                            "pkgvars.tmpl")
     dest_file_name = f"{exec_path}/pkgvars"
     write_to_file(content, dest_file_name)

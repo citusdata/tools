@@ -55,8 +55,9 @@ def test_get_signing_credentials():
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging.gpg")
     os.environ["PACKAGING_PASSPHRASE"] = TEST_GPG_KEY_PASSPHRASE
     secret_key, passphrase = get_signing_credentials("", TEST_GPG_KEY_PASSPHRASE)
-    expected_gpg_key = get_secret_key_by_fingerprint(
-        get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME))
+    fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
+    assert len(fingerprints) > 0
+    expected_gpg_key = get_secret_key_by_fingerprint_without_password(fingerprints[0])
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
     assert secret_key == expected_gpg_key and passphrase == TEST_GPG_KEY_PASSPHRASE
 
@@ -64,8 +65,9 @@ def test_get_signing_credentials():
 def test_delete_rpm_key_by_name():
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_password.gpg")
-    fingerprint = get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME)
-    define_rpm_public_key_to_machine(fingerprint)
+    fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
+    assert len(fingerprints) > 0
+    define_rpm_public_key_to_machine(fingerprints[0])
     delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
     output = subprocess.run(["rpm", "-q gpg-pubkey", "--qf %{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n"],
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -100,9 +102,10 @@ def test_sign_packages():
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
     delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_password.gpg")
-    gpg_fingerprint = get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME)
-    secret_key = get_secret_key_by_fingerprint_with_password(gpg_fingerprint, TEST_GPG_KEY_PASSPHRASE)
-    define_rpm_public_key_to_machine(gpg_fingerprint)
+    gpg_fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
+    assert len(gpg_fingerprints) > 0
+    secret_key = get_secret_key_by_fingerprint_with_password(gpg_fingerprints[0], TEST_GPG_KEY_PASSPHRASE)
+    define_rpm_public_key_to_machine(gpg_fingerprints[0])
     sign_packages(OUTPUT_FOLDER, "centos-8", secret_key, TEST_GPG_KEY_PASSPHRASE, PACKAGING_EXEC_FOLDER)
     sign_packages(OUTPUT_FOLDER, "debian-stretch", secret_key, TEST_GPG_KEY_PASSPHRASE, PACKAGING_EXEC_FOLDER)
     verify_rpm_signature_in_dir(OUTPUT_FOLDER)
