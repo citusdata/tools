@@ -50,7 +50,7 @@ python-gnupg==0.4.7
     # via -r requirements.in
 python-string-utils==1.0.0
     # via -r requirements.in
-pyyaml==5.4.1
+pyyaml==5.3.1
     # via -r requirements.in
 requests==2.22.0
     # via
@@ -58,9 +58,7 @@ requests==2.22.0
     #   docker
     #   pygithub
 six==1.14.0
-    # via
-    #   pathlib2
-    #   websocket-client
+    # via pathlib2
 smmap==4.0.0
     # via gitdb
 toml==0.10.2
@@ -69,7 +67,7 @@ urllib3==1.25.8
     # via
     #   -r requirements.in
     #   requests
-websocket-client==0.59.0
+websocket-client==1.0.1
     # via docker
 wheel==0.36.2
     # via -r requirements.in

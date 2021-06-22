@@ -18,7 +18,7 @@ cd tools
 
 ### Install Required Python Libraries
 
-Verify pip installation
+Verify pip installation 
 
 ``` console
 python -m pip --version
@@ -41,7 +41,7 @@ If all the steps above completed successfully , you are ready for script executi
 
 ## Script Usage
 
-Script can be used for either major release (i.e. third digit of release is '0' e.g. 10.1.0)  or
+Script can be used for either major release (i.e. third digit of release is '0' e.g. 10.1.0)  or 
 patch release (i.e. third digit of release is other than '0' e.g. 10.0.4).
 
 ### Available flags
@@ -53,7 +53,7 @@ patch release (i.e. third digit of release is other than '0' e.g. 10.0.4).
 **--prj_ver:** Upcoming version to be used for release. should include three level of digits separated by dots, e.g: 10.0.1
 (Required)
 
-**--main_branch:** Branch to be used as base to be used for configuration changes. There is no need for base scenario.
+**--main_branch:** Branch to be used as base to be used for configuration changes. There is no need for base scenario. 
 This flag can be used for testing purposes. If not used, default branch value is used; i.e. for 'citus' 'master, for 'citus-enterprise' 'enterprise-master'
 
 **--is_test:** If used, branches would not be pushed remote repository and created release branches would be prefixed with 'test'. Default value is False
@@ -68,7 +68,7 @@ This flag can be used for testing purposes. If not used, default branch value is
 
 ####Major
 ``` console
-python -m  packaging_automation.prepare_release --gh_token <your-personal-token> --prj_name citus --prj_ver 10.1.0
+python -m  packaging_automation.prepare_release --gh_token <your-personal-token> --prj_name citus --prj_ver 10.1.0 
 ```
 #### Patch
 ``` console

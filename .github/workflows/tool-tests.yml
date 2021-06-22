@@ -25,9 +25,6 @@ jobs:
   unit_test_execution:
     runs-on: ubuntu-latest
 
-    env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2

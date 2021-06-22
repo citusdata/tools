@@ -1,17 +1,18 @@
-import argparse
 import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+import argparse
+from enum import Enum
 
 import pathlib2
 from github import Github, Repository
 from parameters_validation import (non_blank, non_empty)
 
-from .common_tool_methods import (get_version_details, is_major_release,
+from .common_tool_methods import (get_version_details, get_upcoming_patch_version, is_major_release,
                                   get_prs_for_patch_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
-                                  find_nth_matching_line_and_line_number, get_patch_version_regex,
+                                  find_nth_matching_line_and_line_number, get_minor_version, get_patch_version_regex,
                                   remote_branch_exists, local_branch_exists, prepend_line_in_file,
                                   get_template_environment, get_upcoming_minor_version, remove_cloned_code)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
