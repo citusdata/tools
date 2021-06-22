@@ -2,7 +2,7 @@ import os
 import pathlib2
 from .test_utils import generate_new_gpg_key
 from ..citus_package import (build_packages, BuildType, decode_os_and_release, get_release_package_folder)
-from ..common_tool_methods import (run, delete_gpg_key_by_name, delete_rpm_key_by_name, get_gpg_fingerprint_from_name,
+from ..common_tool_methods import (run, delete_gpg_key_by_name, delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
                                    get_secret_key_by_fingerprint_with_password, define_rpm_public_key_to_machine,
                                    verify_rpm_signature_in_dir)
 from ..upload_to_package_cloud import (upload_files_in_directory_to_package_cloud, delete_package_from_package_cloud,
@@ -50,9 +50,10 @@ def test_build_packages():
     delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
     delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_password.gpg")
-    gpg_fingerprint = get_gpg_fingerprint_from_name(TEST_GPG_KEY_NAME)
-    secret_key = get_secret_key_by_fingerprint_with_password(gpg_fingerprint, TEST_GPG_KEY_PASSPHRASE)
-    define_rpm_public_key_to_machine(gpg_fingerprint)
+    gpg_fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
+    assert len(gpg_fingerprints) > 0
+    secret_key = get_secret_key_by_fingerprint_with_password(gpg_fingerprints[0], TEST_GPG_KEY_PASSPHRASE)
+    define_rpm_public_key_to_machine(gpg_fingerprints[0])
 
     build_packages(GH_TOKEN, platform, BuildType.release, secret_key,
                    TEST_GPG_KEY_PASSPHRASE, BASE_OUTPUT_FOLDER, PACKAGING_EXEC_FOLDER)
