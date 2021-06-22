@@ -1,9 +1,14 @@
 import pytest
-
+import pathlib2
+import os
+import subprocess
 from .test_utils import generate_new_gpg_key
 from ..citus_package import (decode_os_and_release, is_docker_running, get_signing_credentials, get_postgres_versions,
                              build_package, BuildType, sign_packages)
-from ..common_tool_methods import *
+from ..common_tool_methods import (delete_all_gpg_keys_by_name, get_gpg_fingerprints_by_name, run,
+                                   get_secret_key_by_fingerprint_without_password, define_rpm_public_key_to_machine,
+                                   delete_rpm_key_by_name, get_secret_key_by_fingerprint_with_password,
+                                   verify_rpm_signature_in_dir)
 
 TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
@@ -50,7 +55,7 @@ def test_get_signing_credentials():
     secret_key, passphrase = get_signing_credentials("verysecretkey", "123")
     assert secret_key == "verysecretkey" and passphrase == "123"
 
-    delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
+    delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
 
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging.gpg")
     os.environ["PACKAGING_PASSPHRASE"] = TEST_GPG_KEY_PASSPHRASE
@@ -58,17 +63,17 @@ def test_get_signing_credentials():
     fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
     assert len(fingerprints) > 0
     expected_gpg_key = get_secret_key_by_fingerprint_without_password(fingerprints[0])
-    delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
+    delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     assert secret_key == expected_gpg_key and passphrase == TEST_GPG_KEY_PASSPHRASE
 
 
 def test_delete_rpm_key_by_name():
-    delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
+    delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_password.gpg")
     fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
     assert len(fingerprints) > 0
     define_rpm_public_key_to_machine(fingerprints[0])
-    delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
+    delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     output = subprocess.run(["rpm", "-q gpg-pubkey", "--qf %{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n"],
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -99,7 +104,7 @@ def test_build_package_rpm():
 
 
 def test_sign_packages():
-    delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
+    delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_password.gpg")
     gpg_fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
@@ -110,5 +115,5 @@ def test_sign_packages():
     sign_packages(OUTPUT_FOLDER, "debian-stretch", secret_key, TEST_GPG_KEY_PASSPHRASE, PACKAGING_EXEC_FOLDER)
     verify_rpm_signature_in_dir(OUTPUT_FOLDER)
 
-    delete_gpg_key_by_name(TEST_GPG_KEY_NAME)
+    delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     run(f"rm -r {OUTPUT_FOLDER}")
