@@ -1,5 +1,10 @@
 name: Statistics Tests
 
+env:
+  DB_USER_NAME: ${{ secrets.STATS_DB_USER_NAME }}
+  DB_PASSWORD: ${{ secrets.STATS_DB_PASSWORD }}
+  DB_HOST_AND_PORT: ${{ secrets.STATS_DB_HOST_AND_PORT }}
+  DB_NAME: ${{ secrets.STATS_DB_NAME }}
 
 on:
   push:
