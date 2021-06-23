@@ -13,6 +13,7 @@ import shlex
 from git import Repo
 from github import Repository, PullRequest, Commit
 from jinja2 import Environment, FileSystemLoader
+from github import Github
 
 from .common_validations import (is_tag, is_version)
 
@@ -480,6 +481,7 @@ def remove_prefix(text, prefix):
     else:
         return text
 
+
 def initialize_env(exec_path: str, project_name: str, checkout_dir: str):
     remove_cloned_code(f"{exec_path}/{checkout_dir}")
     if not os.path.exists(checkout_dir):
@@ -495,3 +497,9 @@ def remove_cloned_code(full_checkout_dir: str):
         run(f"chmod -R 777 {full_checkout_dir}/.git")
         run(f"sudo rm -rf {full_checkout_dir}")
         print("Done. Code deleted successfully.")
+
+
+def create_pr(gh_token: str, pr_branch: str, pr_title: str, repo_owner: str, project_name: str):
+    g = Github(gh_token)
+    repository = g.get_repo(f"{repo_owner}/{project_name}")
+    repository.create_pull(title=pr_title, base="master", head=pr_branch, body="")

@@ -1,8 +1,8 @@
 import argparse
-import uuid
 import os
-from .common_tool_methods import (process_template_file, write_to_file, run, initialize_env)
-from github import Github
+import uuid
+
+from .common_tool_methods import (process_template_file, write_to_file, run, initialize_env, create_pr)
 
 REPO_OWNER = "citusdata"
 PROJECT_NAME = "packaging"
@@ -48,13 +48,10 @@ if __name__ == "__main__":
     run(f"git checkout -b {pr_branch}")
     template_path = f"{tools_path}/packaging_automation/templates/pgxn"
     update_pgxn_files(args.prj_ver, template_path, execution_path)
-
-    run(f'git commit -a -m "Bump to version {args.prj_ver}"')
+    commit_message = f"Bump pgxn to version {args.prj_ver}"
+    run(f'git commit -a -m "{commit_message}"')
     if not args.is_test:
         run(f'git push --set-upstream origin {pr_branch}')
 
     if not args.is_test:
-        g = Github(github_token)
-        repository = g.get_repo(f"{REPO_OWNER}/{PROJECT_NAME}")
-        pr_result = repository.create_pull(title=f"Bump Citus to {args.prj_ver}", base=main_branch,
-                                           head=pr_branch, body="")
+        create_pr(github_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME)

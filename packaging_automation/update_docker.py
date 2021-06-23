@@ -1,42 +1,59 @@
 import argparse
-import uuid
 import os
+import uuid
 from datetime import datetime
+from enum import Enum
 
-from github import Github
-
-from .common_tool_methods import (process_template_file, write_to_file, run, initialize_env)
+from .common_tool_methods import (process_template_file, write_to_file, run, initialize_env, create_pr)
 
 REPO_OWNER = "citusdata"
 PROJECT_NAME = "docker"
 
 
+class SupportedDockerImages(Enum):
+    latest = 1,
+    docker_compose = 2,
+    alpine = 3,
+    postgres12 = 4
+
+
+docker_templates = {SupportedDockerImages.latest: "latest/latest.tmpl.dockerfile",
+                    SupportedDockerImages.docker_compose: "latest/docker-compose.tmpl.yml",
+                    SupportedDockerImages.alpine: "alpine/alpine.tmpl.dockerfile",
+                    SupportedDockerImages.postgres12: "postgres-12/postgres-12.tmpl.dockerfile"}
+
+docker_outputs = {SupportedDockerImages.latest: "Dockerfile",
+                  SupportedDockerImages.docker_compose: "docker-compose.yml",
+                  SupportedDockerImages.alpine: "alpine/Dockerfile",
+                  SupportedDockerImages.postgres12: "postgres-12/Dockerfile"}
+
+
 def update_docker_file_for_latest_postgres(project_version: str, template_path: str, exec_path: str,
                                            postgres_version: str):
     content = process_template_file(project_version, template_path,
-                                    "latest/latest.tmpl.dockerfile", postgres_version)
-    dest_file_name = f"{exec_path}/Dockerfile"
+                                    docker_templates[SupportedDockerImages.latest], postgres_version)
+    dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.latest]}"
     write_to_file(content, dest_file_name)
 
 
 def update_regular_docker_compose_file(project_version: str, template_path: str, exec_path: str):
     content = process_template_file(project_version, template_path,
-                                    "latest/docker-compose.tmpl.yml")
-    dest_file_name = f"{exec_path}/docker-compose.yml"
+                                    docker_templates[SupportedDockerImages.docker_compose])
+    dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.docker_compose]}"
     write_to_file(content, dest_file_name)
 
 
 def update_docker_file_alpine(project_version: str, template_path: str, exec_path: str, postgres_version: str):
     content = process_template_file(project_version, template_path,
-                                    "alpine/alpine.tmpl.dockerfile", postgres_version)
-    dest_file_name = f"{exec_path}/alpine/Dockerfile"
+                                    docker_templates[SupportedDockerImages.alpine], postgres_version)
+    dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.alpine]}"
     write_to_file(content, dest_file_name)
 
 
 def update_docker_file_for_postgres12(project_version: str, template_path: str, exec_path: str):
     content = process_template_file(project_version, template_path,
-                                    "postgres-12/postgres-12.tmpl.dockerfile")
-    dest_file_name = f"{exec_path}/postgres-12/Dockerfile"
+                                    docker_templates[SupportedDockerImages.postgres12])
+    dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres12]}"
     write_to_file(content, dest_file_name)
 
 
@@ -63,7 +80,7 @@ def update_changelog(project_version: str, exec_path: str, postgres_version: str
             reader.seek(0, 0)
             reader.write(changelog)
         else:
-            raise ValueError("Already version in the changelog")
+            raise ValueError(f"Already using version {project_version} in the changelog")
 
 
 def update_all_docker_files(project_version: str, tools_path: str, exec_path: str, postgres_version: str):
@@ -85,8 +102,7 @@ def update_all_docker_files(project_version: str, tools_path: str, exec_path: st
 def read_postgres_version(pkgvars_file: str) -> str:
     if os.path.exists(pkgvars_file):
         with open(pkgvars_file, "r") as reader:
-            content = reader.read()
-            lines = content.splitlines()
+            lines = reader.readlines()
             for line in lines:
                 if line.startswith("latest_postgres_version"):
                     line_parts = line.split("=")
@@ -94,6 +110,7 @@ def read_postgres_version(pkgvars_file: str) -> str:
                         raise ValueError("keys and values should be seperated with '=' sign")
                     else:
                         postgres_version = line_parts[1]
+                        break
                 else:
                     raise ValueError("pkgvars file should include a line with key latest_postgres_version")
     else:
@@ -110,14 +127,6 @@ def update_pkgvars(project_version: str, template_path: str, pkgvars_file: str, 
 
 
 CHECKOUT_DIR = "docker_temp"
-
-
-def create_pr():
-    g = Github(github_token)
-    repository = g.get_repo(f"{REPO_OWNER}/{PROJECT_NAME}")
-    repository.create_pull(title=f"Bump Citus to {args.prj_ver}", base="master",
-                           head=pr_branch, body="")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -139,9 +148,11 @@ if __name__ == "__main__":
     run(f"git checkout -b {pr_branch}")
     update_all_docker_files(args.prj_ver, tools_path, execution_path, args.postgres_version)
     run("git add .")
-    run(f'git commit -m "Bump to version {args.prj_ver}"')
+
+    commit_message = f"Bump docker to version {args.prj_ver}"
+    run(f'git commit -m "{commit_message}"')
     if not args.is_test:
         run(f'git push --set-upstream origin {pr_branch}')
 
     if not args.is_test:
-        create_pr()
+        create_pr(github_token, pr_branch, f"{commit_message}", REPO_OWNER, PROJECT_NAME)
