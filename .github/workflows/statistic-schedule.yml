@@ -1,11 +1,14 @@
 name: Statistics Schedule
 
 env:
-  JOB_NAME: ${{ matrix.GH_TOKEN }}
-
+  JOB_NAME: ${{ matrix.JOB_NAME }}
+  DB_USER_NAME: ${{ secrets.STATS_DB_USER_NAME }}
+  DB_PASSWORD: ${{ secrets.STATS_DB_PASSWORD }}
+  DB_HOST_AND_PORT: ${{ secrets.STATS_DB_HOST_AND_PORT }}
+  DB_NAME: ${{ secrets.STATS_DB_NAME }}
 on:
   schedule:
-    - cron:  '15 0 * * *'
+    - cron: '15 0 * * *'
 
   workflow_dispatch:
 
@@ -29,6 +32,6 @@ jobs:
         run: python -m pip install -r packaging_automation/requirements.txt
 
       - name: Execute 'Docker Pull for Citus Repo'
-        run:
+        run: packaging_automation/bash/daily-statistics-job.sh
 
 
