@@ -45,4 +45,5 @@ def test_docker_statistics_collector():
 
     assert third_day_record and second_day_record and (
         third_day_record.total_pull_count == second_day_record.total_pull_count) and (
-               third_day_record.daily_pull_count + second_day_record.daily_pull_count == pull_count_diff)
+               third_day_record.daily_pull_count + second_day_record.daily_pull_count == pull_count_diff) and (
+                   pull_count_diff == 205)

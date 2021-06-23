@@ -35,7 +35,7 @@ def fetch_and_store_docker_statistics(repository_name: str, db_user_name: str, d
                          f"parameters. Please don't use these parameters other than testing.")
 
     result = requests.get(f"https://hub.docker.com/v2/repositories/citusdata/{repository_name}/")
-    fetched_pull_count = int(result.json()["pull_count"]) if not is_test else test_total_pull_count
+    fetched_pull_count = int(result.json()["pull_count"]) if test_total_pull_count == 0 else test_total_pull_count
     total_pull_count = fetched_pull_count + test_pull_count_shift
 
     db_engine = create_engine(
