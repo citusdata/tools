@@ -198,7 +198,7 @@ def test_getprs_with_backlog_label():
 
 
 def test_process_template_file():
-    content = process_template_file("10.0.3", f"{BASE_PATH}/templates", "docker/alpine/alpine.tmpl.dockerfile")
+    content = process_template_file("10.0.3", f"{BASE_PATH}/templates", "docker/alpine/alpine.tmpl.dockerfile", "13.2")
     with open(f"{TEST_BASE_PATH}/files/verify/expected_alpine_10.0.3.txt") as reader:
         expected_content = reader.read()
         assert content == expected_content

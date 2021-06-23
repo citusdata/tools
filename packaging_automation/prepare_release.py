@@ -13,7 +13,8 @@ from .common_tool_methods import (get_version_details, is_major_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
                                   find_nth_matching_line_and_line_number, get_patch_version_regex,
                                   remote_branch_exists, local_branch_exists, prepend_line_in_file,
-                                  get_template_environment, get_upcoming_minor_version, remove_cloned_code)
+                                  get_template_environment, get_upcoming_minor_version, remove_cloned_code,
+                                  initialize_env)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -447,7 +448,7 @@ def execute_autoconf_f():
     print(f"### Done autoconf -f executed. ###")
 
 
-def update_version_in_configure_in(project_name,configure_in_path, project_version):
+def update_version_in_configure_in(project_name, configure_in_path, project_version):
     print(f"### Updating version on file {configure_in_path}... ###")
     if not replace_line_in_file(configure_in_path, CONFIGURE_IN_SEARCH_PATTERN,
                                 f"AC_INIT([{repo_details[project_name]['configure-in-str']}], [{project_version}])"):
@@ -506,23 +507,6 @@ def create_new_sql_for_downgrade_path(current_schema_version, distributed_dir_pa
 CHECKOUT_DIR = "citus_temp"
 
 
-def remove_cloned_code(exec_path: str):
-    if os.path.exists(f"{exec_path}"):
-        print(f"Deleting cloned code {exec_path} ...")
-        # https://stackoverflow.com/questions/51819472/git-cant-delete-local-branch-operation-not-permitted
-        # https://askubuntu.com/questions/1049142/cannot-delete-git-directory
-        # since git directory is readonly first we need to give write permission to delete git directory
-        run(f"chmod -R 777 {exec_path}/.git")
-        run(f"sudo rm -rf {exec_path}")
-        print("Done. Code deleted successfully.")
-
-
-def initialize_env(exec_path: str, project_name: str):
-    remove_cloned_code(exec_path)
-    if not os.path.exists(CHECKOUT_DIR):
-        run(f"git clone https://github.com/citusdata/{project_name}.git {CHECKOUT_DIR}")
-
-
 def validate_parameters(major_release_flag: bool):
     if major_release_flag and arguments.cherry_pick_enabled:
         raise ValueError("Cherry pick could be enabled only for patch release")
@@ -556,7 +540,7 @@ if __name__ == "__main__":
     validate_parameters(major_release)
 
     try:
-        initialize_env(execution_path, arguments.prj_name)
+        initialize_env(execution_path, arguments.prj_name, CHECKOUT_DIR)
 
         is_cherry_pick_enabled = arguments.cherry_pick_enabled
         main_branch = arguments.main_branch if arguments.main_branch else repo_details[arguments.prj_name]["branch"]
