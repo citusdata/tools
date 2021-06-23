@@ -109,7 +109,7 @@ def read_postgres_version(pkgvars_file: str) -> str:
                     if len(line_parts) != 2:
                         raise ValueError("keys and values should be seperated with '=' sign")
                     else:
-                        postgres_version = line_parts[1]
+                        postgres_version = line_parts[1].rstrip("\n")
                         break
                 else:
                     raise ValueError("pkgvars file should include a line with key latest_postgres_version")
