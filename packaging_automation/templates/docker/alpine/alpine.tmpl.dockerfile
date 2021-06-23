@@ -1,4 +1,4 @@
-FROM postgres:13.2-alpine
+FROM postgres:{{postgres_version}}-alpine
 ARG VERSION={{project_version}}
 LABEL maintainer="Citus Data https://citusdata.com" \
       org.label-schema.name="Citus" \

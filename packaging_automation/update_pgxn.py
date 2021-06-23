@@ -9,14 +9,14 @@ PROJECT_NAME = "packaging"
 
 def update_meta_json(project_version: str, template_path: str, exec_path: str):
     content = process_template_file(project_version, template_path,
-                                           "META.tmpl.json")
+                                    "META.tmpl.json")
     dest_file_name = f"{exec_path}/META.json"
     write_to_file(content, dest_file_name)
 
 
 def update_pkgvars(project_version: str, template_path: str, exec_path: str):
     content = process_template_file(project_version, template_path,
-                                           "pkgvars.tmpl")
+                                    "pkgvars.tmpl")
     dest_file_name = f"{exec_path}/pkgvars"
     write_to_file(content, dest_file_name)
 
@@ -28,10 +28,11 @@ def update_pgxn_files(project_version: str, template_path: str, exec_path: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--prj_ver')
-    parser.add_argument('--exec_path')
+    parser.add_argument('--prj_ver', required=True)
+    parser.add_argument('--exec_path', required=True)
     parser.add_argument('--tools_path')
-    parser.add_argument('--gh_token')
+    parser.add_argument('--gh_token', required=True)
+    parser.add_argument('--is_test', action="store_true")
     args = parser.parse_args()
 
     execution_path = args.exec_path
@@ -56,10 +57,11 @@ if __name__ == "__main__":
     update_pgxn_files(args.prj_ver, template_path, execution_path)
 
     run(f'git commit -a -m "Bump to version {args.prj_ver}"')
-    run(f'git push --set-upstream origin {pr_branch}')
+    if not args.is_test:
+        run(f'git push --set-upstream origin {pr_branch}')
 
-    g = Github(github_token)
-    repository = g.get_repo(f"{REPO_OWNER}/{PROJECT_NAME}")
-
-    pr_result = repository.create_pull(title=f"Bump Citus to {args.prj_ver}", base=main_branch,
-                                       head=pr_branch, body="")
+    if not args.is_test:
+        g = Github(github_token)
+        repository = g.get_repo(f"{REPO_OWNER}/{PROJECT_NAME}")
+        pr_result = repository.create_pull(title=f"Bump Citus to {args.prj_ver}", base=main_branch,
+                                           head=pr_branch, body="")

@@ -323,7 +323,8 @@ def remove_cloned_code(exec_path: str):
                   f"Please delete them manually or they will be deleted before next execution")
 
 
-def process_template_file(project_version: str, templates_path: str, template_file_path: str):
+def process_template_file(project_version: str, templates_path: str, template_file_path: str,
+                          postgres_version: str = ""):
     ''' This function gets the template files, changes tha parameters inside the file and returns the output.
         Template files are stored under packaging_automation/templates and these files include parametric items in the
         format of {{parameter_name}}. This function is used while creating docker files and pgxn files which include
@@ -333,7 +334,9 @@ def process_template_file(project_version: str, templates_path: str, template_fi
     minor_version = get_minor_project_version(project_version)
     env = get_template_environment(templates_path)
     template = env.get_template(template_file_path)
-    return f"{template.render(project_version=project_version, project_minor_version=minor_version)}\n"
+    rendered_output = template.render(project_version=project_version, postgres_version=postgres_version,
+                                      project_minor_version=minor_version)
+    return f"{rendered_output}\n"
 
 
 def write_to_file(content: str, dest_file_name: str):
@@ -476,3 +479,19 @@ def remove_prefix(text, prefix):
         return text[len(prefix):]
     else:
         return text
+
+def initialize_env(exec_path: str, project_name: str, checkout_dir: str):
+    remove_cloned_code(f"{exec_path}/{checkout_dir}")
+    if not os.path.exists(checkout_dir):
+        run(f"git clone https://github.com/citusdata/{project_name}.git {checkout_dir}")
+
+
+def remove_cloned_code(full_checkout_dir: str):
+    if os.path.exists(f"{full_checkout_dir}"):
+        print(f"Deleting cloned code {full_checkout_dir} ...")
+        # https://stackoverflow.com/questions/51819472/git-cant-delete-local-branch-operation-not-permitted
+        # https://askubuntu.com/questions/1049142/cannot-delete-git-directory
+        # since git directory is readonly first we need to give write permission to delete git directory
+        run(f"chmod -R 777 {full_checkout_dir}/.git")
+        run(f"sudo rm -rf {full_checkout_dir}")
+        print("Done. Code deleted successfully.")
