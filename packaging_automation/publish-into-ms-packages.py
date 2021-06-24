@@ -18,8 +18,6 @@ ms_package_repo_map = {
     "ubuntu/focal": "ubuntu-focal"
 }
 
-RELEASE_DIR = "pkgs/releases"
-
 
 def run(command, *args, **kwargs):
     print(command)
@@ -73,14 +71,14 @@ def suffix_deb_package(repository, package_file_path):
     return package_file_path
 
 
-def publish_packages(target_platform, citus_repos):
+def publish_packages(target_platform, citus_repos, packages_dir: str):
     responses = {}
-    for package_file in os.listdir(RELEASE_DIR):
+    for package_file in os.listdir(packages_dir):
 
         print("Target Platform is " + target_platform)
         repo_platform = ms_package_repo_map[target_platform]
         repo = citus_repos[repo_platform]
-        package_path = os.path.join(RELEASE_DIR, package_file)
+        package_path = os.path.join(packages_dir, package_file)
 
         print("Repo Url:" + repo["url"])
 
@@ -134,6 +132,7 @@ def check_submissions(all_responses):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--platform', choices=ms_package_repo_map.keys())
+    parser.add_argument('--packages_dir', required=True)
     args = parser.parse_args()
 
     citus_repos = get_citus_repos()
