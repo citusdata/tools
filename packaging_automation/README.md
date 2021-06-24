@@ -114,13 +114,13 @@ Script can be used for both citus version upgrades and PostgreSQL updates.
 #### Citus Upgrade
 
 ``` console
- python -m  packaging_automation.update_docker --gh_token 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  --prj_ver 10.0.4
+ python -m  packaging_automation.update_docker --gh_token <your-personal-token>  --prj_ver 10.0.4
 ```
 
 #### Citus and PostgreSQL version upgrade
 
 ``` console
- python -m  packaging_automation.update_docker --gh_token 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  --prj_ver 10.0.4 --postgres-version 14.0
+ python -m  packaging_automation.update_docker --gh_token <your-personal-token>  --prj_ver 10.0.4 --postgres-version 14.0
 ```
 
 ## Update Pgxn Usage
@@ -146,5 +146,5 @@ Script can be used for  citus version upgrades.
 #### Citus Upgrade
 
 ``` console
- python -m  packaging_automation.update_pgxn --gh_token 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 --prj_ver 10.0.4
+ python -m  packaging_automation.update_pgxn --gh_token <your-personal-token> --prj_ver 10.0.4
 ```
