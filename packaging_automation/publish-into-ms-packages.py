@@ -1,12 +1,11 @@
-from subprocess import PIPE
-import subprocess
-import os
+import argparse
 import json
+import os
 import re
+import subprocess
 import time
-import sys
 from pprint import pprint
-
+from subprocess import PIPE
 
 ms_package_repo_map = {
     "el/8": "centos-8",
@@ -28,16 +27,10 @@ def run(command, *args, **kwargs):
     return result
 
 
-
-
-
-def publish_single_package():
+def publish_single_package(package_path: str, repo):
     result = run(f"repoclient package add --repoID {repo['id']} {package_path}")
-    submission_responses[package_path] = json.loads(result.stdout)
-    print(
-        "Waiting for 30 seconds to avoid concurrency problems on publishing server"
-    )
-    time.sleep(30)
+
+    return json.loads(result.stdout)
 
 
 # Ubuntu focal repo id is not returned from repoclient list so we had to add this repo manually
@@ -66,6 +59,7 @@ def get_citus_repos():
     return repos
 
 
+# Ensure deb packages contain the distribution, so they do not conflict
 def suffix_deb_package(repository, package_file_path):
     if not package_file_path.endswith("amd64.deb"):
         raise "Package should have ended with amd64.deb: %s" % package_file_path
@@ -79,22 +73,8 @@ def suffix_deb_package(repository, package_file_path):
     return package_file_path
 
 
-# Ensure deb packages contain the distribution, so they do not conflict
-def suffix_deb_package(repo, package_path):
-    if repo["url"] in ("citus-ubuntu", "citus-debian"):
-        if repo["distribution"] not in package_file:
-            if not package_path.endswith("amd64.deb"):
-                raise "Package should have ended with amd64.deb: %s" % package_path
-            old_package_path = package_path
-            package_prefix = package_path[: -len("amd64.deb")]
-            package_path = "%s+%s_amd64.deb" % (
-                package_prefix,
-                repo["distribution"],
-            )
-            os.rename(old_package_path, package_path)
-
-def publish_packages():
-    global package_file, repo, package_path
+def publish_packages(target_platform, citus_repos):
+    responses = {}
     for package_file in os.listdir(RELEASE_DIR):
 
         print("Target Platform is " + target_platform)
@@ -111,47 +91,60 @@ def publish_packages():
 
         # Publish packages
         if os.path.isfile(package_path) and (package_file.endswith(".rpm") or package_file.endswith(".deb")):
-            publish_single_package()
+            publish_result = publish_single_package(package_path, repo)
+            responses[package_path] = publish_result
+            print(
+                "Waiting for 30 seconds to avoid concurrency problems on publishing server"
+            )
+            time.sleep(30)
+
+    return responses
 
 
-citus_repos = get_citus_repos()
+def check_submissions(all_responses):
+    # Check 15 times if there are any packages that we couldn't publish
+    unfinished_submissions = all_responses
+    finished_submissions = {}
+    for i in range(15):
 
-# pprint(citus_repos)
-target_platform = sys.argv[1]
-submission_responses = {}
-print("Citus Repos")
-print("Current Dir" + os.getcwd())
-pprint(citus_repos)
+        for pack_path, response in unfinished_submissions.items():
+            package_id = response["Location"].split("/")[-1]
 
-publish_packages()
-print("Submission Responses")
-pprint(submission_responses)
+            try:
+                run("repoclient package check %s" % package_id)
+                finished_submissions[pack_path] = response
+                del unfinished_submissions[pack_path]
+            except Exception:
+                print(pack_path, "was not published yet")
 
-# Check 15 times if there are any packages that we couldn't publish
-unfinished_submissions = {}
-finished_submissions = {}
-for i in range(15):
+        if not unfinished_submissions:
+            break
+        time.sleep(i)
 
-    for package_path, response in submission_responses.items():
-        package_id = response["Location"].split("/")[-1]
+    if finished_submissions:
+        print("The following packages were published successfuly")
+        pprint(finished_submissions)
 
-        try:
-            run("repoclient package check %s" % package_id)
-            finished_submissions[package_path] = response
-        except Exception:
-            print(package_path, "was not published yet")
-            unfinished_submissions[package_path] = response
+    if unfinished_submissions:
+        print("The following packages were not published successfuly")
+        pprint(unfinished_submissions)
+        raise Exception("Some packages were not finished publishing")
 
-    if not unfinished_submissions:
-        break
-    submission_responses = unfinished_submissions
-    time.sleep(i)
 
-if finished_submissions:
-    print("The following packages were published successfuly")
-    pprint(finished_submissions)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--platform', choices=ms_package_repo_map.keys())
+    args = parser.parse_args()
 
-if unfinished_submissions:
-    print("The following packages were not published successfuly")
-    pprint(unfinished_submissions)
-    raise Exception("Some packages were not finished publishing")
+    citus_repos = get_citus_repos()
+
+    # pprint(citus_repos)
+    target_platform = args.platform
+    print("Citus Repos")
+    pprint(citus_repos)
+
+    submission_responses = publish_packages(target_platform, citus_repos)
+    print("Submission Responses")
+    pprint(submission_responses)
+
+    check_submissions(submission_responses)
