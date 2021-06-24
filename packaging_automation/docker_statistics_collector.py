@@ -82,4 +82,4 @@ if __name__ == "__main__":
                                       db_user_name=arguments.db_user_name, db_password=arguments.db_password,
                                       db_host_and_port=arguments.db_host_and_port, db_name=arguments.db_name,
                                       test_day_shift_index=int(arguments.test_day_shift_index),
-                                      test_total_pull_count=int(arguments.test_pull_count_shift))
+                                      test_total_pull_count=int(arguments.test_total_pull_count))
