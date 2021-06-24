@@ -14,7 +14,7 @@ from .common_tool_methods import (get_version_details, is_major_release,
                                   find_nth_matching_line_and_line_number, get_patch_version_regex,
                                   remote_branch_exists, local_branch_exists, prepend_line_in_file,
                                   get_template_environment, get_upcoming_minor_version, remove_cloned_code,
-                                  initialize_env)
+                                  initialize_env, create_pr_with_repo)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -326,8 +326,8 @@ def cherrypick_prs_with_backport_labels(earliest_pr_date, main_branch, release_b
 
 def create_pull_request_for_upcoming_version_branch(repository, main_branch, upcoming_version_branch, upcoming_version):
     print(f"### Creating pull request for {upcoming_version_branch}... ###")
-    pr_result = repository.create_pull(title=f"Bump Citus to {upcoming_version}", base=main_branch,
-                                       head=upcoming_version_branch, body="")
+    pr_result = create_pr_with_repo(repo=repository, pr_branch=upcoming_version_branch,
+                                    pr_title=f"Bump Citus to {upcoming_version}", base_branch=main_branch)
     print(f"### Done Pull request created. PR no:{pr_result.number} PR URL: {pr_result.url}. ###  ")
 
 
@@ -496,9 +496,9 @@ def create_new_sql_for_downgrade_path(current_schema_version, distributed_dir_pa
         content = f"-- citus--{upcoming_minor_version}-1--{current_schema_version}"
         content = content + "\n"
         content = (
-                content + f"-- this is an empty downgrade path since "
-                          f"{upgrade_sql_file_name(current_schema_version, upcoming_minor_version)} "
-                          f"is empty for now" + "\n")
+            content + f"-- this is an empty downgrade path since "
+                      f"{upgrade_sql_file_name(current_schema_version, upcoming_minor_version)} "
+                      f"is empty for now" + "\n")
         f_writer.write(content)
     print(f"### Done {newly_created_sql_file} created. ###")
     return newly_created_sql_file
@@ -518,7 +518,7 @@ def validate_parameters(major_release_flag: bool):
         raise ValueError("schema_version could not be set for major releases")
 
     if not major_release_flag and arguments.cherry_pick_enabled \
-            and not arguments.earliest_pr_date:
+        and not arguments.earliest_pr_date:
         raise ValueError(
             "earliest_pr_date parameter could  not be empty when cherry pick is enabled and release is major.")
 
