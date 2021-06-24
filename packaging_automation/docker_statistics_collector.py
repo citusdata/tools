@@ -30,7 +30,7 @@ def fetch_and_store_docker_statistics(repository_name: str, db_user_name: str, d
                                       test_total_pull_count: int = 0):
     if repository_name not in docker_repositories:
         raise ValueError(f"Repository name should be in {str_array_to_str(docker_repositories)}")
-    if not is_test and (test_day_shift_index > 0 or test_total_pull_count > 0):
+    if not is_test and (test_day_shift_index != 0 or test_total_pull_count != 0):
         raise ValueError(f"test_day_shift_index and test_total_pull_count parameters are test "
                          f"parameters. Please don't use these parameters other than testing.")
 
@@ -56,8 +56,8 @@ def fetch_and_store_docker_statistics(repository_name: str, db_user_name: str, d
     pull_diff = total_pull_count - last_stat_record.total_pull_count if last_stat_record else total_pull_count
     mod_pull_diff = pull_diff % day_diff
     for i in range(0, day_diff):
-        daily_pull_count = (pull_diff - mod_pull_diff) / day_diff if i > 0 else (
-                                                                                    pull_diff - mod_pull_diff) / day_diff + mod_pull_diff
+        daily_pull_count = ((pull_diff - mod_pull_diff) / day_diff
+                            if i > 0 else (pull_diff - mod_pull_diff) / day_diff + mod_pull_diff)
         stat_param = DockerStats(fetch_date=fetch_date, total_pull_count=total_pull_count,
                                  daily_pull_count=daily_pull_count,
                                  stat_date=fetch_date.date() - timedelta(days=i))
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     parser.add_argument('--db_name', required=True)
     parser.add_argument('--is_test', action="store_true")
     parser.add_argument('--test_day_shift_index', nargs='?', default=0)
-    parser.add_argument('--test_pull_count_shift', nargs='?', default=0)
+    parser.add_argument('--test_total_pull_count', nargs='?', default=0)
 
     arguments = parser.parse_args()
 
@@ -82,4 +82,4 @@ if __name__ == "__main__":
                                       db_user_name=arguments.db_user_name, db_password=arguments.db_password,
                                       db_host_and_port=arguments.db_host_and_port, db_name=arguments.db_name,
                                       test_day_shift_index=int(arguments.test_day_shift_index),
-                                      test_pull_count_shift=int(arguments.test_pull_count_shift))
+                                      test_total_pull_count=int(arguments.test_pull_count_shift))
