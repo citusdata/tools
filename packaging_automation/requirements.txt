@@ -54,7 +54,7 @@ python-gnupg==0.4.7
     # via -r requirements.in
 python-string-utils==1.0.0
     # via -r requirements.in
-pyyaml==5.3.1
+pyyaml==5.4
     # via -r requirements.in
 requests==2.22.0
     # via
