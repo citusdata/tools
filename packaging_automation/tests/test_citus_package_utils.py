@@ -7,8 +7,8 @@ from .test_utils import generate_new_gpg_key
 from ..citus_package import (decode_os_and_release, is_docker_running, get_signing_credentials, get_postgres_versions,
                              build_package, BuildType, sign_packages)
 from ..common_tool_methods import (delete_all_gpg_keys_by_name, get_gpg_fingerprints_by_name, run,
-                                   get_secret_key_by_fingerprint_without_password, define_rpm_public_key_to_machine,
-                                   delete_rpm_key_by_name, get_secret_key_by_fingerprint_with_password,
+                                   get_private_key_by_fingerprint_without_password, define_rpm_public_key_to_machine,
+                                   delete_rpm_key_by_name, get_private_key_key_by_fingerprint_with_password,
                                    verify_rpm_signature_in_dir, transform_key_into_base64_str)
 
 TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
@@ -63,7 +63,7 @@ def test_get_signing_credentials():
     secret_key, passphrase = get_signing_credentials("", TEST_GPG_KEY_PASSPHRASE)
     fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
     assert len(fingerprints) > 0
-    expected_gpg_key = get_secret_key_by_fingerprint_without_password(fingerprints[0])
+    expected_gpg_key = get_private_key_by_fingerprint_without_password(fingerprints[0])
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     assert secret_key == transform_key_into_base64_str(expected_gpg_key) and passphrase == TEST_GPG_KEY_PASSPHRASE
 
@@ -110,7 +110,7 @@ def test_sign_packages():
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_password.gpg")
     gpg_fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
     assert len(gpg_fingerprints) > 0
-    private_key = get_secret_key_by_fingerprint_with_password(gpg_fingerprints[0], TEST_GPG_KEY_PASSPHRASE)
+    private_key = get_private_key_key_by_fingerprint_with_password(gpg_fingerprints[0], TEST_GPG_KEY_PASSPHRASE)
     secret_key = transform_key_into_base64_str(private_key)
     define_rpm_public_key_to_machine(gpg_fingerprints[0])
     sign_packages(OUTPUT_FOLDER, "centos-8", secret_key, TEST_GPG_KEY_PASSPHRASE, PACKAGING_EXEC_FOLDER)

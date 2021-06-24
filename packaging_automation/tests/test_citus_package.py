@@ -5,7 +5,8 @@ import pathlib2
 from .test_utils import generate_new_gpg_key
 from ..citus_package import (build_packages, BuildType, decode_os_and_release, get_release_package_folder)
 from ..common_tool_methods import (run, delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
-                                   get_secret_key_by_fingerprint_with_password, define_rpm_public_key_to_machine,
+                                   get_private_key_key_by_fingerprint_with_password, define_rpm_public_key_to_machine,
+                                   transform_key_into_base64_str,
                                    verify_rpm_signature_in_dir, delete_all_gpg_keys_by_name)
 from ..upload_to_package_cloud import (upload_files_in_directory_to_package_cloud, delete_package_from_package_cloud,
                                        package_exists)
@@ -54,7 +55,8 @@ def test_build_packages():
     generate_new_gpg_key(f"{TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_password.gpg")
     gpg_fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
     assert len(gpg_fingerprints) > 0
-    secret_key = get_secret_key_by_fingerprint_with_password(gpg_fingerprints[0], TEST_GPG_KEY_PASSPHRASE)
+    secret_key = transform_key_into_base64_str(
+        get_private_key_key_by_fingerprint_with_password(gpg_fingerprints[0], TEST_GPG_KEY_PASSPHRASE))
     define_rpm_public_key_to_machine(gpg_fingerprints[0])
 
     build_packages(GH_TOKEN, platform, BuildType.release, secret_key,
