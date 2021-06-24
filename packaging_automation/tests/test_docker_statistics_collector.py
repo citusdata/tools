@@ -29,9 +29,8 @@ def test_docker_statistics_collector():
     first_day = datetime.today() + timedelta(days=test_day_shift_index)
     first_day_record = session.query(DockerStats).filter_by(stat_date=first_day.date()).first()
     fetch_and_store_docker_statistics("citus", db_user_name=DB_USER_NAME, db_password=DB_PASSWORD,
-                                      db_host_and_port=DB_HOST_AND_PORT, db_name=DB_NAME,
-                                      test_pull_count_shift=test_pull_count_shift, is_test=True,
-                                      test_total_pull_count=first_day_record.total_pull_count)
+                                      db_host_and_port=DB_HOST_AND_PORT, db_name=DB_NAME, is_test=True,
+                                      test_total_pull_count=first_day_record.total_pull_count + test_pull_count_shift)
 
     Base.metadata.create_all(db)
 
@@ -46,4 +45,4 @@ def test_docker_statistics_collector():
     assert third_day_record and second_day_record and (
         third_day_record.total_pull_count == second_day_record.total_pull_count) and (
                third_day_record.daily_pull_count + second_day_record.daily_pull_count == pull_count_diff) and (
-                   pull_count_diff == 205)
+               pull_count_diff == test_pull_count_shift)

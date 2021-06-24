@@ -27,16 +27,15 @@ docker_repositories = ["citus", "membership-manager"]
 
 def fetch_and_store_docker_statistics(repository_name: str, db_user_name: str, db_password: str, db_host_and_port: str,
                                       db_name: str, is_test: bool = False, test_day_shift_index: int = 0,
-                                      test_pull_count_shift: int = 0, test_total_pull_count: int = 0):
+                                      test_total_pull_count: int = 0):
     if repository_name not in docker_repositories:
         raise ValueError(f"Repository name should be in {str_array_to_str(docker_repositories)}")
-    if not is_test and (test_day_shift_index > 0 or test_pull_count_shift > 0 or test_total_pull_count > 0):
-        raise ValueError(f"test_day_shift_index, test_pull_count_shift parameters and test_total_pull_count are test "
+    if not is_test and (test_day_shift_index > 0 or test_total_pull_count > 0):
+        raise ValueError(f"test_day_shift_index and test_total_pull_count parameters are test "
                          f"parameters. Please don't use these parameters other than testing.")
 
     result = requests.get(f"https://hub.docker.com/v2/repositories/citusdata/{repository_name}/")
-    fetched_pull_count = int(result.json()["pull_count"]) if test_total_pull_count == 0 else test_total_pull_count
-    total_pull_count = fetched_pull_count + test_pull_count_shift
+    total_pull_count = int(result.json()["pull_count"]) if test_total_pull_count == 0 else test_total_pull_count
 
     db_engine = create_engine(
         db_connection_string(user_name=db_user_name, password=db_password, host_and_port=db_host_and_port,
