@@ -34,11 +34,11 @@ def test_update_docker_file_for_latest_postgres():
     with open(f"{TEST_BASE_PATH}/Dockerfile", "r") as reader:
         content = reader.read()
         lines = content.splitlines()
-        assert lines[0].strip() == f"FROM postgres:{POSTGRES_VERSION}"
-        assert lines[1].strip() == f"ARG VERSION={PROJECT_VERSION}"
+        assert lines[2].strip() == f"FROM postgres:{POSTGRES_VERSION}"
+        assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert f"postgresql-$PG_MAJOR-{PROJECT_NAME}-" \
-               f"{version_details['major']}.{version_details['minor']}.=$CITUS_VERSION" in lines[19]
-        assert len(lines) == 40
+               f"{version_details['major']}.{version_details['minor']}.=$CITUS_VERSION" in lines[21]
+        assert len(lines) == 42
 
 
 def test_update_regular_docker_compose_file():
@@ -47,9 +47,9 @@ def test_update_regular_docker_compose_file():
     with open(f"{TEST_BASE_PATH}/docker-compose.yml", "r") as reader:
         content = reader.read()
         lines = content.splitlines()
-        assert lines[5] == parameterized_str
-        assert lines[15] == parameterized_str
-        assert len(lines) == 32
+        assert lines[7] == parameterized_str
+        assert lines[17] == parameterized_str
+        assert len(lines) == 34
 
 
 def test_update_docker_file_alpine():
@@ -57,9 +57,9 @@ def test_update_docker_file_alpine():
     with open(f"{TEST_BASE_PATH}/alpine/Dockerfile", "r") as reader:
         content = reader.read()
         lines = content.splitlines()
-        assert lines[0].strip() == f"FROM postgres:{POSTGRES_VERSION}-alpine"
-        assert lines[1].strip() == f"ARG VERSION={PROJECT_VERSION}"
-        assert len(lines) == 53
+        assert lines[2].strip() == f"FROM postgres:{POSTGRES_VERSION}-alpine"
+        assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
+        assert len(lines) == 55
 
 
 def test_update_docker_file_for_postgres12():
@@ -67,10 +67,10 @@ def test_update_docker_file_for_postgres12():
     with open(f"{TEST_BASE_PATH}/postgres-12/Dockerfile", "r") as reader:
         content = reader.read()
         lines = content.splitlines()
-        assert lines[1].strip() == f"ARG VERSION={PROJECT_VERSION}"
+        assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert f"postgresql-$PG_MAJOR-{PROJECT_NAME}-" \
-               f"{version_details['major']}.{version_details['minor']}.=$CITUS_VERSION" in lines[19]
-        assert len(lines) == 40
+               f"{version_details['major']}.{version_details['minor']}.=$CITUS_VERSION" in lines[21]
+        assert len(lines) == 42
 
 
 def test_update_changelog_with_postgres():

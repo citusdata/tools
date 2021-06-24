@@ -7,6 +7,7 @@ from .common_tool_methods import (process_template_file, write_to_file, run, ini
 REPO_OWNER = "citusdata"
 PROJECT_NAME = "packaging"
 CHECKOUT_DIR = "pgxn_temp"
+MAIN_BRANCH = "master"
 
 
 def update_meta_json(project_version: str, template_path: str, exec_path: str):
@@ -54,4 +55,4 @@ if __name__ == "__main__":
         run(f'git push --set-upstream origin {pr_branch}')
 
     if not args.is_test:
-        create_pr(github_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME)
+        create_pr(github_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME, MAIN_BRANCH)

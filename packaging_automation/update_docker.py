@@ -8,6 +8,7 @@ from .common_tool_methods import (process_template_file, write_to_file, run, ini
 
 REPO_OWNER = "citusdata"
 PROJECT_NAME = "docker"
+MAIN_BRANCH = "master"
 
 
 class SupportedDockerImages(Enum):
@@ -111,8 +112,8 @@ def read_postgres_version(pkgvars_file: str) -> str:
                     else:
                         postgres_version = line_parts[1].rstrip("\n")
                         break
-                else:
-                    raise ValueError("pkgvars file should include a line with key latest_postgres_version")
+            if not postgres_version:
+                raise ValueError("pkgvars file should include a line with key latest_postgres_version")
     else:
         # Setting it because pkgvars does not exist initially
         postgres_version = "13.2"
@@ -120,10 +121,9 @@ def read_postgres_version(pkgvars_file: str) -> str:
 
 
 def update_pkgvars(project_version: str, template_path: str, pkgvars_file: str, postgres_version: str):
-    if postgres_version:
-        content = process_template_file(project_version, template_path, "docker-pkgvars.tmpl", postgres_version)
-        with open(pkgvars_file, "w") as writer:
-            writer.write(content)
+    content = process_template_file(project_version, template_path, "docker-pkgvars.tmpl", postgres_version)
+    with open(pkgvars_file, "w") as writer:
+        writer.write(content)
 
 
 CHECKOUT_DIR = "docker_temp"
@@ -155,4 +155,4 @@ if __name__ == "__main__":
         run(f'git push --set-upstream origin {pr_branch}')
 
     if not args.is_test:
-        create_pr(github_token, pr_branch, f"{commit_message}", REPO_OWNER, PROJECT_NAME)
+        create_pr(github_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME, MAIN_BRANCH)

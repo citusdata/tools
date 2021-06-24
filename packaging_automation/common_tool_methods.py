@@ -499,7 +499,7 @@ def remove_cloned_code(full_checkout_dir: str):
         print("Done. Code deleted successfully.")
 
 
-def create_pr(gh_token: str, pr_branch: str, pr_title: str, repo_owner: str, project_name: str):
+def create_pr(gh_token: str, pr_branch: str, pr_title: str, repo_owner: str, project_name: str, base_branch: str):
     g = Github(gh_token)
     repository = g.get_repo(f"{repo_owner}/{project_name}")
-    repository.create_pull(title=pr_title, base="master", head=pr_branch, body="")
+    repository.create_pull(title=pr_title, base=base_branch, head=pr_branch, body="")
