@@ -284,7 +284,7 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
 
 def get_current_branch(working_dir: str) -> str:
     repo = get_new_repo(working_dir)
-    return repo.active_branch
+    return repo.active_branch.name
 
 
 def remote_branch_exists(branch_name: str, working_dir: str) -> bool:

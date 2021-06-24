@@ -129,8 +129,6 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
         if output_validation:
             validate_output(output, f"{input_files_dir}/packaging_ignore.yml", PackageType.rpm)
 
-    os.environ["PACKAGING_PASSPHRASE"] = passphrase
-    os.environ["PACKAGING_SECRET_KEY"] = secret_key
     if len(deb_files) > 0:
         print("Started DEB Signing...")
         result = subprocess.run(
