@@ -130,7 +130,7 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
                                  f"PACKAGING_PASSPHRASE citusdata/packaging:rpmsigner")
         print("RPM signing finished successfully.")
         if result.returncode != 0:
-            raise ValueError(f"Error while signing rpm files.Err:{result.stdout}")
+            raise ValueError(f"Error while signing rpm files.Err:{result.stderr.decode('ascii')}")
 
         output = result.stdout.decode("ascii")
         print(output)
@@ -144,7 +144,8 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
             ["docker", "run", "--rm", "-v", f"{output_path}:/packages/{sub_folder}",
              "-e", "PACKAGING_SECRET_KEY", "-e", "PACKAGING_PASSPHRASE", "citusdata/packaging:debsigner"],
             text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, input=passphrase)
-        print(result.stdout)
+
+        print("Result" + result.stdout)
 
         if result.returncode != 0:
             raise ValueError(f"Error while signing DEB files.Err:{result.stdout}")
@@ -188,13 +189,15 @@ def build_package(github_token: non_empty(non_blank(str)), build_type: BuildType
     os.environ["GITHUB_TOKEN"] = github_token
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    print(f"docker run --rm -v {output_dir}:/packages -v {input_files_dir}:/buildfiles:ro -e "
-                             f"GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE "
-                             f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}")
+
     output = run_with_output(f"docker run --rm -v {output_dir}:/packages -v {input_files_dir}:/buildfiles:ro -e "
                              f"GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE "
                              f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}")
-    print(output.stdout.decode("ascii"))
+
+    if output.stderr:
+        print("Error:" + output.stderr.decode("ascii"))
+    if output.stdout:
+        print("Output:" + output.stdout.decode("ascii"))
     if output_validation:
         validate_output(output.stdout.decode("ascii"), f"{input_files_dir}/packaging_ignore.yml",
                         get_package_type_by_docker_image_name(docker_platform))
