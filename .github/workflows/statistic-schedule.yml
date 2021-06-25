@@ -1,0 +1,37 @@
+name: Statistics Schedule
+
+env:
+  JOB_NAME: ${{ matrix.JOB_NAME }}
+  DB_USER_NAME: ${{ secrets.STATS_DB_USER_NAME }}
+  DB_PASSWORD: ${{ secrets.STATS_DB_PASSWORD }}
+  DB_HOST_AND_PORT: ${{ secrets.STATS_DB_HOST_AND_PORT }}
+  DB_NAME: ${{ secrets.STATS_DB_NAME }}
+on:
+  schedule:
+    - cron: '15 0 * * *'
+
+  workflow_dispatch:
+
+jobs:
+
+  execute_job:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        job_name: [ docker_pull_citus ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install package dependencies
+        run: sudo apt install libcurl4-openssl-dev libssl-dev
+
+      - name: Install python requirements
+        run: python -m pip install -r packaging_automation/requirements.txt
+
+      - name: Execute 'Docker Pull for Citus Repo'
+        run: packaging_automation/bash/daily-statistics-job.sh
+
+
