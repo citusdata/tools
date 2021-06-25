@@ -1,8 +1,9 @@
-import pytest
-import pathlib2
-import base64
 import os
 import subprocess
+
+import pathlib2
+import pytest
+
 from .test_utils import generate_new_gpg_key
 from ..citus_package import (decode_os_and_release, is_docker_running, get_signing_credentials, get_postgres_versions,
                              build_package, BuildType, sign_packages)

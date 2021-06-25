@@ -23,6 +23,15 @@ supported_platforms = {
     "pgxn": []
 }
 
+
+def platform_names() -> List[str]:
+    platforms = []
+    for platform_os in supported_platforms:
+        for platform_release in supported_platforms[platform_os]:
+            platforms.append(f"{platform_os}/{platform_release}")
+    return platforms
+
+
 docker_image_names = {
     "debian": "debian",
     "el": "centos",
@@ -225,19 +234,16 @@ def build_packages(github_token: non_empty(non_blank(str)), platform: non_empty(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gh_token')
-    parser.add_argument('--platform')
-    parser.add_argument('--build_type')
-    parser.add_argument('--secret_key')
-    parser.add_argument('--passphrase')
-    parser.add_argument('--output_dir')
-    parser.add_argument('--input_files_dir')
-    parser.add_argument('--output_validation')
+    parser.add_argument('--gh_token', required=True)
+    parser.add_argument('--platform', required=True, choices=platform_names())
+    parser.add_argument('--build_type', choices=[b.name for b in BuildType])
+    parser.add_argument('--secret_key', required=True)
+    parser.add_argument('--passphrase', required=True)
+    parser.add_argument('--output_dir', required=True)
+    parser.add_argument('--input_files_dir', required=True)
+    parser.add_argument('--output_validation', action="store_true")
 
     args = parser.parse_args()
 
-    output_validation_enabled = False if not args.output_validation or args.output_validation.lower() == "false" \
-        else True
-
     build_packages(args.gh_token, args.platform, BuildType[args.build_type], args.secret_key, args.passphrase,
-                   args.output_dir, args.input_files_dir, output_validation_enabled)
+                   args.output_dir, args.input_files_dir, args.output_validation)
