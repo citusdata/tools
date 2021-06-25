@@ -7,6 +7,7 @@ env:
   MICROSOFT_EMAIL: gindibay@microsoft.com
   USER_NAME: Gurkan Indibay
   MAIN_BRANCH: all-citus
+  PACKAGE_CLOUD_API_TOKEN: ${{ secrets.PACKAGE_CLOUD_API_TOKEN }}
 
 on:
   push:
@@ -32,7 +33,7 @@ jobs:
         run: sudo apt install libcurl4-openssl-dev libssl-dev
 
       - name: Define git credentails
-        run: git config --global user.email "gindibay@microsoft.com"&& git config --global user.name "Gurkan Indibay"
+        run: git config --global user.email "${MICROSOFT_EMAIL}"&& git config --global user.name "${USER_NAME}"
 
       - name: Install python requirements
         run: python -m pip install -r packaging_automation/requirements.txt
