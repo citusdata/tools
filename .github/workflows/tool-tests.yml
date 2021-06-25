@@ -38,12 +38,18 @@ jobs:
       - name: Install python requirements
         run: python -m pip install -r packaging_automation/requirements.txt
 
-      - name: Execute unit tests for "Update Package Properties"
+      - name: Unit tests for "Update Package Properties"
         run:  python -m pytest -q packaging_automation/tests/test_update_package_properties.py
 
-      - name: Execute unit tests for "Prepare Release"
+      - name: Unit tests for "Prepare Release"
         run: python -m pytest -q packaging_automation/tests/test_prepare_release.py
 
-      - name: Common tools tests
+      - name: Unit tests for "Common Tools"
         run: python -m pytest -q packaging_automation/tests/test_common_tool_methods.py
+
+      - name: Unit tests for "Update Docker"
+        run: python -m pytest -q packaging_automation/tests/test_update_docker.py
+
+      - name: Unit tests for "Update Pgxn"
+        run: python -m pytest -q packaging_automation/tests/test_update_pgxn.py
 

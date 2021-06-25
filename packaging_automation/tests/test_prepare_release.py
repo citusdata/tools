@@ -113,4 +113,4 @@ def test_patch_release():
         run(f"git checkout {MAIN_BRANCH}")
     finally:
         for path in resources_to_be_deleted:
-            run(f"sudo rm -rf {path}")
+            remove_cloned_code(path)
