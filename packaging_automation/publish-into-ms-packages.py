@@ -30,7 +30,7 @@ def run(command, *args, **kwargs):
 
 
 def publish_single_package(package_path: str, repo):
-    result = run(f"repoclient package add --repoID {repo['id']} {package_path}")
+    result = run(f"repoclient package add --repoID {repo['id']} {package_path}", stdout=PIPE)
 
     return json.loads(result.stdout)
 
@@ -98,13 +98,12 @@ def publish_packages(target_platform, citus_repos, packages_dir: str):
 
 def check_submissions(all_responses):
     # Check 15 times if there are any packages that we couldn't publish
-    unfinished_submissions = all_responses
+    unfinished_submissions = all_responses.copy()
     finished_submissions = {}
     for i in range(15):
 
-        for pack_path, response in unfinished_submissions.items():
+        for pack_path, response in all_responses.items():
             package_id = response["Location"].split("/")[-1]
-
             try:
                 run(f"repoclient package check {package_id}")
                 finished_submissions[pack_path] = response

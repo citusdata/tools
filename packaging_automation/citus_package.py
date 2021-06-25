@@ -10,7 +10,7 @@ import gnupg
 from parameters_validation import non_blank, non_empty
 
 from .common_tool_methods import (run_with_output, PackageType, transform_key_into_base64_str,
-                                  get_gpg_fingerprints_by_name)
+                                  get_gpg_fingerprints_by_name, str_array_to_str)
 from .packaging_warning_handler import validate_output
 
 GPG_KEY_NAME = "packaging@citusdata.com"
@@ -188,6 +188,9 @@ def build_package(github_token: non_empty(non_blank(str)), build_type: BuildType
     os.environ["GITHUB_TOKEN"] = github_token
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+    print(f"docker run --rm -v {output_dir}:/packages -v {input_files_dir}:/buildfiles:ro -e "
+                             f"GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE "
+                             f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}")
     output = run_with_output(f"docker run --rm -v {output_dir}:/packages -v {input_files_dir}:/buildfiles:ro -e "
                              f"GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE "
                              f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}")
@@ -219,6 +222,7 @@ def build_packages(github_token: non_empty(non_blank(str)), platform: non_empty(
         raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")
 
     postgres_versions = release_versions if build_type == BuildType.release else nightly_versions
+    print(f"Postgres Versions: {str_array_to_str(postgres_versions)}")
     docker_image_name = get_docker_image_name(platform)
     output_sub_folder = get_release_package_folder(os_name, os_version)
     output_dir = f"{base_output_dir}/{output_sub_folder}"
