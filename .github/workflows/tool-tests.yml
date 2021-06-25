@@ -57,7 +57,3 @@ jobs:
         run: python -m pytest -q packaging_automation/tests/test_packaging_warning_handler.py
 
 
-
-      - name: Common tools tests
-        run: python -m pytest -q packaging_automation/tests/test_common_tool_methods.py
-
