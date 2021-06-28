@@ -1,17 +1,17 @@
 wheel
 docker
 GitPython
-Jinja2
+Jinja2 ==2.11.3
 pathlib2
 pycurl
 PyGithub
 pytest
 python-string-utils
-requests
-urllib3
+requests > 2.22.0
+urllib3 >= 1.26.5
 python-gnupg
 parameters_validation
-PyYAML
+PyYAML == 5.4
 psycopg2
 SQLAlchemy
 
