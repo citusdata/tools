@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from subprocess import PIPE
 import subprocess
 import os
@@ -10,9 +8,15 @@ import sys
 from pprint import pprint
 
 ms_package_repo_map = {
-    "el/8": "centos-8", "el/7": "centos-7", "debian/buster": "debian-buster", "debian/jessie": "debian-jessie",
-    "debian/stretch": "debian-stretch", "ubuntu/bionic": "ubuntu-bionic", "ubuntu/xenial": "ubuntu-xenial",
-    "ubuntu/focal": "ubuntu-focal"}
+    "el/8": "centos-8",
+    "el/7": "centos-7",
+    "debian/buster": "debian-buster",
+    "debian/jessie": "debian-jessie",
+    "debian/stretch": "debian-stretch",
+    "ubuntu/bionic": "ubuntu-bionic",
+    "ubuntu/xenial": "ubuntu-xenial",
+    "ubuntu/focal": "ubuntu-focal"
+}
 
 RELEASE_DIR = "pkgs/releases"
 
@@ -47,7 +51,6 @@ def publish_single_package():
 def run(command, *args, **kwargs):
     print(command)
     result = subprocess.run(command, *args, check=True, shell=True, **kwargs)
-    print()
     return result
 
 
@@ -140,7 +143,7 @@ for i in range(15):
     time.sleep(i)
 
 if finished_submissions:
-    print("The following packages were  published successfuly")
+    print("The following packages were published successfuly")
     pprint(finished_submissions)
 
 if unfinished_submissions:

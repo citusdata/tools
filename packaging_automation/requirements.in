@@ -12,6 +12,3 @@ urllib3
 python-gnupg
 parameters_validation
 PyYAML
-psycopg2
-SQLAlchemy
-

@@ -13,8 +13,7 @@ from .common_tool_methods import (get_version_details, is_major_release,
                                   filter_prs_by_label, cherry_pick_prs, run, replace_line_in_file, get_current_branch,
                                   find_nth_matching_line_and_line_number, get_patch_version_regex,
                                   remote_branch_exists, local_branch_exists, prepend_line_in_file,
-                                  get_template_environment, get_upcoming_minor_version, remove_cloned_code,
-                                  initialize_env, create_pr_with_repo)
+                                  get_template_environment, get_upcoming_minor_version, remove_cloned_code)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN, is_version)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
@@ -55,7 +54,7 @@ repo_details = {
         "branch": "master"},
     "citus-enterprise": {
         "configure-in-str": "Citus Enterprise",
-        "branch": "enterprise-master"}}
+        "branch": "enterprise master"}}
 
 
 @dataclass
@@ -326,8 +325,8 @@ def cherrypick_prs_with_backport_labels(earliest_pr_date, main_branch, release_b
 
 def create_pull_request_for_upcoming_version_branch(repository, main_branch, upcoming_version_branch, upcoming_version):
     print(f"### Creating pull request for {upcoming_version_branch}... ###")
-    pr_result = create_pr_with_repo(repo=repository, pr_branch=upcoming_version_branch,
-                                    pr_title=f"Bump Citus to {upcoming_version}", base_branch=main_branch)
+    pr_result = repository.create_pull(title=f"Bump Citus to {upcoming_version}", base=main_branch,
+                                       head=upcoming_version_branch, body="")
     print(f"### Done Pull request created. PR no:{pr_result.number} PR URL: {pr_result.url}. ###  ")
 
 
@@ -448,7 +447,7 @@ def execute_autoconf_f():
     print(f"### Done autoconf -f executed. ###")
 
 
-def update_version_in_configure_in(project_name, configure_in_path, project_version):
+def update_version_in_configure_in(project_name,configure_in_path, project_version):
     print(f"### Updating version on file {configure_in_path}... ###")
     if not replace_line_in_file(configure_in_path, CONFIGURE_IN_SEARCH_PATTERN,
                                 f"AC_INIT([{repo_details[project_name]['configure-in-str']}], [{project_version}])"):
@@ -480,7 +479,7 @@ def create_new_sql_for_upgrade_path(current_schema_version, distributed_dir_path
     newly_created_sql_file = upgrade_sql_file_name(current_schema_version, upcoming_minor_version)
     print(f"### Creating upgrade file {newly_created_sql_file}... ###")
     with open(f"{distributed_dir_path}/{newly_created_sql_file}", "w") as f_writer:
-        content = f"-- citus--{current_schema_version}--{upcoming_minor_version}-1"
+        content = f"/* citus--{current_schema_version}--{upcoming_minor_version}-1 */"
         content = content + "\n\n"
         content = content + f"-- bump version to {upcoming_minor_version}-1" + "\n\n"
         f_writer.write(content)
@@ -493,18 +492,35 @@ def create_new_sql_for_downgrade_path(current_schema_version, distributed_dir_pa
     newly_created_sql_file = f"citus--{upcoming_minor_version}-1--{current_schema_version}.sql"
     print(f"### Creating downgrade file {newly_created_sql_file}... ###")
     with open(f"{distributed_dir_path}/{newly_created_sql_file}", "w") as f_writer:
-        content = f"-- citus--{upcoming_minor_version}-1--{current_schema_version}"
+        content = f"/* citus--{upcoming_minor_version}-1--{current_schema_version} */"
         content = content + "\n"
         content = (
-            content + f"-- this is an empty downgrade path since "
-                      f"{upgrade_sql_file_name(current_schema_version, upcoming_minor_version)} "
-                      f"is empty for now" + "\n")
+                content + f"-- this is an empty downgrade path since "
+                          f"{upgrade_sql_file_name(current_schema_version, upcoming_minor_version)} "
+                          f"is empty for now" + "\n")
         f_writer.write(content)
     print(f"### Done {newly_created_sql_file} created. ###")
     return newly_created_sql_file
 
 
 CHECKOUT_DIR = "citus_temp"
+
+
+def remove_cloned_code(exec_path: str):
+    if os.path.exists(f"{exec_path}"):
+        print(f"Deleting cloned code {exec_path} ...")
+        # https://stackoverflow.com/questions/51819472/git-cant-delete-local-branch-operation-not-permitted
+        # https://askubuntu.com/questions/1049142/cannot-delete-git-directory
+        # since git directory is readonly first we need to give write permission to delete git directory
+        run(f"chmod -R 777 {exec_path}/.git")
+        run(f"sudo rm -rf {exec_path}")
+        print("Done. Code deleted successfully.")
+
+
+def initialize_env(exec_path: str, project_name: str):
+    remove_cloned_code(exec_path)
+    if not os.path.exists(CHECKOUT_DIR):
+        run(f"git clone https://github.com/citusdata/{project_name}.git {CHECKOUT_DIR}")
 
 
 def validate_parameters(major_release_flag: bool):
@@ -518,7 +534,7 @@ def validate_parameters(major_release_flag: bool):
         raise ValueError("schema_version could not be set for major releases")
 
     if not major_release_flag and arguments.cherry_pick_enabled \
-        and not arguments.earliest_pr_date:
+            and not arguments.earliest_pr_date:
         raise ValueError(
             "earliest_pr_date parameter could  not be empty when cherry pick is enabled and release is major.")
 
@@ -540,7 +556,7 @@ if __name__ == "__main__":
     validate_parameters(major_release)
 
     try:
-        initialize_env(execution_path, arguments.prj_name, CHECKOUT_DIR)
+        initialize_env(execution_path, arguments.prj_name)
 
         is_cherry_pick_enabled = arguments.cherry_pick_enabled
         main_branch = arguments.main_branch if arguments.main_branch else repo_details[arguments.prj_name]["branch"]
