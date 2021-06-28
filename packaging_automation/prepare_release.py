@@ -54,7 +54,7 @@ repo_details = {
         "branch": "master"},
     "citus-enterprise": {
         "configure-in-str": "Citus Enterprise",
-        "branch": "enterprise master"}}
+        "branch": "enterprise-master"}}
 
 
 @dataclass
@@ -479,7 +479,7 @@ def create_new_sql_for_upgrade_path(current_schema_version, distributed_dir_path
     newly_created_sql_file = upgrade_sql_file_name(current_schema_version, upcoming_minor_version)
     print(f"### Creating upgrade file {newly_created_sql_file}... ###")
     with open(f"{distributed_dir_path}/{newly_created_sql_file}", "w") as f_writer:
-        content = f"/* citus--{current_schema_version}--{upcoming_minor_version}-1 */"
+        content = f"-- citus--{current_schema_version}--{upcoming_minor_version}-1"
         content = content + "\n\n"
         content = content + f"-- bump version to {upcoming_minor_version}-1" + "\n\n"
         f_writer.write(content)
@@ -492,7 +492,7 @@ def create_new_sql_for_downgrade_path(current_schema_version, distributed_dir_pa
     newly_created_sql_file = f"citus--{upcoming_minor_version}-1--{current_schema_version}.sql"
     print(f"### Creating downgrade file {newly_created_sql_file}... ###")
     with open(f"{distributed_dir_path}/{newly_created_sql_file}", "w") as f_writer:
-        content = f"/* citus--{upcoming_minor_version}-1--{current_schema_version} */"
+        content = f"-- citus--{upcoming_minor_version}-1--{current_schema_version}"
         content = content + "\n"
         content = (
                 content + f"-- this is an empty downgrade path since "
