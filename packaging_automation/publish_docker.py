@@ -127,7 +127,7 @@ def publish_main_docker_images(docker_image_type: DockerImageType, exec_path: st
     docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
                                tag=docker_image_name,
                                path=".")
-    if current_branch.name == DEFAULT_BRANCH_NAME:
+    if current_branch == DEFAULT_BRANCH_NAME:
         docker_client.images.push(DOCKER_IMAGE_NAME, tag=docker_image_type.name)
 
 
@@ -143,7 +143,7 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, exec_path: st
         tag_version_part = tag_version_part + tag_part
         image_tag = get_image_tag(tag_version_part, docker_image_type)
         docker_api_client.tag(docker_image_name, docker_image_name, image_tag)
-        if current_branch.name == DEFAULT_BRANCH_NAME:
+        if current_branch == DEFAULT_BRANCH_NAME:
             docker_client.images.push(DOCKER_IMAGE_NAME, tag=image_tag)
         tag_version_part = tag_version_part + "."
 
