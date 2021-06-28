@@ -22,8 +22,12 @@ supported_distros = {
     "ubuntu/xenial": 165
 }
 
-supported_repos = ["sample", "citusdata/enterprise", "citusdata/community", "citusdata/community-nightlies",
-                   "citusdata/enterprise-nightlies", "citusdata/azure"]
+supported_repos = ["sample",
+                   "citusdata/enterprise",
+                   "citusdata/community",
+                   "citusdata/community-nightlies",
+                   "citusdata/enterprise-nightlies",
+                   "citusdata/azure"]
 
 
 @dataclass
@@ -50,7 +54,7 @@ MAIN_BRANCH_NAME = os.getenv("MAIN_BRANCH")
 BASE_PATH = pathlib2.Path(__file__).parents[1]
 
 
-def upload_to_package_cloud(distro_name, package_name, packagecloud_token, repo_name) -> ReturnValue:
+def upload_to_package_cloud(distro_name, package_name, package_cloud_token, repo_name) -> ReturnValue:
     distro_id = supported_distros[distro_name]
     files = {
         'package[distro_version_id]': (None, str(distro_id)),
@@ -58,23 +62,23 @@ def upload_to_package_cloud(distro_name, package_name, packagecloud_token, repo_
             package_name, open(package_name, 'rb')),
     }
 
-    package_query_url = 'https://' + packagecloud_token + ':@packagecloud.io/api/v1/repos/citus-bot/' + repo_name + '/packages.json'
+    package_query_url = (
+        f'https://{package_cloud_token}:@packagecloud.io/api/v1/repos/citus-bot/{repo_name}/packages.json')
     print(f"Uploading package {os.path.basename(package_name)} using path {package_query_url}")
     response = requests.post(package_query_url, files=files)
     print(f"Response from package cloud: {response.content}")
-    return ReturnValue(response.ok, response.content, package_name, distro_name, repo_name)
+    return ReturnValue(response.ok, response.content.decode("ascii"), package_name, distro_name, repo_name)
 
 
 def upload_files_in_directory_to_package_cloud(directoryName: str, distro_name: str, package_cloud_token: str,
-                                               repo_name: str) -> MultipleReturnValue:
+                                               repo_name: str, packaging_source_folder: str) -> MultipleReturnValue:
     if not MAIN_BRANCH_NAME:
         raise ValueError("MAIN_BRANCH environment variable should be defined")
-    current_branch = get_current_branch(BASE_PATH.absolute())
+    current_branch = get_current_branch(packaging_source_folder)
     if MAIN_BRANCH_NAME != current_branch:
         print(f"Package publishing skipped since current branch is not equal to {MAIN_BRANCH_NAME}")
         return MultipleReturnValue(ret_vals=[])
-    for key, value in supported_distros.items():
-        print(key + "=>" + str(value))
+
     ret_status: List[ReturnValue] = []
 
     files = glob.glob(f"{directoryName}/**/*.*", recursive=True)
@@ -91,17 +95,17 @@ def upload_files_in_directory_to_package_cloud(directoryName: str, distro_name: 
 
 def delete_package_from_package_cloud(package_cloud_token: str, repo_owner: str, repo_name: str, distro_name: str,
                                       distro_version: str, package_name: str) -> ReturnValue:
-    delete_url = f'https://{package_cloud_token}:@packagecloud.io/api/v1/repos/{repo_owner}/{repo_name}/' \
-                 f'{distro_name}/{distro_version}/{package_name}'
+    delete_url = (f'https://{package_cloud_token}:@packagecloud.io/api/v1/repos/{repo_owner}/{repo_name}/'
+                  f'{distro_name}/{distro_version}/{package_name}')
 
     response = requests.delete(delete_url)
     return ReturnValue(response.ok, response.content, package_name, distro_name, repo_name)
 
 
-def does_package_exist(package_cloud_token: str, repo_owner: str, repo_name: str, package_name: str,
-                       platform: str) -> bool:
-    query_url = f"https://packagecloud.io/api/v1/repos/{repo_owner}/{repo_name}/search?" \
-                f"q={package_name}&filter=all&dist={urllib.parse.quote(platform, safe='')}"
+def package_exists(package_cloud_token: str, repo_owner: str, repo_name: str, package_name: str,
+                   platform: str) -> bool:
+    query_url = (f"https://packagecloud.io/api/v1/repos/{repo_owner}/{repo_name}/search?"
+                 f"q={package_name}&filter=all&dist={urllib.parse.quote(platform, safe='')}")
     response = requests.get(query_url, auth=HTTPBasicAuth(package_cloud_token, ''))
     return response.ok
 
