@@ -5,11 +5,15 @@ import subprocess
 from enum import Enum
 from typing import List
 from typing import Tuple
+import gnupg
 
 from parameters_validation import non_blank, non_empty
 
-from .common_tool_methods import run_with_output, PackageType
+from .common_tool_methods import (run_with_output, PackageType, transform_key_into_base64_str,
+                                  get_gpg_fingerprints_by_name, str_array_to_str)
 from .packaging_warning_handler import validate_output
+
+GPG_KEY_NAME = "packaging@citusdata.com"
 
 supported_platforms = {
     "debian": ["buster", "stretch", "jessie", "wheezy"],
@@ -18,6 +22,15 @@ supported_platforms = {
     "ubuntu": ["focal", "bionic", "xenial", "trusty"],
     "pgxn": []
 }
+
+
+def platform_names() -> List[str]:
+    platforms = []
+    for platform_os in supported_platforms:
+        for platform_release in supported_platforms[platform_os]:
+            platforms.append(f"{platform_os}/{platform_release}")
+    return platforms
+
 
 docker_image_names = {
     "debian": "debian",
@@ -87,29 +100,18 @@ def is_docker_running() -> bool:
 def get_signing_credentials(packaging_secret_key: str, packaging_passphrase: str) -> Tuple[str, str]:
     if not packaging_passphrase or len(packaging_passphrase) == 0:
         raise ValueError("packaging_passphrase should not be null")
-    if  packaging_secret_key and len(packaging_secret_key) > 0:
+    if packaging_secret_key and len(packaging_secret_key) > 0:
         secret_key = packaging_secret_key
     else:
-        child = subprocess.Popen(["gpg", "--batch", "--fingerprint", "packaging@citusdata.com"], stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-        stream_data = child.communicate()
-        if child.returncode != 0:
-            raise ValueError("Gpg key for 'packaging@citusdata.com' does not exist")
-        gpg_result = stream_data[0].decode("ascii")
-        gpg_result_lines = gpg_result.splitlines()
-        if len(gpg_result_lines) != 5:
-            raise ValueError(f"GPG Key result is not in desired format. It should have "
-                             f"4 lines including pub, uid and sub. Result: {gpg_result} ")
-        fingerprint = gpg_result_lines[1].strip()
+        fingerprints = get_gpg_fingerprints_by_name(GPG_KEY_NAME)
+        if len(fingerprints) == 0:
+            raise ValueError(f"Key for {GPG_KEY_NAME} does not exist")
 
-        try:
-            cmd = f'gpg --batch --export-secret-keys -a "{fingerprint}" | base64'
-            ps = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=2)
-            secret_key = ps.stdout.decode("ascii")
-        except subprocess.TimeoutExpired:
-            raise ValueError(
-                "Error while getting key. Most probably packaging key is stored with password. "
-                "Please remove the password when storing key with email packaging@citusdata.com")
+        gpg = gnupg.GPG()
+
+        private_key = gpg.export_keys(fingerprints[0], secret=True, passphrase=packaging_passphrase)
+        secret_key = transform_key_into_base64_str(private_key)
+
     passphrase = packaging_passphrase
     return secret_key, passphrase
 
@@ -128,7 +130,7 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
                                  f"PACKAGING_PASSPHRASE citusdata/packaging:rpmsigner")
         print("RPM signing finished successfully.")
         if result.returncode != 0:
-            raise ValueError(f"Error while signing rpm files.Err:{result.stdout}")
+            raise ValueError(f"Error while signing rpm files.Err:{result.stderr.decode('ascii')}")
 
         output = result.stdout.decode("ascii")
         print(output)
@@ -136,15 +138,14 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
         if output_validation:
             validate_output(output, f"{input_files_dir}/packaging_ignore.yml", PackageType.rpm)
 
-    os.environ["PACKAGING_PASSPHRASE"] = passphrase
-    os.environ["PACKAGING_SECRET_KEY"] = secret_key
     if len(deb_files) > 0:
         print("Started DEB Signing...")
         result = subprocess.run(
             ["docker", "run", "--rm", "-v", f"{output_path}:/packages/{sub_folder}",
              "-e", "PACKAGING_SECRET_KEY", "-e", "PACKAGING_PASSPHRASE", "citusdata/packaging:debsigner"],
             text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, input=passphrase)
-        print(result.stdout)
+
+        print("Result" + result.stdout)
 
         if result.returncode != 0:
             raise ValueError(f"Error while signing DEB files.Err:{result.stdout}")
@@ -188,10 +189,15 @@ def build_package(github_token: non_empty(non_blank(str)), build_type: BuildType
     os.environ["GITHUB_TOKEN"] = github_token
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+
     output = run_with_output(f"docker run --rm -v {output_dir}:/packages -v {input_files_dir}:/buildfiles:ro -e "
                              f"GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE "
                              f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}")
-    print(output.stdout.decode("ascii"))
+
+    if output.stderr:
+        print("Error:" + output.stderr.decode("ascii"))
+    if output.stdout:
+        print("Output:" + output.stdout.decode("ascii"))
     if output_validation:
         validate_output(output.stdout.decode("ascii"), f"{input_files_dir}/packaging_ignore.yml",
                         get_package_type_by_docker_image_name(docker_platform))
@@ -219,6 +225,7 @@ def build_packages(github_token: non_empty(non_blank(str)), platform: non_empty(
         raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")
 
     postgres_versions = release_versions if build_type == BuildType.release else nightly_versions
+    print(f"Postgres Versions: {str_array_to_str(postgres_versions)}")
     docker_image_name = get_docker_image_name(platform)
     output_sub_folder = get_release_package_folder(os_name, os_version)
     output_dir = f"{base_output_dir}/{output_sub_folder}"
@@ -234,19 +241,16 @@ def build_packages(github_token: non_empty(non_blank(str)), platform: non_empty(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gh_token')
-    parser.add_argument('--platform')
-    parser.add_argument('--build_type')
-    parser.add_argument('--secret_key')
-    parser.add_argument('--passphrase')
-    parser.add_argument('--output_dir')
-    parser.add_argument('--input_files_dir')
-    parser.add_argument('--output_validation')
+    parser.add_argument('--gh_token', required=True)
+    parser.add_argument('--platform', required=True, choices=platform_names())
+    parser.add_argument('--build_type', choices=[b.name for b in BuildType])
+    parser.add_argument('--secret_key', required=True)
+    parser.add_argument('--passphrase', required=True)
+    parser.add_argument('--output_dir', required=True)
+    parser.add_argument('--input_files_dir', required=True)
+    parser.add_argument('--output_validation', action="store_true")
 
     args = parser.parse_args()
 
-    output_validation_enabled = False if not args.output_validation or args.output_validation.lower() == "false" \
-        else True
-
     build_packages(args.gh_token, args.platform, BuildType[args.build_type], args.secret_key, args.passphrase,
-                   args.output_dir, args.input_files_dir, output_validation_enabled)
+                   args.output_dir, args.input_files_dir, args.output_validation)
