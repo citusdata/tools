@@ -29,15 +29,16 @@ def test_github_stats_collector():
 
     session = db_session(db_params=db_params, is_test=True)
     records = session.query(GithubCloneStats).all()
-    assert len(records) == 13
+    previous_record_length = len(records)
+    assert previous_record_length >= 13
     first_record = session.query(GithubCloneStats).first()
     session.delete(first_record)
     session.commit()
     records = session.query(GithubCloneStats).all()
-    assert len(records) == 12
+    assert previous_record_length - len(records) == 1
     fetch_and_store_github_clones(organization_name=ORGANIZATION_NAME, repo_name=REPO_NAME, github_token=GH_TOKEN,
                                   db_parameters=db_params, is_test=True)
     records = session.query(GithubCloneStats).all()
-    assert len(records) == 13
+    assert len(records) == previous_record_length
     today_record = session.query(GithubCloneStats).filter_by(clone_date=datetime.today())
     assert not today_record.first()
