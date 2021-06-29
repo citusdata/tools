@@ -28,7 +28,7 @@ def test_github_stats_collector():
     fetch_and_store_github_clones(organization_name=ORGANIZATION_NAME, repo_name=REPO_NAME, github_token=GH_TOKEN,
                                   db_parameters=db_params, is_test=True)
 
-    session = db_session(db_parameters=db_params, is_test=True)
+    session = db_session(db_params=db_params, is_test=True)
     records = session.query(GithubCloneStats).all()
     assert len(records) == 13
     first_record = session.query(GithubCloneStats).first()

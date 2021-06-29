@@ -1,7 +1,6 @@
 name: Statistics Schedule
 
 env:
-  JOB_NAME: ${{ matrix.JOB_NAME }}
   DB_USER_NAME: ${{ secrets.STATS_DB_USER_NAME }}
   DB_PASSWORD: ${{ secrets.STATS_DB_PASSWORD }}
   DB_HOST_AND_PORT: ${{ secrets.STATS_DB_HOST_AND_PORT }}
@@ -9,6 +8,9 @@ env:
 on:
   schedule:
     - cron: '15 0 * * *'
+
+  push:
+    branches: "**"
 
   workflow_dispatch:
 
@@ -19,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job_name: [ docker_pull_citus ]
+        job_name: [ docker_pull_citus,github_clone_citus ]
 
     steps:
       - name: Checkout repository
@@ -33,5 +35,7 @@ jobs:
 
       - name: Execute 'Docker Pull for Citus Repo'
         run: packaging_automation/bash/daily-statistics-job.sh
+        env:
+          JOB_NAME: ${{ matrix.JOB_NAME }}
 
 
