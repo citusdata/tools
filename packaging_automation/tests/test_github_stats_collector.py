@@ -1,9 +1,11 @@
 import os
-from ..dbconfig import (Base, db_connection_string, DbParams, db_session)
+from datetime import datetime
+
+from sqlalchemy import text, create_engine
+
+from ..dbconfig import (db_connection_string, DbParams, db_session)
 from ..github_stats_collector import (fetch_and_store_github_clones, GithubCloneStatsTransactionsDetail,
                                       GithubCloneStatsTransactionsMain, GithubCloneStats)
-from sqlalchemy import text, create_engine
-from datetime import datetime
 
 DB_USER_NAME = os.getenv("DB_USER_NAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
@@ -16,15 +18,12 @@ REPO_NAME = "citus"
 
 
 def test_github_stats_collector():
-    db = create_engine(
-        db_connection_string(user_name=DB_USER_NAME, password=DB_PASSWORD, host_and_port=DB_HOST_AND_PORT,
-                             db_name=DB_NAME, is_test=True))
+    db_params = DbParams(user_name=DB_USER_NAME, password=DB_PASSWORD, host_and_port=DB_HOST_AND_PORT, db_name=DB_NAME)
+    db = create_engine(db_connection_string(db_params=db_params, is_test=True))
     db.execute(text(f'DROP TABLE IF EXISTS {GithubCloneStatsTransactionsDetail.__tablename__}'))
     db.execute(text(f'DROP TABLE IF EXISTS {GithubCloneStatsTransactionsMain.__tablename__}'))
     db.execute(text(f'DROP TABLE IF EXISTS {GithubCloneStats.__tablename__}'))
 
-    db_params = DbParams(user_name=DB_USER_NAME, password=DB_PASSWORD,
-                         host_and_port=DB_HOST_AND_PORT, db_name=DB_NAME)
     fetch_and_store_github_clones(organization_name=ORGANIZATION_NAME, repo_name=REPO_NAME, github_token=GH_TOKEN,
                                   db_parameters=db_params, is_test=True)
 
