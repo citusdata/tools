@@ -6,8 +6,9 @@ from enum import Enum
 from typing import List
 from typing import Tuple
 import gnupg
+import docker
 
-from parameters_validation import non_blank, non_empty
+from parameters_validation import non_blank, non_empty, validate_parameters
 
 from .common_tool_methods import (run_with_output, PackageType, transform_key_into_base64_str,
                                   get_gpg_fingerprints_by_name, str_array_to_str)
@@ -19,8 +20,7 @@ supported_platforms = {
     "debian": ["buster", "stretch", "jessie", "wheezy"],
     "el": ["8", "7", "6"],
     "ol": ["7", "8"],
-    "ubuntu": ["focal", "bionic", "xenial", "trusty"],
-    "pgxn": []
+    "ubuntu": ["focal", "bionic", "xenial", "trusty"]
 }
 
 
@@ -29,6 +29,7 @@ def platform_names() -> List[str]:
     for platform_os in supported_platforms:
         for platform_release in supported_platforms[platform_os]:
             platforms.append(f"{platform_os}/{platform_release}")
+    platforms.append("pgxn")
     return platforms
 
 
@@ -42,8 +43,7 @@ docker_image_names = {
 
 
 def get_package_type_by_docker_image_name(docker_image_name: str) -> PackageType:
-    return PackageType.deb if docker_image_name.startswith("ubuntu") or docker_image_name.startswith(
-        "debian") else PackageType.rpm
+    return PackageType.deb if docker_image_name.startswith(("ubuntu", "debian")) else PackageType.rpm
 
 
 class BuildType(Enum):
@@ -51,17 +51,17 @@ class BuildType(Enum):
     nightly = 2
 
 
-class PostgresVersionDockerImage:
+class PostgresVersionDockerImageType:
     multiple = 1,
     single = 2
 
 
 platform_postgres_version_source = {
-    "el": PostgresVersionDockerImage.multiple,
-    "ol": PostgresVersionDockerImage.multiple,
-    "debian": PostgresVersionDockerImage.single,
-    "ubuntu": PostgresVersionDockerImage.single,
-    "pgxn": PostgresVersionDockerImage.single
+    "el": PostgresVersionDockerImageType.multiple,
+    "ol": PostgresVersionDockerImageType.multiple,
+    "debian": PostgresVersionDockerImageType.single,
+    "ubuntu": PostgresVersionDockerImageType.single,
+    "pgxn": PostgresVersionDockerImageType.single
 }
 
 PKGVARS_FILE = "pkgvars"
@@ -91,16 +91,18 @@ def decode_os_and_release(platform_name: str) -> Tuple[str, str]:
 
 
 def is_docker_running() -> bool:
-    child = subprocess.Popen(["docker", "info"], stdout=subprocess.PIPE)
-    stream_data = child.communicate()[0]
-    print(stream_data.decode("ascii"))
-    return child.returncode == 0
+    docker_client = docker.from_env()
+    try:
+        docker_client.ping()
+        return True
+    except:
+        return False
 
 
-def get_signing_credentials(packaging_secret_key: str, packaging_passphrase: str) -> Tuple[str, str]:
-    if not packaging_passphrase or len(packaging_passphrase) == 0:
-        raise ValueError("packaging_passphrase should not be null")
-    if packaging_secret_key and len(packaging_secret_key) > 0:
+@validate_parameters
+def get_signing_credentials(packaging_secret_key: str,
+                            packaging_passphrase: non_empty(non_blank(str))) -> Tuple[str, str]:
+    if packaging_secret_key:
         secret_key = packaging_secret_key
     else:
         fingerprints = get_gpg_fingerprints_by_name(GPG_KEY_NAME)
@@ -127,12 +129,12 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
     if len(rpm_files) > 0:
         print("Started RPM Signing...")
         result = run_with_output(f"docker run --rm -v {output_path}:/packages/{sub_folder} -e PACKAGING_SECRET_KEY -e "
-                                 f"PACKAGING_PASSPHRASE citusdata/packaging:rpmsigner")
-        print("RPM signing finished successfully.")
-        if result.returncode != 0:
-            raise ValueError(f"Error while signing rpm files.Err:{result.stderr.decode('ascii')}")
+                                 f"PACKAGING_PASSPHRASE citusdata/packaging:rpmsigner", text=True)
 
-        output = result.stdout.decode("ascii")
+        if result.returncode != 0:
+            raise ValueError(f"Error while signing rpm files.Err:{result.stderr}")
+        print("RPM signing finished successfully.")
+        output = result.stdout
         print(output)
 
         if output_validation:
@@ -140,6 +142,7 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
 
     if len(deb_files) > 0:
         print("Started DEB Signing...")
+
         result = subprocess.run(
             ["docker", "run", "--rm", "-v", f"{output_path}:/packages/{sub_folder}",
              "-e", "PACKAGING_SECRET_KEY", "-e", "PACKAGING_PASSPHRASE", "citusdata/packaging:debsigner"],
@@ -158,7 +161,7 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
 def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str], List[str]]:
     release_versions = []
     nightly_versions = []
-    if platform_postgres_version_source[os_name] == PostgresVersionDockerImage.single:
+    if platform_postgres_version_source[os_name] == PostgresVersionDockerImageType.single:
         release_versions = ["all"]
         nightly_versions = ["all"]
     else:
@@ -167,22 +170,25 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
             lines = content.splitlines()
             for line in lines:
                 if line.startswith("releasepg"):
-                    release_version = line
+                    release_version_assignment = line
                 if line.startswith("nightlypg"):
-                    nightly_version = line
-            if release_version is None or "=" not in release_version or len(release_version.split("=")) != 2:
+                    nightly_version_assignment = line
+            if release_version_assignment is None or "=" not in release_version_assignment or len(
+                release_version_assignment.split("=")) != 2:
                 raise ValueError(
-                    f"Release version in pkglatest is not well formatted.Expected format: releasepg=12,13 "
-                    f"Actual Format:{release_version}")
-            if nightly_version is None or "=" not in nightly_version or len(nightly_version.split("=")) != 2:
+                    f"Release version in pkglatest is not well formatted. Expected format: releasepg=12,13 "
+                    f"Actual Format:{release_version_assignment}")
+            if nightly_version_assignment is None or "=" not in nightly_version_assignment or len(
+                nightly_version_assignment.split("=")) != 2:
                 raise ValueError(
-                    f"Nightly version in pkglatest is not well formatted.Expected format: nightlypg=12,13 "
-                    f"Actual Format:{nightly_version}")
-            release_versions = release_version.split("=")[1].split(",")
-            nightly_versions = nightly_version.split("=")[1].split(",")
+                    f"Nightly version in pkglatest is not well formatted. Expected format: nightlypg=12,13 "
+                    f"Actual Format:{nightly_version_assignment}")
+            release_versions = release_version_assignment.split("=")[1].split(",")
+            nightly_versions = nightly_version_assignment.split("=")[1].split(",")
     return release_versions, nightly_versions
 
 
+@validate_parameters
 def build_package(github_token: non_empty(non_blank(str)), build_type: BuildType, output_dir: str, input_files_dir: str,
                   docker_platform: str, postgres_version: str, output_validation: bool = False):
     postgres_extension = "all" if postgres_version == "all" else f"pg{postgres_version}"
@@ -192,18 +198,19 @@ def build_package(github_token: non_empty(non_blank(str)), build_type: BuildType
 
     output = run_with_output(f"docker run --rm -v {output_dir}:/packages -v {input_files_dir}:/buildfiles:ro -e "
                              f"GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE "
-                             f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}")
+                             f"citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}", text=True)
 
-    if output.stderr:
-        print("Error:" + output.stderr.decode("ascii"))
     if output.stdout:
-        print("Output:" + output.stdout.decode("ascii"))
+        print("Output:" + output.stdout)
+    if output.stderr:
+        raise ValueError(output.stderr)
+
     if output_validation:
-        validate_output(output.stdout.decode("ascii"), f"{input_files_dir}/packaging_ignore.yml",
+        validate_output(output.stdout, f"{input_files_dir}/packaging_ignore.yml",
                         get_package_type_by_docker_image_name(docker_platform))
 
 
-def get_release_package_folder(os_name: str, os_version: str) -> str:
+def get_release_package_folder_name(os_name: str, os_version: str) -> str:
     return f"{os_name}-{os_version}"
 
 
@@ -212,6 +219,7 @@ def get_docker_image_name(platform: str):
     return f'{docker_image_names[os_name]}-{os_version}'
 
 
+@validate_parameters
 def build_packages(github_token: non_empty(non_blank(str)), platform: non_empty(non_blank(str)), build_type: BuildType,
                    packaging_secret_key: non_empty(non_blank(str)),
                    packaging_passphrase: non_empty(non_blank(str)),
@@ -227,7 +235,7 @@ def build_packages(github_token: non_empty(non_blank(str)), platform: non_empty(
     postgres_versions = release_versions if build_type == BuildType.release else nightly_versions
     print(f"Postgres Versions: {str_array_to_str(postgres_versions)}")
     docker_image_name = get_docker_image_name(platform)
-    output_sub_folder = get_release_package_folder(os_name, os_version)
+    output_sub_folder = get_release_package_folder_name(os_name, os_version)
     output_dir = f"{base_output_dir}/{output_sub_folder}"
     for postgres_version in postgres_versions:
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} started... ")

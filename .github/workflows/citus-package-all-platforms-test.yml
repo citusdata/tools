@@ -21,7 +21,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ el/7, el/8, ol/7, debian/stretch, debian/buster, ubuntu/xenial, ubuntu/bionic,ubuntu/focal ]
+        platform: [
+            el/7,
+            el/8,
+            ol/7,
+            debian/stretch,
+            debian/buster,
+            ubuntu/xenial,
+            ubuntu/bionic,
+            ubuntu/focal
+        ]
     env:
       PLATFORM: ${{ matrix.platform }}
 
@@ -40,5 +49,3 @@ jobs:
 
       - name: Citus package tests
         run: python -m pytest -q packaging_automation/tests/test_citus_package.py
-
-
