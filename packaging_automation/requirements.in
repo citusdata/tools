@@ -14,4 +14,3 @@ parameters_validation
 PyYAML
 psycopg2
 SQLAlchemy
-
