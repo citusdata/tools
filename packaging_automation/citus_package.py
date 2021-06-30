@@ -202,7 +202,7 @@ def build_package(github_token: non_empty(non_blank(str)), build_type: BuildType
 
     if output.stdout:
         print("Output:" + output.stdout)
-    if output.stderr:
+    if output.returncode != 0:
         raise ValueError(output.stderr)
 
     if output_validation:
