@@ -31,6 +31,6 @@ jobs:
         run: python -m pytest -q packaging_automation/tests/test_docker_statistics_collector.py
 
       - name: Unit tests for "Github clone statistics"
-        run: python -m pytest -q packaging_automation/tests/test_github_stats_collector.py
+        run: python -m pytest -q packaging_automation/tests/test_github_statistics_collector.py
 
 
