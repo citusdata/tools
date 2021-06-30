@@ -5,10 +5,9 @@ from typing import Dict, Any
 
 from github import Github
 from sqlalchemy import Column, DATE, INTEGER, TIMESTAMP, ForeignKey, String, UniqueConstraint
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import relationship
 
-from .dbconfig import (Base, db_connection_string, DbParams,db_session)
+from .dbconfig import (Base, DbParams, db_session)
 
 ORGANIZATION_NAME = "citusdata"
 
@@ -60,8 +59,6 @@ def github_clone_stats(github_token: str, organization_name: str, repo_name: str
     return repo.get_clones_traffic(per="day")
 
 
-
-
 def fetch_and_store_github_clones(organization_name: str, repo_name: str, db_parameters: DbParams, github_token: str,
                                   is_test: bool):
     contents = github_clone_stats(github_token, organization_name, repo_name)
@@ -73,6 +70,9 @@ def fetch_and_store_github_clones(organization_name: str, repo_name: str, db_par
     main_transaction = GithubCloneStatsTransactionsMain(fetch_time=fetch_time, count=contents['count'],
                                                         repo_name=repo_name, uniques=contents['uniques'])
     for daily_record in contents['clones']:
+        detail_transaction = GithubCloneStatsTransactionsDetail(clone_date=daily_record.timestamp,
+                                                                count=daily_record.count, uniques=daily_record.uniques)
+        main_transaction.details.append(detail_transaction)
         # current date's record is skipped since statistics continue to change until end of the day
         # stat record will not be added if it exists in
         if daily_record.timestamp.date() == fetch_time.date() or stat_records_exists(daily_record.timestamp.date(),
@@ -81,9 +81,7 @@ def fetch_and_store_github_clones(organization_name: str, repo_name: str, db_par
         stats_record = GithubCloneStats(fetch_time=fetch_time, clone_date=daily_record.timestamp,
                                         count=daily_record.count, uniques=daily_record.uniques,
                                         repo_name=repo_name)
-        detail_transaction = GithubCloneStatsTransactionsDetail(clone_date=daily_record.timestamp,
-                                                                count=daily_record.count, uniques=daily_record.uniques)
-        main_transaction.details.append(detail_transaction)
+
         session.add(stats_record)
 
     session.add(main_transaction)
