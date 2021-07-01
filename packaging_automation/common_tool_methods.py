@@ -482,6 +482,10 @@ def remove_prefix(text, prefix):
         return text
 
 
+def remove_suffix(initial_str: str, suffix: str) -> str:
+    if initial_str.endswith(suffix):
+        return initial_str[:-len(suffix)]
+
 def initialize_env(exec_path: str, project_name: str, checkout_dir: str):
     remove_cloned_code(f"{exec_path}/{checkout_dir}")
     if not os.path.exists(checkout_dir):
