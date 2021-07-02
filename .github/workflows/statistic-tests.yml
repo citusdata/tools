@@ -33,4 +33,5 @@ jobs:
       - name: Unit tests for "Github clone statistics"
         run: python -m pytest -q packaging_automation/tests/test_github_statistics_collector.py
 
-
+      - name: Unit tests for "Packagecloud download statistics"
+        run: python -m pytest -q packaging_automation/tests/test_package_cloud_statistics_collector.py

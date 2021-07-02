@@ -1,7 +1,9 @@
 from attr import dataclass
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, INTEGER, TIMESTAMP, String, TEXT
 from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from enum import Enum
 
 
 @dataclass
@@ -27,3 +29,20 @@ def db_session(db_params: DbParams, is_test: bool, create_db_objects: bool = Tru
 
 
 Base = declarative_base()
+
+
+class RequestType(Enum):
+    docker_pull = 1
+    github_clone = 2
+    package_cloud_list_package = 3
+    package_cloud_detail_query = 4
+    homebrew_download = 5
+
+
+class RequestLog(Base):
+    __tablename__ = "request_log"
+    id = Column(INTEGER, primary_key=True, autoincrement=True)
+    request_time = Column(TIMESTAMP, nullable=False)
+    request_type = Column(String, nullable=False)
+    status_code = Column(INTEGER)
+    response = Column(TEXT)

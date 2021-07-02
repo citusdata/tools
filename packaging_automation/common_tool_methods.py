@@ -16,6 +16,8 @@ from jinja2 import Environment, FileSystemLoader
 from github import Github
 
 from .common_validations import (is_tag, is_version)
+from .dbconfig import RequestLog, RequestType
+import requests
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
@@ -486,6 +488,7 @@ def remove_suffix(initial_str: str, suffix: str) -> str:
     if initial_str.endswith(suffix):
         return initial_str[:-len(suffix)]
 
+
 def initialize_env(exec_path: str, project_name: str, checkout_dir: str):
     remove_cloned_code(f"{exec_path}/{checkout_dir}")
     if not os.path.exists(checkout_dir):
@@ -511,3 +514,14 @@ def create_pr(gh_token: str, pr_branch: str, pr_title: str, repo_owner: str, pro
 
 def create_pr_with_repo(repo: Repository, pr_branch: str, pr_title: str, base_branch: str):
     return repo.create_pull(title=pr_title, base=base_branch, head=pr_branch, body="")
+
+
+def stat_get_request(request_address: str, request_type: RequestType, session):
+    request_log = RequestLog(request_time=datetime.now(), request_type=request_type.name)
+    session.add(request_log)
+    session.commit()
+    result = requests.get(request_address)
+    request_log.status_code = result.status_code
+    request_log.response = result.content.decode("ascii")
+    session.commit()
+    return result

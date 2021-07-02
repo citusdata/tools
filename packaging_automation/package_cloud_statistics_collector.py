@@ -1,6 +1,5 @@
 import argparse
 import json
-import os
 import time
 from datetime import datetime, date
 from enum import Enum
@@ -8,17 +7,14 @@ from http import HTTPStatus
 from typing import List, Any
 
 import requests
-from sqlalchemy import Column, INTEGER, DATE, TIMESTAMP, String, TEXT
+from sqlalchemy import Column, INTEGER, DATE, TIMESTAMP, String
 
-from .common_tool_methods import (remove_suffix)
-from .dbconfig import (Base, db_session, DbParams)
+from .common_tool_methods import (remove_suffix, stat_get_request)
+from .dbconfig import (Base, db_session, DbParams, RequestType)
 
-PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 ORGANIZATION_NAME = "citusdata"
-PAGE_RECORD_COUNT = 30
 PC_PACKAGE_COUNT_SUFFIX = " packages"
 PC_DOWNLOAD_DATE_FORMAT = '%Y%m%dZ'
-SAVE_RECORDS_WITH_DOWNLOAD_COUNT_ZERO = False
 
 
 class PackageCloudRepos(Enum):
@@ -35,14 +31,6 @@ class PackageCloudOrganizations(Enum):
     citus_bot = "citus-bot"
 
 
-class RequestType(Enum):
-    docker_pull = 1
-    github_clone = 2
-    package_cloud_list_package = 3
-    package_cloud_detail_query = 4
-    homebrew_download = 5
-
-
 class PackageCloudDownloadStats(Base):
     __tablename__ = "package_cloud_download_stats"
     id = Column(INTEGER, primary_key=True, autoincrement=True)
@@ -56,38 +44,32 @@ class PackageCloudDownloadStats(Base):
     download_count = Column(INTEGER, nullable=False)
 
 
-class RequestLog(Base):
-    __tablename__ = "request_log"
-    id = Column(INTEGER, primary_key=True, autoincrement=True)
-    request_time = Column(TIMESTAMP, nullable=False)
-    request_type = Column(String, nullable=False)
-    status_code = Column(INTEGER)
-    response = Column(TEXT)
-
-
-def package_count(organization: str, repo_name: str) -> int:
+def package_count(organization: PackageCloudOrganizations, repo_name: PackageCloudRepos,
+                  package_cloud_api_token: str) -> int:
     result = requests.get(
-        f"https://{PACKAGE_CLOUD_API_TOKEN}:@packagecloud.io/api/v1/repos.json?include_collaborations=true")
+        f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos.json?include_collaborations=true")
 
     repo_details = json.loads(result.content)
     for repo in repo_details:
-        if repo["fqname"] == f"{organization}/{repo_name}":
+        if repo["fqname"] == f"{organization.name}/{repo_name.name}":
             return int(remove_suffix(repo['package_count_human'], PC_PACKAGE_COUNT_SUFFIX))
     raise ValueError(f"Repo name with the name {repo_name} could not be found on package cloud")
 
 
 def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_token: str,
                                        organization: PackageCloudOrganizations, repo_name: PackageCloudRepos,
-                                       parallel_count: int,
-                                       parallel_exec_index: int, is_test: bool = False):
-    repo_package_count = package_count(organization=arguments.organization, repo_name=arguments.repo_name)
+                                       parallel_count: int, parallel_exec_index: int, page_record_count: int,
+                                       is_test: bool = False, save_records_with_download_count_zero: bool = False):
+    repo_package_count = package_count(organization=organization, repo_name=repo_name,
+                                       package_cloud_api_token=package_cloud_api_token)
     session = db_session(db_params=db_params, is_test=is_test)
     page_index = parallel_exec_index + 1
     start = time.time()
-    while is_page_in_range(page_index, repo_package_count):
+    while is_page_in_range(page_index, repo_package_count, page_record_count):
 
-        result = stat_get_request(package_request_address(package_cloud_api_token, page_index, organization, repo_name),
-                                  RequestType.package_cloud_list_package, session)
+        result = stat_get_request(
+            package_request_address(package_cloud_api_token, page_index, organization, repo_name, page_record_count),
+            RequestType.package_cloud_list_package, session)
         package_info_list = json.loads(result.content)
         print(page_index)
         if len(package_info_list) > 0:
@@ -95,7 +77,8 @@ def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_to
         else:
             break
         # print(package_info_list)
-        fetch_and_save_package_stats(package_info_list, package_cloud_api_token, session)
+        fetch_and_save_package_stats(package_info_list, package_cloud_api_token, session,
+                                     save_records_with_download_count_zero)
 
         session.commit()
     end = time.time()
@@ -103,7 +86,8 @@ def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_to
     print(end - start)
 
 
-def fetch_and_save_package_stats(package_info_list: List[Any], package_cloud_api_token: str, session):
+def fetch_and_save_package_stats(package_info_list: List[Any], package_cloud_api_token: str, session,
+                                 save_records_with_download_count_zero: bool):
     for package_info in package_info_list:
         # print(f"{package_info['created_at']}-{package_info['name']}-{package_info['downloads_series_url']}-{package_info['type']}-"
         #       f"{package_info['distro_version']}-{package_info['filename']}")
@@ -115,10 +99,10 @@ def fetch_and_save_package_stats(package_info_list: List[Any], package_cloud_api
             for stat_date in download_stats['value']:
                 download_date = datetime.strptime(stat_date, PC_DOWNLOAD_DATE_FORMAT).date()
                 download_count = int(download_stats['value'][stat_date])
-                if download_date != datetime.today() and not stat_records_exists(download_date,
+                if download_date != date.today() and not stat_records_exists(download_date,
                                                                                  package_info['filename'],
                                                                                  session) and (
-                        is_download_count_eligible_for_save(download_count)):
+                        is_download_count_eligible_for_save(download_count, save_records_with_download_count_zero)):
                     pc_stats = PackageCloudDownloadStats(fetch_date=datetime.now(),
                                                          package_full_name=package_info['filename'],
                                                          package_name=package_info['name'],
@@ -135,29 +119,18 @@ def package_details_request_address(package_cloud_api_token: str, detail_query_u
 
 
 def package_request_address(package_cloud_api_token, page_index, organization: PackageCloudOrganizations,
-                            repo_name: PackageCloudRepos) -> str:
+                            repo_name: PackageCloudRepos, page_record_count: int) -> str:
     return (f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos/{organization.name}/{repo_name.name}"
-            f"/packages.json?per_page={PAGE_RECORD_COUNT}&page={page_index}")
+            f"/packages.json?per_page={page_record_count}&page={page_index}")
 
 
-def stat_get_request(request_address: str, request_type: RequestType, session):
-    request_log = RequestLog(request_time=datetime.now(), request_type=request_type.name)
-    session.add(request_log)
-    session.commit()
-    result = requests.get(request_address)
-    request_log.status_code = result.status_code
-    request_log.response = result.content.decode("ascii")
-    session.commit()
-    return result
+def is_download_count_eligible_for_save(download_count: int, save_records_with_download_count_zero: bool) -> bool:
+    return download_count > 0 or (download_count == 0 and save_records_with_download_count_zero)
 
 
-def is_download_count_eligible_for_save(download_count: int) -> bool:
-    return download_count > 0 or (download_count == 0 and SAVE_RECORDS_WITH_DOWNLOAD_COUNT_ZERO)
-
-
-def is_page_in_range(page_index, total_package_count):
-    return page_index * PAGE_RECORD_COUNT < total_package_count or (
-            page_index * PAGE_RECORD_COUNT >= total_package_count > page_index - 1 * PAGE_RECORD_COUNT)
+def is_page_in_range(page_index: int, total_package_count: int, page_record_count: int):
+    return page_index * page_record_count < total_package_count or (
+            page_index * page_record_count >= total_package_count > page_index - 1 * page_record_count)
 
 
 def stat_records_exists(download_date: date, package_full_name: str, session) -> bool:
@@ -174,9 +147,10 @@ if __name__ == "__main__":
     parser.add_argument('--db_password', required=True)
     parser.add_argument('--db_host_and_port', required=True)
     parser.add_argument('--db_name', required=True)
-    parser.add_argument('--package_cloud_token', required=True)
+    parser.add_argument('--package_cloud_api_token', required=True)
     parser.add_argument('--parallel_count', type=int, choices=range(1, 30), required=True, default=1)
     parser.add_argument('--parallel_exec_index', type=int, choices=range(1, 30), required=True, default=0)
+    parser.add_argument('--page_record_count', type=int, choices=range(0, 100), required=True, default=0)
     parser.add_argument('--is_test', action="store_true")
 
     arguments = parser.parse_args()
@@ -184,7 +158,7 @@ if __name__ == "__main__":
     db_parameters = DbParams(user_name=arguments.db_user_name, password=arguments.db_password,
                              host_and_port=arguments.db_host_and_port, db_name=arguments.db_name)
 
-    fetch_and_save_package_cloud_stats(db_parameters, PACKAGE_CLOUD_API_TOKEN,
+    fetch_and_save_package_cloud_stats(db_parameters, arguments.package_cloud_api_token,
                                        PackageCloudOrganizations[arguments.organization],
                                        PackageCloudRepos[arguments.repo_name], arguments.parallel_count,
                                        arguments.parallel_exec_index, arguments.is_test)
