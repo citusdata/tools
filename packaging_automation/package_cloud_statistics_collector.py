@@ -1,16 +1,17 @@
+import argparse
 import json
+import os
 import time
-
 from datetime import datetime, date
+from enum import Enum
+from http import HTTPStatus
+from typing import List, Any
+
 import requests
 from sqlalchemy import Column, INTEGER, DATE, TIMESTAMP, String, TEXT
 
-from .dbconfig import (Base, db_session, DbParams)
 from .common_tool_methods import (remove_suffix)
-from enum import Enum
-from typing import List, Any
-import os
-from http import HTTPStatus
+from .dbconfig import (Base, db_session, DbParams)
 
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 ORGANIZATION_NAME = "citusdata"
@@ -18,6 +19,20 @@ PAGE_RECORD_COUNT = 30
 PC_PACKAGE_COUNT_SUFFIX = " packages"
 PC_DOWNLOAD_DATE_FORMAT = '%Y%m%dZ'
 SAVE_RECORDS_WITH_DOWNLOAD_COUNT_ZERO = False
+
+
+class PackageCloudRepos(Enum):
+    community = "community"
+    enterprise = "enterprise"
+    azure = "azure"
+    community_nightlies = "community-nightlies"
+    enterprise_nightlies = "enterprise-nightlies"
+    test = "test"
+
+
+class PackageCloudOrganizations(Enum):
+    citusdata = "citusdata"
+    citus_bot = "citus-bot"
 
 
 class RequestType(Enum):
@@ -50,31 +65,33 @@ class RequestLog(Base):
     response = Column(TEXT)
 
 
-def package_count(repo_name: str) -> int:
+def package_count(organization: str, repo_name: str) -> int:
     result = requests.get(
         f"https://{PACKAGE_CLOUD_API_TOKEN}:@packagecloud.io/api/v1/repos.json?include_collaborations=true")
 
     repo_details = json.loads(result.content)
     for repo in repo_details:
-        if repo["name"] == repo_name:
+        if repo["fqname"] == f"{organization}/{repo_name}":
             return int(remove_suffix(repo['package_count_human'], PC_PACKAGE_COUNT_SUFFIX))
     raise ValueError(f"Repo name with the name {repo_name} could not be found on package cloud")
 
 
-def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_token: str, repo_name: str,
-                                       ref_mod_value: int,
-                                       mod_index: int, total_package_count: int, is_test: bool = False):
+def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_token: str,
+                                       organization: PackageCloudOrganizations, repo_name: PackageCloudRepos,
+                                       parallel_count: int,
+                                       parallel_exec_index: int, is_test: bool = False):
+    repo_package_count = package_count(organization=arguments.organization, repo_name=arguments.repo_name)
     session = db_session(db_params=db_params, is_test=is_test)
-    page_index = mod_index + 1
+    page_index = parallel_exec_index + 1
     start = time.time()
-    while is_page_in_range(page_index, total_package_count):
+    while is_page_in_range(page_index, repo_package_count):
 
-        result = stat_get_request(package_request_address(package_cloud_api_token, page_index, repo_name),
+        result = stat_get_request(package_request_address(package_cloud_api_token, page_index, organization, repo_name),
                                   RequestType.package_cloud_list_package, session)
         package_info_list = json.loads(result.content)
         print(page_index)
         if len(package_info_list) > 0:
-            page_index = page_index + ref_mod_value
+            page_index = page_index + parallel_count
         else:
             break
         # print(package_info_list)
@@ -117,8 +134,9 @@ def package_details_request_address(package_cloud_api_token: str, detail_query_u
     return f"https://{package_cloud_api_token}:@packagecloud.io/{detail_query_uri}"
 
 
-def package_request_address(package_cloud_api_token, page_index, repo_name) -> str:
-    return (f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos/{ORGANIZATION_NAME}/{repo_name}"
+def package_request_address(package_cloud_api_token, page_index, organization: PackageCloudOrganizations,
+                            repo_name: PackageCloudRepos) -> str:
+    return (f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos/{organization.name}/{repo_name.name}"
             f"/packages.json?per_page={PAGE_RECORD_COUNT}&page={page_index}")
 
 
@@ -148,12 +166,25 @@ def stat_records_exists(download_date: date, package_full_name: str, session) ->
     return db_record is not None
 
 
-DB_USER_NAME = os.getenv("DB_USER_NAME")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST_AND_PORT = os.getenv("DB_HOST_AND_PORT")
-DB_NAME = os.getenv("DB_NAME")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--organization', choices=[r.value for r in PackageCloudOrganizations])
+    parser.add_argument('--repo_name', choices=[r.value for r in PackageCloudRepos])
+    parser.add_argument('--db_user_name', required=True)
+    parser.add_argument('--db_password', required=True)
+    parser.add_argument('--db_host_and_port', required=True)
+    parser.add_argument('--db_name', required=True)
+    parser.add_argument('--package_cloud_token', required=True)
+    parser.add_argument('--parallel_count', type=int, choices=range(1, 30), required=True, default=1)
+    parser.add_argument('--parallel_exec_index', type=int, choices=range(1, 30), required=True, default=0)
+    parser.add_argument('--is_test', action="store_true")
 
-db_parameters = DbParams(user_name=DB_USER_NAME, password=DB_PASSWORD, host_and_port=DB_HOST_AND_PORT, db_name=DB_NAME)
-pack_count = package_count("azure")
-print(pack_count)
-fetch_and_save_package_cloud_stats(db_parameters, PACKAGE_CLOUD_API_TOKEN, "azure", 30, 0, pack_count)
+    arguments = parser.parse_args()
+
+    db_parameters = DbParams(user_name=arguments.db_user_name, password=arguments.db_password,
+                             host_and_port=arguments.db_host_and_port, db_name=arguments.db_name)
+
+    fetch_and_save_package_cloud_stats(db_parameters, PACKAGE_CLOUD_API_TOKEN,
+                                       PackageCloudOrganizations[arguments.organization],
+                                       PackageCloudRepos[arguments.repo_name], arguments.parallel_count,
+                                       arguments.parallel_exec_index, arguments.is_test)
