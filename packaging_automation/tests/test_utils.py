@@ -20,4 +20,4 @@ def generate_new_gpg_key(gpg_file_name: str):
 
 
 def generate_new_gpg_key_with_password():
-    run(f"gpg --batch --generate-key {TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_password.gpg")
+    run(f"gpg --batch --generate-key {TEST_BASE_PATH}/packaging_automation/tests/files/gpg/packaging_with_passphrase.gpg")

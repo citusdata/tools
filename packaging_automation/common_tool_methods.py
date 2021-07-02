@@ -11,9 +11,9 @@ import gnupg
 import pathlib2
 import shlex
 from git import Repo
-from github import Repository, PullRequest, Commit
+from github import Repository, PullRequest, Commit, Github
 from jinja2 import Environment, FileSystemLoader
-from github import Github
+from parameters_validation import validate_parameters
 
 from .common_validations import (is_tag, is_version)
 
@@ -131,6 +131,7 @@ def get_minor_version(version: str) -> str:
     return f'{project_version_details["major"]}.{project_version_details["minor"]}'
 
 
+@validate_parameters
 def get_patch_version_regex(version: is_version(str)):
     return fr"^{re.escape(get_minor_version(version))}{PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX}$"
 
@@ -139,16 +140,19 @@ def is_merge_commit(commit: Commit):
     return len(commit.parents) <= 1
 
 
+@validate_parameters
 def get_version_details(version: is_version(str)) -> Dict[str, str]:
     version_parts = version.split(".")
     return {"major": version_parts[0], "minor": version_parts[1], "patch": version_parts[2]}
 
 
+@validate_parameters
 def get_upcoming_patch_version(version: is_version(str)) -> str:
     project_version_details = get_version_details(version)
     return f'{get_upcoming_minor_version(version)}.{int(project_version_details["patch"]) + 1}'
 
 
+@validate_parameters
 def get_upcoming_minor_version(version: is_version(str)) -> str:
     project_version_details = get_version_details(version)
     return f'{project_version_details["major"]}.{int(project_version_details["minor"]) + 1}'
@@ -160,6 +164,7 @@ def get_last_commit_message(path: str) -> str:
     return commit.message
 
 
+@validate_parameters
 def is_major_release(version: is_version(str)) -> bool:
     version_info = get_version_details(version)
     return version_info["patch"] == "0"
@@ -176,6 +181,7 @@ def get_prs_for_patch_release(repo: Repository.Repository, earliest_date: dateti
     # filter pull requests according to given time interval
     filtered_pull_requests = list()
     for pull_request in pull_requests:
+        # FIXME: We hit to API rate limit when using `.merged`, so we use `.merged_at` here
         if not pull_request.merged_at:
             continue
         if pull_request.merged_at < earliest_date:
@@ -284,7 +290,7 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
 
 def get_current_branch(working_dir: str) -> str:
     repo = get_new_repo(working_dir)
-    return repo.active_branch
+    return repo.active_branch.name
 
 
 def remote_branch_exists(branch_name: str, working_dir: str) -> bool:
@@ -398,7 +404,7 @@ def delete_all_gpg_keys_by_name(name: str):
     delete_public_gpg_key_by_name(name)
 
 
-def get_secret_key_by_fingerprint_without_password(fingerprint: str) -> str:
+def get_private_key_by_fingerprint_without_passphrase(fingerprint: str) -> str:
     gpg = gnupg.GPG()
 
     private_key = gpg.export_keys(fingerprint, secret=True, expect_passphrase=False)
@@ -406,11 +412,11 @@ def get_secret_key_by_fingerprint_without_password(fingerprint: str) -> str:
         return private_key
     else:
         raise ValueError(
-            f"Error while getting key. Most probably packaging key is stored with password. "
-            f"Please check the password and try again")
+            f"Error while getting key. Most probably packaging key is stored with passphrase. "
+            f"Please check the passphrase and try again")
 
 
-def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: str) -> str:
+def get_private_key_by_fingerprint_with_passphrase(fingerprint: str, passphrase: str) -> str:
     gpg = gnupg.GPG()
 
     private_key = gpg.export_keys(fingerprint, secret=True, passphrase=passphrase)
@@ -418,8 +424,8 @@ def get_secret_key_by_fingerprint_with_password(fingerprint: str, passphrase: st
         return private_key
     else:
         raise ValueError(
-            f"Error while getting key. Most probably packaging key is stored with password. "
-            f"Please check the password and try again")
+            f"Error while getting key. Most probably packaging key is stored with passphrase. "
+            f"Please check the passphrase and try again")
 
 
 def transform_key_into_base64_str(key: str) -> str:

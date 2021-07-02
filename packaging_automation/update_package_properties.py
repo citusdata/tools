@@ -12,7 +12,7 @@ from parameters_validation import (no_whitespaces, non_blank, non_empty, non_neg
 from .common_tool_methods import (find_nth_matching_line_and_line_number, find_nth_occurrence_position,
                                   get_project_version_from_tag_name, get_template_environment)
 
-from .common_validations import (is_version, is_tag, is_email)
+from .common_validations import (is_version, is_tag)
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
