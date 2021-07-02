@@ -132,6 +132,7 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
                                  f"PACKAGING_PASSPHRASE citusdata/packaging:rpmsigner", text=True)
         output = result.stdout
         print(f"Result:{output}")
+
         if result.returncode != 0:
             raise ValueError(f"Error while signing rpm files.Err:{result.stderr}")
         if output_validation:
@@ -154,6 +155,7 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
 
         if output_validation:
             validate_output(result.stdout, f"{input_files_dir}/packaging_ignore.yml", PackageType.deb)
+
         print("DEB signing finished successfully.")
 
 
