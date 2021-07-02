@@ -6,6 +6,7 @@ env:
   DB_HOST_AND_PORT: ${{ secrets.STATS_DB_HOST_AND_PORT }}
   DB_NAME: ${{ secrets.STATS_DB_NAME }}
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  PACKAGE_CLOUD_API_TOKEN: ${{ secrets.PACKAGE_CLOUD_API_TOKEN }}
 on:
   push:
     branches: "**"
