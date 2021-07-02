@@ -11,7 +11,7 @@ if [[ ${JOB_NAME} == 'docker_pull_citus' ]]; then
     --db_name "${DB_NAME}"
 elif [[ ${JOB_NAME} == 'github_clone_citus' ]]; then
   [ -z "${GH_TOKEN:-}" ] && echo "GH_TOKEN should be non-empty value" && exit 1
-  python -m packaging_automation.github_stats_collector --repo_name citus \
+  python -m packaging_automation.github_statistics_collector --repo_name citus \
     --db_user_name "${DB_USER_NAME}" --db_password "${DB_PASSWORD}" --db_host_and_port "${DB_HOST_AND_PORT}" \
     --db_name "${DB_NAME}" --github_token "${GH_TOKEN}"
 fi

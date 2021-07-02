@@ -74,7 +74,7 @@ def fetch_and_store_github_clones(organization_name: str, repo_name: str, db_par
                                                                 count=daily_record.count, uniques=daily_record.uniques)
         main_transaction.details.append(detail_transaction)
         # current date's record is skipped since statistics continue to change until end of the day
-        # stat record will not be added if it exists in
+        # stat record will not be added if it exists in the 'github_clone_stats' table
         if daily_record.timestamp.date() == fetch_time.date() or stat_records_exists(daily_record.timestamp.date(),
                                                                                      session=session):
             continue
