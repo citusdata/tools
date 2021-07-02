@@ -211,7 +211,7 @@ def test_remove_prefix():
 
 def test_delete_rpm_key_by_name():
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
-    generate_new_gpg_key(f"{TEST_BASE_PATH}/files/gpg/packaging_with_password.gpg")
+    generate_new_gpg_key(f"{TEST_BASE_PATH}/files/gpg/packaging_with_passphrase.gpg")
     fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
     assert len(fingerprints) > 0
     define_rpm_public_key_to_machine(fingerprints[0])

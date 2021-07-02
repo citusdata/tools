@@ -51,8 +51,8 @@ class BuildType(Enum):
     nightly = 2
 
 
-class PostgresVersionDockerImageType:
-    multiple = 1,
+class PostgresVersionDockerImageType(Enum):
+    multiple = 1
     single = 2
 
 
@@ -91,8 +91,8 @@ def decode_os_and_release(platform_name: str) -> Tuple[str, str]:
 
 
 def is_docker_running() -> bool:
-    docker_client = docker.from_env()
     try:
+        docker_client = docker.from_env()
         docker_client.ping()
         return True
     except:
@@ -130,15 +130,14 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
         print("Started RPM Signing...")
         result = run_with_output(f"docker run --rm -v {output_path}:/packages/{sub_folder} -e PACKAGING_SECRET_KEY -e "
                                  f"PACKAGING_PASSPHRASE citusdata/packaging:rpmsigner", text=True)
-
+        output = result.stdout
+        print(f"Result:{output}")
         if result.returncode != 0:
             raise ValueError(f"Error while signing rpm files.Err:{result.stderr}")
-        print("RPM signing finished successfully.")
-        output = result.stdout
-        print(output)
-
         if output_validation:
             validate_output(output, f"{input_files_dir}/packaging_ignore.yml", PackageType.rpm)
+
+        print("RPM signing finished successfully.")
 
     if len(deb_files) > 0:
         print("Started DEB Signing...")
@@ -147,11 +146,11 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
             ["docker", "run", "--rm", "-v", f"{output_path}:/packages/{sub_folder}",
              "-e", "PACKAGING_SECRET_KEY", "-e", "PACKAGING_PASSPHRASE", "citusdata/packaging:debsigner"],
             text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, input=passphrase)
-
-        print("Result" + result.stdout)
+        output = result.stdout
+        print(f"Result:{output}")
 
         if result.returncode != 0:
-            raise ValueError(f"Error while signing DEB files.Err:{result.stdout}")
+            raise ValueError(f"Error while signing deb files.Err:{result.stdout}")
 
         if output_validation:
             validate_output(result.stdout, f"{input_files_dir}/packaging_ignore.yml", PackageType.deb)
@@ -174,12 +173,12 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
                 if line.startswith("nightlypg"):
                     nightly_version_assignment = line
             if release_version_assignment is None or "=" not in release_version_assignment or len(
-                release_version_assignment.split("=")) != 2:
+                    release_version_assignment.split("=")) != 2:
                 raise ValueError(
                     f"Release version in pkglatest is not well formatted. Expected format: releasepg=12,13 "
                     f"Actual Format:{release_version_assignment}")
             if nightly_version_assignment is None or "=" not in nightly_version_assignment or len(
-                nightly_version_assignment.split("=")) != 2:
+                    nightly_version_assignment.split("=")) != 2:
                 raise ValueError(
                     f"Nightly version in pkglatest is not well formatted. Expected format: nightlypg=12,13 "
                     f"Actual Format:{nightly_version_assignment}")

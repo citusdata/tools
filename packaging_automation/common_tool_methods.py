@@ -416,7 +416,7 @@ def get_private_key_by_fingerprint_without_passphrase(fingerprint: str) -> str:
             f"Please check the passphrase and try again")
 
 
-def get_private_key_key_by_fingerprint_with_passphrase(fingerprint: str, passphrase: str) -> str:
+def get_private_key_by_fingerprint_with_passphrase(fingerprint: str, passphrase: str) -> str:
     gpg = gnupg.GPG()
 
     private_key = gpg.export_keys(fingerprint, secret=True, passphrase=passphrase)
