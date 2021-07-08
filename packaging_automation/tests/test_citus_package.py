@@ -39,7 +39,7 @@ REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 def setup_module():
     if not os.path.exists(PACKAGING_SOURCE_FOLDER):
         run(
-            f"git clone --branch all-citus https://github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}")
+            f"git clone --branch all-citus-unit-tests https://github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}")
 
 
 def teardown_module():
