@@ -1,7 +1,7 @@
+import re
+
 import string_utils
 from parameters_validation import parameter_validation
-import argparse
-import re
 
 CITUS_MINOR_VERSION_PATTERN = r"\d{1,2}\.\d{1,2}"
 CITUS_PATCH_VERSION_PATTERN = CITUS_MINOR_VERSION_PATTERN + r"\.\d{1,2}"
@@ -29,6 +29,3 @@ def is_tag(tag: str):
 def is_email(email: str):
     if not string_utils.is_email(email):
         raise ValueError("Parameter is not in email format")
-
-
-

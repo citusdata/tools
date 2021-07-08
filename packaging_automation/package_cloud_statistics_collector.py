@@ -53,7 +53,7 @@ def package_count(organization: PackageCloudOrganizations, repo_name: PackageClo
     for repo in repo_details:
         if repo["fqname"] == f"{organization.name}/{repo_name.name}":
             return int(remove_suffix(repo['package_count_human'], PC_PACKAGE_COUNT_SUFFIX))
-    raise ValueError(f"Repo name with the name {repo_name} could not be found on package cloud")
+    raise ValueError(f"Repo name with the name {repo_name.name} could not be found on package cloud")
 
 
 def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_token: str,
@@ -76,7 +76,6 @@ def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_to
             page_index = page_index + parallel_count
         else:
             break
-        # print(package_info_list)
         fetch_and_save_package_stats(package_info_list, package_cloud_api_token, session,
                                      save_records_with_download_count_zero)
 
@@ -89,8 +88,7 @@ def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_to
 def fetch_and_save_package_stats(package_info_list: List[Any], package_cloud_api_token: str, session,
                                  save_records_with_download_count_zero: bool):
     for package_info in package_info_list:
-        # print(f"{package_info['created_at']}-{package_info['name']}-{package_info['downloads_series_url']}-{package_info['type']}-"
-        #       f"{package_info['distro_version']}-{package_info['filename']}")
+
         request_result = stat_get_request(
             package_details_request_address(package_cloud_api_token, package_info['downloads_series_url']),
             RequestType.package_cloud_detail_query, session)

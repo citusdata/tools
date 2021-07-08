@@ -517,11 +517,17 @@ def create_pr_with_repo(repo: Repository, pr_branch: str, pr_title: str, base_br
 
 
 def stat_get_request(request_address: str, request_type: RequestType, session):
-    request_log = RequestLog(request_time=datetime.now(), request_type=request_type.name)
+    request_log = RequestLog(request_time=datetime.now(), request_type=request_type)
     session.add(request_log)
     session.commit()
-    result = requests.get(request_address)
-    request_log.status_code = result.status_code
-    request_log.response = result.content.decode("ascii")
-    session.commit()
+    try:
+        result = requests.get(request_address)
+        request_log.status_code = result.status_code
+        request_log.response = result.content.decode("ascii")
+    except requests.exceptions.RequestException as e:
+        result = e.response
+        request_log.status_code = -1
+        request_log.response = e.response if e.response.content.decode("ascii") else str(e)
+    finally:
+        session.commit()
     return result
