@@ -14,10 +14,26 @@ from .common_tool_methods import (find_nth_matching_line_and_line_number, find_n
 
 from .common_validations import (is_version, is_tag)
 
+from enum import Enum
+
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
+
+class SupportedProjects(Enum):
+    # enum values are project
+    citus = "citus"
+    citus_enterprise = "citus-enterprise"
+    pg_auto_failover = "pg_auto_failover"
+    pg_auto_failover_enterprise = "citus-ha"
+    pgxn = "pgxn"
+
+
+spec_file_names = {SupportedProjects.citus: "citus", SupportedProjects.citus_enterprise: "citus-enterprise",
+                   SupportedProjects.pg_auto_failover: "pg-auto-failover",
+                   SupportedProjects.pg_auto_failover_enterprise: "pg-auto-failover-enterprise"}
+
 project_name_suffix_dict = {"citus": "citus", "citus-enterprise": "citus",
-                            "pg-auto-failover": "", "pg-auto-failover-enterprise": "", "pg-cron": "", "pg-xn": ""}
+                            "pg-auto-failover": "", "pg-auto-failover-enterprise": "", "pg-cron": "", "pgxn": ""}
 
 
 @parameter_validation
@@ -68,7 +84,7 @@ class PackagePropertiesParams:
 
 
 def spec_file_name(project_name: str) -> str:
-    return f"{project_name}.spec"
+    return f"{spec_file_names[SupportedProjects(project_name)]}.spec"
 
 
 def get_last_changelog_content(all_changelog_content: str) -> str:
@@ -242,7 +258,7 @@ def update_all_changes(github_token: non_empty(non_blank(str)), package_properti
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token')
-    parser.add_argument('--prj_name')
+    parser.add_argument('--prj_name', choices=[r.value for r in SupportedProjects])
     parser.add_argument('--tag_name')
     parser.add_argument('--fancy')
     parser.add_argument('--fancy_ver_no')
