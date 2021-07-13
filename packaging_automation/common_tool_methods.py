@@ -527,7 +527,7 @@ def stat_get_request(request_address: str, request_type: RequestType, session):
     except requests.exceptions.RequestException as e:
         result = e.response
         request_log.status_code = -1
-        request_log.response = e.response if e.response.content.decode("ascii") else str(e)
+        request_log.response = e.response.content.decode("ascii") if e.response.content.decode("ascii") else str(e)
     finally:
         session.commit()
     return result

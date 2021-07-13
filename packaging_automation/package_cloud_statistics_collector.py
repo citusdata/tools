@@ -49,8 +49,8 @@ def package_count(organization: PackageCloudOrganizations, repo_name: PackageClo
     result = requests.get(
         f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos.json?include_collaborations=true")
 
-    repo_details = json.loads(result.content)
-    for repo in repo_details:
+    repo_list = json.loads(result.content)
+    for repo in repo_list:
         if repo["fqname"] == f"{organization.name}/{repo_name.name}":
             return int(remove_suffix(repo['package_count_human'], PC_PACKAGE_COUNT_SUFFIX))
     raise ValueError(f"Repo name with the name {repo_name.name} could not be found on package cloud")
@@ -60,6 +60,9 @@ def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_to
                                        organization: PackageCloudOrganizations, repo_name: PackageCloudRepos,
                                        parallel_count: int, parallel_exec_index: int, page_record_count: int,
                                        is_test: bool = False, save_records_with_download_count_zero: bool = False):
+    '''It is called directly from pipeline. Packages are queried page by page from packagecloud. Packages are queried
+     with the given index and queried packages are saved into database using
+     fetch_and_save_package_stats_for_package_list method'''
     repo_package_count = package_count(organization=organization, repo_name=repo_name,
                                        package_cloud_api_token=package_cloud_api_token)
     session = db_session(db_params=db_params, is_test=is_test)
@@ -68,56 +71,60 @@ def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_to
     while is_page_in_range(page_index, repo_package_count, page_record_count):
 
         result = stat_get_request(
-            package_request_address(package_cloud_api_token, page_index, organization, repo_name, page_record_count),
+            package_list_with_pagination_request_address(package_cloud_api_token, page_index, organization, repo_name,
+                                                         page_record_count),
             RequestType.package_cloud_list_package, session)
         package_info_list = json.loads(result.content)
-        print(page_index)
+
         if len(package_info_list) > 0:
             page_index = page_index + parallel_count
         else:
             break
-        fetch_and_save_package_stats(package_info_list, package_cloud_api_token, session,
-                                     save_records_with_download_count_zero)
+        fetch_and_save_package_stats_for_package_list(package_info_list, package_cloud_api_token, session,
+                                                      save_records_with_download_count_zero)
 
         session.commit()
     end = time.time()
 
-    print(end - start)
+    print("Elapsed Time in seconds: " + str(end - start))
 
 
-def fetch_and_save_package_stats(package_info_list: List[Any], package_cloud_api_token: str, session,
-                                 save_records_with_download_count_zero: bool):
+def fetch_and_save_package_stats_for_package_list(package_info_list: List[Any], package_cloud_api_token: str, session,
+                                                  save_records_with_download_count_zero: bool):
+    '''Gets and saves the package statistics of the given packages'''
     for package_info in package_info_list:
 
         request_result = stat_get_request(
-            package_details_request_address(package_cloud_api_token, package_info['downloads_series_url']),
+            package_historic_statistics_request_address(package_cloud_api_token, package_info['downloads_series_url']),
             RequestType.package_cloud_detail_query, session)
-        if request_result.status_code == HTTPStatus.OK:
-            download_stats = json.loads(request_result.content)
-            for stat_date in download_stats['value']:
-                download_date = datetime.strptime(stat_date, PC_DOWNLOAD_DATE_FORMAT).date()
-                download_count = int(download_stats['value'][stat_date])
-                if download_date != date.today() and not stat_records_exists(download_date,
-                                                                                 package_info['filename'],
-                                                                                 session) and (
-                        is_download_count_eligible_for_save(download_count, save_records_with_download_count_zero)):
-                    pc_stats = PackageCloudDownloadStats(fetch_date=datetime.now(),
-                                                         package_full_name=package_info['filename'],
-                                                         package_name=package_info['name'],
-                                                         package_version=package_info['version'],
-                                                         package_release=package_info['release'],
-                                                         package_type=package_info['type'],
-                                                         download_date=download_date,
-                                                         download_count=download_count)
-                    session.add(pc_stats)
+        if request_result.status_code != HTTPStatus.OK:
+            continue
+        download_stats = json.loads(request_result.content)
+        for stat_date in download_stats['value']:
+            download_date = datetime.strptime(stat_date, PC_DOWNLOAD_DATE_FORMAT).date()
+            download_count = int(download_stats['value'][stat_date])
+            if download_date != date.today() and not stat_records_exists(download_date,
+                                                                         package_info['filename'],
+                                                                         session) and (
+                    is_download_count_eligible_for_save(download_count, save_records_with_download_count_zero)):
+                pc_stats = PackageCloudDownloadStats(fetch_date=datetime.now(),
+                                                     package_full_name=package_info['filename'],
+                                                     package_name=package_info['name'],
+                                                     package_version=package_info['version'],
+                                                     package_release=package_info['release'],
+                                                     package_type=package_info['type'],
+                                                     download_date=download_date,
+                                                     download_count=download_count)
+                session.add(pc_stats)
 
 
-def package_details_request_address(package_cloud_api_token: str, detail_query_uri: str):
+def package_historic_statistics_request_address(package_cloud_api_token: str, detail_query_uri: str):
     return f"https://{package_cloud_api_token}:@packagecloud.io/{detail_query_uri}"
 
 
-def package_request_address(package_cloud_api_token, page_index, organization: PackageCloudOrganizations,
-                            repo_name: PackageCloudRepos, page_record_count: int) -> str:
+def package_list_with_pagination_request_address(package_cloud_api_token, page_index,
+                                                 organization: PackageCloudOrganizations,
+                                                 repo_name: PackageCloudRepos, page_record_count: int) -> str:
     return (f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos/{organization.name}/{repo_name.name}"
             f"/packages.json?per_page={page_record_count}&page={page_index}")
 
@@ -127,8 +134,8 @@ def is_download_count_eligible_for_save(download_count: int, save_records_with_d
 
 
 def is_page_in_range(page_index: int, total_package_count: int, page_record_count: int):
-    return page_index * page_record_count < total_package_count or (
-            page_index * page_record_count >= total_package_count > page_index - 1 * page_record_count)
+    return ((page_index * page_record_count < total_package_count) or
+            (page_index * page_record_count >= total_package_count > (page_index - 1) * page_record_count))
 
 
 def stat_records_exists(download_date: date, package_full_name: str, session) -> bool:
