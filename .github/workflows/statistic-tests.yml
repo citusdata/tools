@@ -6,6 +6,7 @@ env:
   DB_HOST_AND_PORT: ${{ secrets.STATS_DB_HOST_AND_PORT }}
   DB_NAME: ${{ secrets.STATS_DB_NAME }}
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  PACKAGE_CLOUD_API_TOKEN: ${{ secrets.PACKAGE_CLOUD_API_TOKEN }}
 on:
   push:
     branches: "**"
@@ -33,4 +34,5 @@ jobs:
       - name: Unit tests for "Github clone statistics"
         run: python -m pytest -q packaging_automation/tests/test_github_statistics_collector.py
 
-
+      - name: Unit tests for "Packagecloud download statistics"
+        run: python -m pytest -q packaging_automation/tests/test_package_cloud_statistics_collector.py
