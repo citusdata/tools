@@ -171,8 +171,6 @@ def validate_and_extract_general_parameters(docker_image_type_param: str, pipeli
 
         if docker_image_type_param == "all" or not docker_image_type_param:
             docker_image_type = None
-        elif docker_image_type_param == "nightly":
-            raise ValueError(image_type_invalid_error_message)
         else:
             docker_image_type = DockerImageType[docker_image_type_param]
     except KeyError:
