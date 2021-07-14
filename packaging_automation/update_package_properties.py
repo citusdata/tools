@@ -288,7 +288,6 @@ if __name__ == "__main__":
     parser.add_argument('--gh_token', required=True)
     parser.add_argument('--prj_name', choices=[r.name for r in SupportedProjects])
     parser.add_argument('--tag_name', required=True)
-    parser.add_argument('--fancy', action="store_true")
     parser.add_argument('--fancy_ver_no', type=int, choices=range(1, 10), default=1)
     parser.add_argument('--email', required=True)
     parser.add_argument('--name', required=True)
@@ -321,8 +320,10 @@ if __name__ == "__main__":
         exec_date = datetime.now()
     is_tag(arguments.tag_name)
 
+    fancy = True if arguments.fancy_ver_no > 1 else False
+
     package_properties = PackagePropertiesParams(supported_project=supported_project,
-                                                 project_version=prj_ver, fancy=arguments.fancy,
+                                                 project_version=prj_ver, fancy=fancy,
                                                  fancy_version_number=arguments.fancy_ver_no,
                                                  name_surname=arguments.name, microsoft_email=arguments.email,
                                                  changelog_date=exec_date)

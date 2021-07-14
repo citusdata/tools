@@ -116,13 +116,14 @@ if __name__ == "__main__":
     parser.add_argument('--package_cloud_api_token', required=True)
     parser.add_argument('--repository_name', required=True, choices=supported_repos)
     parser.add_argument('--output_file_path', required=True)
+    parser.add_argument('--exec_folder_path', required=True)
 
     args = parser.parse_args()
 
     multiple_return_value = upload_files_in_directory_to_package_cloud(args.output_file_path,
                                                                        args.platform,
                                                                        args.package_cloud_api_token,
-                                                                       args.repository_name)
+                                                                       args.repository_name, args.exec_folder_path)
     print(multiple_return_value.success_status())
     print(multiple_return_value.return_values)
     for rv in multiple_return_value.return_values:
