@@ -317,7 +317,7 @@ if __name__ == "__main__":
     if arguments.date:
         exec_date = datetime.strptime(arguments.date, '%Y.%m.%d %H:%M')
     else:
-        exec_date = datetime.now()
+        exec_date = datetime.now().astimezone()
     is_tag(arguments.tag_name)
 
     fancy = True if arguments.fancy_ver_no > 1 else False
