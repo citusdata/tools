@@ -16,6 +16,7 @@ TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[
 PACKAGING_SOURCE_FOLDER = "packaging_test"
 PACKAGING_EXEC_FOLDER = f"{TEST_BASE_PATH}/{PACKAGING_SOURCE_FOLDER}"
 BASE_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
+MAIN_BRANCH = "all-citus"
 
 package_counts = {
     "el/7": 4,
@@ -39,7 +40,7 @@ REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 def setup_module():
     if not os.path.exists(PACKAGING_SOURCE_FOLDER):
         run(
-            f"git clone --branch all-citus https://github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}")
+            f"git clone --branch all-citus-unit-tests https://github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}")
 
 
 def teardown_module():
@@ -71,7 +72,7 @@ def test_build_packages():
 
 def test_upload_to_package_cloud():
     output = upload_files_in_directory_to_package_cloud(BASE_OUTPUT_FOLDER, PLATFORM, PACKAGE_CLOUD_API_TOKEN, "sample",
-                                                        PACKAGING_EXEC_FOLDER)
+                                                        PACKAGING_EXEC_FOLDER, MAIN_BRANCH)
     distro_parts = PLATFORM.split("/")
     if len(distro_parts) != 2:
         raise ValueError("Platform should consist of two parts splitted with '/' e.g. el/8")
