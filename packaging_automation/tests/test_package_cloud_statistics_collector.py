@@ -24,16 +24,13 @@ def test_fetch_and_save_package_cloud_stats():
     pack_count = package_count(ORGANIZATION, REPO, PACKAGE_CLOUD_API_TOKEN)
     session = db_session(db_params=db_parameters, is_test=True)
     index = 0
-    page_record_count = 5
-    iteration_count = math.ceil(pack_count / page_record_count)
-    while index < iteration_count:
+    page_record_count = 3
+    parallel_count = 3
+    for index in range(0, parallel_count):
         fetch_and_save_package_cloud_stats(package_cloud_api_token=PACKAGE_CLOUD_API_TOKEN, organization=ORGANIZATION,
-                                           repo_name=REPO, db_params=db_parameters, parallel_count=iteration_count,
+                                           repo_name=REPO, db_params=db_parameters, parallel_count=parallel_count,
                                            parallel_exec_index=index, page_record_count=page_record_count,
                                            is_test=True, save_records_with_download_count_zero=True)
-        records = session.query(PackageCloudDownloadStats).all()
-        index = index + 1
-        if index < iteration_count:
-            assert len(records) == (page_record_count * index) * PACKAGE_SAVED_HISTORIC_RECORD_COUNT
-        else:
-            assert len(records) == pack_count * PACKAGE_SAVED_HISTORIC_RECORD_COUNT
+
+    records = session.query(PackageCloudDownloadStats).all()
+    assert len(records) == pack_count * PACKAGE_SAVED_HISTORIC_RECORD_COUNT

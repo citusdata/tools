@@ -1,7 +1,6 @@
-import re
-
 import string_utils
 from parameters_validation import parameter_validation
+import re
 
 CITUS_MINOR_VERSION_PATTERN = r"\d{1,2}\.\d{1,2}"
 CITUS_PATCH_VERSION_PATTERN = CITUS_MINOR_VERSION_PATTERN + r"\.\d{1,2}"
