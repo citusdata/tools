@@ -72,7 +72,7 @@ def test_build_packages():
 
 def test_upload_to_package_cloud():
     output = upload_files_in_directory_to_package_cloud(BASE_OUTPUT_FOLDER, PLATFORM, PACKAGE_CLOUD_API_TOKEN, "sample",
-                                                        PACKAGING_EXEC_FOLDER, MAIN_BRANCH)
+                                                        PACKAGING_EXEC_FOLDER)
     distro_parts = PLATFORM.split("/")
     if len(distro_parts) != 2:
         raise ValueError("Platform should consist of two parts splitted with '/' e.g. el/8")
