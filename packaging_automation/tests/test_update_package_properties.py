@@ -191,7 +191,7 @@ def test_update_all_changes():
 
     try:
         package_properties_param = PackagePropertiesParams(
-            supported_project=DEFAULT_CHANGELOG_PARAM_FOR_TEST.project,
+            project=DEFAULT_CHANGELOG_PARAM_FOR_TEST.project,
             project_version=PROJECT_VERSION, fancy=True,
             fancy_version_number=1,
             name_surname=NAME_SURNAME, microsoft_email=MICROSOFT_EMAIL,
