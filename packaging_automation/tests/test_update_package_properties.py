@@ -10,7 +10,7 @@ from ..update_package_properties import (PackagePropertiesParams, changelog_for_
                                          get_last_changelog_content_from_debian, debian_changelog_header,
                                          prepend_latest_changelog_into_debian_changelog,
                                          convert_citus_changelog_into_rpm_changelog, spec_file_name, update_rpm_spec,
-                                         update_pkgvars, update_all_changes, SupportedProjects)
+                                         update_pkgvars, update_all_changes, SupportedProject)
 
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[1])
@@ -25,7 +25,7 @@ CHANGELOG_DATE = datetime.strptime(CHANGELOG_DATE_STR, '%a, %d %b %Y %H:%M:%S %z
 
 
 def default_changelog_param_for_test(latest_changelog, changelog_date):
-    changelog_param = PackagePropertiesParams(supported_project=SupportedProjects.citus,
+    changelog_param = PackagePropertiesParams(supported_project=SupportedProject.citus,
                                               project_version=PROJECT_VERSION, fancy=True,
                                               fancy_version_number=1, microsoft_email=MICROSOFT_EMAIL,
                                               name_surname=NAME_SURNAME, changelog_date=changelog_date,
@@ -191,7 +191,7 @@ def test_update_all_changes():
 
     try:
         package_properties_param = PackagePropertiesParams(
-            supported_project=DEFAULT_CHANGELOG_PARAM_FOR_TEST.supported_project,
+            supported_project=DEFAULT_CHANGELOG_PARAM_FOR_TEST.project,
             project_version=PROJECT_VERSION, fancy=True,
             fancy_version_number=1,
             name_surname=NAME_SURNAME, microsoft_email=MICROSOFT_EMAIL,

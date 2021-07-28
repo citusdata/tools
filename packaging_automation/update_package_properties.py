@@ -31,7 +31,7 @@ class ProjectDetails:
     packaging_branch: str
 
 
-class SupportedProjects(Enum):
+class SupportedProject(Enum):
     citus = ProjectDetails(name="citus", version_suffix="citus", github_repo_name="citus",
                            changelog_project_name="citus", packaging_branch="all-citus")
     citus_enterprise = ProjectDetails(name="citus-enterprise", version_suffix="citus",
@@ -50,6 +50,7 @@ class SupportedProjects(Enum):
 def is_project_changelog_header(header: str):
     if not header:
         raise ValueError("header should be non-empty and should not be None")
+    # an example matching string is "### citus-enterprise v10.1.0 (July 14, 2021) ###"
     if not re.match(r"^### \w+[-]?\w+\sv\d+\.\d+\.\d+\s\(\w+\s\d+,\s\d+\)\s###$", header):
         raise ValueError(
             f"changelog header is in invalid format. Actual:{header} Expected: ### citus v8.3.3 (March 23, 2021) ### ")
@@ -57,7 +58,7 @@ def is_project_changelog_header(header: str):
 
 @dataclass
 class PackagePropertiesParams:
-    supported_project: SupportedProjects
+    project: SupportedProject
     project_version: str
     fancy: bool
     fancy_version_number: int
@@ -66,17 +67,17 @@ class PackagePropertiesParams:
     latest_changelog: str = ""
     changelog_date: datetime = datetime.now()
 
-    def changelog_add(self) -> bool:
+    def should_add_changelog(self) -> bool:
         return not self.fancy or self.fancy_version_number == 1
 
     def spec_file_name(self) -> str:
-        return spec_file_name(self.supported_project.value.name)
+        return spec_file_name(self.project.value.name)
 
     def pkgvars_template_file_name(self) -> str:
-        return f"{self.supported_project.value.name}-pkgvars.tmpl"
+        return f"{self.project.value.name}-pkgvars.tmpl"
 
     def rpm_spec_template_file_name(self) -> str:
-        return f"{self.supported_project.value.name}.spec.tmpl"
+        return f"{self.project.value.name}.spec.tmpl"
 
     def version_number(self) -> str:
         fancy_suffix = f"-{self.fancy_version_number}" if self.fancy else ""
@@ -91,11 +92,11 @@ class PackagePropertiesParams:
 
     def project_name_suffix(self) -> str:
         return (
-            self.supported_project.value.version_suffix if not self.supported_project.value.version_suffix
-            else f".{self.supported_project.value.version_suffix}")
+            self.project.value.version_suffix if not self.project.value.version_suffix
+            else f".{self.project.value.version_suffix}")
 
     def rpm_changelog_project_name(self) -> str:
-        return self.supported_project.value.name.replace("-", " ").replace("_", " ").title()
+        return self.project.value.name.replace("-", " ").replace("_", " ").title()
 
     def rpm_header(self):
         formatted_date = self.changelog_date.strftime("%a %b %d %Y")
@@ -107,11 +108,11 @@ class PackagePropertiesParams:
         return f" -- {self.name_surname} <{self.microsoft_email}>  {formatted_date} \n "
 
 
-def get_enum_from_changelog_project_name(changelog_project_name) -> SupportedProjects:
-    for e in SupportedProjects:
+def get_enum_from_changelog_project_name(changelog_project_name) -> SupportedProject:
+    for e in SupportedProject:
         if e.value.changelog_project_name == changelog_project_name:
             return e
-    raise ValueError(f"{changelog_project_name} could not be found in supported project changelog project names.")
+    raise ValueError(f"{changelog_project_name} could not be found in supported project changelog names.")
 
 
 def spec_file_name(project_name: str) -> str:
@@ -238,7 +239,7 @@ def update_rpm_spec(package_properties_params: PackagePropertiesParams, spec_ful
 
     rpm_version = package_properties_params.rpm_version()
     template = env.get_template(package_properties_params.rpm_spec_template_file_name())
-    if package_properties_params.changelog_add():
+    if package_properties_params.should_add_changelog():
         history_lines = rpm_changelog_history(spec_full_path).splitlines()
 
         if len(history_lines) > 0 and package_properties_params.project_version in history_lines[1]:
@@ -249,7 +250,7 @@ def update_rpm_spec(package_properties_params: PackagePropertiesParams, spec_ful
     else:
         changelog = rpm_changelog_history(spec_full_path)
     content = template.render(version=package_properties_params.project_version, rpm_version=rpm_version,
-                              project_name=package_properties_params.supported_project.value.name,
+                              project_name=package_properties_params.project.value.name,
                               fancy_version_no=package_properties_params.fancy_version_number, changelog=changelog)
     with open(spec_full_path, "w+") as writer:
         writer.write(content)
@@ -274,9 +275,9 @@ def update_all_changes(github_token: non_empty(non_blank(str)), package_properti
     update_pkgvars(package_properties_params, templates_path,
                    f"{packaging_path}")
     latest_changelog = changelog_for_tag(github_token,
-                                         package_properties_params.supported_project.value.github_repo_name, tag_name)
+                                         package_properties_params.project.value.github_repo_name, tag_name)
     package_properties_params.latest_changelog = latest_changelog
-    if package_properties_params.changelog_add():
+    if package_properties_params.should_add_changelog():
         prepend_latest_changelog_into_debian_changelog(package_properties_params, f"{packaging_path}/debian/changelog")
     spec_full_path = f"{packaging_path}/{package_properties_params.spec_file_name()}"
     update_rpm_spec(package_properties_params, spec_full_path, templates_path)
@@ -286,7 +287,7 @@ CHECKOUT_DIR = "update_properties_temp"
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token', required=True)
-    parser.add_argument('--prj_name', choices=[r.name for r in SupportedProjects])
+    parser.add_argument('--prj_name', choices=[r.name for r in SupportedProject])
     parser.add_argument('--tag_name', required=True)
     parser.add_argument('--fancy_ver_no', type=int, choices=range(1, 10), default=1)
     parser.add_argument('--email', required=True)
@@ -299,7 +300,7 @@ if __name__ == "__main__":
 
     prj_ver = get_project_version_from_tag_name(arguments.tag_name)
 
-    supported_project = SupportedProjects[arguments.prj_name]
+    project = SupportedProject[arguments.prj_name]
     if arguments.pipeline:
         if not arguments.exec_path:
             raise ValueError(f"exec_path should be defined")
@@ -311,8 +312,8 @@ if __name__ == "__main__":
 
     os.chdir(execution_path)
 
-    run(f"git checkout {supported_project.value.packaging_branch}")
-    pr_branch = f"{supported_project.value.packaging_branch}-{prj_ver}-{uuid.uuid4()}"
+    run(f"git checkout {project.value.packaging_branch}")
+    pr_branch = f"{project.value.packaging_branch}-{prj_ver}-{uuid.uuid4()}"
     run(f"git checkout -b {pr_branch}")
     if arguments.date:
         exec_date = datetime.strptime(arguments.date, '%Y.%m.%d %H:%M')
@@ -322,7 +323,7 @@ if __name__ == "__main__":
 
     fancy = True if arguments.fancy_ver_no > 1 else False
 
-    package_properties = PackagePropertiesParams(supported_project=supported_project,
+    package_properties = PackagePropertiesParams(project=project,
                                                  project_version=prj_ver, fancy=fancy,
                                                  fancy_version_number=arguments.fancy_ver_no,
                                                  name_surname=arguments.name, microsoft_email=arguments.email,
@@ -335,5 +336,5 @@ if __name__ == "__main__":
     if not arguments.is_test:
         run(f'git push --set-upstream origin {pr_branch}')
         create_pr(arguments.gh_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME,
-                  supported_project.value.packaging_branch)
+                  project.value.packaging_branch)
         remove_cloned_code(execution_path)
