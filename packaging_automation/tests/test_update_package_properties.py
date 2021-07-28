@@ -25,7 +25,7 @@ CHANGELOG_DATE = datetime.strptime(CHANGELOG_DATE_STR, '%a, %d %b %Y %H:%M:%S %z
 
 
 def default_changelog_param_for_test(latest_changelog, changelog_date):
-    changelog_param = PackagePropertiesParams(supported_project=SupportedProject.citus,
+    changelog_param = PackagePropertiesParams(project=SupportedProject.citus,
                                               project_version=PROJECT_VERSION, fancy=True,
                                               fancy_version_number=1, microsoft_email=MICROSOFT_EMAIL,
                                               name_surname=NAME_SURNAME, changelog_date=changelog_date,
