@@ -168,7 +168,7 @@ def debian_changelog_header(changelog_header: is_project_changelog_header(str), 
     project_version = words[1].lstrip("v")
 
     supported_project = get_enum_from_changelog_project_name(project_name)
-    package_properties_params = PackagePropertiesParams(supported_project=supported_project,
+    package_properties_params = PackagePropertiesParams(project=supported_project,
                                                         project_version=project_version,
                                                         fancy=fancy, fancy_version_number=fancy_version_number)
 
