@@ -117,7 +117,7 @@ if __name__ == "__main__":
     parser.add_argument('--repository_name', required=True, choices=supported_repos)
     parser.add_argument('--output_file_path', required=True)
     parser.add_argument('--exec_folder_path', required=True)
-    parser.add_argument('--main_branch', required=True
+    parser.add_argument('--main_branch', required=True)
 
     args = parser.parse_args()
 
