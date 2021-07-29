@@ -3,7 +3,6 @@ from sqlalchemy import text, create_engine
 from ..dbconfig import (Base, db_session, DbParams, db_connection_string)
 from ..package_cloud_statistics_collector import (fetch_and_save_package_cloud_stats, PackageCloudRepos,
                                                   PackageCloudOrganizations, package_count, PackageCloudDownloadStats)
-import math
 
 DB_USER_NAME = os.getenv("DB_USER_NAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
@@ -23,7 +22,6 @@ def test_fetch_and_save_package_cloud_stats():
     db.execute(text(f'DROP TABLE IF EXISTS {PackageCloudDownloadStats.__tablename__}'))
     pack_count = package_count(ORGANIZATION, REPO, PACKAGE_CLOUD_API_TOKEN)
     session = db_session(db_params=db_parameters, is_test=True)
-    index = 0
     page_record_count = 3
     parallel_count = 3
     for index in range(0, parallel_count):

@@ -12,7 +12,6 @@ from sqlalchemy import Column, INTEGER, DATE, TIMESTAMP, String
 from .common_tool_methods import (remove_suffix, stat_get_request)
 from .dbconfig import (Base, db_session, DbParams, RequestType)
 
-ORGANIZATION_NAME = "citusdata"
 PC_PACKAGE_COUNT_SUFFIX = " packages"
 PC_DOWNLOAD_DATE_FORMAT = '%Y%m%dZ'
 
