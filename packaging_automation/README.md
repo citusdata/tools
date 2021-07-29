@@ -88,6 +88,46 @@ python -m  packaging_automation.prepare_release --gh_token <your-personal-token>
 python -m  packaging_automation.prepare_release --gh_token <your-personal-token> --prj_name citus-enterprise --prj_ver 10.0.4 --schema_version 10.0-5
 ```
 
+## Update Package Properties Usage
+Update package properties script updates debian and redhat package configuration files.
+
+## Script Usage
+
+Script can be used in projects following: citus, citus-enterprise, pg-auto-failover, pg-auto-failover-enterprise
+
+## Available flags
+**--gh_token:** Personal access token that is authorized to commit citus/citus-enterprise projects. (Required)
+
+**--prj_name:** Project to be released. Allowed values 'citus' and 'citus-enterprise (Required)
+
+**--tag-name:** Tag to be used for release. should include three level of digits separated by dots starting with v, e.g:
+v10.0.1
+(Required)
+
+**--fancy_ver_no:** If not set default is 1 and fancy versioning is disabled. If set and greater than 1, fancy is enabled
+
+**--email:** Email to be printed in changelogs (Required)
+
+**--name:** Name to be printed in changelogs (Required)
+
+**--date:**: Date to be printed in changelogs
+
+**--pipeline:** If set, exec path should also be set and exec path will be used as packaging source. If not set, it is evaluated as false and packaging code will be cloned
+
+**--exec_path:** If pipeline parameter is used, this parameter should be set. Shows the path of packaging sources
+
+**--is_test:** If true, the branch created will not be published into remote repository
+
+### Example Usage
+
+```console
+python -m packaging_automation.update_package_properties --gh_token=${{ secrets.GH_TOKEN }} \
+              --prj_name "${PRJ_NAME}" --tag_name ${{ github.event.inputs.tag_name }} \
+              --email ${{ github.event.inputs.microsoft_email }} --name ${{ github.event.inputs.name }} --pipeline \
+              --exec_path "$(pwd)"
+```
+
+
 ## Update Docker Usage
 
 Update docker script updates the docker and changelog files in docker repository required for new release of docker

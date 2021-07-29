@@ -67,42 +67,53 @@ class PackagePropertiesParams:
     latest_changelog: str = ""
     changelog_date: datetime = datetime.now()
 
+    @property
     def should_add_changelog(self) -> bool:
         return not self.fancy or self.fancy_version_number == 1
 
+    @property
     def spec_file_name(self) -> str:
         return spec_file_name(self.project.value.name)
 
+    @property
     def pkgvars_template_file_name(self) -> str:
         return f"{self.project.value.name}-pkgvars.tmpl"
 
+    @property
     def rpm_spec_template_file_name(self) -> str:
         return f"{self.project.value.name}.spec.tmpl"
 
+    @property
     def version_number(self) -> str:
         fancy_suffix = f"-{self.fancy_version_number}" if self.fancy else ""
         return f"{self.project_version}{fancy_suffix}"
 
+    @property
     def version_number_with_project_name(self) -> str:
         fancy_suffix = f"{self.fancy_version_number}" if self.fancy else "1"
-        return f"{self.project_version}{self.project_name_suffix()}-{fancy_suffix}"
+        return f"{self.project_version}{self.project_name_suffix}-{fancy_suffix}"
 
+    @property
     def rpm_version(self) -> str:
-        return f"{self.project_version}{self.project_name_suffix()}"
+        return f"{self.project_version}{self.project_name_suffix}"
 
+    @property
     def project_name_suffix(self) -> str:
         return (
             self.project.value.version_suffix if not self.project.value.version_suffix
             else f".{self.project.value.version_suffix}")
 
+    @property
     def rpm_changelog_project_name(self) -> str:
         return self.project.value.name.replace("-", " ").replace("_", " ").title()
 
+    @property
     def rpm_header(self):
         formatted_date = self.changelog_date.strftime("%a %b %d %Y")
         return f"* {formatted_date} - {self.name_surname} <{self.microsoft_email}> " \
-               f"{self.version_number_with_project_name()} "
+               f"{self.version_number_with_project_name} "
 
+    @property
     def debian_trailer(self):
         formatted_date = self.changelog_date.strftime("%a, %d %b %Y %H:%M:%S %z ")
         return f" -- {self.name_surname} <{self.microsoft_email}>  {formatted_date} \n "
@@ -172,7 +183,7 @@ def debian_changelog_header(changelog_header: is_project_changelog_header(str), 
                                                         project_version=project_version,
                                                         fancy=fancy, fancy_version_number=fancy_version_number)
 
-    version_on_changelog = package_properties_params.version_number_with_project_name()
+    version_on_changelog = package_properties_params.version_number_with_project_name
 
     return f"{supported_project.value.name} ({version_on_changelog}) stable; urgency=low"
 
@@ -181,7 +192,7 @@ def convert_citus_changelog_into_debian_changelog(package_properties_params: Pac
     lines = package_properties_params.latest_changelog.splitlines()
     lines[0] = debian_changelog_header(lines[0], package_properties_params.fancy,
                                        package_properties_params.fancy_version_number)
-    lines.append(package_properties_params.debian_trailer())
+    lines.append(package_properties_params.debian_trailer)
     debian_latest_changelog = ""
     for i in range(len(lines)):
         append_line = lines[i] if i == 0 or i == len(lines) - 1 else '  ' + lines[i]
@@ -207,9 +218,9 @@ def prepend_latest_changelog_into_debian_changelog(package_properties_params: Pa
 def update_pkgvars(package_properties_params: PackagePropertiesParams, templates_path: str, pkgvars_path: str) -> None:
     env = get_template_environment(templates_path)
 
-    version_str = package_properties_params.version_number_with_project_name()
+    version_str = package_properties_params.version_number_with_project_name
 
-    template = env.get_template(package_properties_params.pkgvars_template_file_name())
+    template = env.get_template(package_properties_params.pkgvars_template_file_name)
 
     pkgvars_content = f"{template.render(version=version_str)}\n"
     with open(f'{pkgvars_path}/pkgvars', "w") as writer:
@@ -226,9 +237,9 @@ def rpm_changelog_history(spec_file_path: str) -> str:
 
 
 def convert_citus_changelog_into_rpm_changelog(package_properties_params: PackagePropertiesParams) -> str:
-    header = package_properties_params.rpm_header()
+    header = package_properties_params.rpm_header
     rpm_changelog = f"{header.strip()}\n- Official {package_properties_params.project_version} release of " \
-                    f"{package_properties_params.rpm_changelog_project_name()}"
+                    f"{package_properties_params.rpm_changelog_project_name}"
 
     return rpm_changelog
 
@@ -237,9 +248,9 @@ def update_rpm_spec(package_properties_params: PackagePropertiesParams, spec_ful
                     templates_path: str) -> None:
     env = get_template_environment(templates_path)
 
-    rpm_version = package_properties_params.rpm_version()
-    template = env.get_template(package_properties_params.rpm_spec_template_file_name())
-    if package_properties_params.should_add_changelog():
+    rpm_version = package_properties_params.rpm_version
+    template = env.get_template(package_properties_params.rpm_spec_template_file_name)
+    if package_properties_params.should_add_changelog:
         history_lines = rpm_changelog_history(spec_full_path).splitlines()
 
         if len(history_lines) > 0 and package_properties_params.project_version in history_lines[1]:
@@ -277,9 +288,9 @@ def update_all_changes(github_token: non_empty(non_blank(str)), package_properti
     latest_changelog = changelog_for_tag(github_token,
                                          package_properties_params.project.value.github_repo_name, tag_name)
     package_properties_params.latest_changelog = latest_changelog
-    if package_properties_params.should_add_changelog():
+    if package_properties_params.should_add_changelog:
         prepend_latest_changelog_into_debian_changelog(package_properties_params, f"{packaging_path}/debian/changelog")
-    spec_full_path = f"{packaging_path}/{package_properties_params.spec_file_name()}"
+    spec_full_path = f"{packaging_path}/{package_properties_params.spec_file_name}"
     update_rpm_spec(package_properties_params, spec_full_path, templates_path)
 
 
