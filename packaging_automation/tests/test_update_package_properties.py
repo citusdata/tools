@@ -37,11 +37,11 @@ DEFAULT_CHANGELOG_PARAM_FOR_TEST = default_changelog_param_for_test("", CHANGELO
 
 
 def test_get_version_number():
-    assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number() == "10.0.3-1"
+    assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number == "10.0.3-1"
 
 
 def test_get_version_number_with_project_name():
-    assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number_with_project_name() == "10.0.3.citus-1"
+    assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number_with_project_name == "10.0.3.citus-1"
 
 
 def test_get_changelog_for_tag():
