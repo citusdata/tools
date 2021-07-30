@@ -70,11 +70,10 @@ def upload_to_package_cloud(distro_name, package_name, package_cloud_token, repo
 
 
 def upload_files_in_directory_to_package_cloud(directoryName: str, distro_name: str, package_cloud_token: str,
-                                               repo_name: str, packaging_source_folder: str,
+                                               repo_name: str, current_branch: str,
                                                main_branch: str) -> MultipleReturnValue:
     if not main_branch:
         raise ValueError("MAIN_BRANCH environment variable should be defined")
-    current_branch = get_current_branch(packaging_source_folder)
     if main_branch != current_branch:
         print(f"Package publishing skipped since current branch is not equal to {main_branch}")
         return MultipleReturnValue(ret_vals=[])
@@ -116,7 +115,7 @@ if __name__ == "__main__":
     parser.add_argument('--package_cloud_api_token', required=True)
     parser.add_argument('--repository_name', required=True, choices=supported_repos)
     parser.add_argument('--output_file_path', required=True)
-    parser.add_argument('--exec_folder_path', required=True)
+    parser.add_argument('--current_branch', required=True)
     parser.add_argument('--main_branch', required=True)
 
     args = parser.parse_args()
@@ -124,7 +123,7 @@ if __name__ == "__main__":
     multiple_return_value = upload_files_in_directory_to_package_cloud(args.output_file_path,
                                                                        args.platform,
                                                                        args.package_cloud_api_token,
-                                                                       args.repository_name, args.exec_folder_path,
+                                                                       args.repository_name, args.current_branch,
                                                                        args.main_branch)
     print(multiple_return_value.success_status())
     print(multiple_return_value.return_values)
