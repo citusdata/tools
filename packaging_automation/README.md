@@ -40,7 +40,7 @@ python -m pip install -r packaging_automation/requirements.txt
 
 If all the steps above completed successfully , you are ready for script execution
 
-# **Prepare Release Usage**
+# **Prepare Release **
 
 prepare-release.py script performs the pre-packaging configurations in citus/citus-enterprise projects.
 
@@ -88,7 +88,47 @@ python -m  packaging_automation.prepare_release --gh_token <your-personal-token>
 python -m  packaging_automation.prepare_release --gh_token <your-personal-token> --prj_name citus-enterprise --prj_ver 10.0.4 --schema_version 10.0-5
 ```
 
-## Update Docker Usage
+## Update Package Properties 
+Update package properties script updates debian and redhat package configuration files.
+
+## Script Usage
+
+Script can be used in projects following: citus, citus-enterprise, pg-auto-failover, pg-auto-failover-enterprise
+
+## Available flags
+**--gh_token:** Personal access token that is authorized to commit citus/citus-enterprise projects. (Required)
+
+**--prj_name:** Project to be released. Allowed values 'citus' and 'citus-enterprise (Required)
+
+**--tag-name:** Tag to be used for release. should include three level of digits separated by dots starting with v, e.g:
+v10.0.1
+(Required)
+
+**--fancy_ver_no:** If not set default is 1 and fancy versioning is disabled. If set and greater than 1, fancy is enabled
+
+**--email:** Email to be printed in changelogs (Required)
+
+**--name:** Name to be printed in changelogs (Required)
+
+**--date:**: Date to be printed in changelogs
+
+**--pipeline:** If set, exec path should also be set and exec path will be used as packaging source. If not set, it is evaluated as false and packaging code will be cloned
+
+**--exec_path:** If pipeline parameter is used, this parameter should be set. Shows the path of packaging sources
+
+**--is_test:** If true, the branch created will not be published into remote repository
+
+### Example Usage
+
+```console
+python -m packaging_automation.update_package_properties --gh_token=${{ secrets.GH_TOKEN }} \
+              --prj_name "${PRJ_NAME}" --tag_name ${{ github.event.inputs.tag_name }} \
+              --email ${{ github.event.inputs.microsoft_email }} --name ${{ github.event.inputs.name }} --pipeline \
+              --exec_path "$(pwd)"
+```
+
+
+## Update Docker 
 
 Update docker script updates the docker and changelog files in docker repository required for new release of docker
 images after citus/postgres release
@@ -109,7 +149,7 @@ Script can be used for both citus version upgrades and PostgreSQL updates.
 
 **--is_test:** If used, branches would not be pushed remote repository and PR would not be created (Optional)
 
-### Example Usage
+### Example 
 
 #### Citus Upgrade
 
@@ -123,7 +163,7 @@ Script can be used for both citus version upgrades and PostgreSQL updates.
  python -m  packaging_automation.update_docker --gh_token <your-personal-token>  --prj_ver 10.0.4 --postgres-version 14.0
 ```
 
-## Update Pgxn Usage
+## Update Pgxn 
 
 Update pgxn script updates the files related to pgxn in all-pgxn branch in packaging repo.
 
@@ -141,10 +181,67 @@ Script can be used for  citus version upgrades.
 
 **--is_test:** If used, branches would not be pushed remote repository and PR would not be created (Optional)
 
-### Example Usage
-
-#### Citus Upgrade
+### Example
 
 ``` console
  python -m  packaging_automation.update_pgxn --gh_token <your-personal-token> --prj_ver 10.0.4
 ```
+
+## Upload to package cloud 
+This script uploads built deb and rpm packages. 
+
+## Script usage
+This script uploads all the rpm and deb packages from given directory into package cloud,if  current branch equals to main branch . 
+
+### Available flags
+
+**--platform:** Personal access token that is authorized to commit packaging project. (Required)
+
+**--package_cloud_api_token:** Token required to get authorization from package cloud to upload (Required)
+
+**--repository_name:** Packagecloud repository name to upload Available repos: "sample","citusdata/enterprise","citusdata/community","citusdata/community-nightlies","citusdata/enterprise-nightlies","citusdata/azure" (Required)
+
+**--output_file_path:** Directory that contains deb and rpm files (Required)
+
+**--current_branch:** Current branch that the pipeline is working on (Required)
+
+**--main_branch:** Main branch that is the script to be executed (Required)
+
+### Example
+
+``` console
+ python -m  tools.packaging_automation.upload_to_package_cloud \
+          --platform ${{ matrix.platform }} \
+          --package_cloud_api_token ${{ secrets.PACKAGE_CLOUD_API_TOKEN }} \
+          --repository_name "${PACKAGE_CLOUD_REPO_NAME}" \
+          --output_file_path "$(pwd)/packages" \
+          --current_branch all-citus \
+          --main_branch ${MAIN_BRANCH}
+```
+
+## Publish docker
+This script builds and publishes given docker image type
+
+## Script Usage
+Script executes docker build on given image type and publishes the docker image with related tags
+
+### Available flags
+
+**--github_ref:** Github Action parameter denoting tag or branch name depending on trigger type . (Required)
+
+**--pipeline_trigger_type:** Pipeline trigger type. Available option: push,schedule, workflow_dispatch (Required)
+
+**--tag_name:** Tag name if trigger type is push and
+
+**--manual_trigger_type:** Trigger type when executing the script manually. Available options: main,tags,nightly (Required)
+
+**--image_type:** Image type to be published. Available options: latest,alpine,nightly, postgre12
+
+### Example
+
+``` console
+            python -m  tools.packaging_automation.publish_docker  --pipeline_trigger_type "${GITHUB_EVENT_NAME}" \
+            --exec_path "$(pwd)" --tag_name ${{ github.event.inputs.tag_name }} \
+            --manual_trigger_type ${{ github.event.inputs.trigger_type }}
+```
+
