@@ -7,7 +7,7 @@ import docker
 import pathlib2
 from parameters_validation import validate_parameters
 
-from .common_tool_methods import get_current_branch, remove_prefix
+from .common_tool_methods import remove_prefix
 from .common_validations import is_tag
 
 BASE_PATH = pathlib2.Path(__file__).parents[1]
@@ -92,37 +92,36 @@ def get_image_tag(tag_prefix: str, docker_image_type: DockerImageType) -> str:
     return f"{tag_prefix}{tag_suffix}"
 
 
-def publish_docker_image_on_push(docker_image_type: DockerImageType, github_ref: str, exec_path: str, ):
+def publish_docker_image_on_push(docker_image_type: DockerImageType, github_ref: str, current_branch: str, ):
     triggering_event_info, resource_name = decode_triggering_event_info(github_ref)
     for docker_image_type in regular_images_to_be_built(docker_image_type):
         if triggering_event_info == GithubTriggerEventSource.branch_push:
-            publish_main_docker_images(docker_image_type, exec_path)
+            publish_main_docker_images(docker_image_type, current_branch)
         else:
-            publish_tagged_docker_images(docker_image_type, resource_name, exec_path)
+            publish_tagged_docker_images(docker_image_type, resource_name, current_branch)
 
 
-def publish_docker_image_on_schedule(docker_image_type: DockerImageType, exec_path: str, ):
+def publish_docker_image_on_schedule(docker_image_type: DockerImageType, current_branch: str, ):
     if docker_image_type == DockerImageType.nightly:
         publish_nightly_docker_image()
     else:
         for docker_image_type in regular_images_to_be_built(docker_image_type):
-            publish_main_docker_images(docker_image_type, exec_path)
+            publish_main_docker_images(docker_image_type, current_branch)
 
 
-def publish_docker_image_manually(manual_trigger_type_param: ManualTriggerType, exec_path: str,
+def publish_docker_image_manually(manual_trigger_type_param: ManualTriggerType, current_branch: str,
                                   docker_image_type: DockerImageType, tag_name: str = "") -> None:
     if manual_trigger_type_param == ManualTriggerType.main and not tag_name:
         for it in regular_images_to_be_built(docker_image_type):
-            publish_main_docker_images(it, exec_path)
+            publish_main_docker_images(it, current_branch)
     elif manual_trigger_type_param == ManualTriggerType.tags and tag_name:
         for it in regular_images_to_be_built(docker_image_type):
-            publish_tagged_docker_images(it, tag_name, exec_path)
+            publish_tagged_docker_images(it, tag_name, current_branch)
     elif manual_trigger_type_param == ManualTriggerType.nightly:
         publish_nightly_docker_image()
 
 
-def publish_main_docker_images(docker_image_type: DockerImageType, exec_path: str):
-    current_branch = get_current_branch(exec_path)
+def publish_main_docker_images(docker_image_type: DockerImageType, current_branch: str):
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_type.name}"
     docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
                                tag=docker_image_name,
@@ -131,8 +130,7 @@ def publish_main_docker_images(docker_image_type: DockerImageType, exec_path: st
         docker_client.images.push(DOCKER_IMAGE_NAME, tag=docker_image_type.name)
 
 
-def publish_tagged_docker_images(docker_image_type, tag_name: str, exec_path: str):
-    current_branch = get_current_branch(exec_path)
+def publish_tagged_docker_images(docker_image_type, tag_name: str, current_branch: str):
     tag_parts = decode_tag_parts(tag_name)
     tag_version_part = ""
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_type.name}"
@@ -156,8 +154,8 @@ def publish_nightly_docker_image():
     docker_client.images.push(DOCKER_IMAGE_NAME, tag=docker_image_info_dict[DockerImageType.nightly]['docker-tag'])
 
 
-def validate_and_extract_general_parameters(docker_image_type_param: str, pipeline_trigger_type_param: str,
-                                            exec_path_param: str) -> Tuple[GithubPipelineTriggerType, DockerImageType]:
+def validate_and_extract_general_parameters(docker_image_type_param: str, pipeline_trigger_type_param: str) -> Tuple[
+    GithubPipelineTriggerType, DockerImageType]:
     try:
         trigger_type_param = GithubPipelineTriggerType[pipeline_trigger_type_param]
     except KeyError:
@@ -175,10 +173,7 @@ def validate_and_extract_general_parameters(docker_image_type_param: str, pipeli
             docker_image_type = DockerImageType[docker_image_type_param]
     except KeyError:
         raise ValueError(image_type_invalid_error_message)
-    if not exec_path_param and not os.path.exists(exec_path_param):
-        raise ValueError(
-            f"exec_path is invalid. exec_path should be non-empty value and "
-            f"there should be a directory with this name on the server")
+
     return trigger_type_param, docker_image_type
 
 
@@ -199,19 +194,18 @@ if __name__ == "__main__":
     parser.add_argument('--github_ref')
     parser.add_argument('--pipeline_trigger_type', choices=[e.name for e in GithubPipelineTriggerType], required=True)
     parser.add_argument('--tag_name', nargs='?', default="")
-    parser.add_argument('--exec_path')
     parser.add_argument('--manual_trigger_type', choices=[e.name for e in ManualTriggerType])
     parser.add_argument('--image_type', choices=[e.name for e in DockerImageType])
     args = parser.parse_args()
 
     pipeline_trigger_type, image_type = validate_and_extract_general_parameters(args.image_type,
-                                                                                args.pipeline_trigger_type,
-                                                                                args.exec_path)
+                                                                                args.pipeline_trigger_type)
+    triggering_event_info, current_branch = decode_triggering_event_info(args.github_ref)
     if pipeline_trigger_type == GithubPipelineTriggerType.workflow_dispatch:
         manual_trigger_type = validate_and_extract_manual_exec_params(args.manual_trigger_type, args.tag_name)
-        publish_docker_image_manually(manual_trigger_type_param=manual_trigger_type, exec_path=args.exec_path,
+        publish_docker_image_manually(manual_trigger_type_param=manual_trigger_type, current_branch=current_branch,
                                       docker_image_type=image_type, tag_name=args.tag_name)
     elif pipeline_trigger_type == GithubPipelineTriggerType.push:
-        publish_docker_image_on_push(image_type, args.github_ref, args.exec_path)
+        publish_docker_image_on_push(image_type, args.github_ref, current_branch)
     else:
-        publish_docker_image_on_schedule(image_type, args.exec_path)
+        publish_docker_image_on_schedule(image_type, current_branch)
