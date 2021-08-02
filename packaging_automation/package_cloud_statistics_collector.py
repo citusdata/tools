@@ -9,7 +9,6 @@ from typing import List, Any
 import requests
 from sqlalchemy import Column, INTEGER, DATE, TIMESTAMP, String
 
-from release.docker.tools.packaging_automation.package_cloud_statistics_collector import PackageCloudRepos
 from .common_tool_methods import (remove_suffix, stat_get_request)
 from .dbconfig import (Base, db_session, DbParams, RequestType)
 
@@ -108,7 +107,7 @@ def fetch_and_save_package_stats_for_package_list(package_info_list: List[Any], 
                                                                          package_info['filename'],
                                                                          session) and (
                     is_download_count_eligible_for_save(download_count, save_records_with_download_count_zero)):
-                pc_stats = PackageCloudDownloadStats(fetch_date=datetime.now(), repo=repo_name.name,
+                pc_stats = PackageCloudDownloadStats(fetch_date=datetime.now(), repo=repo_name.value,
                                                      package_full_name=package_info['filename'],
                                                      package_name=package_info['name'],
                                                      package_version=package_info['version'],
