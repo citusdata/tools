@@ -8,6 +8,7 @@ from typing import List, Any
 
 import requests
 from sqlalchemy import Column, INTEGER, DATE, TIMESTAMP, String
+import sqlalchemy
 
 from .common_tool_methods import (remove_suffix, stat_get_request)
 from .dbconfig import (Base, db_session, DbParams, RequestType)
@@ -34,6 +35,7 @@ class PackageCloudDownloadStats(Base):
     __tablename__ = "package_cloud_download_stats"
     id = Column(INTEGER, primary_key=True, autoincrement=True)
     fetch_date = Column(TIMESTAMP, nullable=False)
+    repo = Column(sqlalchemy.Enum(PackageCloudRepos), nullable=False)
     package_name = Column(String, nullable=False)
     package_full_name = Column(String, nullable=False)
     package_version = Column(String, nullable=False)
@@ -80,7 +82,7 @@ def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_to
         else:
             break
         fetch_and_save_package_stats_for_package_list(package_info_list, package_cloud_api_token, session,
-                                                      save_records_with_download_count_zero)
+                                                      save_records_with_download_count_zero, repo_name)
 
         session.commit()
     end = time.time()
@@ -89,7 +91,8 @@ def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_to
 
 
 def fetch_and_save_package_stats_for_package_list(package_info_list: List[Any], package_cloud_api_token: str, session,
-                                                  save_records_with_download_count_zero: bool):
+                                                  save_records_with_download_count_zero: bool,
+                                                  repo_name: PackageCloudRepos):
     '''Gets and saves the package statistics of the given packages'''
     for package_info in package_info_list:
 
@@ -106,7 +109,7 @@ def fetch_and_save_package_stats_for_package_list(package_info_list: List[Any], 
                                                                          package_info['filename'],
                                                                          session) and (
                     is_download_count_eligible_for_save(download_count, save_records_with_download_count_zero)):
-                pc_stats = PackageCloudDownloadStats(fetch_date=datetime.now(),
+                pc_stats = PackageCloudDownloadStats(fetch_date=datetime.now(), repo=repo_name,
                                                      package_full_name=package_info['filename'],
                                                      package_name=package_info['name'],
                                                      package_version=package_info['version'],
