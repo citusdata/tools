@@ -73,7 +73,7 @@ def upload_files_in_directory_to_package_cloud(directoryName: str, distro_name: 
                                                repo_name: str, current_branch: str,
                                                main_branch: str) -> MultipleReturnValue:
     if not main_branch:
-        raise ValueError("MAIN_BRANCH environment variable should be defined")
+        raise ValueError("main_branch should be defined")
     if main_branch != current_branch:
         print(f"Package publishing skipped since current branch is not equal to {main_branch}")
         return MultipleReturnValue(ret_vals=[])
