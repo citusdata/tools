@@ -34,7 +34,7 @@ class PackageCloudDownloadStats(Base):
     __tablename__ = "package_cloud_download_stats"
     id = Column(INTEGER, primary_key=True, autoincrement=True)
     fetch_date = Column(TIMESTAMP, nullable=False)
-    repo = Column(String, nullable=False)
+    repo = Column(Enum(PackageCloudRepos), nullable=False)
     package_name = Column(String, nullable=False)
     package_full_name = Column(String, nullable=False)
     package_version = Column(String, nullable=False)
@@ -90,7 +90,8 @@ def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_to
 
 
 def fetch_and_save_package_stats_for_package_list(package_info_list: List[Any], package_cloud_api_token: str, session,
-                                                  save_records_with_download_count_zero: bool, repo_name: PackageCloudRepos):
+                                                  save_records_with_download_count_zero: bool,
+                                                  repo_name: PackageCloudRepos):
     '''Gets and saves the package statistics of the given packages'''
     for package_info in package_info_list:
 
