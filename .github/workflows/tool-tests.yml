@@ -39,7 +39,7 @@ jobs:
         run: python -m pip install -r packaging_automation/requirements.txt
 
       - name: Unit tests for "Update Package Properties"
-        run:  python -m pytest -q packaging_automation/tests/test_update_package_properties.py
+        run: python -m pytest -q packaging_automation/tests/test_update_package_properties.py
 
       - name: Unit tests for "Prepare Release"
         run: python -m pytest -q packaging_automation/tests/test_prepare_release.py
@@ -55,4 +55,3 @@ jobs:
 
       - name: Packaging Warning Handler
         run: python -m pytest -q packaging_automation/tests/test_packaging_warning_handler.py
-

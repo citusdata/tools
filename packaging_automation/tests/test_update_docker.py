@@ -43,7 +43,7 @@ def test_update_docker_file_for_latest_postgres():
 
 def test_update_regular_docker_compose_file():
     update_regular_docker_compose_file(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH)
-    parameterized_str = f"    image: 'citusdata/{PROJECT_NAME}:{PROJECT_VERSION}'"
+    parameterized_str = f'    image: "citusdata/{PROJECT_NAME}:{PROJECT_VERSION}"'
     with open(f"{TEST_BASE_PATH}/docker-compose.yml", "r") as reader:
         content = reader.read()
         lines = content.splitlines()

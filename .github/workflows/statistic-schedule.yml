@@ -8,22 +8,21 @@ env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
 on:
   schedule:
-    - cron: '15 0 * * *'
-# Should be commented out when changing this file since pipelines with trigger type schedule
-# could not be tested on non-main branch
-#  push:
-#    branches: "**"
+    - cron: "15 0 * * *"
+  # Should be commented out when changing this file since pipelines with trigger type schedule
+  # could not be tested on non-main branch
+  #  push:
+  #    branches: "**"
 
   workflow_dispatch:
 
 jobs:
-
   execute_job:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        job_name: [ docker_pull_citus,github_clone_citus ]
+        job_name: [docker_pull_citus, github_clone_citus]
 
     steps:
       - name: Checkout repository
@@ -39,5 +38,3 @@ jobs:
         run: packaging_automation/bash/daily-statistics-job.sh
         env:
           JOB_NAME: ${{ matrix.JOB_NAME }}
-
-
