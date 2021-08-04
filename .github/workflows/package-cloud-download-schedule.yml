@@ -8,20 +8,17 @@ env:
   PACKAGE_CLOUD_API_TOKEN: ${{ secrets.PACKAGE_CLOUD_API_TOKEN }}
 on:
   schedule:
-    - cron: '30 0 * * *'
+    - cron: "30 0 * * *"
 
   workflow_dispatch:
 jobs:
-
   statistics_fetch:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        parallel_index: [
-            0,1,2,3,4,5,6,7,8,9
-        ]
-        repo: [community,enterprise,community_nightlies,enterprise_nightlies]
+        parallel_index: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        repo: [community, enterprise, community-nightlies, enterprise-nightlies]
 
     steps:
       - name: Checkout repository
@@ -35,10 +32,14 @@ jobs:
 
       - name: Execute 'Package Cloud Statistics Collector'
         run: |
-              python -m packaging_automation.package_cloud_statistics_collector --organization citusdata --repo_name \
-              ${{ matrix.repo }} --db_user_name ${{ secrets.STATS_DB_USER_NAME }} --db_password ${{ secrets.STATS_DB_PASSWORD }} \
-              --db_host_and_port ${{ secrets.STATS_DB_HOST_AND_PORT }} --db_name ${{ secrets.STATS_DB_NAME }} \
-              --package_cloud_api_token ${{ secrets.PACKAGE_CLOUD_API_TOKEN }} --parallel_count 10 \
-              --parallel_exec_index ${{ matrix.parallel_index }} --page_record_count 100
-
-
+          python -m packaging_automation.package_cloud_statistics_collector \
+          --organization citusdata \
+          --repo_name ${{ matrix.repo }} \
+          --db_user_name ${{ secrets.STATS_DB_USER_NAME }} \
+          --db_password ${{ secrets.STATS_DB_PASSWORD }} \
+          --db_host_and_port ${{ secrets.STATS_DB_HOST_AND_PORT }} \
+          --db_name ${{ secrets.STATS_DB_NAME }} \
+          --package_cloud_api_token ${{ secrets.PACKAGE_CLOUD_API_TOKEN }} \
+          --parallel_count 10 \
+          --parallel_exec_index ${{ matrix.parallel_index }} \
+          --page_record_count 100

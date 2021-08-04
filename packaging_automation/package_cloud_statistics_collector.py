@@ -156,8 +156,8 @@ if __name__ == "__main__":
     parser.add_argument('--db_name', required=True)
     parser.add_argument('--package_cloud_api_token', required=True)
     parser.add_argument('--parallel_count', type=int, choices=range(1, 30), required=True, default=1)
-    parser.add_argument('--parallel_exec_index', type=int, choices=range(1, 30), required=True, default=0)
-    parser.add_argument('--page_record_count', type=int, choices=range(0, 100), required=True, default=0)
+    parser.add_argument('--parallel_exec_index', type=int, choices=range(0, 30), required=True, default=0)
+    parser.add_argument('--page_record_count', type=int, choices=range(5, 101), required=True, default=0)
     parser.add_argument('--is_test', action="store_true")
 
     arguments = parser.parse_args()
