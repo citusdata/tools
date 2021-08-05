@@ -127,7 +127,7 @@ def package_historic_statistics_request_address(package_cloud_api_token: str, de
 def package_list_with_pagination_request_address(package_cloud_api_token, page_index,
                                                  organization: PackageCloudOrganizations,
                                                  repo_name: PackageCloudRepos, page_record_count: int) -> str:
-    return (f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos/{organization.name}/{repo_name.name}"
+    return (f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos/{organization.name}/{repo_name.value}"
             f"/packages.json?per_page={page_record_count}&page={page_index}")
 
 
