@@ -105,10 +105,8 @@ def fetch_and_save_package_stats_for_package_list(package_info_list: List[Any], 
         for stat_date in download_stats['value']:
             download_date = datetime.strptime(stat_date, PC_DOWNLOAD_DATE_FORMAT).date()
             download_count = int(download_stats['value'][stat_date])
-            if download_date != date.today() and not is_ignored_package(
-                    package_info['name']) and not stat_records_exists(download_date,
-                                                                      package_info['filename'],
-                                                                      session) and (
+            if (download_date != date.today() and not is_ignored_package(package_info['name']) and
+                    not stat_records_exists(download_date, package_info['filename'], session) and
                     is_download_count_eligible_for_save(download_count, save_records_with_download_count_zero)):
                 pc_stats = PackageCloudDownloadStats(fetch_date=datetime.now(), repo=repo_name,
                                                      package_full_name=package_info['filename'],
