@@ -4,7 +4,8 @@ from ..common_tool_methods import stat_get_request
 from ..dbconfig import (Base, db_session, DbParams, db_connection_string)
 from ..package_cloud_statistics_collector import (fetch_and_save_package_cloud_stats, PackageCloudRepos,
                                                   PackageCloudOrganizations, package_count, PackageCloudDownloadStats,
-                                                  package_list_with_pagination_request_address, RequestType)
+                                                  package_list_with_pagination_request_address, RequestType,
+                                                  is_ignored_package)
 import json
 
 DB_USER_NAME = os.getenv("DB_USER_NAME")
@@ -32,9 +33,7 @@ def test_fetch_and_save_package_cloud_stats():
         RequestType.package_cloud_list_package, session)
     package_info_list = json.loads(result.content)
     package_list = list(filter(
-        lambda p: not p["name"].endswith(("debuginfo", "dbgsym")) and not p["name"].startswith(
-            ("citus-ha-", "pg-auto-failover-cli")),
-        package_info_list))
+        lambda p: not is_ignored_package(p["name"]), package_info_list))
 
     for index in range(0, parallel_count):
         fetch_and_save_package_cloud_stats(package_cloud_api_token=PACKAGE_CLOUD_API_TOKEN, organization=ORGANIZATION,
