@@ -149,7 +149,7 @@ def stat_records_exists(download_date: date, package_full_name: str, session) ->
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--organization', choices=[r.value for r in PackageCloudOrganizations])
-    parser.add_argument('--repo_name', choices=[r.name for r in PackageCloudRepos])
+    parser.add_argument('--repo_name', choices=[r.value for r in PackageCloudRepos])
     parser.add_argument('--db_user_name', required=True)
     parser.add_argument('--db_password', required=True)
     parser.add_argument('--db_host_and_port', required=True)
@@ -167,6 +167,6 @@ if __name__ == "__main__":
 
     fetch_and_save_package_cloud_stats(db_parameters, arguments.package_cloud_api_token,
                                        PackageCloudOrganizations[arguments.organization],
-                                       PackageCloudRepos[PackageCloudRepos(arguments.repo_name)],
+                                       PackageCloudRepos(arguments.repo_name),
                                        arguments.parallel_count,
                                        arguments.parallel_exec_index, arguments.is_test)
