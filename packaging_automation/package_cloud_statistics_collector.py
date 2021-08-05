@@ -39,7 +39,7 @@ class PackageCloudDownloadStats(Base):
     package_name = Column(String, nullable=False)
     package_full_name = Column(String, nullable=False)
     package_version = Column(String, nullable=False)
-    package_release = Column(String, nullable=False)
+    package_release = Column(String)
     package_type = Column(String, nullable=False)
     download_date = Column(DATE, nullable=False)
     download_count = Column(INTEGER, nullable=False)
@@ -149,7 +149,7 @@ def stat_records_exists(download_date: date, package_full_name: str, session) ->
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--organization', choices=[r.value for r in PackageCloudOrganizations])
-    parser.add_argument('--repo_name', choices=[r for r in PackageCloudRepos])
+    parser.add_argument('--repo_name', choices=[r.name for r in PackageCloudRepos])
     parser.add_argument('--db_user_name', required=True)
     parser.add_argument('--db_password', required=True)
     parser.add_argument('--db_host_and_port', required=True)
