@@ -10,6 +10,9 @@ on:
   schedule:
     - cron: "30 0 * * *"
 
+  push:
+    branches: "**"
+
   workflow_dispatch:
 jobs:
   statistics_fetch:
