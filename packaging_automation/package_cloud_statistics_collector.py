@@ -52,9 +52,9 @@ def package_count(organization: PackageCloudOrganizations, repo_name: PackageClo
 
     repo_list = json.loads(result.content)
     for repo in repo_list:
-        if repo["fqname"] == f"{organization.name}/{repo_name.name}":
+        if repo["fqname"] == f"{organization.name}/{repo_name.value}":
             return int(remove_suffix(repo['package_count_human'], PC_PACKAGE_COUNT_SUFFIX))
-    raise ValueError(f"Repo name with the name {repo_name.name} could not be found on package cloud")
+    raise ValueError(f"Repo name with the name {repo_name.value} could not be found on package cloud")
 
 
 def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_token: str,
