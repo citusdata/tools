@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
 
 jobs:
-
   unit_test_execution:
     runs-on: ubuntu-latest
 
