@@ -171,7 +171,6 @@ if __name__ == "__main__":
                              host_and_port=arguments.db_host_and_port, db_name=arguments.db_name)
 
     fetch_and_save_package_cloud_stats(db_parameters, arguments.package_cloud_api_token,
-                                       PackageCloudOrganizations[arguments.organization],
-                                       PackageCloudRepos(arguments.repo_name),
-                                       arguments.parallel_count,
+                                       PackageCloudOrganizations(arguments.organization),
+                                       PackageCloudRepos(arguments.repo_name), arguments.parallel_count,
                                        arguments.parallel_exec_index, arguments.is_test)
