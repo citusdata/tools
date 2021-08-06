@@ -6,12 +6,26 @@
 [ -z "${DB_NAME:-}" ] && echo "DB_NAME should be non-empty value" && exit 1
 
 if [[ ${JOB_NAME} == 'docker_pull_citus' ]]; then
-  python -m packaging_automation.docker_statistics_collector --repo_name citus \
-    --db_user_name "${DB_USER_NAME}" --db_password "${DB_PASSWORD}" --db_host_and_port "${DB_HOST_AND_PORT}" \
+  python -m packaging_automation.docker_statistics_collector \
+    --repo_name citus \
+    --db_user_name "${DB_USER_NAME}" \
+    --db_password "${DB_PASSWORD}" \
+    --db_host_and_port "${DB_HOST_AND_PORT}" \
     --db_name "${DB_NAME}"
 elif [[ ${JOB_NAME} == 'github_clone_citus' ]]; then
   [ -z "${GH_TOKEN:-}" ] && echo "GH_TOKEN should be non-empty value" && exit 1
-  python -m packaging_automation.github_statistics_collector --repo_name citus \
-    --db_user_name "${DB_USER_NAME}" --db_password "${DB_PASSWORD}" --db_host_and_port "${DB_HOST_AND_PORT}" \
-    --db_name "${DB_NAME}" --github_token "${GH_TOKEN}"
+  python -m packaging_automation.github_statistics_collector \
+    --repo_name citus \
+    --db_user_name "${DB_USER_NAME}" \
+    --db_password "${DB_PASSWORD}" \
+    --db_host_and_port "${DB_HOST_AND_PORT}" \
+    --db_name "${DB_NAME}" \
+    --github_token "${GH_TOKEN}"
+elif [[ ${JOB_NAME} == 'homebrew_citus' ]]; then
+  python -m packaging_automation.homebrew_statistics_collector \
+    --db_user_name "${DB_USER_NAME}" \
+    --db_password "${DB_PASSWORD}" \
+    --db_host_and_port "${DB_HOST_AND_PORT}" \
+    --db_name "${DB_NAME}" \
+    --github_token "${GH_TOKEN}"
 fi

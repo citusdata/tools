@@ -11,8 +11,8 @@ on:
     - cron: "15 0 * * *"
   # Should be commented out when changing this file since pipelines with trigger type schedule
   # could not be tested on non-main branch
-  #  push:
-  #    branches: "**"
+  push:
+    branches: "**"
 
   workflow_dispatch:
 
@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job_name: [docker_pull_citus, github_clone_citus]
+        job_name: [docker_pull_citus, github_clone_citus, homebrew_citus]
 
     steps:
       - name: Checkout repository
