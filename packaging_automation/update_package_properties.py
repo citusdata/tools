@@ -320,10 +320,11 @@ if __name__ == "__main__":
     else:
         execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
         initialize_env(execution_path, PROJECT_NAME, execution_path)
+        run(f"git checkout {project.value.packaging_branch}")
 
     os.chdir(execution_path)
 
-    run(f"git checkout {project.value.packaging_branch}")
+
     pr_branch = f"{project.value.packaging_branch}-{prj_ver}-{uuid.uuid4()}"
     run(f"git checkout -b {pr_branch}")
     if arguments.date:
@@ -348,4 +349,5 @@ if __name__ == "__main__":
         run(f'git push --set-upstream origin {pr_branch}')
         create_pr(arguments.gh_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME,
                   project.value.packaging_branch)
-        remove_cloned_code(execution_path)
+        if not arguments.pipeline:
+            remove_cloned_code(execution_path)
