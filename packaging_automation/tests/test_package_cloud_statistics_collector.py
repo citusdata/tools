@@ -28,12 +28,7 @@ def test_fetch_and_save_package_cloud_stats():
     page_record_count = 3
     parallel_count = 3
 
-    result = stat_get_request(
-        package_list_with_pagination_request_address(PACKAGE_CLOUD_API_TOKEN, 1, ORGANIZATION, REPO, 100),
-        RequestType.package_cloud_list_package, session)
-    package_info_list = json.loads(result.content)
-    package_list = list(filter(
-        lambda p: not is_ignored_package(p["name"]), package_info_list))
+    filtered_package_count = get_filtered_package_count(session)
 
     for index in range(0, parallel_count):
         fetch_and_save_package_cloud_stats(package_cloud_api_token=PACKAGE_CLOUD_API_TOKEN, organization=ORGANIZATION,
@@ -42,4 +37,15 @@ def test_fetch_and_save_package_cloud_stats():
                                            is_test=True, save_records_with_download_count_zero=True)
 
     records = session.query(PackageCloudDownloadStats).all()
-    assert len(records) == len(list(package_list)) * PACKAGE_SAVED_HISTORIC_RECORD_COUNT
+
+    assert len(records) == filtered_package_count * PACKAGE_SAVED_HISTORIC_RECORD_COUNT
+
+
+def get_filtered_package_count(session) -> int:
+    result = stat_get_request(
+        package_list_with_pagination_request_address(PACKAGE_CLOUD_API_TOKEN, 1, ORGANIZATION, REPO, 100),
+        RequestType.package_cloud_list_package, session)
+    package_info_list = json.loads(result.content)
+    package_list = list(filter(
+        lambda p: not is_ignored_package(p["name"]), package_info_list))
+    return len(package_list)
