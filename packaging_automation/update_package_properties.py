@@ -349,4 +349,5 @@ if __name__ == "__main__":
         run(f'git push --set-upstream origin {pr_branch}')
         create_pr(arguments.gh_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME,
                   project.value.packaging_branch)
-        remove_cloned_code(execution_path)
+        if not arguments.pipeline:
+            remove_cloned_code(execution_path)
