@@ -112,6 +112,7 @@ def publish_docker_image_on_schedule(docker_image_type: DockerImageType, current
 def publish_docker_image_manually(manual_trigger_type_param: ManualTriggerType, current_branch: str,
                                   docker_image_type: DockerImageType, tag_name: str = "") -> None:
     if manual_trigger_type_param == ManualTriggerType.main and not tag_name:
+        print(f"Manually building main image for {docker_image_type.name}   ")
         for it in regular_images_to_be_built(docker_image_type):
             publish_main_docker_images(it, current_branch)
     elif manual_trigger_type_param == ManualTriggerType.tags and tag_name:
@@ -121,7 +122,10 @@ def publish_docker_image_manually(manual_trigger_type_param: ManualTriggerType, 
         publish_nightly_docker_image()
 
 
+
+
 def publish_main_docker_images(docker_image_type: DockerImageType, current_branch: str):
+    print(f"Building main docker image for {docker_image_type.name}")
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_type.name}"
     docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
                                tag=docker_image_name,
@@ -131,6 +135,7 @@ def publish_main_docker_images(docker_image_type: DockerImageType, current_branc
 
 
 def publish_tagged_docker_images(docker_image_type, tag_name: str, current_branch: str):
+    print(f"Building and publishing tagged image {docker_image_type.name} for tag {tag_name}")
     tag_parts = decode_tag_parts(tag_name)
     tag_version_part = ""
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_type.name}"
@@ -140,6 +145,7 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, current_branc
     for tag_part in tag_parts:
         tag_version_part = tag_version_part + tag_part
         image_tag = get_image_tag(tag_version_part, docker_image_type)
+        print(f"Tagging {docker_image_name} with the tag {image_tag}")
         docker_api_client.tag(docker_image_name, docker_image_name, image_tag)
         if current_branch == DEFAULT_BRANCH_NAME:
             docker_client.images.push(DOCKER_IMAGE_NAME, tag=image_tag)
@@ -147,6 +153,7 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, current_branc
 
 
 def publish_nightly_docker_image():
+    print("Building nightly image for citus")
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_info_dict[DockerImageType.nightly]['docker-tag']}"
     docker_client.images.build(dockerfile=docker_image_info_dict[DockerImageType.nightly]['file-name'],
                                tag=docker_image_name,
