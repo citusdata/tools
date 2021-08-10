@@ -103,7 +103,7 @@ def publish_docker_image_on_push(docker_image_type: DockerImageType, github_ref:
 
 def publish_docker_image_on_schedule(docker_image_type: DockerImageType, current_branch: str, ):
     if docker_image_type == DockerImageType.nightly:
-        publish_nightly_docker_image()
+        publish_nightly_docker_image(current_branch)
     else:
         for docker_image_type in regular_images_to_be_built(docker_image_type):
             publish_main_docker_images(docker_image_type, current_branch)
@@ -118,7 +118,7 @@ def publish_docker_image_manually(manual_trigger_type_param: ManualTriggerType, 
         for it in regular_images_to_be_built(docker_image_type):
             publish_tagged_docker_images(it, tag_name, current_branch)
     elif manual_trigger_type_param == ManualTriggerType.nightly:
-        publish_nightly_docker_image()
+        publish_nightly_docker_image(current_branch)
 
 
 def publish_main_docker_images(docker_image_type: DockerImageType, current_branch: str):
@@ -165,16 +165,18 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, current_branc
     print(f"Building and publishing tagged image {docker_image_type.name} for tag {tag_name} finished.")
 
 
-def publish_nightly_docker_image():
+def publish_nightly_docker_image(current_branch: str):
     print("Building nightly image...")
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_info_dict[DockerImageType.nightly]['docker-tag']}"
     docker_client.images.build(dockerfile=docker_image_info_dict[DockerImageType.nightly]['file-name'],
                                tag=docker_image_name,
                                path=".")
     print("Nightly image build finished.")
-    print("Pushing nightly image...")
-    docker_client.images.push(DOCKER_IMAGE_NAME, tag=docker_image_info_dict[DockerImageType.nightly]['docker-tag'])
-    print("Nightly image push finished.")
+
+    if current_branch == DEFAULT_BRANCH_NAME:
+        print("Pushing nightly image...")
+        docker_client.images.push(DOCKER_IMAGE_NAME, tag=docker_image_info_dict[DockerImageType.nightly]['docker-tag'])
+        print("Nightly image push finished.")
 
 
 def validate_and_extract_general_parameters(docker_image_type_param: str, pipeline_trigger_type_param: str) -> Tuple[
