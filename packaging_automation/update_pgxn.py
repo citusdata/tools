@@ -51,7 +51,6 @@ if __name__ == "__main__":
         execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
         initialize_env(execution_path, PROJECT_NAME, execution_path)
 
-    initialize_env(execution_path, PROJECT_NAME, CHECKOUT_DIR)
     os.chdir(execution_path)
 
     run(f"git checkout {main_branch}")
