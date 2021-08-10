@@ -162,6 +162,7 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
 def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str], List[str]]:
     release_versions = []
     nightly_versions = []
+
     if platform_postgres_version_source[os_name] == PostgresVersionDockerImageType.single:
         release_versions = ["all"]
         nightly_versions = ["all"]
@@ -169,17 +170,22 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
         with open(f"{input_files_dir}/pkgvars", "r") as reader:
             content = reader.read()
             lines = content.splitlines()
+            nightly_version_assignment = ""
+            release_version_assignment = ""
             for line in lines:
                 if line.startswith("releasepg"):
                     release_version_assignment = line
                 if line.startswith("nightlypg"):
                     nightly_version_assignment = line
-            if release_version_assignment is None or "=" not in release_version_assignment or len(
+            if not release_version_assignment or "=" not in release_version_assignment or len(
                     release_version_assignment.split("=")) != 2:
                 raise ValueError(
                     f"Release version in pkglatest is not well formatted. Expected format: releasepg=12,13 "
                     f"Actual Format:{release_version_assignment}")
-            if nightly_version_assignment is None or "=" not in nightly_version_assignment or len(
+            if not nightly_version_assignment:
+                print("Warning: Nightly version in pkglatest is missing. Getting releasepg value as nightlypg value ")
+                nightly_version_assignment = release_version_assignment
+            if "=" not in nightly_version_assignment or len(
                     nightly_version_assignment.split("=")) != 2:
                 raise ValueError(
                     f"Nightly version in pkglatest is not well formatted. Expected format: nightlypg=12,13 "
