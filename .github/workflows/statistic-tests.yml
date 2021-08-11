@@ -35,3 +35,6 @@ jobs:
 
       - name: Unit tests for "Packagecloud download statistics"
         run: python -m pytest -q packaging_automation/tests/test_package_cloud_statistics_collector.py
+
+      - name: Unit tests for "Homebrew download statistics"
+        run: python -m pytest -q packaging_automation/tests/test_homebrew_statistics_collector.py
