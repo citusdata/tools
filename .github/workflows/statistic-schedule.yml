@@ -9,8 +9,6 @@ env:
 on:
   schedule:
     - cron: "15 0 * * *"
-  # Should be commented out when changing this file since pipelines with trigger type schedule
-  # could not be tested on non-main branch
   push:
     branches: "**"
 

@@ -39,7 +39,7 @@ class PackageCloudDownloadStats(Base):
     package_name = Column(String, nullable=False)
     package_full_name = Column(String, nullable=False)
     package_version = Column(String, nullable=False)
-    package_release = Column(String, nullable=False)
+    package_release = Column(String)
     package_type = Column(String, nullable=False)
     download_date = Column(DATE, nullable=False)
     download_count = Column(INTEGER, nullable=False)
@@ -52,9 +52,9 @@ def package_count(organization: PackageCloudOrganizations, repo_name: PackageClo
 
     repo_list = json.loads(result.content)
     for repo in repo_list:
-        if repo["fqname"] == f"{organization.name}/{repo_name.name}":
+        if repo["fqname"] == f"{organization.name}/{repo_name.value}":
             return int(remove_suffix(repo['package_count_human'], PC_PACKAGE_COUNT_SUFFIX))
-    raise ValueError(f"Repo name with the name {repo_name.name} could not be found on package cloud")
+    raise ValueError(f"Repo name with the name {repo_name.value} could not be found on package cloud")
 
 
 def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_token: str,
@@ -105,9 +105,8 @@ def fetch_and_save_package_stats_for_package_list(package_info_list: List[Any], 
         for stat_date in download_stats['value']:
             download_date = datetime.strptime(stat_date, PC_DOWNLOAD_DATE_FORMAT).date()
             download_count = int(download_stats['value'][stat_date])
-            if download_date != date.today() and not stat_records_exists(download_date,
-                                                                         package_info['filename'],
-                                                                         session) and (
+            if (download_date != date.today() and not is_ignored_package(package_info['name']) and
+                    not stat_records_exists(download_date, package_info['filename'], session) and
                     is_download_count_eligible_for_save(download_count, save_records_with_download_count_zero)):
                 pc_stats = PackageCloudDownloadStats(fetch_date=datetime.now(), repo=repo_name,
                                                      package_full_name=package_info['filename'],
@@ -127,7 +126,7 @@ def package_historic_statistics_request_address(package_cloud_api_token: str, de
 def package_list_with_pagination_request_address(package_cloud_api_token, page_index,
                                                  organization: PackageCloudOrganizations,
                                                  repo_name: PackageCloudRepos, page_record_count: int) -> str:
-    return (f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos/{organization.name}/{repo_name.name}"
+    return (f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos/{organization.name}/{repo_name.value}"
             f"/packages.json?per_page={page_record_count}&page={page_index}")
 
 
@@ -146,6 +145,12 @@ def stat_records_exists(download_date: date, package_full_name: str, session) ->
     return db_record is not None
 
 
+def is_ignored_package(package_name: str) -> bool:
+    ignored_suffixes = ("debuginfo", "dbgsym")
+    ignored_prefixes = ("citus-ha-", "pg-auto-failover-cli")
+    return package_name.endswith(ignored_suffixes) or package_name.startswith(ignored_prefixes)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--organization', choices=[r.value for r in PackageCloudOrganizations])
@@ -156,8 +161,8 @@ if __name__ == "__main__":
     parser.add_argument('--db_name', required=True)
     parser.add_argument('--package_cloud_api_token', required=True)
     parser.add_argument('--parallel_count', type=int, choices=range(1, 30), required=True, default=1)
-    parser.add_argument('--parallel_exec_index', type=int, choices=range(1, 30), required=True, default=0)
-    parser.add_argument('--page_record_count', type=int, choices=range(0, 100), required=True, default=0)
+    parser.add_argument('--parallel_exec_index', type=int, choices=range(0, 30), required=True, default=0)
+    parser.add_argument('--page_record_count', type=int, choices=range(5, 101), required=True, default=0)
     parser.add_argument('--is_test', action="store_true")
 
     arguments = parser.parse_args()
@@ -166,6 +171,6 @@ if __name__ == "__main__":
                              host_and_port=arguments.db_host_and_port, db_name=arguments.db_name)
 
     fetch_and_save_package_cloud_stats(db_parameters, arguments.package_cloud_api_token,
-                                       PackageCloudOrganizations[arguments.organization],
-                                       PackageCloudRepos[arguments.repo_name], arguments.parallel_count,
+                                       PackageCloudOrganizations(arguments.organization),
+                                       PackageCloudRepos(arguments.repo_name), arguments.parallel_count,
                                        arguments.parallel_exec_index, arguments.is_test)
