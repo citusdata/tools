@@ -20,8 +20,8 @@ class HomebrewStats(Base):
     __tablename__ = "homebrew_stats"
     id = Column(INTEGER, primary_key=True, autoincrement=True)
     fetch_time = Column(TIMESTAMP, nullable=False)
-    stat_day = Column(DATE, nullable=False)
-    stat_30d = Column(INTEGER, nullable=False, default=0)
+    stat_date = Column(DATE, nullable=False,unique=True)
+    stat_30d = Column(INTEGER, nullable=False, default=0,)
     stat_90d = Column(INTEGER, nullable=False, default=0)
     stat_365d = Column(INTEGER, nullable=False, default=0)
 
@@ -31,9 +31,9 @@ def fetch_and_save_homebrew_stats(db_params: DbParams, is_test: bool) -> None:
 
     result = stat_get_request(HOMEBREW_STATS_ADDRESS, RequestType.homebrew_download, session)
     stat_details = json.loads(result.content)
-    record = session.query(HomebrewStats).filter_by(stat_day=date.today()).first()
+    record = session.query(HomebrewStats).filter_by(stat_date=date.today()).first()
     if record is None:
-        hb_stat = HomebrewStats(fetch_time=datetime.now(), stat_day=date.today(),
+        hb_stat = HomebrewStats(fetch_time=datetime.now(), stat_date=date.today(),
                                 stat_30d=stat_details["analytics"]["install"]["30d"]["citus"],
                                 stat_90d=stat_details["analytics"]["install"]["90d"]["citus"],
                                 stat_365d=stat_details["analytics"]["install"]["365d"]["citus"])

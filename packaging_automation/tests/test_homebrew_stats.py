@@ -21,3 +21,8 @@ def test_fetch_and_save_homebrew_stats():
 
     records = session.query(HomebrewStats).all()
     assert len(records) == 1
+
+    fetch_and_save_homebrew_stats(db_params=db_parameters, is_test=True)
+
+    records = session.query(HomebrewStats).all()
+    assert len(records) == 1
