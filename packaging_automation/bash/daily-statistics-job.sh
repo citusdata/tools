@@ -26,6 +26,5 @@ elif [[ ${JOB_NAME} == 'homebrew_citus' ]]; then
     --db_user_name "${DB_USER_NAME}" \
     --db_password "${DB_PASSWORD}" \
     --db_host_and_port "${DB_HOST_AND_PORT}" \
-    --db_name "${DB_NAME}" \
-    --github_token "${GH_TOKEN}"
+    --db_name "${DB_NAME}"
 fi
