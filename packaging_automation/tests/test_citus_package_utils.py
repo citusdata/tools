@@ -24,7 +24,7 @@ OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
 
 def setup_module():
     if not os.path.exists("packaging_test"):
-        run(f"git clone --branch all-citus https://github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}")
+        run(f"git clone --branch all-citus-unit-tests https://github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}")
 
 
 def teardown_module():

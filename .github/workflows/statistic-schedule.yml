@@ -9,7 +9,6 @@ env:
 on:
   schedule:
     - cron: "15 0 * * *"
-
   push:
     branches: "**"
 
@@ -21,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job_name: [docker_pull_citus, github_clone_citus]
+        job_name: [docker_pull_citus, github_clone_citus, homebrew_citus]
 
     steps:
       - name: Checkout repository
