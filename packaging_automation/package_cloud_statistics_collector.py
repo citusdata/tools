@@ -4,17 +4,18 @@ import time
 from datetime import datetime, date
 from enum import Enum
 from http import HTTPStatus
-from typing import List, Any
 
 import requests
-from sqlalchemy import Column, INTEGER, DATE, TIMESTAMP, String
 import sqlalchemy
+from sqlalchemy import Column, INTEGER, DATE, TIMESTAMP, String, UniqueConstraint
 
 from .common_tool_methods import (remove_suffix, stat_get_request)
 from .dbconfig import (Base, db_session, DbParams, RequestType)
 
 PC_PACKAGE_COUNT_SUFFIX = " packages"
 PC_DOWNLOAD_DATE_FORMAT = '%Y%m%dZ'
+PC_DOWNLOAD_DETAIL_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.000Z'
+DETAIL_PAGE_RECORD_COUNT = 100
 
 
 class PackageCloudRepos(Enum):
@@ -40,9 +41,33 @@ class PackageCloudDownloadStats(Base):
     package_full_name = Column(String, nullable=False)
     package_version = Column(String, nullable=False)
     package_release = Column(String)
+    distro_version = Column(String, nullable=False)
+    epoch = Column(String, nullable=False)
     package_type = Column(String, nullable=False)
     download_date = Column(DATE, nullable=False)
     download_count = Column(INTEGER, nullable=False)
+    detail_url = Column(String, nullable=False)
+    UniqueConstraint('package_full_name', 'download_date', "distro_version", name='ux_package_cloud_download_stats')
+
+
+class PackageCloudDownloadDetails(Base):
+    __tablename__ = "package_cloud_download_details"
+    id = Column(INTEGER, primary_key=True, autoincrement=True)
+    fetch_date = Column(TIMESTAMP, nullable=False)
+    repo = Column(sqlalchemy.Enum(PackageCloudRepos), nullable=False)
+    package_name = Column(String, nullable=False)
+    package_full_name = Column(String, nullable=False)
+    package_version = Column(String, nullable=False)
+    package_release = Column(String)
+    distro_version = Column(String, nullable=False)
+    epoch = Column(String, nullable=False)
+    package_type = Column(String, nullable=False)
+    downloaded_at = Column(TIMESTAMP, nullable=False)
+    download_date = Column(DATE, nullable=False)
+    ip_address = Column(String)
+    user_agent = Column(String)
+    source = Column(String)
+    read_token = Column(String)
 
 
 def package_count(organization: PackageCloudOrganizations, repo_name: PackageCloudRepos,
@@ -81,46 +106,103 @@ def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_to
             page_index = page_index + parallel_count
         else:
             break
-        fetch_and_save_package_stats_for_package_list(package_info_list, package_cloud_api_token, session,
-                                                      save_records_with_download_count_zero, repo_name)
+        for package_info in package_info_list:
+            fetch_and_save_package_download_details(package_info, package_cloud_api_token, session,
+                                                    repo_name)
+            fetch_and_save_package_stats(package_info, package_cloud_api_token, session,
+                                         save_records_with_download_count_zero, repo_name)
 
-        session.commit()
+            session.commit()
+
     end = time.time()
 
     print("Elapsed Time in seconds: " + str(end - start))
 
 
-def fetch_and_save_package_stats_for_package_list(package_info_list: List[Any], package_cloud_api_token: str, session,
-                                                  save_records_with_download_count_zero: bool,
-                                                  repo_name: PackageCloudRepos):
+def fetch_and_save_package_stats(package_info, package_cloud_api_token: str, session,
+                                 save_records_with_download_count_zero: bool,
+                                 repo_name: PackageCloudRepos):
     '''Gets and saves the package statistics of the given packages'''
-    for package_info in package_info_list:
+    request_result = stat_get_request(
+        package_statistics_request_address(package_cloud_api_token, package_info['downloads_series_url']),
+        RequestType.package_cloud_download_series_query, session)
+    if request_result.status_code != HTTPStatus.OK:
+        print(f"Error while getting package stat for package {package_info['filename']}")
+        return
+    download_stats = json.loads(request_result.content)
+    for stat_date in download_stats['value']:
+        download_date = datetime.strptime(stat_date, PC_DOWNLOAD_DATE_FORMAT).date()
+        download_count = int(download_stats['value'][stat_date])
+        if (download_date != date.today() and not is_ignored_package(package_info['name']) and
+                not stat_records_exists(download_date, package_info['filename'], package_info['distro_version'],
+                                        session) and
+                is_download_count_eligible_for_save(download_count, save_records_with_download_count_zero)):
+            pc_stats = PackageCloudDownloadStats(fetch_date=datetime.now(), repo=repo_name,
+                                                 package_full_name=package_info['filename'],
+                                                 package_name=package_info['name'],
+                                                 distro_version=package_info['distro_version'],
+                                                 package_version=package_info['version'],
+                                                 package_release=package_info['release'],
+                                                 package_type=package_info['type'],
+                                                 epoch=package_info['epoch'],
+                                                 download_date=download_date,
+                                                 download_count=download_count,
+                                                 detail_url=package_info['downloads_detail_url'])
 
+            session.add(pc_stats)
+
+
+def fetch_and_save_package_download_details(package_info, package_cloud_api_token: str,
+                                            session,
+                                            repo_name: PackageCloudRepos):
+    print(f"Download Detail Query for {package_info['filename']}: {package_info['downloads_detail_url']}")
+    page_number = 1
+    record_count = DETAIL_PAGE_RECORD_COUNT
+    while record_count == DETAIL_PAGE_RECORD_COUNT:
         request_result = stat_get_request(
-            package_historic_statistics_request_address(package_cloud_api_token, package_info['downloads_series_url']),
+            package_statistics_detail_request_address(package_cloud_api_token, package_info['downloads_detail_url'],
+                                                      DETAIL_PAGE_RECORD_COUNT, page_number),
             RequestType.package_cloud_detail_query, session)
+        page_number = page_number + 1
         if request_result.status_code != HTTPStatus.OK:
-            continue
-        download_stats = json.loads(request_result.content)
-        for stat_date in download_stats['value']:
-            download_date = datetime.strptime(stat_date, PC_DOWNLOAD_DATE_FORMAT).date()
-            download_count = int(download_stats['value'][stat_date])
-            if (download_date != date.today() and not is_ignored_package(package_info['name']) and
-                    not stat_records_exists(download_date, package_info['filename'], session) and
-                    is_download_count_eligible_for_save(download_count, save_records_with_download_count_zero)):
-                pc_stats = PackageCloudDownloadStats(fetch_date=datetime.now(), repo=repo_name,
-                                                     package_full_name=package_info['filename'],
-                                                     package_name=package_info['name'],
-                                                     package_version=package_info['version'],
-                                                     package_release=package_info['release'],
-                                                     package_type=package_info['type'],
-                                                     download_date=download_date,
-                                                     download_count=download_count)
-                session.add(pc_stats)
+            print(
+                f"Error while calling detail query for package {package_info['filename']}. Error Code: {request_result.status_code}")
+            return
+        download_details = json.loads(request_result.content)
+        record_count = len(download_details)
+
+        for download_detail in download_details:
+            downloaded_at = datetime.strptime(download_detail['downloaded_at'], PC_DOWNLOAD_DETAIL_DATE_FORMAT)
+            download_date = downloaded_at.date()
+            if (download_date != date.today() and not is_ignored_package(package_info['name']) and not stat_records_exists(download_date,
+                                                                                         package_info['filename'],
+                                                                                         package_info['distro_version'],
+                                                                                         session)):
+                download_detail_record = PackageCloudDownloadDetails(fetch_date=datetime.now(), repo=repo_name,
+                                                                     package_full_name=package_info['filename'],
+                                                                     package_name=package_info['name'],
+                                                                     distro_version=package_info['distro_version'],
+                                                                     package_version=package_info['version'],
+                                                                     package_release=package_info['release'],
+                                                                     package_type=package_info['type'],
+                                                                     epoch=package_info['epoch'],
+                                                                     download_date=download_date,
+                                                                     downloaded_at=downloaded_at,
+                                                                     ip_address=download_detail['ip_address'],
+                                                                     user_agent=download_detail['user_agent'],
+                                                                     source=download_detail['source'],
+                                                                     read_token=download_detail['read_token']
+                                                                     )
+                session.add(download_detail_record)
 
 
-def package_historic_statistics_request_address(package_cloud_api_token: str, detail_query_uri: str):
+def package_statistics_request_address(package_cloud_api_token: str, detail_query_uri: str):
     return f"https://{package_cloud_api_token}:@packagecloud.io/{detail_query_uri}"
+
+
+def package_statistics_detail_request_address(package_cloud_api_token: str, detail_query_uri: str, page_count: int,
+                                              page_number):
+    return f"https://{package_cloud_api_token}:@packagecloud.io/{detail_query_uri}?per_page={page_count}&page={page_number}"
 
 
 def package_list_with_pagination_request_address(package_cloud_api_token, page_index,
@@ -139,9 +221,18 @@ def is_page_in_range(page_index: int, total_package_count: int, page_record_coun
             (page_index * page_record_count >= total_package_count > (page_index - 1) * page_record_count))
 
 
-def stat_records_exists(download_date: date, package_full_name: str, session) -> bool:
+def stat_records_exists(download_date: date, package_full_name: str, distro_version: str, session) -> bool:
     db_record = session.query(PackageCloudDownloadStats).filter_by(download_date=download_date,
-                                                                   package_full_name=package_full_name).first()
+                                                                   package_full_name=package_full_name,
+                                                                   distro_version=distro_version).first()
+    return db_record is not None
+
+
+def detail_records_exists(downloaded_at: datetime, ip_address: str, package_full_name: str, distro_version: str,
+                          session) -> bool:
+    db_record = session.query(PackageCloudDownloadDetails).filter_by(downloaded_at=downloaded_at, ip_address=ip_address,
+                                                                     package_full_name=package_full_name,
+                                                                     distro_version=distro_version).first()
     return db_record is not None
 
 

@@ -36,6 +36,7 @@ class RequestType(enum.Enum):
     docker_pull = 1
     github_clone = 2
     package_cloud_list_package = 3
+    package_cloud_download_series_query = 4
     package_cloud_detail_query = 4
     homebrew_download = 5
 
