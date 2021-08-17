@@ -127,8 +127,7 @@ def fetch_and_save_package_stats(package_info, package_cloud_api_token: str, ses
         package_statistics_request_address(package_cloud_api_token, package_info['downloads_series_url']),
         RequestType.package_cloud_download_series_query, session)
     if request_result.status_code != HTTPStatus.OK:
-        print(f"Error while getting package stat for package {package_info['filename']}")
-        return
+        raise ValueError(f"Error while getting package stat for package {package_info['filename']}")
     download_stats = json.loads(request_result.content)
     for stat_date in download_stats['value']:
         download_date = datetime.strptime(stat_date, PC_DOWNLOAD_DATE_FORMAT).date()
@@ -153,8 +152,7 @@ def fetch_and_save_package_stats(package_info, package_cloud_api_token: str, ses
 
 
 def fetch_and_save_package_download_details(package_info, package_cloud_api_token: str,
-                                            session,
-                                            repo_name: PackageCloudRepos):
+                                            session, repo_name: PackageCloudRepos):
     print(f"Download Detail Query for {package_info['filename']}: {package_info['downloads_detail_url']}")
     page_number = 1
     record_count = DETAIL_PAGE_RECORD_COUNT
@@ -165,19 +163,17 @@ def fetch_and_save_package_download_details(package_info, package_cloud_api_toke
             RequestType.package_cloud_detail_query, session)
         page_number = page_number + 1
         if request_result.status_code != HTTPStatus.OK:
-            print(
-                f"Error while calling detail query for package {package_info['filename']}. Error Code: {request_result.status_code}")
-            return
+            raise ValueError(f"Error while calling detail query for package {package_info['filename']}. "
+                             f"Error Code: {request_result.status_code}")
         download_details = json.loads(request_result.content)
         record_count = len(download_details)
 
         for download_detail in download_details:
             downloaded_at = datetime.strptime(download_detail['downloaded_at'], PC_DOWNLOAD_DETAIL_DATE_FORMAT)
             download_date = downloaded_at.date()
-            if (download_date != date.today() and not is_ignored_package(package_info['name']) and not stat_records_exists(download_date,
-                                                                                         package_info['filename'],
-                                                                                         package_info['distro_version'],
-                                                                                         session)):
+            if (download_date != date.today() and not is_ignored_package(package_info['name']) and
+                    not stat_records_exists(download_date, package_info['filename'],
+                                            package_info['distro_version'], session)):
                 download_detail_record = PackageCloudDownloadDetails(fetch_date=datetime.now(), repo=repo_name,
                                                                      package_full_name=package_info['filename'],
                                                                      package_name=package_info['name'],
