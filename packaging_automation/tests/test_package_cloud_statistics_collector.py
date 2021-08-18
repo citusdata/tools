@@ -13,6 +13,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST_AND_PORT = os.getenv("DB_HOST_AND_PORT")
 DB_NAME = os.getenv("DB_NAME")
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
+PACKAGE_CLOUD_ADMIN_API_TOKEN = os.getenv("PACKAGE_CLOUD_ADMIN_API_TOKEN")
 REPO = PackageCloudRepos.azure
 ORGANIZATION = PackageCloudOrganizations.citusdata
 db_parameters = DbParams(user_name=DB_USER_NAME, password=DB_PASSWORD, host_and_port=DB_HOST_AND_PORT, db_name=DB_NAME)
@@ -31,7 +32,9 @@ def test_fetch_and_save_package_cloud_stats():
     filtered_package_count = get_filtered_package_count(session)
 
     for index in range(0, parallel_count):
-        fetch_and_save_package_cloud_stats(package_cloud_api_token=PACKAGE_CLOUD_API_TOKEN, organization=ORGANIZATION,
+        fetch_and_save_package_cloud_stats(package_cloud_api_token=PACKAGE_CLOUD_API_TOKEN,
+                                           package_cloud_admin_api_token=PACKAGE_CLOUD_ADMIN_API_TOKEN,
+                                           organization=ORGANIZATION,
                                            repo_name=REPO, db_params=db_parameters, parallel_count=parallel_count,
                                            parallel_exec_index=index, page_record_count=page_record_count,
                                            is_test=True, save_records_with_download_count_zero=True)

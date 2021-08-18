@@ -83,6 +83,7 @@ def package_count(organization: PackageCloudOrganizations, repo_name: PackageClo
 
 
 def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_token: str,
+                                       package_cloud_admin_api_token: str,
                                        organization: PackageCloudOrganizations, repo_name: PackageCloudRepos,
                                        parallel_count: int, parallel_exec_index: int, page_record_count: int,
                                        is_test: bool = False, save_records_with_download_count_zero: bool = False):
@@ -107,7 +108,7 @@ def fetch_and_save_package_cloud_stats(db_params: DbParams, package_cloud_api_to
         else:
             break
         for package_info in package_info_list:
-            fetch_and_save_package_download_details(package_info, package_cloud_api_token, session,
+            fetch_and_save_package_download_details(package_info, package_cloud_admin_api_token, session,
                                                     repo_name)
             fetch_and_save_package_stats(package_info, package_cloud_api_token, session,
                                          save_records_with_download_count_zero, repo_name)
@@ -151,14 +152,14 @@ def fetch_and_save_package_stats(package_info, package_cloud_api_token: str, ses
             session.add(pc_stats)
 
 
-def fetch_and_save_package_download_details(package_info, package_cloud_api_token: str,
+def fetch_and_save_package_download_details(package_info, package_cloud_admin_api_token: str,
                                             session, repo_name: PackageCloudRepos):
     print(f"Download Detail Query for {package_info['filename']}: {package_info['downloads_detail_url']}")
     page_number = 1
     record_count = DETAIL_PAGE_RECORD_COUNT
     while record_count == DETAIL_PAGE_RECORD_COUNT:
         request_result = stat_get_request(
-            package_statistics_detail_request_address(package_cloud_api_token, package_info['downloads_detail_url'],
+            package_statistics_detail_request_address(package_cloud_admin_api_token, package_info['downloads_detail_url'],
                                                       DETAIL_PAGE_RECORD_COUNT, page_number),
             RequestType.package_cloud_detail_query, session)
         page_number = page_number + 1
@@ -197,7 +198,7 @@ def package_statistics_request_address(package_cloud_api_token: str, series_quer
 
 
 def package_statistics_detail_request_address(package_cloud_api_token: str, detail_query_uri: str, per_page: int,
-                                              page_number:int):
+                                              page_number: int):
     return f"https://{package_cloud_api_token}:@packagecloud.io/{detail_query_uri}?per_page={per_page}&page={page_number}"
 
 
@@ -247,6 +248,7 @@ if __name__ == "__main__":
     parser.add_argument('--db_host_and_port', required=True)
     parser.add_argument('--db_name', required=True)
     parser.add_argument('--package_cloud_api_token', required=True)
+    parser.add_argument('--package_cloud_admin_api_token', required=True)
     parser.add_argument('--parallel_count', type=int, choices=range(1, 30), required=True, default=1)
     parser.add_argument('--parallel_exec_index', type=int, choices=range(0, 30), required=True, default=0)
     parser.add_argument('--page_record_count', type=int, choices=range(5, 101), required=True, default=0)
