@@ -4,8 +4,8 @@ from datetime import datetime
 from sqlalchemy import text, create_engine
 
 from ..dbconfig import (db_connection_string, DbParams, db_session)
-from ..github_statistics_collector import (fetch_and_store_github_clones, GithubCloneStatsTransactionsDetail,
-                                           GithubCloneStatsTransactionsMain, GithubCloneStats)
+from ..github_statistics_collector import (fetch_and_store_github_stats, GithubCloneStatsTransactionsDetail,
+                                           GithubCloneStatsTransactionsMain, GithubCloneStats, GitHubReleases)
 
 DB_USER_NAME = os.getenv("DB_USER_NAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
@@ -24,8 +24,8 @@ def test_github_stats_collector():
     db.execute(text(f'DROP TABLE IF EXISTS {GithubCloneStatsTransactionsMain.__tablename__}'))
     db.execute(text(f'DROP TABLE IF EXISTS {GithubCloneStats.__tablename__}'))
 
-    fetch_and_store_github_clones(organization_name=ORGANIZATION_NAME, repo_name=REPO_NAME, github_token=GH_TOKEN,
-                                  db_parameters=db_params, is_test=True)
+    fetch_and_store_github_stats(organization_name=ORGANIZATION_NAME, repo_name=REPO_NAME, github_token=GH_TOKEN,
+                                 db_parameters=db_params, is_test=True)
     session = db_session(db_params=db_params, is_test=True)
     main_records = session.query(GithubCloneStatsTransactionsMain).all()
     assert len(main_records) == 1
@@ -39,8 +39,8 @@ def test_github_stats_collector():
     session.commit()
     records = session.query(GithubCloneStats).all()
     assert previous_record_length - len(records) == 1
-    fetch_and_store_github_clones(organization_name=ORGANIZATION_NAME, repo_name=REPO_NAME, github_token=GH_TOKEN,
-                                  db_parameters=db_params, is_test=True)
+    fetch_and_store_github_stats(organization_name=ORGANIZATION_NAME, repo_name=REPO_NAME, github_token=GH_TOKEN,
+                                 db_parameters=db_params, is_test=True)
 
     main_records = session.query(GithubCloneStatsTransactionsMain).all()
     assert len(main_records) == 2
@@ -51,3 +51,7 @@ def test_github_stats_collector():
     assert len(records) == previous_record_length
     today_record = session.query(GithubCloneStats).filter_by(clone_date=datetime.today())
     assert not today_record.first()
+
+    release_records = session.query(GitHubReleases).filter_by(tag_name="v10.0.3").all()
+
+    assert len(release_records) > 0
