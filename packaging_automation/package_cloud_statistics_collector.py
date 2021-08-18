@@ -159,7 +159,8 @@ def fetch_and_save_package_download_details(package_info, package_cloud_admin_ap
     record_count = DETAIL_PAGE_RECORD_COUNT
     while record_count == DETAIL_PAGE_RECORD_COUNT:
         request_result = stat_get_request(
-            package_statistics_detail_request_address(package_cloud_admin_api_token, package_info['downloads_detail_url'],
+            package_statistics_detail_request_address(package_cloud_admin_api_token,
+                                                      package_info['downloads_detail_url'],
                                                       DETAIL_PAGE_RECORD_COUNT, page_number),
             RequestType.package_cloud_detail_query, session)
         page_number = page_number + 1
@@ -260,6 +261,7 @@ if __name__ == "__main__":
                              host_and_port=arguments.db_host_and_port, db_name=arguments.db_name)
 
     fetch_and_save_package_cloud_stats(db_parameters, arguments.package_cloud_api_token,
+                                       arguments.package_cloud_admin_api_token,
                                        PackageCloudOrganizations(arguments.organization),
                                        PackageCloudRepos(arguments.repo_name), arguments.parallel_count,
                                        arguments.parallel_exec_index, arguments.is_test)
