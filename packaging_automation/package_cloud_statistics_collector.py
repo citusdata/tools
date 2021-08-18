@@ -47,7 +47,7 @@ class PackageCloudDownloadStats(Base):
     download_date = Column(DATE, nullable=False)
     download_count = Column(INTEGER, nullable=False)
     detail_url = Column(String, nullable=False)
-    UniqueConstraint('package_full_name', 'download_date', "distro_version", name='ux_package_cloud_download_stats')
+    UniqueConstraint('package_full_name', 'download_date', 'distro_version', name='ux_package_cloud_download_stats')
 
 
 class PackageCloudDownloadDetails(Base):
@@ -192,13 +192,13 @@ def fetch_and_save_package_download_details(package_info, package_cloud_api_toke
                 session.add(download_detail_record)
 
 
-def package_statistics_request_address(package_cloud_api_token: str, detail_query_uri: str):
-    return f"https://{package_cloud_api_token}:@packagecloud.io/{detail_query_uri}"
+def package_statistics_request_address(package_cloud_api_token: str, series_query_uri: str):
+    return f"https://{package_cloud_api_token}:@packagecloud.io/{series_query_uri}"
 
 
-def package_statistics_detail_request_address(package_cloud_api_token: str, detail_query_uri: str, page_count: int,
-                                              page_number):
-    return f"https://{package_cloud_api_token}:@packagecloud.io/{detail_query_uri}?per_page={page_count}&page={page_number}"
+def package_statistics_detail_request_address(package_cloud_api_token: str, detail_query_uri: str, per_page: int,
+                                              page_number:int):
+    return f"https://{package_cloud_api_token}:@packagecloud.io/{detail_query_uri}?per_page={per_page}&page={page_number}"
 
 
 def package_list_with_pagination_request_address(package_cloud_api_token, page_index,
