@@ -24,8 +24,8 @@ package_counts = {
     "debian/stretch": 4,
     "debian/buster": 4,
     "ubuntu/xenial": 2,
-    "ubuntu/bionic": 2,
-    "ubuntu/focal": 2
+    "ubuntu/bionic": 4,
+    "ubuntu/focal": 4
 }
 
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"

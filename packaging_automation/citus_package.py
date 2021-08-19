@@ -183,8 +183,8 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
         else:
             nightly_versions_str = release_versions_str
 
-            release_versions = release_versions_str.split(",")
-            nightly_versions = nightly_versions_str.split(",")
+        release_versions = release_versions_str.split(",")
+        nightly_versions = nightly_versions_str.split(",")
     return release_versions, nightly_versions
 
 
