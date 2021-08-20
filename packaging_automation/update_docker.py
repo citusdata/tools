@@ -3,8 +3,10 @@ import os
 import uuid
 from datetime import datetime
 from enum import Enum
+import pathlib2
 
-from .common_tool_methods import (process_template_file, write_to_file, run, initialize_env, create_pr)
+from .common_tool_methods import (process_template_file, write_to_file, run, initialize_env, create_pr,
+                                  remove_cloned_code)
 
 REPO_OWNER = "citusdata"
 PROJECT_NAME = "docker"
@@ -27,6 +29,8 @@ docker_outputs = {SupportedDockerImages.latest: "Dockerfile",
                   SupportedDockerImages.docker_compose: "docker-compose.yml",
                   SupportedDockerImages.alpine: "alpine/Dockerfile",
                   SupportedDockerImages.postgres12: "postgres-12/Dockerfile"}
+
+BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
 
 def update_docker_file_for_latest_postgres(project_version: str, template_path: str, exec_path: str,
@@ -84,8 +88,8 @@ def update_changelog(project_version: str, exec_path: str, postgres_version: str
             raise ValueError(f"Already using version {project_version} in the changelog")
 
 
-def update_all_docker_files(project_version: str, tools_path: str, exec_path: str, postgres_version: str):
-    template_path = f"{tools_path}/packaging_automation/templates/docker"
+def update_all_docker_files(project_version: str, exec_path: str, postgres_version: str):
+    template_path = f"{BASE_PATH}/templates/docker"
     pkgvars_file = f"{exec_path}/pkgvars"
 
     if postgres_version:
@@ -133,26 +137,28 @@ if __name__ == "__main__":
     parser.add_argument('--prj_ver', required=True)
     parser.add_argument('--gh_token', required=True)
     parser.add_argument('--postgres_version')
+    parser.add_argument("--pipeline", action="store_true")
+    parser.add_argument('--exec_path')
     parser.add_argument('--is_test', action="store_true")
     args = parser.parse_args()
 
-    execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
-    github_token = args.gh_token
+    if args.pipeline:
+        if not args.exec_path:
+            raise ValueError(f"exec_path should be defined")
+        execution_path = args.exec_path
+    else:
+        execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
+        initialize_env(execution_path, PROJECT_NAME, execution_path)
 
-    tools_path = os.getcwd()
-
-    initialize_env(execution_path, PROJECT_NAME, CHECKOUT_DIR)
     os.chdir(execution_path)
-    run("git checkout master")
     pr_branch = f"release-{args.prj_ver}-{uuid.uuid4()}"
     run(f"git checkout -b {pr_branch}")
-    update_all_docker_files(args.prj_ver, tools_path, execution_path, args.postgres_version)
+    update_all_docker_files(args.prj_ver, execution_path, args.postgres_version)
     run("git add .")
 
     commit_message = f"Bump docker to version {args.prj_ver}"
     run(f'git commit -m "{commit_message}"')
     if not args.is_test:
         run(f'git push --set-upstream origin {pr_branch}')
-
-    if not args.is_test:
-        create_pr(github_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME, MAIN_BRANCH)
+        create_pr(args.gh_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME, MAIN_BRANCH)
+        remove_cloned_code(execution_path)
