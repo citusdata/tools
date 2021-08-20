@@ -93,7 +93,7 @@ def test_publish_nightly_docker_image():
     os.chdir("docker")
     try:
         run_with_output("git checkout -b docker-unit-test")
-        publish_nightly_docker_image()
+        publish_nightly_docker_image(NON_DEFAULT_BRANCH_NAME)
         docker_client.images.get("citusdata/citus:nightly")
     finally:
         run_with_output("git checkout master")
