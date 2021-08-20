@@ -320,10 +320,11 @@ if __name__ == "__main__":
     else:
         execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
         initialize_env(execution_path, PROJECT_NAME, execution_path)
+        run(f"git checkout {project.value.packaging_branch}")
 
     os.chdir(execution_path)
 
-    run(f"git checkout {project.value.packaging_branch}")
+
     pr_branch = f"{project.value.packaging_branch}-{prj_ver}-{uuid.uuid4()}"
     run(f"git checkout -b {pr_branch}")
     if arguments.date:
