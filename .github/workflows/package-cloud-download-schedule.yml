@@ -12,7 +12,8 @@ on:
     - cron: "30 0 * * *"
 
   push:
-    branches: "**"
+    branches:
+      - "**"
 
   workflow_dispatch:
 jobs:

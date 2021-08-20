@@ -10,7 +10,8 @@ on:
   schedule:
     - cron: "15 0 * * *"
   push:
-    branches: "**"
+    branches:
+      - "**"
 
   workflow_dispatch:
 
