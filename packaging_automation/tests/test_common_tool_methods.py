@@ -24,7 +24,9 @@ from ..common_tool_methods import (
     get_patch_version_regex,
     get_project_version_from_tag_name,
     get_prs_for_patch_release,
-    get_upcoming_minor_version, get_version_details,
+    get_supported_postgres_versions,
+    get_upcoming_minor_version,
+    get_version_details,
     is_major_release,
     is_tag_on_branch,
     local_branch_exists,
@@ -256,3 +258,7 @@ def test_delete_rpm_key_by_name():
     key_lines = output.splitlines()
     for key_line in key_lines:
         assert not rpm_key_matches_summary(key_line, TEST_GPG_KEY_NAME)
+
+
+def test_get_supported_postgres_versions():
+    get_supported_postgres_versions("ubuntu", os.getcwd(), "10.0.0")

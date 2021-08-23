@@ -4,7 +4,7 @@ import shlex
 import subprocess
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Tuple
+from typing import Dict, List, Any,Tuple
 
 import base64
 import git
@@ -19,7 +19,11 @@ from parameters_validation import validate_parameters
 from .common_validations import (is_tag, is_version)
 from .dbconfig import RequestLog, RequestType
 
+import yaml
+
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
+PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
+POSTGRES_MATRIX_FLIE_NAME = "postgres-matrix.yml"
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = r"\.\d{1,3}"
 
 # http://python-notes.curiousefficiency.org/en/latest/python3/text_file_processing.html
@@ -318,7 +322,6 @@ def is_tag_on_branch(tag_name: str, branch_name: str):
 
 def get_current_branch(working_dir: str) -> str:
     repo = get_new_repo(working_dir)
-
     return repo.active_branch.name
 
 
@@ -557,3 +560,47 @@ def stat_get_request(request_address: str, request_type: RequestType, session):
     finally:
         session.commit()
     return result
+
+
+def get_supported_postgres_versions(os_name: str, input_files_dir: str, package_version: is_version(str)):
+    postgres_matrix_conf_file_path = f"{input_files_dir}/{POSTGRES_MATRIX_FLIE_NAME}"
+
+    with open(postgres_matrix_conf_file_path, "r") as reader:
+        yaml_content = yaml.load(reader, yaml.BaseLoader)
+
+    versions_dictionary = {}
+    for version_info in yaml_content['version_matrix']:
+        versions_dictionary[version_info['package_version']] = version_info['postgres_versions']
+
+    return match_postgres_versions(versions_dictionary, package_version)
+
+
+def match_postgres_versions(versions_dictionary: Dict[str:List], package_version: str):
+    versions = versions_dictionary.keys()
+    numeric_versions_of_config: Dict[int, str] = {}
+    for version in versions:
+        numeric_versions_of_config[get_numeric_counterpart_of_version(version)] = version
+    package_version_numeric = get_numeric_counterpart_of_version(package_version)
+
+    version_in_str = ''
+    if package_version_numeric in numeric_versions_of_config:
+        version_in_str = numeric_versions_of_config[package_version_numeric]
+    else:
+        for numeric_version in numeric_versions_of_config:
+            if numeric_version > package_version_numeric:
+                version_in_str = numeric_versions_of_config[numeric_version]
+                break
+        if not version_in_str:
+            version_in_str = versions.keys[-1]
+
+    return versions[version_in_str]
+
+
+def get_numeric_counterpart_of_version(package_version: str):
+    numbers_in_version = package_version.split(".")
+    multiplier = 1
+    numeric_counterpart = 0
+    for num in reversed(numbers_in_version):
+        numeric_counterpart = numeric_counterpart + num * multiplier
+        multiplier = multiplier * 100
+    return numeric_counterpart
