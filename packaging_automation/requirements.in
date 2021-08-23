@@ -15,5 +15,3 @@ SQLAlchemy
 urllib3
 wheel
 python-dotenv
-
-
