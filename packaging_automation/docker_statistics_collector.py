@@ -56,7 +56,7 @@ def fetch_and_store_docker_statistics(repository_name: str, db_parameters: DbPar
                             if i > 0 else (pull_diff - mod_pull_diff) / day_diff + mod_pull_diff)
         stat_param = DockerStats(fetch_date=fetch_date, total_pull_count=total_pull_count,
                                  daily_pull_count=daily_pull_count,
-                                 stat_date=fetch_date.date() - timedelta(days=i))
+                                 stat_date=fetch_date.date() - timedelta(days=i+1))
         session.add(stat_param)
     session.commit()
 
