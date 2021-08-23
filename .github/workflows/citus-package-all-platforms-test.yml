@@ -11,7 +11,8 @@ env:
 
 on:
   push:
-    branches: "**"
+    branches:
+      - "**"
 
   workflow_dispatch:
 

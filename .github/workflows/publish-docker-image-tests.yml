@@ -2,7 +2,8 @@ name: Docker image creation tests
 
 on:
   push:
-    branches: "**"
+    branches:
+      - "**"
 
   workflow_dispatch:
 

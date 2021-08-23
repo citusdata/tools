@@ -10,7 +10,8 @@ env:
   PACKAGE_CLOUD_ADMIN_API_TOKEN: ${{ secrets.PACKAGE_CLOUD_ADMIN_API_TOKEN }}
 on:
   push:
-    branches: "**"
+    branches:
+      - "**"
 
   workflow_dispatch:
 
