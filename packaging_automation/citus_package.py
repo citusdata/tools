@@ -5,9 +5,10 @@ import subprocess
 from enum import Enum
 from typing import List
 from typing import Tuple
-import gnupg
-import docker
 
+import docker
+import gnupg
+from dotenv import dotenv_values
 from parameters_validation import non_blank, non_empty, validate_parameters
 
 from .common_tool_methods import (run_with_output, PackageType, transform_key_into_base64_str,
@@ -160,32 +161,19 @@ def sign_packages(base_output_path: str, sub_folder: str, secret_key: str, passp
 
 
 def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str], List[str]]:
-    release_versions = []
-    nightly_versions = []
     if platform_postgres_version_source[os_name] == PostgresVersionDockerImageType.single:
         release_versions = ["all"]
         nightly_versions = ["all"]
     else:
-        with open(f"{input_files_dir}/pkgvars", "r") as reader:
-            content = reader.read()
-            lines = content.splitlines()
-            for line in lines:
-                if line.startswith("releasepg"):
-                    release_version_assignment = line
-                if line.startswith("nightlypg"):
-                    nightly_version_assignment = line
-            if release_version_assignment is None or "=" not in release_version_assignment or len(
-                    release_version_assignment.split("=")) != 2:
-                raise ValueError(
-                    f"Release version in pkglatest is not well formatted. Expected format: releasepg=12,13 "
-                    f"Actual Format:{release_version_assignment}")
-            if nightly_version_assignment is None or "=" not in nightly_version_assignment or len(
-                    nightly_version_assignment.split("=")) != 2:
-                raise ValueError(
-                    f"Nightly version in pkglatest is not well formatted. Expected format: nightlypg=12,13 "
-                    f"Actual Format:{nightly_version_assignment}")
-            release_versions = release_version_assignment.split("=")[1].split(",")
-            nightly_versions = nightly_version_assignment.split("=")[1].split(",")
+        pkgvars_config = dotenv_values(f"{input_files_dir}/{PKGVARS_FILE}")
+        release_versions_str = pkgvars_config['releasepg']
+        if "nightlypg" in pkgvars_config:
+            nightly_versions_str = pkgvars_config['nightlypg']
+        else:
+            nightly_versions_str = release_versions_str
+
+        release_versions = release_versions_str.split(",")
+        nightly_versions = nightly_versions_str.split(",")
     return release_versions, nightly_versions
 
 
