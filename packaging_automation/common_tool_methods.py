@@ -562,45 +562,51 @@ def stat_get_request(request_address: str, request_type: RequestType, session):
     return result
 
 
-def get_supported_postgres_versions(os_name: str, input_files_dir: str, package_version: is_version(str)):
-    postgres_matrix_conf_file_path = f"{input_files_dir}/{POSTGRES_MATRIX_FLIE_NAME}"
-
+def get_supported_postgres_versions(postgres_matrix_conf_file_path: str, package_version: is_version(str)):
     with open(postgres_matrix_conf_file_path, "r") as reader:
         yaml_content = yaml.load(reader, yaml.BaseLoader)
 
     versions_dictionary = {}
     for version_info in yaml_content['version_matrix']:
-        versions_dictionary[version_info['package_version']] = version_info['postgres_versions']
+        versions_dictionary[list(version_info.keys())[0]] = \
+            version_info[list(version_info.keys())[0]]['postgres_versions']
 
     return match_postgres_versions(versions_dictionary, package_version)
 
 
-def match_postgres_versions(versions_dictionary: Dict[str:List], package_version: str):
-    versions = versions_dictionary.keys()
+def match_postgres_versions(versions_dictionary, package_version: str):
+    versions = list(versions_dictionary.keys())
     numeric_versions_of_config: Dict[int, str] = {}
     for version in versions:
         numeric_versions_of_config[get_numeric_counterpart_of_version(version)] = version
     package_version_numeric = get_numeric_counterpart_of_version(package_version)
 
-    version_in_str = ''
     if package_version_numeric in numeric_versions_of_config:
         version_in_str = numeric_versions_of_config[package_version_numeric]
     else:
+        last_smallest_version = -1
         for numeric_version in numeric_versions_of_config:
             if numeric_version > package_version_numeric:
-                version_in_str = numeric_versions_of_config[numeric_version]
                 break
-        if not version_in_str:
-            version_in_str = versions.keys[-1]
+            else:
+                last_smallest_version = numeric_version
 
-    return versions[version_in_str]
+        if last_smallest_version < 0:
+            version_in_str = versions[0]
+        else:
+            version_in_str = numeric_versions_of_config[last_smallest_version]
+
+    return versions_dictionary[version_in_str]
 
 
 def get_numeric_counterpart_of_version(package_version: str):
     numbers_in_version = package_version.split(".")
+    # add a 0 if version is minor to calculate and match for patch releases accurately
+    if len(numbers_in_version) == 2:
+        numbers_in_version.append('0')
     multiplier = 1
     numeric_counterpart = 0
     for num in reversed(numbers_in_version):
-        numeric_counterpart = numeric_counterpart + num * multiplier
+        numeric_counterpart = numeric_counterpart + int(num) * multiplier
         multiplier = multiplier * 100
     return numeric_counterpart
