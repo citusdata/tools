@@ -94,7 +94,7 @@ def test_build_packages():
     assert config["postgres_versions"] == "11,12,13"
 
 def test_get_required_package_count():
-    assert get_required_package_count(PACKAGING_EXEC_FOLDER, platform="el/8") == 6
+    assert get_required_package_count(PACKAGING_EXEC_FOLDER, platform="el/8") == 9
 
 def test_decode_os_packages():
     os, release = decode_os_and_release("el/7")
