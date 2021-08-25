@@ -13,10 +13,13 @@ from dotenv import dotenv_values
 from parameters_validation import non_blank, non_empty, validate_parameters
 
 from .common_tool_methods import (run_with_output, PackageType, transform_key_into_base64_str,
-                                  get_gpg_fingerprints_by_name, str_array_to_str)
+                                  get_gpg_fingerprints_by_name, str_array_to_str, get_supported_postgres_versions)
 from .packaging_warning_handler import validate_output
 
 GPG_KEY_NAME = "packaging@citusdata.com"
+
+POSTGRES_VERSION_FILE = "supported-postgres.txt"
+POSTGRES_MATRIX_FILE_NAME = "postgres-matrix.yml"
 
 supported_platforms = {
     "debian": ["bullseye", "buster", "stretch", "jessie", "wheezy"],
@@ -161,6 +164,14 @@ def get_signing_credentials(packaging_secret_key: str,
     return SigningCredentials(secret_key=secret_key, passphrase=passphrase)
 
 
+def write_postgres_versions_into_file(input_files_dir: str, package_version: str):
+    postgres_versions = get_supported_postgres_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
+                                                        package_version)
+    version_str = ','.join(postgres_versions)
+    with open(f"{input_files_dir}/{POSTGRES_VERSION_FILE}", 'w') as f:
+        f.write(f"postgres_versions={version_str}")
+
+
 def sign_packages(sub_folder: str, signing_credentials: SigningCredentials,
                   input_output_parameters: InputOutputParameters):
     output_path = f"{input_output_parameters.output_dir}/{sub_folder}"
@@ -210,12 +221,11 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
         release_versions = ["all"]
         nightly_versions = ["all"]
     else:
-        pkgvars_config = dotenv_values(f"{input_files_dir}/{PKGVARS_FILE}")
-        release_versions_str = pkgvars_config['releasepg']
-        if "nightlypg" in pkgvars_config:
-            nightly_versions_str = pkgvars_config['nightlypg']
-        else:
-            nightly_versions_str = release_versions_str
+        package_version = get_package_version_from_pkgvars(input_files_dir)
+        postgres_versions = get_supported_postgres_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
+                                                            package_version)
+        release_versions_str = ','.join(postgres_versions)
+        nightly_versions_str = release_versions_str
 
         release_versions = release_versions_str.split(",")
         nightly_versions = nightly_versions_str.split(",")
@@ -269,6 +279,9 @@ def build_packages(github_token: non_empty(non_blank(str)),
     release_versions, nightly_versions = get_postgres_versions(os_name, input_output_parameters.input_files_dir)
     signing_credentials = get_signing_credentials(signing_credentials.secret_key, signing_credentials.passphrase)
 
+    package_version = get_package_version_from_pkgvars(input_output_parameters.input_files_dir)
+    write_postgres_versions_into_file(input_output_parameters.input_files_dir, package_version)
+
     if not signing_credentials.passphrase:
         raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")
 
@@ -289,6 +302,14 @@ def build_packages(github_token: non_empty(non_blank(str)),
 def get_build_platform(packaging_platform: str, packaging_docker_platform: str) -> str:
     return (
         package_docker_platform_dict[packaging_docker_platform] if packaging_docker_platform else packaging_platform)
+
+
+def get_package_version_from_pkgvars(input_files_dir: str):
+    pkgvars_config = dotenv_values(f"{input_files_dir}/pkgvars")
+    package_version_with_suffix = pkgvars_config["pkglatest"]
+    version_parts = package_version_with_suffix.split(".")
+    package_version = f"{version_parts[0]}.{version_parts[1]}.{version_parts[2]}"
+    return package_version
 
 
 if __name__ == "__main__":

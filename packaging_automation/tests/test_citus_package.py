@@ -4,13 +4,19 @@ import pathlib2
 
 from .test_utils import generate_new_gpg_key
 from ..citus_package import (build_packages, BuildType, decode_os_and_release, get_release_package_folder_name,
-                             SigningCredentials, InputOutputParameters, get_build_platform)
+                             SigningCredentials, InputOutputParameters, get_build_platform,
+                             POSTGRES_VERSION_FILE, get_package_version_from_pkgvars, POSTGRES_MATRIX_FILE_NAME,
+                             SigningCredentials, InputOutputParameters)
+
 from ..common_tool_methods import (run, delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
                                    get_private_key_by_fingerprint_with_passphrase, define_rpm_public_key_to_machine,
                                    transform_key_into_base64_str,
-                                   verify_rpm_signature_in_dir, delete_all_gpg_keys_by_name)
+                                   verify_rpm_signature_in_dir, delete_all_gpg_keys_by_name,
+                                   get_supported_postgres_versions)
 from ..upload_to_package_cloud import (upload_files_in_directory_to_package_cloud, delete_package_from_package_cloud,
                                        package_exists)
+
+from dotenv import dotenv_values
 
 TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 
@@ -38,6 +44,13 @@ GH_TOKEN = os.getenv("GH_TOKEN")
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 PLATFORM = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_PLATFORM"))
+
+
+def get_required_package_count(input_files_dir: str, platform: str):
+    package_version = get_package_version_from_pkgvars(input_files_dir)
+    postgres_versions = get_supported_postgres_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
+                                                        package_version)
+    return len(postgres_versions) * single_postgres_package_counts[platform]
 
 
 def setup_module():
@@ -73,8 +86,15 @@ def test_build_packages():
     sub_folder = get_release_package_folder_name(os_name, os_version)
     release_output_folder = f"{BASE_OUTPUT_FOLDER}/{sub_folder}"
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
-    assert len(os.listdir(release_output_folder)) == package_counts[PLATFORM]
+    assert len(os.listdir(release_output_folder)) == get_required_package_count(input_files_dir=PACKAGING_EXEC_FOLDER,
+                                                                                platform=PLATFORM)
+    postgres_version_file_path = f"{PACKAGING_EXEC_FOLDER}/{POSTGRES_VERSION_FILE}"
+    assert os.path.exists(postgres_version_file_path)
+    config = dotenv_values(postgres_version_file_path)
+    assert config["postgres_versions"] == "11,12,13"
 
+def test_get_required_package_count():
+    assert get_required_package_count(PACKAGING_EXEC_FOLDER, platform="el/8") == 6
 
 def test_decode_os_packages():
     os, release = decode_os_and_release("el/7")
