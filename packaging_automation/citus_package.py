@@ -165,11 +165,13 @@ def get_signing_credentials(packaging_secret_key: str,
 
 
 def write_postgres_versions_into_file(input_files_dir: str, package_version: str):
-    postgres_versions = get_supported_postgres_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
-                                                        package_version)
-    version_str = ','.join(postgres_versions)
+    release_versions, nightly_versions = \
+        get_supported_postgres_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}", package_version)
+    release_version_str = ','.join(release_versions)
+    nightly_version_str = ','.join(nightly_versions)
     with open(f"{input_files_dir}/{POSTGRES_VERSION_FILE}", 'w') as f:
-        f.write(f"postgres_versions={version_str}")
+        f.write(f"release_versions={release_version_str}\n")
+        f.write(f"nightly_versions={nightly_version_str}\n")
 
 
 def sign_packages(sub_folder: str, signing_credentials: SigningCredentials,
@@ -222,13 +224,9 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
         nightly_versions = ["all"]
     else:
         package_version = get_package_version_from_pkgvars(input_files_dir)
-        postgres_versions = get_supported_postgres_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
-                                                            package_version)
-        release_versions_str = ','.join(postgres_versions)
-        nightly_versions_str = release_versions_str
+        release_versions, nightly_versions = get_supported_postgres_versions(
+            f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}", package_version)
 
-        release_versions = release_versions_str.split(",")
-        nightly_versions = nightly_versions_str.split(",")
     return release_versions, nightly_versions
 
 

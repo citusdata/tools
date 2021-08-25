@@ -263,24 +263,24 @@ def test_delete_rpm_key_by_name():
 def test_get_supported_postgres_versions():
     postgres_versions_10_0_0 = get_supported_postgres_versions(
         f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.0.0")
-    assert postgres_versions_10_0_0 == ['11', '12', '13']
+    assert postgres_versions_10_0_0 == (['11', '12', '13'], ['12', '13', '14'])
 
     postgres_versions_9_2_1 = get_supported_postgres_versions(
         f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "9.2.1")
-    assert postgres_versions_9_2_1 == ['11', '12']
+    assert postgres_versions_9_2_1 == (['11', '12'], ['12', '13', '14'])
 
     postgres_versions_10_1_1 = get_supported_postgres_versions(
         f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.1.1")
-    assert postgres_versions_10_1_1 == ['12', '13']
+    assert postgres_versions_10_1_1 == (['12', '13'], ['12', '13', '14'])
 
     postgres_versions_7_2_1 = get_supported_postgres_versions(
         f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "7.2.1")
-    assert postgres_versions_7_2_1 == ['10', '11']
+    assert postgres_versions_7_2_1 == (['10', '11'], ['12', '13', '14'])
 
     postgres_versions_10_2_0 = get_supported_postgres_versions(
         f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.2.0")
-    assert postgres_versions_10_2_0 == ['12', '13', '14']
+    assert postgres_versions_10_2_0 == (['12', '13', '14'], ['12', '13', '14'])
 
     postgres_versions_10_2_1 = get_supported_postgres_versions(
         f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.2.1")
-    assert postgres_versions_10_2_1 == ['12', '13', '14']
+    assert postgres_versions_10_2_1 == (['12', '13', '14'], ['12', '13', '14'])

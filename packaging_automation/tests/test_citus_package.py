@@ -48,9 +48,9 @@ PLATFORM = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_
 
 def get_required_package_count(input_files_dir: str, platform: str):
     package_version = get_package_version_from_pkgvars(input_files_dir)
-    postgres_versions = get_supported_postgres_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
-                                                        package_version)
-    return len(postgres_versions) * single_postgres_package_counts[platform]
+    release_versions, nightly_versions = \
+        get_supported_postgres_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}", package_version)
+    return len(release_versions) * single_postgres_package_counts[platform]
 
 
 def setup_module():
@@ -91,7 +91,8 @@ def test_build_packages():
     postgres_version_file_path = f"{PACKAGING_EXEC_FOLDER}/{POSTGRES_VERSION_FILE}"
     assert os.path.exists(postgres_version_file_path)
     config = dotenv_values(postgres_version_file_path)
-    assert config["postgres_versions"] == "11,12,13"
+    assert config["release_versions"] == "11,12,13"
+    assert config["nightly_versions"] == "12,13"
 
 def test_get_required_package_count():
     assert get_required_package_count(PACKAGING_EXEC_FOLDER, platform="el/8") == 9
