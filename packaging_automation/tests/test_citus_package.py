@@ -80,7 +80,8 @@ def test_build_packages():
     signing_credentials = SigningCredentials(secret_key, TEST_GPG_KEY_PASSPHRASE)
     input_output_parameters = InputOutputParameters.build(PACKAGING_EXEC_FOLDER, BASE_OUTPUT_FOLDER,
                                                           output_validation=False)
-    build_packages(GH_TOKEN, PLATFORM, BuildType.release, signing_credentials, input_output_parameters)
+
+    build_packages(GH_TOKEN, PLATFORM, BuildType.release, signing_credentials, input_output_parameters, is_test=False)
     verify_rpm_signature_in_dir(BASE_OUTPUT_FOLDER)
     os_name, os_version = decode_os_and_release(PLATFORM)
     sub_folder = get_release_package_folder_name(os_name, os_version)
@@ -96,6 +97,7 @@ def test_build_packages():
 
 def test_get_required_package_count():
     assert get_required_package_count(PACKAGING_EXEC_FOLDER, platform="el/8") == 9
+
 
 def test_decode_os_packages():
     os, release = decode_os_and_release("el/7")

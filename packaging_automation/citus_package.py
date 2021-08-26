@@ -235,7 +235,8 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
 # pylint: disable=no-value-for-parameter
 def build_package(github_token: non_empty(non_blank(str)),
                   build_type: BuildType, docker_platform: str, postgres_version: str,
-                  input_output_parameters: InputOutputParameters):
+                  input_output_parameters: InputOutputParameters,is_test: bool = False):
+    docker_image_name = "packaging" if not is_test else "packaging-test"
     postgres_extension = "all" if postgres_version == "all" else f"pg{postgres_version}"
     os.environ["GITHUB_TOKEN"] = github_token
     if not os.path.exists(input_output_parameters.output_dir):
@@ -245,7 +246,7 @@ def build_package(github_token: non_empty(non_blank(str)),
         f'docker run --rm -v {input_output_parameters.output_dir}:/packages -v '
         f'{input_output_parameters.input_files_dir}:/buildfiles:ro -e '
         f'GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE '
-        f'citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}', text=True)
+        f'citus/packaging:{docker_image_name}-{postgres_extension} {build_type.name}', text=True)
 
     if output.stdout:
         print("Output:" + output.stdout)
@@ -272,7 +273,7 @@ def get_docker_image_name(platform: str):
 def build_packages(github_token: non_empty(non_blank(str)),
                    platform: non_empty(non_blank(str)),
                    build_type: BuildType, signing_credentials: SigningCredentials,
-                   input_output_parameters: InputOutputParameters) -> None:
+                   input_output_parameters: InputOutputParameters,is_test: bool = False) -> None:
     os_name, os_version = decode_os_and_release(platform)
     release_versions, nightly_versions = get_postgres_versions(os_name, input_output_parameters.input_files_dir)
     signing_credentials = get_signing_credentials(signing_credentials.secret_key, signing_credentials.passphrase)
@@ -291,7 +292,7 @@ def build_packages(github_token: non_empty(non_blank(str)),
     for postgres_version in postgres_versions:
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} started... ")
         build_package(github_token, build_type, docker_image_name,
-                      postgres_version, input_output_parameters)
+                      postgres_version, input_output_parameters,is_test)
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} finished ")
 
     sign_packages(output_sub_folder, signing_credentials, input_output_parameters)
@@ -321,6 +322,7 @@ if __name__ == "__main__":
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--input_files_dir', required=True)
     parser.add_argument('--output_validation', action="store_true")
+    parser.add_argument('--is_test', action="store_true")
 
     args = parser.parse_args()
 
@@ -331,4 +333,4 @@ if __name__ == "__main__":
     io_parameters = InputOutputParameters.build(args.input_files_dir, args.output_dir, args.output_validation)
     sign_credentials = SigningCredentials(args.secret_key, args.passphrase)
     build_packages(args.gh_token, build_platform, BuildType[args.build_type], sign_credentials,
-                   io_parameters)
+                   io_parameters,args.is_test)
