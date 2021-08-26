@@ -95,8 +95,7 @@ def test_get_postgres_versions():
 
     release_versions, nightly_versions = get_postgres_versions("el",
                                                                f"{TEST_BASE_PATH}/packaging_automation/tests/files")
-    assert release_versions[0] == "11" and len(release_versions) == 3 and nightly_versions[0] == "12" and \
-           len(nightly_versions) == 2
+    assert release_versions == ["11", "12", "13"] and nightly_versions == ["12", "13"]
 
 
 def test_build_package_debian():
