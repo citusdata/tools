@@ -90,11 +90,11 @@ def test_delete_rpm_key_by_name():
 
 def test_get_postgres_versions():
     release_versions, nightly_versions = get_postgres_versions("debian",
-                                                               f"{TEST_BASE_PATH}/packaging_automation/tests/files/postgres-matrix")
+                                                               f"{TEST_BASE_PATH}/packaging_automation/tests/files/")
     assert release_versions[0] == "all" and nightly_versions[0] == "all"
 
     release_versions, nightly_versions = get_postgres_versions("el",
-                                                               f"{TEST_BASE_PATH}/packaging_automation/tests/files/postgres-matrix")
+                                                               f"{TEST_BASE_PATH}/packaging_automation/tests/files/")
     assert release_versions[0] == "11" and len(release_versions) == 3 and nightly_versions[0] == "12" and \
            len(nightly_versions) == 2
 
