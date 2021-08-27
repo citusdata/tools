@@ -12,7 +12,7 @@ from ..common_tool_methods import (run, delete_rpm_key_by_name, get_gpg_fingerpr
                                    get_private_key_by_fingerprint_with_passphrase, define_rpm_public_key_to_machine,
                                    transform_key_into_base64_str,
                                    verify_rpm_signature_in_dir, delete_all_gpg_keys_by_name,
-                                   get_supported_postgres_versions)
+                                   get_supported_postgres_release_versions, get_supported_postgres_nightly_versions)
 from ..upload_to_package_cloud import (upload_files_in_directory_to_package_cloud, delete_package_from_package_cloud,
                                        package_exists)
 
@@ -48,8 +48,8 @@ PLATFORM = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_
 
 def get_required_package_count(input_files_dir: str, platform: str):
     package_version = get_package_version_from_pkgvars(input_files_dir)
-    release_versions, nightly_versions = \
-        get_supported_postgres_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}", package_version)
+    release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
+                                                               package_version)
     return len(release_versions) * single_postgres_package_counts[platform]
 
 

@@ -562,8 +562,8 @@ def stat_get_request(request_address: str, request_type: RequestType, session):
     return result
 
 
-def get_supported_postgres_versions(postgres_matrix_conf_file_path: str,
-                                    package_version: is_version(str)) -> Tuple[List, List]:
+def get_supported_postgres_release_versions(postgres_matrix_conf_file_path: str,
+                                            package_version: is_version(str)) -> List[str]:
     with open(postgres_matrix_conf_file_path, "r") as reader:
         yaml_content = yaml.load(reader, yaml.BaseLoader)
 
@@ -572,10 +572,18 @@ def get_supported_postgres_versions(postgres_matrix_conf_file_path: str,
         versions_dictionary[list(version_info.keys())[0]] = \
             version_info[list(version_info.keys())[0]]['postgres_versions']
     release_versions = match_release_version(versions_dictionary, package_version)
+
+    return release_versions
+
+
+def get_supported_postgres_nightly_versions(postgres_matrix_conf_file_path: str) -> List[str]:
+    with open(postgres_matrix_conf_file_path, "r") as reader:
+        yaml_content = yaml.load(reader, yaml.BaseLoader)
+
     # nightly version is the last element in the postgres matrix
     latest_version_info = yaml_content['version_matrix'][-1]
     nightly_versions = latest_version_info[list(latest_version_info.keys())[0]]["postgres_versions"]
-    return release_versions, nightly_versions
+    return nightly_versions
 
 
 def match_release_version(versions_dictionary, package_version: str):

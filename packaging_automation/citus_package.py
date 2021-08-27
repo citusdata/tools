@@ -13,7 +13,8 @@ from dotenv import dotenv_values
 from parameters_validation import non_blank, non_empty, validate_parameters
 
 from .common_tool_methods import (run_with_output, PackageType, transform_key_into_base64_str,
-                                  get_gpg_fingerprints_by_name, str_array_to_str, get_supported_postgres_versions)
+                                  get_gpg_fingerprints_by_name, str_array_to_str,
+                                  get_supported_postgres_release_versions, get_supported_postgres_nightly_versions)
 from .packaging_warning_handler import validate_output
 
 GPG_KEY_NAME = "packaging@citusdata.com"
@@ -165,8 +166,9 @@ def get_signing_credentials(packaging_secret_key: str,
 
 
 def write_postgres_versions_into_file(input_files_dir: str, package_version: str):
-    release_versions, nightly_versions = \
-        get_supported_postgres_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}", package_version)
+    release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
+                                                               package_version)
+    nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
     release_version_str = ','.join(release_versions)
     nightly_version_str = ','.join(nightly_versions)
     with open(f"{input_files_dir}/{POSTGRES_VERSION_FILE}", 'w') as f:
@@ -224,8 +226,9 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
         nightly_versions = ["all"]
     else:
         package_version = get_package_version_from_pkgvars(input_files_dir)
-        release_versions, nightly_versions = get_supported_postgres_versions(
-            f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}", package_version)
+        release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
+                                                                   package_version)
+        nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
 
     return release_versions, nightly_versions
 
