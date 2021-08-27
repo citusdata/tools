@@ -62,7 +62,7 @@ def upload_to_package_cloud(distro_name, package_name, package_cloud_token, repo
     }
 
     package_query_url = (
-        f'https://{package_cloud_token}:@packagecloud.io/api/v1/repos/citus-bot/{repo_name}/packages.json')
+        f'https://{package_cloud_token}:@packagecloud.io/api/v1/repos/{repo_name}/packages.json')
     print(f"Uploading package {os.path.basename(package_name)}")
     response = requests.post(package_query_url, files=files)
     print(f"Response from package cloud: {response.content}")
