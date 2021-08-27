@@ -74,7 +74,7 @@ def test_build_packages():
 def test_upload_to_package_cloud():
     current_branch = "all-citus"
     main_branch = "all-citus"
-    output = upload_files_in_directory_to_package_cloud(BASE_OUTPUT_FOLDER, PLATFORM, PACKAGE_CLOUD_API_TOKEN, "sample",
+    output = upload_files_in_directory_to_package_cloud(BASE_OUTPUT_FOLDER, PLATFORM, PACKAGE_CLOUD_API_TOKEN, "citus-bot/sample",
                                                         current_branch, main_branch)
     distro_parts = PLATFORM.split("/")
     if len(distro_parts) != 2:
