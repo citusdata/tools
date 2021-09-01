@@ -7,7 +7,7 @@ import pathlib2
 from ..common_tool_methods import (file_includes_line, count_line_in_file, run, get_last_commit_message,
                                    remove_cloned_code)
 from ..prepare_release import (update_release, MULTI_EXTENSION_OUT, MULTI_EXTENSION_SQL, CONFIGURE,
-                               CONFIGURE_IN, CITUS_CONTROL, CONFIG_PY)
+                               CONFIGURE_IN, CITUS_CONTROL, CONFIG_PY, ProjectParams)
 
 github_token = os.getenv("GH_TOKEN")
 
@@ -36,8 +36,10 @@ def test_major_release():
     previous_print_extension_changes = count_line_in_file(test_base_path_major, MULTI_EXTENSION_OUT,
                                                           "SELECT * FROM print_extension_changes();")
 
+    project_params = ProjectParams(project_version="10.1.0", project_name="citus", main_branch=MAIN_BRANCH,
+                                   schema_version="")
     update_release_return_value = update_release(
-        github_token=github_token, project_name="citus", project_version="10.1.0", main_branch=MAIN_BRANCH,
+        github_token=github_token, project_params=project_params,
         earliest_pr_date=datetime.strptime('2021.03.25 00:00', '%Y.%m.%d %H:%M'),
         exec_path=test_base_path_major, is_test=True)
 
@@ -92,24 +94,29 @@ def test_patch_release():
     test_base_path_patch = initialize_env()
     resources_to_be_deleted.append(test_base_path_patch)
     os.chdir(test_base_path_patch)
+    project_params = ProjectParams(project_version="10.0.4", project_name="citus", main_branch=MAIN_BRANCH,
+                                   schema_version="10.1-5")
     try:
-        project_version = "10.0.4"
-        schema_version = "10.1-5"
+
         update_release(
-            github_token=github_token, project_name="citus", project_version=project_version,
-            main_branch=MAIN_BRANCH,
+            github_token=github_token, project_params=project_params,
             earliest_pr_date=datetime.strptime('2021.03.25 00:00', '%Y.%m.%d %H:%M'),
-            exec_path=test_base_path_patch, is_test=True, schema_version=schema_version)
-        assert file_includes_line(test_base_path_patch, MULTI_EXTENSION_OUT, f" {project_version}")
-        assert file_includes_line(test_base_path_patch, CONFIGURE_IN, f"AC_INIT([Citus], [{project_version}])")
-        assert file_includes_line(test_base_path_patch, CONFIGURE, f"PACKAGE_VERSION='{project_version}'")
-        assert file_includes_line(test_base_path_patch, CONFIGURE, f"PACKAGE_STRING='Citus {project_version}'")
+            exec_path=test_base_path_patch, is_test=True)
+        assert file_includes_line(test_base_path_patch, MULTI_EXTENSION_OUT, f" {project_params.project_version}")
+        assert file_includes_line(test_base_path_patch, CONFIGURE_IN,
+                                  f"AC_INIT([Citus], [{project_params.project_version}])")
         assert file_includes_line(test_base_path_patch, CONFIGURE,
-                                  rf"\`configure' configures Citus {project_version} to adapt to many kinds of systems.")
+                                  f"PACKAGE_VERSION='{project_params.project_version}'")
         assert file_includes_line(test_base_path_patch, CONFIGURE,
-                                  f'     short | recursive ) echo "Configuration of Citus {project_version}:";;')
-        assert file_includes_line(test_base_path_patch, CONFIGURE, f"PACKAGE_VERSION='{project_version}'")
-        assert file_includes_line(test_base_path_patch, CITUS_CONTROL, f"default_version = '{schema_version}'")
+                                  f"PACKAGE_STRING='Citus {project_params.project_version}'")
+        assert file_includes_line(test_base_path_patch, CONFIGURE,
+                                  rf"\`configure' configures Citus {project_params.project_version} to adapt to many kinds of systems.")
+        assert file_includes_line(test_base_path_patch, CONFIGURE,
+                                  f'     short | recursive ) echo "Configuration of Citus {project_params.project_version}:";;')
+        assert file_includes_line(test_base_path_patch, CONFIGURE,
+                                  f"PACKAGE_VERSION='{project_params.project_version}'")
+        assert file_includes_line(test_base_path_patch, CITUS_CONTROL,
+                                  f"default_version = '{project_params.schema_version}'")
         run(f"git checkout {MAIN_BRANCH}")
     finally:
         for path in resources_to_be_deleted:

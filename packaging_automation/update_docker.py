@@ -3,10 +3,11 @@ import os
 import uuid
 from datetime import datetime
 from enum import Enum
+
 import pathlib2
 
 from .common_tool_methods import (process_template_file, write_to_file, run, initialize_env, create_pr,
-                                  remove_cloned_code)
+                                  remove_cloned_code, DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER)
 
 REPO_OWNER = "citusdata"
 PROJECT_NAME = "docker"
@@ -14,9 +15,9 @@ MAIN_BRANCH = "master"
 
 
 class SupportedDockerImages(Enum):
-    latest = 1,
-    docker_compose = 2,
-    alpine = 3,
+    latest = 1
+    docker_compose = 2
+    alpine = 3
     postgres12 = 4
 
 
@@ -77,7 +78,8 @@ def get_new_changelog_entry(project_version: str, postgres_version: str = ""):
 def update_changelog(project_version: str, exec_path: str, postgres_version: str = ""):
     latest_changelog = get_new_changelog_entry(project_version, postgres_version)
     changelog_file_path = f"{exec_path}/CHANGELOG.md"
-    with open(changelog_file_path, "r+") as reader:
+    with open(changelog_file_path, "r+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         if not (f"({project_version}" in reader.readline()):
             reader.seek(0, 0)
             old_changelog = reader.read()
@@ -106,16 +108,16 @@ def update_all_docker_files(project_version: str, exec_path: str, postgres_versi
 
 def read_postgres_version(pkgvars_file: str) -> str:
     if os.path.exists(pkgvars_file):
-        with open(pkgvars_file, "r") as reader:
+        with open(pkgvars_file, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
             lines = reader.readlines()
             for line in lines:
                 if line.startswith("latest_postgres_version"):
                     line_parts = line.split("=")
                     if len(line_parts) != 2:
                         raise ValueError("keys and values should be seperated with '=' sign")
-                    else:
-                        postgres_version = line_parts[1].rstrip("\n")
-                        break
+                    postgres_version = line_parts[1].rstrip("\n")
+                    break
             if not postgres_version:
                 raise ValueError("pkgvars file should include a line with key latest_postgres_version")
     else:
@@ -126,7 +128,8 @@ def read_postgres_version(pkgvars_file: str) -> str:
 
 def update_pkgvars(project_version: str, template_path: str, pkgvars_file: str, postgres_version: str):
     content = process_template_file(project_version, template_path, "docker-pkgvars.tmpl", postgres_version)
-    with open(pkgvars_file, "w") as writer:
+    with open(pkgvars_file, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
         writer.write(content)
 
 
@@ -144,7 +147,7 @@ if __name__ == "__main__":
 
     if args.pipeline:
         if not args.exec_path:
-            raise ValueError(f"exec_path should be defined")
+            raise ValueError("exec_path should be defined")
         execution_path = args.exec_path
     else:
         execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"

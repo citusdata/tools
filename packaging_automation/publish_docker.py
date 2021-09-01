@@ -32,8 +32,8 @@ class DockerImageType(Enum):
 
 
 class ManualTriggerType(Enum):
-    main = 1,
-    tags = 2,
+    main = 1
+    tags = 2
     nightly = 3
 
 
@@ -61,8 +61,8 @@ docker_api_client = docker.APIClient()
 def regular_images_to_be_built(docker_image_type: DockerImageType = None) -> List[DockerImageType]:
     if docker_image_type:
         return [docker_image_type]
-    return [it for it in docker_image_info_dict.keys() if
-            docker_image_info_dict[it]["schedule-type"] == ScheduleType.regular]
+    return [key for key, value in docker_image_info_dict.items() if
+            value["schedule-type"] == ScheduleType.regular]
 
 
 # When pipeline triggered, if the event source is
@@ -74,11 +74,9 @@ def decode_triggering_event_info(github_ref: str) -> Tuple[GithubTriggerEventSou
         raise ValueError(
             "github ref should be like one of the following two formats: "
             "refs/heads/{branch_name}, refs/tags/{tag_name}")
-    else:
-        if parts[1] == "tags":
-            return GithubTriggerEventSource.tag_push, parts[2]
-        else:
-            return GithubTriggerEventSource.branch_push, parts[2]
+    if parts[1] == "tags":
+        return GithubTriggerEventSource.tag_push, parts[2]
+    return GithubTriggerEventSource.branch_push, parts[2]
 
 
 @validate_parameters
@@ -94,19 +92,19 @@ def get_image_tag(tag_prefix: str, docker_image_type: DockerImageType) -> str:
 
 def publish_docker_image_on_push(docker_image_type: DockerImageType, github_ref: str, current_branch: str):
     triggering_event_info, resource_name = decode_triggering_event_info(github_ref)
-    for docker_image_type in regular_images_to_be_built(docker_image_type):
+    for regular_image_type in regular_images_to_be_built(docker_image_type):
         if triggering_event_info == GithubTriggerEventSource.branch_push:
-            publish_main_docker_images(docker_image_type, current_branch)
+            publish_main_docker_images(regular_image_type, current_branch)
         else:
-            publish_tagged_docker_images(docker_image_type, resource_name, current_branch)
+            publish_tagged_docker_images(regular_image_type, resource_name, current_branch)
 
 
 def publish_docker_image_on_schedule(docker_image_type: DockerImageType, current_branch: str, ):
     if docker_image_type == DockerImageType.nightly:
         publish_nightly_docker_image(current_branch)
     else:
-        for docker_image_type in regular_images_to_be_built(docker_image_type):
-            publish_main_docker_images(docker_image_type, current_branch)
+        for regular_image_type in regular_images_to_be_built(docker_image_type):
+            publish_main_docker_images(regular_image_type, current_branch)
 
 
 def publish_docker_image_manually(manual_trigger_type_param: ManualTriggerType, current_branch: str,
@@ -186,7 +184,7 @@ def validate_and_extract_general_parameters(docker_image_type_param: str, pipeli
     except KeyError:
         raise ValueError(
             f"trigger_type parameter is invalid. Valid ones are "
-            f"{','.join([d.name for d in GithubPipelineTriggerType])}.")
+            f"{','.join([d.name for d in GithubPipelineTriggerType])}.") from KeyError
 
     image_type_invalid_error_message = (
         f"image_type parameter is invalid. Valid ones are {','.join([d.name for d in regular_images_to_be_built()])}.")
@@ -197,7 +195,7 @@ def validate_and_extract_general_parameters(docker_image_type_param: str, pipeli
         else:
             docker_image_type = DockerImageType[docker_image_type_param]
     except KeyError:
-        raise ValueError(image_type_invalid_error_message)
+        raise ValueError(image_type_invalid_error_message) from KeyError
 
     return trigger_type_param, docker_image_type
 
@@ -207,7 +205,8 @@ def validate_and_extract_manual_exec_params(manual_trigger_type_param: str, tag_
         manual_trigger_type_param = ManualTriggerType[manual_trigger_type_param]
     except KeyError:
         raise ValueError(
-            f"manual_trigger_type parameter is invalid. Valid ones are {','.join([d.name for d in ManualTriggerType])}.")
+            f"manual_trigger_type parameter is invalid. "
+            f"Valid ones are {','.join([d.name for d in ManualTriggerType])}.") from KeyError
 
     is_tag(tag_name_param)
 

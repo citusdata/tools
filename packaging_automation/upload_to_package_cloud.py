@@ -9,8 +9,6 @@ import pathlib2
 import requests
 from requests.auth import HTTPBasicAuth
 
-from .common_tool_methods import (get_current_branch)
-
 supported_distros = {
     "el/7": 140,
     "el/8": 205,
@@ -55,10 +53,11 @@ BASE_PATH = pathlib2.Path(__file__).parents[1]
 
 def upload_to_package_cloud(distro_name, package_name, package_cloud_token, repo_name) -> ReturnValue:
     distro_id = supported_distros[distro_name]
+
     files = {
         'package[distro_version_id]': (None, str(distro_id)),
         'package[package_file]': (
-            package_name, open(package_name, 'rb')),
+            package_name, open(package_name, 'rb')),  # pylint: disable=consider-using-with
     }
 
     package_query_url = (
@@ -111,7 +110,7 @@ def package_exists(package_cloud_token: str, repo_owner: str, repo_name: str, pa
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--platform', choices=[e for e in supported_distros])
+    parser.add_argument('--platform', choices=supported_distros.keys())
     parser.add_argument('--package_cloud_api_token', required=True)
     parser.add_argument('--repository_name', required=True, choices=supported_repos)
     parser.add_argument('--output_file_path', required=True)

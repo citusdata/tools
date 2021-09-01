@@ -1,6 +1,7 @@
 import argparse
 import os
 import uuid
+
 import pathlib2
 
 from .common_tool_methods import (process_template_file, write_to_file, run, initialize_env, create_pr,
@@ -45,7 +46,7 @@ if __name__ == "__main__":
 
     if args.pipeline:
         if not args.exec_path:
-            raise ValueError(f"exec_path should be defined")
+            raise ValueError("exec_path should be defined")
         execution_path = args.exec_path
     else:
         execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"

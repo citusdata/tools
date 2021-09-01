@@ -4,11 +4,9 @@ from datetime import datetime, timedelta
 
 import requests
 from sqlalchemy import Column, DATE, INTEGER, TIMESTAMP, desc
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from .common_tool_methods import (str_array_to_str)
-from .dbconfig import (Base, db_connection_string, DbParams)
+from .dbconfig import (Base, DbParams, db_session)
 
 
 class DockerStats(Base):
@@ -29,28 +27,17 @@ def fetch_and_store_docker_statistics(repository_name: str, db_parameters: DbPar
     if repository_name not in docker_repositories:
         raise ValueError(f"Repository name should be in {str_array_to_str(docker_repositories)}")
     if not is_test and (test_day_shift_index != 0 or test_total_pull_count != 0):
-        raise ValueError(f"test_day_shift_index and test_total_pull_count parameters are test "
-                         f"parameters. Please don't use these parameters other than testing.")
+        raise ValueError("test_day_shift_index and test_total_pull_count parameters are test "
+                         "parameters. Please don't use these parameters other than testing.")
 
     result = requests.get(f"https://hub.docker.com/v2/repositories/citusdata/{repository_name}/")
     total_pull_count = int(result.json()["pull_count"]) if test_total_pull_count == 0 else test_total_pull_count
 
-    db_engine = create_engine(db_connection_string(db_params=db_parameters, is_test=is_test))
-    Session = sessionmaker(db_engine)
-    session = Session()
-
-    Base.metadata.create_all(db_engine)
+    session = db_session(db_params=db_parameters, is_test=is_test, create_db_objects=True)
 
     fetch_date = datetime.now() + timedelta(days=test_day_shift_index)
-    same_day_record = session.query(DockerStats).filter_by(stat_date=fetch_date.date()).first()
-    if same_day_record:
-        print(f"Docker download record for date {fetch_date.date()} already exists. No need to add record.")
-        sys.exit(0)
-    last_stat_record = session.query(DockerStats).order_by(desc(DockerStats.stat_date)).first()
-
-    day_diff = (fetch_date.date() - last_stat_record.stat_date).days if last_stat_record else 1
-    pull_diff = total_pull_count - last_stat_record.total_pull_count if last_stat_record else total_pull_count
-    mod_pull_diff = pull_diff % day_diff
+    validate_same_day_record_existence(fetch_date, session)
+    day_diff, mod_pull_diff, pull_diff = calculate_diff_params(fetch_date, session, total_pull_count)
     for i in range(0, day_diff):
         daily_pull_count = ((pull_diff - mod_pull_diff) / day_diff
                             if i > 0 else (pull_diff - mod_pull_diff) / day_diff + mod_pull_diff)
@@ -59,6 +46,21 @@ def fetch_and_store_docker_statistics(repository_name: str, db_parameters: DbPar
                                  stat_date=fetch_date.date() - timedelta(days=i))
         session.add(stat_param)
     session.commit()
+
+
+def calculate_diff_params(fetch_date, session, total_pull_count):
+    last_stat_record = session.query(DockerStats).order_by(desc(DockerStats.stat_date)).first()
+    day_diff = (fetch_date.date() - last_stat_record.stat_date).days if last_stat_record else 1
+    pull_diff = total_pull_count - last_stat_record.total_pull_count if last_stat_record else total_pull_count
+    mod_pull_diff = pull_diff % day_diff
+    return day_diff, mod_pull_diff, pull_diff
+
+
+def validate_same_day_record_existence(fetch_date, session):
+    same_day_record = session.query(DockerStats).filter_by(stat_date=fetch_date.date()).first()
+    if same_day_record:
+        print(f"Docker download record for date {fetch_date.date()} already exists. No need to add record.")
+        sys.exit(0)
 
 
 if __name__ == "__main__":

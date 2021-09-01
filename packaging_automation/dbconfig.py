@@ -1,10 +1,11 @@
+import enum
+
+import sqlalchemy
 from attr import dataclass
 from sqlalchemy import Column, INTEGER, TIMESTAMP, TEXT
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import sqlalchemy
-import enum
 
 
 @dataclass

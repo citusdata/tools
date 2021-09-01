@@ -1,11 +1,13 @@
+import os
+
+import docker
+import pathlib2
+import pytest
+
+from ..common_tool_methods import (remove_prefix, run, run_with_output)
 from ..publish_docker import (decode_triggering_event_info, GithubTriggerEventSource, decode_tag_parts,
                               get_image_tag, DockerImageType, publish_main_docker_images, publish_tagged_docker_images,
                               publish_nightly_docker_image)
-from ..common_tool_methods import (remove_prefix, run, run_with_output)
-import pytest
-import os
-import docker
-import pathlib2
 
 NON_DEFAULT_BRANCH_NAME = "10.0.3_test"
 DEFAULT_BRANCH_NAME = "master"
