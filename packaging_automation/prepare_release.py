@@ -15,7 +15,8 @@ from .common_tool_methods import (get_version_details, is_major_release,
                                   find_nth_matching_line_and_line_number, get_patch_version_regex,
                                   remote_branch_exists, local_branch_exists, prepend_line_in_file,
                                   get_template_environment, get_upcoming_minor_version, remove_cloned_code,
-                                  initialize_env, create_pr_with_repo, DEFAULT_ENCODING_FOR_FILE_HANDLING)
+                                  initialize_env, create_pr_with_repo, DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                                  DEFAULT_UNICODE_ERROR_HANDLER)
 from .common_validations import (CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN)
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"

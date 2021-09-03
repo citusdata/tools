@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 import yaml
 
-from .common_tool_methods import (PackageType, DEFAULT_ENCODING_FOR_FILE_HANDLING)
+from .common_tool_methods import (PackageType, DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER)
 
 
 class PackagingWarningIgnoreType(Enum):
