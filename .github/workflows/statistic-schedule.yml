@@ -36,4 +36,4 @@ jobs:
       - name: Execute 'Docker Pull for Citus Repo'
         run: packaging_automation/bash/daily-statistics-job.sh
         env:
-          JOB_NAME: ${{ matrix.JOB_NAME }}
+          JOB_NAME: "${{ matrix.JOB_NAME }}"
