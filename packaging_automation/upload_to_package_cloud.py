@@ -9,8 +9,6 @@ import pathlib2
 import requests
 from requests.auth import HTTPBasicAuth
 
-from .common_tool_methods import (DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER)
-
 supported_distros = {
     "el/7": 140,
     "el/8": 205,
