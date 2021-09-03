@@ -9,6 +9,7 @@ import pathlib2
 import requests
 from requests.auth import HTTPBasicAuth
 
+from .common_tool_methods import (DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER)
 
 supported_distros = {
     "el/7": 140,
@@ -54,7 +55,8 @@ BASE_PATH = pathlib2.Path(__file__).parents[1]
 
 def upload_to_package_cloud(distro_name, package_name, package_cloud_token, repo_name) -> ReturnValue:
     distro_id = supported_distros[distro_name]
-    with open(package_name, "rb") as file_handle:
+    with open(package_name, "rb", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as file_handle:
         files = {
             'package[distro_version_id]': (None, str(distro_id)),
             'package[package_file]': (
