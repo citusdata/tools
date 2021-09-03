@@ -155,7 +155,8 @@ class MigrationFiles:
     upgrade_file: str
     downgrade_file: str
 
-
+# disabled since this is related to parameter_validations library methods
+# pylint: disable=no-value-for-parameter
 def update_release(github_token: non_blank(non_empty(str)), project_params: ProjectParams,
                    earliest_pr_date: datetime, exec_path: non_blank(non_empty(str)),
                    is_test: bool = False, cherry_pick_enabled: bool = False) -> UpdateReleaseReturnValue:

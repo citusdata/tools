@@ -115,6 +115,8 @@ class InputOutputParameters:
 
     @staticmethod
     @validate_parameters
+    # disabled since this is related to parameter_validations library methods
+    # pylint: disable=no-value-for-parameter
     def build(input_files_dir: non_empty(non_blank(str)), output_dir: non_empty(non_blank(str)),
               output_validation: bool = False):
         return InputOutputParameters(input_files_dir=input_files_dir, output_dir=output_dir,
@@ -122,6 +124,8 @@ class InputOutputParameters:
 
 
 @validate_parameters
+# disabled since this is related to parameter_validations library methods
+# pylint: disable=no-value-for-parameter
 def get_signing_credentials(packaging_secret_key: str,
                             packaging_passphrase: non_empty(
                                 non_blank(str))) -> SigningCredentials:
@@ -203,6 +207,8 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
 
 
 @validate_parameters
+# disabled since this is related to parameter_validations library methods
+# pylint: disable=no-value-for-parameter
 def build_package(github_token: non_empty(non_blank(str)),
                   build_type: BuildType, docker_platform: str, postgres_version: str,
                   input_output_parameters: InputOutputParameters):
@@ -236,6 +242,8 @@ def get_docker_image_name(platform: str):
 
 
 @validate_parameters
+# disabled since this is related to parameter_validations library methods
+# pylint: disable=no-value-for-parameter
 def build_packages(github_token: non_empty(non_blank(str)),
                    platform: non_empty(non_blank(str)),
                    build_type: BuildType, signing_credentials: SigningCredentials,

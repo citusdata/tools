@@ -4,14 +4,10 @@ member-warnings: false
 
 ignore-paths:
   - docs
-ignore-patterns:
-  - (^|/)skip(this)?(/|$)
+
 autodetect: true
-#max-line-length: 88
 
 pylint:
   disable:
-    # parameter_validations library methods give this error
-    - no-value-for-parameter
   options:
     max-args: 6
