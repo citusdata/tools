@@ -82,7 +82,7 @@ def parse_ignore_lists(ignore_file_path: str, package_type: PackageType):
         else PackagingWarningIgnoreType.rpm
     package_type_specific_ignore_list = []
     with open(ignore_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_ENCODING_FOR_FILE_HANDLING) as reader:
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         yaml_content = yaml.load(reader, yaml.BaseLoader)
     if PackagingWarningIgnoreType.base.name in yaml_content:
         base_ignore_list = yaml_content[PackagingWarningIgnoreType.base.name]

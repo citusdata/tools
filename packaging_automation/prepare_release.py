@@ -432,7 +432,7 @@ def get_current_schema_from_citus_control(citus_control_file_path: str) -> str:
     print(f"### Reading current schema version from {citus_control_file_path}... ###")
     current_schema_version = ""
     with open(citus_control_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_ENCODING_FOR_FILE_HANDLING) as cc_reader:
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as cc_reader:
         cc_file_content = cc_reader.read()
         _, cc_line = find_nth_matching_line_and_line_number(cc_file_content, CITUS_CONTROL_SEARCH_PATTERN, 1)
         schema_not_found = False
@@ -536,7 +536,7 @@ def create_new_sql_for_upgrade_path(current_schema_version, distributed_dir_path
     newly_created_sql_file = upgrade_sql_file_name(current_schema_version, upcoming_minor_version)
     print(f"### Creating upgrade file {newly_created_sql_file}... ###")
     with open(f"{distributed_dir_path}/{newly_created_sql_file}", "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_ENCODING_FOR_FILE_HANDLING) as f_writer:
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as f_writer:
         content = f"-- citus--{current_schema_version}--{upcoming_minor_version}-1"
         content = content + "\n\n"
         content = content + f"-- bump version to {upcoming_minor_version}-1" + "\n\n"
@@ -550,7 +550,7 @@ def create_new_sql_for_downgrade_path(current_schema_version, distributed_dir_pa
     newly_created_sql_file = f"citus--{upcoming_minor_version}-1--{current_schema_version}.sql"
     print(f"### Creating downgrade file {newly_created_sql_file}... ###")
     with open(f"{distributed_dir_path}/{newly_created_sql_file}", "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_ENCODING_FOR_FILE_HANDLING) as f_writer:
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as f_writer:
         content = f"-- citus--{upcoming_minor_version}-1--{current_schema_version}"
         content = content + "\n"
         content = (
