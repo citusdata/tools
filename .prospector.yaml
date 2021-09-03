@@ -13,5 +13,6 @@ pylint:
   disable:
     # parameter_validations library methods give this error
     - no-value-for-parameter
+    - consider-using-with
   options:
     max-args: 6

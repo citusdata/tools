@@ -57,7 +57,7 @@ def upload_to_package_cloud(distro_name, package_name, package_cloud_token, repo
     files = {
         'package[distro_version_id]': (None, str(distro_id)),
         'package[package_file]': (
-            package_name, open(package_name, 'rb')),  # pylint: disable=consider-using-with
+            package_name, open(package_name, 'rb')),
     }
 
     package_query_url = (
