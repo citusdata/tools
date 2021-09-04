@@ -15,7 +15,8 @@ from ..common_tool_methods import (
     get_patch_version_regex, append_line_in_file, prepend_line_in_file, remote_branch_exists, get_current_branch,
     local_branch_exists, get_last_commit_message, get_prs_for_patch_release, filter_prs_by_label, process_template_file,
     remove_prefix, delete_all_gpg_keys_by_name, define_rpm_public_key_to_machine,
-    delete_rpm_key_by_name, get_gpg_fingerprints_by_name, run_with_output, rpm_key_matches_summary)
+    delete_rpm_key_by_name, get_gpg_fingerprints_by_name, run_with_output, rpm_key_matches_summary,
+    DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 BASE_PATH = pathlib2.Path(__file__).parents[1]
@@ -39,24 +40,24 @@ def test_is_major_release():
 
 def test_get_project_version_from_tag_name():
     tag_name = "v10.0.3"
-    assert "10.0.3" == get_project_version_from_tag_name(tag_name)
+    assert get_project_version_from_tag_name(tag_name) == "10.0.3"
 
 
 def test_str_array_to_str():
-    assert "1\n2\n3\n4\n" == str_array_to_str(["1", "2", "3", "4"])
+    assert str_array_to_str(["1", "2", "3", "4"]) == "1\n2\n3\n4\n"
 
 
 def test_run():
     result = run("echo 'Run' method is performing fine ")
-    assert 0 == result.returncode
+    assert result.returncode == 0
 
 
 def test_remove_paranthesis_from_string():
-    assert "out of paranthesis " == remove_text_with_parenthesis("out of paranthesis (inside paranthesis)")
+    assert remove_text_with_parenthesis("out of paranthesis (inside paranthesis)") == "out of paranthesis "
 
 
 def test_get_version_details():
-    assert {"major": "10", "minor": "0", "patch": "1"} == get_version_details("10.0.1")
+    assert get_version_details("10.0.1") == {"major": "10", "minor": "0", "patch": "1"}
 
 
 def test_replace_line_in_file():
@@ -65,7 +66,8 @@ def test_replace_line_in_file():
     copyfile(f"{TEST_BASE_PATH}/files/citus.spec", copy_file_path)
     replace_line_in_file(copy_file_path, r"^Summary:	*", replace_str)
     try:
-        with open(copy_file_path, "r") as reader:
+        with open(copy_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
             content = reader.read()
             lines = content.splitlines()
             assert lines[5] == replace_str
@@ -82,9 +84,10 @@ def test_get_last_commit_message():
     test_branch_name = f"test{uuid.uuid4()}"
     run(f"git checkout -b {test_branch_name}")
     try:
-        with open(test_branch_name, "w") as writer:
+        with open(test_branch_name, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
             writer.write("Test content")
-        run(f"git add .")
+        run("git add .")
         commit_message = f"Test message for {test_branch_name}"
         run(f"git commit -m '{commit_message}'")
         assert get_last_commit_message(os.getcwd()) == f"{commit_message}\n"
@@ -116,17 +119,18 @@ def test_remote_branch_exist():
 
 
 def test_get_minor_version():
-    assert "10.0" == get_minor_version("10.0.3")
+    assert get_minor_version("10.0.3") == "10.0"
 
 
 def test_get_patch_version_regex():
-    assert "^10\.0\.\d{1,3}$" == get_patch_version_regex("10.0.3")
+    assert get_patch_version_regex("10.0.3") == r"^10\.0\.\d{1,3}$"
 
 
 def test_append_line_in_file():
     test_file = "test_append.txt"
     try:
-        with open(test_file, "a") as writer:
+        with open(test_file, "a", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
             writer.write("Test line 1\n")
             writer.write("Test line 2\n")
             writer.write("Test line 3\n")
@@ -139,9 +143,10 @@ def test_append_line_in_file():
         append_line_in_file(test_file, "^Test line 2", "Test line 2.5")
         append_line_in_file(test_file, "^Test line 5", "Test line 5.5")
 
-        with open(test_file, "r") as reader:
+        with open(test_file, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
             lines = reader.readlines()
-            assert 11 == len(lines)
+            assert len(lines) == 11
             assert lines[0] == "Test line 1\n"
             assert lines[1] == "Test line 1.5\n"
             assert lines[2] == "Test line 2\n"
@@ -153,7 +158,8 @@ def test_append_line_in_file():
 def test_prepend_line_in_file():
     test_file = "test_prepend.txt"
     try:
-        with open(test_file, "a") as writer:
+        with open(test_file, "a", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
             writer.write("Test line 1\n")
             writer.write("Test line 2\n")
             writer.write("Test line 3\n")
@@ -166,9 +172,10 @@ def test_prepend_line_in_file():
         prepend_line_in_file(test_file, "^Test line 2", "Test line 1.5")
         prepend_line_in_file(test_file, "^Test line 5", "Test line 4.5")
 
-        with open(test_file, "r") as reader:
+        with open(test_file, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
             lines = reader.readlines()
-            assert 11, len(lines)
+            assert len(lines) == 11
             assert lines[0] == "Test line 0.5\n"
             assert lines[1] == "Test line 1\n"
             assert lines[2] == "Test line 1.5\n"
@@ -180,28 +187,29 @@ def test_prepend_line_in_file():
 def test_getprs():
     # created at is not seen on Github. Should be checked on API result
     g = Github(GITHUB_TOKEN)
-    repository = g.get_repo(f"citusdata/citus")
+    repository = g.get_repo("citusdata/citus")
     prs = get_prs_for_patch_release(repository, datetime.strptime('2021.02.26', '%Y.%m.%d'), "master",
                                     datetime.strptime('2021.03.02', '%Y.%m.%d'))
-    assert 6 == len(prs)
-    assert 4748 == prs[0].number
+    assert len(prs) == 6
+    assert prs[0].number == 4748
 
 
 def test_getprs_with_backlog_label():
     g = Github(GITHUB_TOKEN)
-    repository = g.get_repo(f"citusdata/citus")
+    repository = g.get_repo("citusdata/citus")
     prs = get_prs_for_patch_release(repository, datetime.strptime('2021.02.20', '%Y.%m.%d'), "master",
                                     datetime.strptime('2021.02.27', '%Y.%m.%d'))
     prs_backlog = filter_prs_by_label(prs, "backport")
-    assert 1 == len(prs_backlog)
-    assert 4746 == prs_backlog[0].number
+    assert len(prs_backlog) == 1
+    assert prs_backlog[0].number == 4746
 
 
 def test_process_template_file():
     content = process_template_file("10.0.3", f"{BASE_PATH}/templates", "docker/alpine/alpine.tmpl.dockerfile", "13.2")
-    with open(f"{TEST_BASE_PATH}/files/verify/expected_alpine_10.0.3.txt") as reader:
+    with open(f"{TEST_BASE_PATH}/files/verify/expected_alpine_10.0.3.txt", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         expected_content = reader.read()
-        assert content == expected_content
+        assert expected_content == content
 
 
 def test_remove_prefix():

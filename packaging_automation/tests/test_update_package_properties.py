@@ -1,11 +1,13 @@
-import pytest
 import os
 import re
-from shutil import copyfile
-import pathlib2
 from datetime import datetime
+from shutil import copyfile
+
+import pathlib2
+import pytest
 
 from .test_utils import are_strings_equal
+from ..common_tool_methods import DEFAULT_UNICODE_ERROR_HANDLER, DEFAULT_ENCODING_FOR_FILE_HANDLING
 from ..update_package_properties import (PackagePropertiesParams, changelog_for_tag,
                                          get_last_changelog_content_from_debian, debian_changelog_header,
                                          prepend_latest_changelog_into_debian_changelog,
@@ -46,7 +48,9 @@ def test_get_version_number_with_project_name():
 
 def test_get_changelog_for_tag():
     changelog = changelog_for_tag(GITHUB_TOKEN, "citus", "v10.0.3")
-    with open(f"{TEST_BASE_PATH}/files/verify/expected_changelog_10.0.3.txt", "r") as reader:
+    with open(f"{TEST_BASE_PATH}/files/verify/expected_changelog_10.0.3.txt", "r",
+              encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         expected_changelog = reader.read()
     assert expected_changelog == changelog
 
@@ -59,12 +63,14 @@ def test_get_debian_changelog_header():
 def test_get_last_changelog_from_debian():
     refer_file_path = f"{TEST_BASE_PATH}/files/verify/debian_changelog_with_10.0.3.txt"
     expected_file_path = f"{TEST_BASE_PATH}/files/verify/expected_debian_latest_v10.0.3.txt"
-    with open(refer_file_path, "r") as reader:
+    with open(refer_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         changelog = reader.read()
 
     latest_changelog = get_last_changelog_content_from_debian(changelog)
 
-    with open(expected_file_path, "r") as reader:
+    with open(expected_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         expected_output = reader.read()
 
     are_strings_equal(expected_output, latest_changelog)
@@ -100,10 +106,13 @@ def test_prepend_latest_changelog_into_debian_changelog_10_0_3_already_included(
 
 
 def verify_prepend_debian_changelog(changelog_file_path):
-    with open(changelog_file_path, "r") as reader:
+    with open(changelog_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
         latest_changelog = get_last_changelog_content_from_debian(content)
-    with open(f"{TEST_BASE_PATH}/files/verify/expected_debian_latest_v10.0.3.txt", "r") as reader:
+    with open(f"{TEST_BASE_PATH}/files/verify/expected_debian_latest_v10.0.3.txt", "r",
+              encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         expected_content = reader.read()
     are_strings_equal(expected_content, latest_changelog)
 
@@ -111,7 +120,9 @@ def verify_prepend_debian_changelog(changelog_file_path):
 def test_convert_citus_changelog_into_rpm_changelog():
     changelog_param = default_changelog_param_for_test("", CHANGELOG_DATE)
     changelog = convert_citus_changelog_into_rpm_changelog(changelog_param)
-    with open(f"{TEST_BASE_PATH}/files/verify/rpm_latest_changelog_reference.txt", "r") as reader:
+    with open(f"{TEST_BASE_PATH}/files/verify/rpm_latest_changelog_reference.txt", "r",
+              encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
     assert content == changelog
 
@@ -148,8 +159,10 @@ def test_update_rpm_spec_include_10_0_3():
 
 
 def verify_rpm_spec(spec_file_reference, spec_file_for_test):
-    with open(spec_file_for_test, "r") as reader_test:
-        with open(spec_file_reference, "r") as reader_reference:
+    with open(spec_file_for_test, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader_test:
+        with open(spec_file_reference, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader_reference:
             test_str = reader_test.read()
             reference_str = reader_reference.read()
             are_strings_equal(reference_str, test_str)
@@ -170,7 +183,8 @@ def test_update_pkg_vars():
 
 
 def verify_pkgvars(pkgvars_path):
-    with open(pkgvars_path, "r") as reader:
+    with open(pkgvars_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
         index = content.find(f"pkglatest={PROJECT_VERSION}.{PROJECT_NAME}-1")
         assert index > -1

@@ -1,6 +1,8 @@
 import os
+
 from sqlalchemy import text, create_engine
-from ..dbconfig import (Base, db_session, DbParams, db_connection_string)
+
+from ..dbconfig import (db_session, DbParams, db_connection_string)
 from ..homebrew_statistics_collector import (fetch_and_save_homebrew_stats, HomebrewStats)
 
 DB_USER_NAME = os.getenv("DB_USER_NAME")

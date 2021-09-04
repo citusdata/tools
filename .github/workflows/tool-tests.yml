@@ -39,6 +39,9 @@ jobs:
       - name: Install python requirements
         run: python -m pip install -r packaging_automation/requirements.txt
 
+      - name: Run static code analysis
+        run: python -m prospector
+
       - name: Unit tests for "Update Package Properties"
         run: python -m pytest -q packaging_automation/tests/test_update_package_properties.py
 

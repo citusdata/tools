@@ -1,9 +1,10 @@
 import argparse
+import os
 import re
+import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-import os
 
 import pathlib2
 import string_utils
@@ -13,9 +14,9 @@ from parameters_validation import (non_blank, non_empty, validate_parameters,
 
 from .common_tool_methods import (find_nth_matching_line_and_line_number, find_nth_occurrence_position,
                                   get_project_version_from_tag_name, get_template_environment, initialize_env, run,
-                                  create_pr, remove_cloned_code)
+                                  create_pr, remove_cloned_code, DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                                  DEFAULT_UNICODE_ERROR_HANDLER)
 from .common_validations import (is_version, is_tag)
-import uuid
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 REPO_OWNER = "citusdata"
@@ -143,8 +144,8 @@ def get_last_changelog_content(all_changelog_content: str) -> str:
 
 
 def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
-    second_changelog_index, second_changelog_line = find_nth_matching_line_and_line_number(all_changelog_content,
-                                                                                           "^[a-zA-Z]", 2)
+    second_changelog_index, _ = find_nth_matching_line_and_line_number(all_changelog_content,
+                                                                       "^[a-zA-Z]", 2)
     lines = all_changelog_content.splitlines()
     changelogs = "\n".join(lines[:second_changelog_index - 1]) + "\n"
     if len(lines) < 1:
@@ -194,8 +195,8 @@ def convert_citus_changelog_into_debian_changelog(package_properties_params: Pac
                                        package_properties_params.fancy_version_number)
     lines.append(package_properties_params.debian_trailer)
     debian_latest_changelog = ""
-    for i in range(len(lines)):
-        append_line = lines[i] if i == 0 or i == len(lines) - 1 else '  ' + lines[i]
+    for i, line in enumerate(lines):
+        append_line = line if i in (0, len(lines) - 1) else '  ' + line
         debian_latest_changelog = debian_latest_changelog + append_line + "\n"
     return debian_latest_changelog
 
@@ -203,7 +204,8 @@ def convert_citus_changelog_into_debian_changelog(package_properties_params: Pac
 def prepend_latest_changelog_into_debian_changelog(package_properties_params: PackagePropertiesParams,
                                                    changelog_file_path: str) -> None:
     debian_latest_changelog = convert_citus_changelog_into_debian_changelog(package_properties_params)
-    with open(changelog_file_path, "r+") as reader:
+    with open(changelog_file_path, mode="r+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         if not (f"({package_properties_params.project_version}" in reader.readline()):
             reader.seek(0, 0)
             old_changelog = reader.read()
@@ -223,12 +225,14 @@ def update_pkgvars(package_properties_params: PackagePropertiesParams, templates
     template = env.get_template(package_properties_params.pkgvars_template_file_name)
 
     pkgvars_content = f"{template.render(version=version_str)}\n"
-    with open(f'{pkgvars_path}/pkgvars', "w") as writer:
+    with open(f'{pkgvars_path}/pkgvars', "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
         writer.write(pkgvars_content)
 
 
 def rpm_changelog_history(spec_file_path: str) -> str:
-    with open(spec_file_path, "r") as reader:
+    with open(spec_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         spec_content = reader.read()
         changelog_index = spec_content.find("%changelog")
         changelog_content = spec_content[changelog_index + len("%changelog") + 1:]
@@ -263,7 +267,8 @@ def update_rpm_spec(package_properties_params: PackagePropertiesParams, spec_ful
     content = template.render(version=package_properties_params.project_version, rpm_version=rpm_version,
                               project_name=package_properties_params.project.value.name,
                               fancy_version_no=package_properties_params.fancy_version_number, changelog=changelog)
-    with open(spec_full_path, "w+") as writer:
+    with open(spec_full_path, "w+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
         writer.write(content)
 
 
@@ -278,6 +283,8 @@ def validate_package_properties_params_for_update_all_changes(package_props: Pac
 
 
 @validate_parameters
+# disabled since this is related to parameter_validations library methods
+# pylint: disable=no-value-for-parameter
 def update_all_changes(github_token: non_empty(non_blank(str)), package_properties_params: PackagePropertiesParams,
                        tag_name: is_tag(str),
                        packaging_path: str):
@@ -314,7 +321,7 @@ if __name__ == "__main__":
     project = SupportedProject[arguments.prj_name]
     if arguments.pipeline:
         if not arguments.exec_path:
-            raise ValueError(f"exec_path should be defined")
+            raise ValueError("exec_path should be defined")
         execution_path = arguments.exec_path
 
     else:
@@ -324,16 +331,13 @@ if __name__ == "__main__":
 
     os.chdir(execution_path)
 
-
     pr_branch = f"{project.value.packaging_branch}-{prj_ver}-{uuid.uuid4()}"
     run(f"git checkout -b {pr_branch}")
-    if arguments.date:
-        exec_date = datetime.strptime(arguments.date, '%Y.%m.%d %H:%M')
-    else:
-        exec_date = datetime.now().astimezone()
+    exec_date = datetime.strptime(arguments.date,
+                                  '%Y.%m.%d %H:%M') if arguments.date else datetime.now().astimezone()
     is_tag(arguments.tag_name)
 
-    fancy = True if arguments.fancy_ver_no > 1 else False
+    fancy = arguments.fancy_ver_no > 1
 
     package_properties = PackagePropertiesParams(project=project,
                                                  project_version=prj_ver, fancy=fancy,

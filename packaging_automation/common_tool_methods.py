@@ -1,6 +1,7 @@
 import base64
 import os
 import re
+import shlex
 import subprocess
 from datetime import datetime
 from enum import Enum
@@ -9,7 +10,7 @@ from typing import Tuple
 
 import gnupg
 import pathlib2
-import shlex
+import requests
 from git import Repo
 from github import Repository, PullRequest, Commit, Github
 from jinja2 import Environment, FileSystemLoader
@@ -17,10 +18,15 @@ from parameters_validation import validate_parameters
 
 from .common_validations import (is_tag, is_version)
 from .dbconfig import RequestLog, RequestType
-import requests
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
-PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
+PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = r"\.\d{1,3}"
+
+# http://python-notes.curiousefficiency.org/en/latest/python3/text_file_processing.html
+# https://bleepcoder.com/pylint/698183789/pep-597-require-encoding-kwarg-in-open-call-and-other-calls
+# Parameterized to fix pylint unspecified-encoding error
+DEFAULT_ENCODING_FOR_FILE_HANDLING = "utf8"
+DEFAULT_UNICODE_ERROR_HANDLER = "surrogateescape"
 
 # When using GitPython library Repo objects should be closed to be able to delete cloned sources
 # referenced by Repo objects.References are stored in below array to be able to close
@@ -40,7 +46,7 @@ def release_all_repos():
 
 
 class PackageType(Enum):
-    deb = 1,
+    deb = 1
     rpm = 2
 
 
@@ -113,8 +119,10 @@ def run(command, *args, **kwargs):
 
 
 def run_with_output(command, *args, **kwargs):
-    result = subprocess.run(shlex.split(command), *args, capture_output=True,
-                            **kwargs)
+    # this method's main objective is to return output. Therefore it is caller's responsibility to handle
+    # success status
+    # pylint: disable=subprocess-run-check
+    result = subprocess.run(shlex.split(command), *args, capture_output=True, **kwargs)
     return result
 
 
@@ -181,7 +189,7 @@ def get_prs_for_patch_release(repo: Repository.Repository, earliest_date: dateti
     pull_requests = repo.get_pulls(state="closed", base=base_branch, sort="created", direction="desc")
 
     # filter pull requests according to given time interval
-    filtered_pull_requests = list()
+    filtered_pull_requests = []
     for pull_request in pull_requests:
         # FIXME: We hit to API rate limit when using `.merged`, so we use `.merged_at` here
         if not pull_request.merged_at:
@@ -207,7 +215,8 @@ def filter_prs_by_label(prs: List[PullRequest.PullRequest], label_name: str):
 
 
 def file_includes_line(base_path: str, relative_file_path: str, line_content: str) -> bool:
-    with open(f"{base_path}/{relative_file_path}", "r") as reader:
+    with open(f"{base_path}/{relative_file_path}", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
         lines = content.splitlines()
         for line in lines:
@@ -217,14 +226,15 @@ def file_includes_line(base_path: str, relative_file_path: str, line_content: st
 
 
 def count_line_in_file(base_path: str, relative_file_path: str, search_line: str) -> int:
-    with open(f"{base_path}/{relative_file_path}", "r") as reader:
+    with open(f"{base_path}/{relative_file_path}", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
         lines = content.splitlines()
     return len(list(filter(lambda line: line == search_line, lines)))
 
 
 def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
-    with open(file, "r") as reader:
+    with open(file, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         file_content = reader.read()
         lines = file_content.splitlines()
         has_match = False
@@ -233,14 +243,14 @@ def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
                 has_match = True
                 lines[line_number] = replace_str
         edited_content = str_array_to_str(lines)
-    with open(file, "w") as writer:
+    with open(file, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
         writer.write(edited_content)
 
     return has_match
 
 
 def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
-    with open(file, "r+") as reader:
+    with open(file, "r+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         file_content = reader.read()
         lines = file_content.splitlines()
         has_match = False
@@ -261,14 +271,14 @@ def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
                     copy_lines.append(append_str)
             appended_line_index = appended_line_index + 1
         edited_content = str_array_to_str(copy_lines)
-    with open(file, "w") as writer:
+    with open(file, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
         writer.write(edited_content)
 
     return has_match
 
 
 def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
-    with open(file, "r+") as reader:
+    with open(file, "r+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         file_content = reader.read()
         lines = file_content.splitlines()
         has_match = False
@@ -284,7 +294,7 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
                 copy_lines = copy_lines[0:prepended_line_index + 1] + lines_to_be_shifted
             prepended_line_index = prepended_line_index + 1
         edited_content = str_array_to_str(copy_lines)
-    with open(file, "w") as writer:
+    with open(file, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
         writer.write(edited_content)
 
     return has_match
@@ -327,7 +337,7 @@ def remove_cloned_code(exec_path: str):
         try:
             run(f"rm -rf {exec_path}")
             print("Done. Code deleted successfully.")
-        except:
+        except subprocess.CalledProcessError:
             print(f"Some files could not be deleted in directory {exec_path}. "
                   f"Please delete them manually or they will be deleted before next execution")
 
@@ -349,14 +359,15 @@ def process_template_file(project_version: str, templates_path: str, template_fi
 
 
 def write_to_file(content: str, dest_file_name: str):
-    with open(dest_file_name, "w") as writer:
+    with open(dest_file_name, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
         writer.write(content)
 
 
 def get_gpg_fingerprints_by_name(name: str) -> List[str]:
     '''Returns GPG fingerprint by its unique key name. We use this function to determine the fingerprint that
        we should use when signing packages'''
-    result = subprocess.run(shlex.split(f"gpg --list-keys"), check=True, stdout=subprocess.PIPE)
+    result = subprocess.run(shlex.split("gpg --list-keys"), check=True, stdout=subprocess.PIPE)
     lines = result.stdout.decode("ascii").splitlines()
     finger_prints = []
     previous_line = ""
@@ -410,24 +421,22 @@ def get_private_key_by_fingerprint_without_passphrase(fingerprint: str) -> str:
     gpg = gnupg.GPG()
 
     private_key = gpg.export_keys(fingerprint, secret=True, expect_passphrase=False)
-    if private_key:
-        return private_key
-    else:
+    if not private_key:
         raise ValueError(
-            f"Error while getting key. Most probably packaging key is stored with passphrase. "
-            f"Please check the passphrase and try again")
+            "Error while getting key. Most probably packaging key is stored with passphrase. "
+            "Please check the passphrase and try again")
+    return private_key
 
 
 def get_private_key_by_fingerprint_with_passphrase(fingerprint: str, passphrase: str) -> str:
     gpg = gnupg.GPG()
 
     private_key = gpg.export_keys(fingerprint, secret=True, passphrase=passphrase)
-    if private_key:
-        return private_key
-    else:
+    if not private_key:
         raise ValueError(
-            f"Error while getting key. Most probably packaging key is stored with passphrase. "
-            f"Please check the passphrase and try again")
+            "Error while getting key. Most probably packaging key is stored with passphrase. "
+            "Please check the passphrase and try again")
+    return private_key
 
 
 def transform_key_into_base64_str(key: str) -> str:
@@ -437,8 +446,9 @@ def transform_key_into_base64_str(key: str) -> str:
 
 
 def define_rpm_public_key_to_machine(fingerprint: str):
-    with open("rpm_public.key", "w") as writer:
-        subprocess.run(shlex.split(f"gpg --export -a {fingerprint}"), stdout=writer)
+    with open("rpm_public.key", "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
+        subprocess.run(shlex.split(f"gpg --export -a {fingerprint}"), stdout=writer, check=True)
     run("rpm --import rpm_public.key")
     os.remove("rpm_public.key")
 
@@ -474,8 +484,8 @@ def is_rpm_file_signed(file_path: str) -> bool:
 
 
 def verify_rpm_signature_in_dir(rpm_dir_path: str):
-    files = list()
-    for (dirpath, dirnames, filenames) in os.walk(rpm_dir_path):
+    files = []
+    for (dirpath, _, filenames) in os.walk(rpm_dir_path):
         files += [os.path.join(dirpath, file) for file in filenames]
     rpm_files = filter(lambda file_name: file_name.endswith("rpm"), files)
     for file in rpm_files:
@@ -485,31 +495,24 @@ def verify_rpm_signature_in_dir(rpm_dir_path: str):
 
 def remove_prefix(text, prefix):
     if text.startswith(prefix):
-        return text[len(prefix):]
+        result_str = text[len(prefix):]
     else:
-        return text
+        result_str = text
+    return result_str
 
 
 def remove_suffix(initial_str: str, suffix: str) -> str:
     if initial_str.endswith(suffix):
-        return initial_str[:-len(suffix)]
+        result_str = initial_str[:-len(suffix)]
+    else:
+        result_str = initial_str
+    return result_str
 
 
 def initialize_env(exec_path: str, project_name: str, checkout_dir: str):
     remove_cloned_code(f"{exec_path}/{checkout_dir}")
     if not os.path.exists(checkout_dir):
         run(f"git clone https://github.com/citusdata/{project_name}.git {checkout_dir}")
-
-
-def remove_cloned_code(full_checkout_dir: str):
-    if os.path.exists(f"{full_checkout_dir}"):
-        print(f"Deleting cloned code {full_checkout_dir} ...")
-        # https://stackoverflow.com/questions/51819472/git-cant-delete-local-branch-operation-not-permitted
-        # https://askubuntu.com/questions/1049142/cannot-delete-git-directory
-        # since git directory is readonly first we need to give write permission to delete git directory
-        run(f"chmod -R 777 {full_checkout_dir}/.git")
-        run(f"sudo rm -rf {full_checkout_dir}")
-        print("Done. Code deleted successfully.")
 
 
 def create_pr(gh_token: str, pr_branch: str, pr_title: str, repo_owner: str, project_name: str, base_branch: str):

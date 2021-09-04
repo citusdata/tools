@@ -9,8 +9,6 @@ import pathlib2
 import requests
 from requests.auth import HTTPBasicAuth
 
-from .common_tool_methods import (get_current_branch)
-
 supported_distros = {
     "el/7": 140,
     "el/8": 205,
@@ -55,18 +53,19 @@ BASE_PATH = pathlib2.Path(__file__).parents[1]
 
 def upload_to_package_cloud(distro_name, package_name, package_cloud_token, repo_name) -> ReturnValue:
     distro_id = supported_distros[distro_name]
-    files = {
-        'package[distro_version_id]': (None, str(distro_id)),
-        'package[package_file]': (
-            package_name, open(package_name, 'rb')),
-    }
+    with open(package_name, "rb") as file_handle:
+        files = {
+            'package[distro_version_id]': (None, str(distro_id)),
+            'package[package_file]': (
+                package_name, file_handle),
+        }
 
-    package_query_url = (
-        f'https://{package_cloud_token}:@packagecloud.io/api/v1/repos/{repo_name}/packages.json')
-    print(f"Uploading package {os.path.basename(package_name)}")
-    response = requests.post(package_query_url, files=files)
-    print(f"Response from package cloud: {response.content}")
-    return ReturnValue(response.ok, response.content.decode("ascii"), package_name, distro_name, repo_name)
+        package_query_url = (
+            f'https://{package_cloud_token}:@packagecloud.io/api/v1/repos/{repo_name}/packages.json')
+        print(f"Uploading package {os.path.basename(package_name)}")
+        response = requests.post(package_query_url, files=files)
+        print(f"Response from package cloud: {response.content}")
+        return ReturnValue(response.ok, response.content.decode("ascii"), package_name, distro_name, repo_name)
 
 
 def upload_files_in_directory_to_package_cloud(directoryName: str, distro_name: str, package_cloud_token: str,
@@ -111,7 +110,7 @@ def package_exists(package_cloud_token: str, repo_owner: str, repo_name: str, pa
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--platform', choices=[e for e in supported_distros])
+    parser.add_argument('--platform', choices=supported_distros.keys())
     parser.add_argument('--package_cloud_api_token', required=True)
     parser.add_argument('--repository_name', required=True, choices=supported_repos)
     parser.add_argument('--output_file_path', required=True)
