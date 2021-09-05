@@ -43,6 +43,20 @@ docker_image_names = {
     "pgxn": "pgxn"
 }
 
+package_docker_platform_dict = {
+    "centos,8": "el/8",
+    "centos,7": "el/7",
+    "debian,buster": "debian/buster",
+    "debian,stretch": "debian/stretch",
+    "oraclelinux,8": "ol/8",
+    "oraclelinux,7": "ol/7",
+    "oraclelinux,6": "ol/6",
+    "ubuntu,focal": "ubuntu/focal",
+    "ubuntu,bionic": "ubuntu/bionic",
+    "ubuntu,xenial": "ubuntu/xenial",
+    "pgxn": "pgxn"
+}
+
 
 def get_package_type_by_docker_image_name(docker_image_name: str) -> PackageType:
     return PackageType.deb if docker_image_name.startswith(("ubuntu", "debian")) else PackageType.rpm
@@ -277,7 +291,8 @@ def build_packages(github_token: non_empty(non_blank(str)),
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token', required=True)
-    parser.add_argument('--platform', required=True, choices=platform_names())
+    parser.add_argument('--platform', required=False, choices=platform_names())
+    parser.add_argument('--packaging_docker_platform', required=False, choices=package_docker_platform_dict.keys())
     parser.add_argument('--build_type', choices=[b.name for b in BuildType])
     parser.add_argument('--secret_key', required=True)
     parser.add_argument('--passphrase', required=True)
@@ -287,7 +302,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if args.platform and args.packaging_docker_platform:
+        raise ValueError("Either platform or packaging_docker_platform should be set.")
+
+    if args.packaging_docker_platform:
+        build_platform = package_docker_platform_dict[args.packaging_docker_platform]
+    else:
+        build_platform = args.platform
+
     io_parameters = InputOutputParameters.build(args.input_files_dir, args.output_dir, args.output_validation)
     sign_credentials = SigningCredentials(args.secret_key, args.passphrase)
-    build_packages(args.gh_token, args.platform, BuildType[args.build_type], sign_credentials,
+    build_packages(args.gh_token, build_platform, BuildType[args.build_type], sign_credentials,
                    io_parameters)
