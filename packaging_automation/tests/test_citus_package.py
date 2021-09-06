@@ -4,7 +4,7 @@ import pathlib2
 
 from .test_utils import generate_new_gpg_key
 from ..citus_package import (build_packages, BuildType, decode_os_and_release, get_release_package_folder_name,
-                             SigningCredentials, InputOutputParameters)
+                             SigningCredentials, InputOutputParameters, get_build_platform)
 from ..common_tool_methods import (run, delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
                                    get_private_key_by_fingerprint_with_passphrase, define_rpm_public_key_to_machine,
                                    transform_key_into_base64_str,
@@ -52,7 +52,7 @@ def teardown_module():
 
 
 def test_build_packages():
-    platform = os.getenv("PLATFORM")
+    platform = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_PLATFORM"))
 
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     delete_rpm_key_by_name(TEST_GPG_KEY_NAME)

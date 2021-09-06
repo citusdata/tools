@@ -288,6 +288,11 @@ def build_packages(github_token: non_empty(non_blank(str)),
     sign_packages(output_sub_folder, signing_credentials, input_output_parameters)
 
 
+def get_build_platform(packaging_platform: str, packaging_docker_platform: str) -> str:
+    return (
+        package_docker_platform_dict[packaging_docker_platform] if packaging_docker_platform else packaging_platform)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token', required=True)
@@ -304,11 +309,7 @@ if __name__ == "__main__":
 
     if args.platform and args.packaging_docker_platform:
         raise ValueError("Either platform or packaging_docker_platform should be set.")
-
-    if args.packaging_docker_platform:
-        build_platform = package_docker_platform_dict[args.packaging_docker_platform]
-    else:
-        build_platform = args.platform
+    build_platform = get_build_platform(args.platform, args.packaging_docker_platform)
 
     io_parameters = InputOutputParameters.build(args.input_files_dir, args.output_dir, args.output_validation)
     sign_credentials = SigningCredentials(args.secret_key, args.passphrase)
