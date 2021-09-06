@@ -27,7 +27,8 @@ package_counts = {
     "debian/bullseye": 4,
     "ubuntu/xenial": 2,
     "ubuntu/bionic": 4,
-    "ubuntu/focal": 4
+    "ubuntu/focal": 4,
+    "pgxn": 1
 }
 
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
@@ -47,7 +48,6 @@ def setup_module():
         run(
             f"git clone --branch {packaging_branch_name} https://github.com/citusdata/packaging.git"
             f" {PACKAGING_EXEC_FOLDER}")
-
 
 
 # def teardown_module():
