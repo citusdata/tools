@@ -257,7 +257,7 @@ def get_release_package_folder_name(os_name: str, os_version: str) -> str:
 
 def get_docker_image_name(platform: str):
     os_name, os_version = decode_os_and_release(platform)
-    return f'{docker_image_names[os_name]}-{os_version}'
+    return f'{docker_image_names[os_name]}-{os_version}' if os_version else f'{docker_image_names[os_name]}'
 
 
 @validate_parameters
