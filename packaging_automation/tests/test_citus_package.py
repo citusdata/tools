@@ -33,7 +33,6 @@ package_counts = {
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
 TEST_GPG_KEY_PASSPHRASE = os.getenv("PACKAGING_PASSPHRASE")
 GH_TOKEN = os.getenv("GH_TOKEN")
-PLATFORM = os.getenv("PLATFORM")
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 
@@ -75,18 +74,19 @@ def test_build_packages():
 
 
 def test_upload_to_package_cloud():
+    platform = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_PLATFORM"))
     current_branch = "all-citus"
     main_branch = "all-citus"
-    output = upload_files_in_directory_to_package_cloud(BASE_OUTPUT_FOLDER, PLATFORM, PACKAGE_CLOUD_API_TOKEN,
+    output = upload_files_in_directory_to_package_cloud(BASE_OUTPUT_FOLDER, platform, PACKAGE_CLOUD_API_TOKEN,
                                                         "citus-bot/sample",
                                                         current_branch, main_branch)
-    distro_parts = PLATFORM.split("/")
+    distro_parts = platform.split("/")
     if len(distro_parts) != 2:
         raise ValueError("Platform should consist of two parts splitted with '/' e.g. el/8")
     for return_value in output.return_values:
         exists = package_exists(PACKAGE_CLOUD_API_TOKEN, "citus-bot", "sample",
                                 os.path.basename(return_value.file_name),
-                                PLATFORM)
+                                platform)
         if not exists:
             raise ValueError(f"{os.path.basename(return_value.file_name)} could not be found on package cloud")
 
