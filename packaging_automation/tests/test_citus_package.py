@@ -42,15 +42,12 @@ PLATFORM = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_
 def setup_module():
     # Run tests against "all-citus-unit-tests" since we don't want to deal with the changes
     # made to "all-citus" in each release.
+    packaging_branch_name = "pgxn-citus" if PLATFORM == "pgxn" else "all-citus-unit-tests"
     if not os.path.exists(PACKAGING_EXEC_FOLDER):
-        if PLATFORM == "pgxn":
-            run(
-                f"git clone --branch all-pgxn https://github.com/citusdata/packaging.git"
-                f" {PACKAGING_EXEC_FOLDER}")
-        else:
-            run(
-                f"git clone --branch all-citus-unit-tests https://github.com/citusdata/packaging.git"
-                f" {PACKAGING_EXEC_FOLDER}")
+        run(
+            f"git clone --branch {packaging_branch_name} https://github.com/citusdata/packaging.git"
+            f" {PACKAGING_EXEC_FOLDER}")
+
 
 
 # def teardown_module():
