@@ -22,6 +22,7 @@ package_counts = {
     "el/7": 4,
     "el/8": 6,
     "ol/7": 4,
+    "ol/8": 6,
     "debian/stretch": 4,
     "debian/buster": 4,
     "debian/bullseye": 4,
