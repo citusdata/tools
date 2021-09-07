@@ -75,7 +75,8 @@ def upload_files_in_directory_to_package_cloud(directoryName: str, distro_name: 
     if not main_branch:
         raise ValueError("main_branch should be defined")
     if main_branch != current_branch:
-        print(f"Package publishing skipped since current branch is not equal to {main_branch}")
+        print(f"Package publishing skipped since current branch; {current_branch} is not equal to "
+              f"main branch; {main_branch}")
         return MultipleReturnValue(ret_vals=[])
 
     ret_status: List[ReturnValue] = []
