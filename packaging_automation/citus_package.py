@@ -28,8 +28,9 @@ supported_platforms = {
 
 def platform_names() -> List[str]:
     platforms = []
-    for platform_os, platform_release in supported_platforms.items():
-        platforms.append(f"{platform_os}/{platform_release}")
+    for platform_os, platform_releases in supported_platforms.items():
+        for platform_release in platform_releases:
+            platforms.append(f"{platform_os}/{platform_release}")
     platforms.append("pgxn")
     return platforms
 
