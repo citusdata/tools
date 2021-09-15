@@ -40,18 +40,23 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
 
 
 def filter_warning_lines(output_lines: List[str], package_type: PackageType) -> Tuple[List[str], List[str]]:
+    rpm_warning_summary = r"\d+ packages and \d+ specfiles checked; \d+ errors, \d+ warnings."
+    rpm_lintian_starter = 'Executing "/usr/bin/rpmlint -f /rpmlintrc'
+    debian_lintian_starter = "Now running lintian"
+    lintian_warning_error_pattern = r".*: [W|E]: .*"
+
     base_warning_lines = []
     package_specific_warning_lines = []
     is_deb_warning_line = False
     is_rpm_warning_line = False
     for output_line in output_lines:
+
         if package_type == PackageType.deb:
-            if "warning" in output_line.lower() or is_deb_warning_line:
-                if "Now running lintian" in output_line:
-                    is_deb_warning_line = True
-                    continue
+            if debian_lintian_starter in output_line:
+                is_deb_warning_line = True
+            elif "warning" in output_line.lower() or is_deb_warning_line:
                 if is_deb_warning_line:
-                    match = re.match(r".*: W: .*", output_line)
+                    match = re.match(lintian_warning_error_pattern, output_line)
                     if match:
                         package_specific_warning_lines.append(output_line)
                     else:
@@ -59,14 +64,14 @@ def filter_warning_lines(output_lines: List[str], package_type: PackageType) -> 
                 else:
                     base_warning_lines.append(output_line)
         else:
-            if 'Executing "/usr/bin/rpmlint -f /rpmlintrc' in output_line:
+            if rpm_lintian_starter in output_line:
                 is_rpm_warning_line = True
             elif "warning" in output_line.lower() or is_rpm_warning_line:
                 if is_rpm_warning_line and re.match(
-                        r"\d+ packages and \d+ specfiles checked; \d+ errors, \d+ warnings.", output_line):
+                        rpm_warning_summary, output_line):
                     is_rpm_warning_line = False
                     continue
-                if re.match(r".*: W: .*", output_line):
+                if re.match(lintian_warning_error_pattern, output_line):
                     package_specific_warning_lines.append(output_line)
                 else:
                     base_warning_lines.append(output_line)
