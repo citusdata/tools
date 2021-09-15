@@ -136,6 +136,7 @@ pg_cron_12-debugsource.x86_64: W: no-documentation
 pg_cron_13-debugsource.x86_64: W: no-documentation
 citus-enterprise100_11.x86_64: W: invalid-license Commercial
 citus-enterprise100_11.x86_64: W: invalid-date-format
+citus-enterprise100_11.x86_64: E: zero-length /usr/pgsql-/usr/lib/share/extension/
 
 
 Removing centos-8/
