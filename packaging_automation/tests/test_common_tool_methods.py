@@ -16,7 +16,7 @@ from ..common_tool_methods import (
     local_branch_exists, get_last_commit_message, get_prs_for_patch_release, filter_prs_by_label, process_template_file,
     remove_prefix, delete_all_gpg_keys_by_name, define_rpm_public_key_to_machine,
     delete_rpm_key_by_name, get_gpg_fingerprints_by_name, run_with_output, rpm_key_matches_summary,
-    DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER)
+    DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER, is_tag_on_branch)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 BASE_PATH = pathlib2.Path(__file__).parents[1]
@@ -58,6 +58,11 @@ def test_remove_paranthesis_from_string():
 
 def test_get_version_details():
     assert get_version_details("10.0.1") == {"major": "10", "minor": "0", "patch": "1"}
+
+
+def test_is_tag_on_branch():
+    assert is_tag_on_branch("v0.8.3", "develop")
+    assert not is_tag_on_branch("v1.8.3", "develop")
 
 
 def test_replace_line_in_file():

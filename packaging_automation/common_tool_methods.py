@@ -11,7 +11,8 @@ from typing import Tuple
 import gnupg
 import pathlib2
 import requests
-from git import Repo
+from git import Repo,GitCommandError
+import git
 from github import Repository, PullRequest, Commit, Github
 from jinja2 import Environment, FileSystemLoader
 from parameters_validation import validate_parameters
@@ -299,10 +300,29 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
 
     return has_match
 
+def is_tag_on_branch(tag_name: str, branch_name: str):
+    g = git.Git(os.getcwd())
+    try:
+        branches_str = g.execute(["git", "branch", "--contains", f"tags/{tag_name}"])
+        branches = remove_prefix(branches_str, "*").split("\n")
+        if len(branches) > 0:
+            for branch in branches:
+                if branch.strip() == branch_name:
+                    return True
+        return False
+    except GitCommandError:
+        return False
+
+
+
 
 def get_current_branch(working_dir: str) -> str:
     repo = get_new_repo(working_dir)
-    return repo.active_branch.name
+    try:
+        branch_name = repo.active_branch.name
+    except TypeError:
+        branch_name = 'Detached'
+    return branch_name
 
 
 def remote_branch_exists(branch_name: str, working_dir: str) -> bool:

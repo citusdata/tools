@@ -7,7 +7,7 @@ import docker
 import pathlib2
 from parameters_validation import validate_parameters
 
-from .common_tool_methods import remove_prefix, get_current_branch
+from .common_tool_methods import remove_prefix, get_current_branch, is_tag_on_branch
 from .common_validations import is_tag
 
 BASE_PATH = pathlib2.Path(__file__).parents[1]
@@ -147,8 +147,9 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, current_branc
     docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
                                tag=docker_image_name,
                                path=".")
-    if current_branch != DEFAULT_BRANCH_NAME:
-        print(f"Since current branch {current_branch} is not equal to {DEFAULT_BRANCH_NAME} tags will not be pushed.")
+    if is_tag_on_branch(tag_name=tag_name, branch_name=DEFAULT_BRANCH_NAME):
+        print(f"Since default branch {DEFAULT_BRANCH_NAME} does not contain {tag_parts} ,tags will not be pushed.")
+        return
     print(f"{docker_image_type.name} image built.Now starting tagging and pushing...")
     for tag_part in tag_parts:
         tag_version_part = tag_version_part + tag_part
