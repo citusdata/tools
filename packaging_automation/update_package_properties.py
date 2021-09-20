@@ -8,7 +8,7 @@ from enum import Enum
 
 import pathlib2
 import string_utils
-from parameters_validation import (non_blank, non_empty, validate_parameters,
+from parameters_validation import ( validate_parameters,
                                    parameter_validation)
 
 from .common_tool_methods import (find_nth_occurrence_position,
@@ -267,8 +267,6 @@ def validate_package_properties_params_for_update_all_changes(package_props: Pac
 
 
 @validate_parameters
-# disabled since this is related to parameter_validations library methods
-# pylint: disable=no-value-for-parameter
 def update_all_changes(package_properties_params: PackagePropertiesParams,
                        packaging_path: str):
     validate_package_properties_params_for_update_all_changes(package_properties_params)

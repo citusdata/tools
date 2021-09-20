@@ -11,7 +11,7 @@ from ..common_tool_methods import DEFAULT_UNICODE_ERROR_HANDLER, DEFAULT_ENCODIN
 from ..update_package_properties import (PackagePropertiesParams,
                                          debian_changelog_header, get_rpm_changelog,
                                          prepend_latest_changelog_into_debian_changelog,
-                                         get_debian_latest_changelog, spec_file_name, update_rpm_spec,
+                                         spec_file_name, update_rpm_spec,
                                          update_pkgvars, update_all_changes, SupportedProject)
 
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
