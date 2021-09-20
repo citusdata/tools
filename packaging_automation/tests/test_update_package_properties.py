@@ -8,10 +8,10 @@ import pytest
 
 from .test_utils import are_strings_equal
 from ..common_tool_methods import DEFAULT_UNICODE_ERROR_HANDLER, DEFAULT_ENCODING_FOR_FILE_HANDLING
-from ..update_package_properties import (PackagePropertiesParams, changelog_for_tag,
-                                         get_last_changelog_content_from_debian, debian_changelog_header,
+from ..update_package_properties import (PackagePropertiesParams,
+                                         debian_changelog_header, get_rpm_changelog,
                                          prepend_latest_changelog_into_debian_changelog,
-                                         convert_citus_changelog_into_rpm_changelog, spec_file_name, update_rpm_spec,
+                                         get_debian_latest_changelog, spec_file_name, update_rpm_spec,
                                          update_pkgvars, update_all_changes, SupportedProject)
 
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -30,8 +30,7 @@ def default_changelog_param_for_test(latest_changelog, changelog_date):
     changelog_param = PackagePropertiesParams(project=SupportedProject.citus,
                                               project_version=PROJECT_VERSION, fancy=True,
                                               fancy_version_number=1, microsoft_email=MICROSOFT_EMAIL,
-                                              name_surname=NAME_SURNAME, changelog_date=changelog_date,
-                                              latest_changelog=latest_changelog)
+                                              name_surname=NAME_SURNAME, changelog_date=changelog_date)
     return changelog_param
 
 
@@ -46,43 +45,17 @@ def test_get_version_number_with_project_name():
     assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number_with_project_name == "10.0.3.citus-1"
 
 
-def test_get_changelog_for_tag():
-    changelog = changelog_for_tag(GITHUB_TOKEN, "citus", "v10.0.3")
-    with open(f"{TEST_BASE_PATH}/files/verify/expected_changelog_10.0.3.txt", "r",
-              encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
-        expected_changelog = reader.read()
-    assert expected_changelog == changelog
-
-
 def test_get_debian_changelog_header():
-    header = debian_changelog_header("### citus v10.0.3 (March 16, 2021) ###", True, 2)
+    header = debian_changelog_header(SupportedProject.citus, "10.0.3", True, 2)
     assert header == "citus (10.0.3.citus-2) stable; urgency=low"
-
-
-def test_get_last_changelog_from_debian():
-    refer_file_path = f"{TEST_BASE_PATH}/files/verify/debian_changelog_with_10.0.3.txt"
-    expected_file_path = f"{TEST_BASE_PATH}/files/verify/expected_debian_latest_v10.0.3.txt"
-    with open(refer_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
-        changelog = reader.read()
-
-    latest_changelog = get_last_changelog_content_from_debian(changelog)
-
-    with open(expected_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
-        expected_output = reader.read()
-
-    are_strings_equal(expected_output, latest_changelog)
 
 
 def test_prepend_latest_changelog_into_debian_changelog():
     refer_file_path = f"{TEST_BASE_PATH}/files/debian.changelog.refer"
     changelog_file_path = f"{TEST_BASE_PATH}/files/debian.changelog"
     copyfile(refer_file_path, changelog_file_path)
-    latest_changelog = changelog_for_tag(GITHUB_TOKEN, PROJECT_NAME, TAG_NAME)
 
-    changelog_param = default_changelog_param_for_test(latest_changelog, CHANGELOG_DATE)
+    changelog_param = default_changelog_param_for_test("", CHANGELOG_DATE)
 
     try:
         prepend_latest_changelog_into_debian_changelog(changelog_param, changelog_file_path)
@@ -91,25 +64,12 @@ def test_prepend_latest_changelog_into_debian_changelog():
         os.remove(changelog_file_path)
 
 
-def test_prepend_latest_changelog_into_debian_changelog_10_0_3_already_included():
-    refer_file_path = f"{TEST_BASE_PATH}/files/debian.changelog_include_10_0_3.refer"
-    changelog_file_path = f"{TEST_BASE_PATH}/files/debian.changelog"
-    copyfile(refer_file_path, changelog_file_path)
-    latest_changelog = changelog_for_tag(GITHUB_TOKEN, PROJECT_NAME, TAG_NAME)
-    changelog_param = default_changelog_param_for_test(latest_changelog, datetime.now())
-    try:
-
-        with pytest.raises(ValueError):
-            prepend_latest_changelog_into_debian_changelog(changelog_param, changelog_file_path)
-    finally:
-        os.remove(changelog_file_path)
-
-
 def verify_prepend_debian_changelog(changelog_file_path):
     with open(changelog_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
-        latest_changelog = get_last_changelog_content_from_debian(content)
+        latest_changelog = get_debian_latest_changelog(
+            package_properties_params=default_changelog_param_for_test("", CHANGELOG_DATE))
     with open(f"{TEST_BASE_PATH}/files/verify/expected_debian_latest_v10.0.3.txt", "r",
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
@@ -119,7 +79,7 @@ def verify_prepend_debian_changelog(changelog_file_path):
 
 def test_convert_citus_changelog_into_rpm_changelog():
     changelog_param = default_changelog_param_for_test("", CHANGELOG_DATE)
-    changelog = convert_citus_changelog_into_rpm_changelog(changelog_param)
+    changelog = get_rpm_changelog(changelog_param)
     with open(f"{TEST_BASE_PATH}/files/verify/rpm_latest_changelog_reference.txt", "r",
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
