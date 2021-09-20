@@ -26,7 +26,7 @@ CHANGELOG_DATE_STR = os.getenv("CHANGELOG_DATE", 'Thu, 18 Mar 2021 01:40:08 +000
 CHANGELOG_DATE = datetime.strptime(CHANGELOG_DATE_STR, '%a, %d %b %Y %H:%M:%S %z')
 
 
-def default_changelog_param_for_test(latest_changelog, changelog_date):
+def default_changelog_param_for_test(changelog_date):
     changelog_param = PackagePropertiesParams(project=SupportedProject.citus,
                                               project_version=PROJECT_VERSION, fancy=True,
                                               fancy_version_number=1, microsoft_email=MICROSOFT_EMAIL,
@@ -34,7 +34,7 @@ def default_changelog_param_for_test(latest_changelog, changelog_date):
     return changelog_param
 
 
-DEFAULT_CHANGELOG_PARAM_FOR_TEST = default_changelog_param_for_test("", CHANGELOG_DATE)
+DEFAULT_CHANGELOG_PARAM_FOR_TEST = default_changelog_param_for_test(CHANGELOG_DATE)
 
 
 def test_get_version_number():
@@ -55,7 +55,7 @@ def test_prepend_latest_changelog_into_debian_changelog():
     changelog_file_path = f"{TEST_BASE_PATH}/files/debian.changelog"
     copyfile(refer_file_path, changelog_file_path)
 
-    changelog_param = default_changelog_param_for_test("", CHANGELOG_DATE)
+    changelog_param = default_changelog_param_for_test(CHANGELOG_DATE)
 
     try:
         prepend_latest_changelog_into_debian_changelog(changelog_param, changelog_file_path)
@@ -68,17 +68,15 @@ def verify_prepend_debian_changelog(changelog_file_path):
     with open(changelog_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
-        latest_changelog = get_debian_latest_changelog(
-            package_properties_params=default_changelog_param_for_test("", CHANGELOG_DATE))
-    with open(f"{TEST_BASE_PATH}/files/verify/expected_debian_latest_v10.0.3.txt", "r",
+    with open(f"{TEST_BASE_PATH}/files/verify/debian_changelog_with_10.0.3.txt", "r",
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         expected_content = reader.read()
-    are_strings_equal(expected_content, latest_changelog)
+    assert  content== expected_content
 
 
 def test_convert_citus_changelog_into_rpm_changelog():
-    changelog_param = default_changelog_param_for_test("", CHANGELOG_DATE)
+    changelog_param = default_changelog_param_for_test(CHANGELOG_DATE)
     changelog = get_rpm_changelog(changelog_param)
     with open(f"{TEST_BASE_PATH}/files/verify/rpm_latest_changelog_reference.txt", "r",
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
@@ -95,7 +93,7 @@ def test_update_rpm_spec():
     templates_path = f"{BASE_PATH}/templates"
     copyfile(spec_file, spec_file_copy)
     try:
-        changelog_param = default_changelog_param_for_test("", CHANGELOG_DATE)
+        changelog_param = default_changelog_param_for_test(CHANGELOG_DATE)
         update_rpm_spec(changelog_param, spec_file, templates_path)
         verify_rpm_spec(spec_file_reference, spec_file)
     finally:
@@ -110,7 +108,7 @@ def test_update_rpm_spec_include_10_0_3():
     templates_path = f"{BASE_PATH}/templates"
     copyfile(spec_file, spec_file_copy)
     try:
-        changelog_param = default_changelog_param_for_test("", CHANGELOG_DATE)
+        changelog_param = default_changelog_param_for_test(CHANGELOG_DATE)
         with pytest.raises(ValueError):
             update_rpm_spec(changelog_param, spec_file, templates_path)
     finally:
@@ -170,7 +168,7 @@ def test_update_all_changes():
             fancy_version_number=1,
             name_surname=NAME_SURNAME, microsoft_email=MICROSOFT_EMAIL,
             changelog_date=CHANGELOG_DATE)
-        update_all_changes(GITHUB_TOKEN, package_properties_param, TAG_NAME, f"{TEST_BASE_PATH}/files")
+        update_all_changes(package_properties_param, f"{TEST_BASE_PATH}/files")
         verify_prepend_debian_changelog(changelog_file_path)
         verify_pkgvars(pkgvars_path)
         verify_rpm_spec(spec_file_reference, spec_file)

@@ -115,8 +115,8 @@ class PackagePropertiesParams:
 
     @property
     def debian_trailer(self):
-        formatted_date = self.changelog_date.strftime("%a, %d %b %Y %H:%M:%S %z ")
-        return f" -- {self.name_surname} <{self.microsoft_email}>  {formatted_date} \n "
+        formatted_date = self.changelog_date.strftime("%a, %d %b %Y %H:%M:%S %z")
+        return f" -- {self.name_surname} <{self.microsoft_email}>  {formatted_date}\n"
 
 
 def get_enum_from_changelog_project_name(project_name) -> SupportedProject:
@@ -168,11 +168,11 @@ def get_debian_latest_changelog(package_properties_params: PackagePropertiesPara
                                 package_properties_params.project_version,
                                 package_properties_params.fancy,
                                 package_properties_params.fancy_version_number))
-    lines.append(f"* {get_changelog_entry(package_properties_params)}")
+    lines.append(f"  * {get_changelog_entry(package_properties_params)}")
     lines.append(package_properties_params.debian_trailer)
     debian_latest_changelog = ""
     for i, line in enumerate(lines):
-        append_line = line if i in (0, len(lines) - 1) else '  ' + line
+        append_line = line if i in (0, len(lines) - 1) else '' + line
         debian_latest_changelog = debian_latest_changelog + append_line + "\n\n"
     return debian_latest_changelog[:-1]
 
@@ -269,8 +269,7 @@ def validate_package_properties_params_for_update_all_changes(package_props: Pac
 @validate_parameters
 # disabled since this is related to parameter_validations library methods
 # pylint: disable=no-value-for-parameter
-def update_all_changes(github_token: non_empty(non_blank(str)), package_properties_params: PackagePropertiesParams,
-                       tag_name: is_tag(str),
+def update_all_changes(package_properties_params: PackagePropertiesParams,
                        packaging_path: str):
     validate_package_properties_params_for_update_all_changes(package_properties_params)
     templates_path = f"{BASE_PATH}/templates"
@@ -325,7 +324,7 @@ if __name__ == "__main__":
                                                  fancy_version_number=arguments.fancy_ver_no,
                                                  name_surname=arguments.name, microsoft_email=arguments.email,
                                                  changelog_date=exec_date, changelog_entry=arguments.changelog_entry)
-    update_all_changes(arguments.gh_token, package_properties, arguments.tag_name, execution_path)
+    update_all_changes(package_properties, execution_path)
 
     commit_message = f"Bump to {arguments.prj_name} {prj_ver}"
     run(f'git commit -am "{commit_message}"')
