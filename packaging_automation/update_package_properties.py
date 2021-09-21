@@ -354,3 +354,5 @@ if __name__ == "__main__":
         create_pr(arguments.gh_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME,
                   project.value.packaging_branch)
         remove_cloned_code(execution_path)
+    if not arguments.is_test and not arguments.pipeline:
+        remove_cloned_code(execution_path)
