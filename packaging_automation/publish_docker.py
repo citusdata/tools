@@ -149,9 +149,6 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, publish: bool
     docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
                                tag=docker_image_name,
                                path=".")
-    if not publish:
-        print(f"Tags will not be pushed since publish flag is false.  ")
-        return
     print(f"{docker_image_type.name} image built.Now starting tagging and pushing...")
     for tag_part in tag_parts:
         tag_version_part = tag_version_part + tag_part
@@ -159,10 +156,12 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, publish: bool
         print(f"Tagging {docker_image_name} with the tag {image_tag}...")
         docker_api_client.tag(docker_image_name, docker_image_name, image_tag)
         print(f"Tagging {docker_image_name} with the tag {image_tag} finished.")
-
-        print(f"Pushing {docker_image_name} with the tag {image_tag}...")
-        docker_client.images.push(DOCKER_IMAGE_NAME, tag=image_tag)
-        print(f"Pushing {docker_image_name} with the tag {image_tag} finished")
+        if publish:
+            print(f"Pushing {docker_image_name} with the tag {image_tag}...")
+            docker_client.images.push(DOCKER_IMAGE_NAME, tag=image_tag)
+            print(f"Pushing {docker_image_name} with the tag {image_tag} finished")
+        else:
+            print(f"Skipped pushing {docker_image_type} with the tag {image_tag} since publish flag is false")
 
         tag_version_part = tag_version_part + "."
     print(f"Building and publishing tagged image {docker_image_type.name} for tag {tag_name} finished.")
