@@ -54,7 +54,7 @@ docker_image_info_dict = {
                                   "schedule-type": ScheduleType.regular},
     DockerImageType.nightly: {"file-name": "nightly/Dockerfile", "docker-tag": "nightly",
                               "schedule-type": ScheduleType.nightly}}
-DOCKER_IMAGE_NAME = "gurkanindibay/citus"
+DOCKER_IMAGE_NAME = "citusdata/citus"
 
 docker_client = docker.from_env()
 
