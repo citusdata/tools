@@ -34,7 +34,7 @@ jobs:
         run: git config --global user.email "${MICROSOFT_EMAIL}"&& git config --global user.name "${USER_NAME}"
 
       - name: Install package dependencies
-        run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev
+        run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
 
       - name: Install python requirements
         run: python -m pip install -r packaging_automation/requirements.txt
