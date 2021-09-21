@@ -22,7 +22,7 @@ from .dbconfig import RequestLog, RequestType
 import yaml
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
-PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = "\.\d{1,3}"
+PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = r"\.\d{1,3}"
 POSTGRES_MATRIX_FLIE_NAME = "postgres-matrix.yml"
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = r"\.\d{1,3}"
 
@@ -564,7 +564,8 @@ def stat_get_request(request_address: str, request_type: RequestType, session):
 
 def get_supported_postgres_release_versions(postgres_matrix_conf_file_path: str,
                                             package_version: is_version(str)) -> List[str]:
-    with open(postgres_matrix_conf_file_path, "r") as reader:
+    with open(postgres_matrix_conf_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         yaml_content = yaml.load(reader, yaml.BaseLoader)
 
     versions_dictionary = {}
@@ -577,7 +578,8 @@ def get_supported_postgres_release_versions(postgres_matrix_conf_file_path: str,
 
 
 def get_supported_postgres_nightly_versions(postgres_matrix_conf_file_path: str) -> List[str]:
-    with open(postgres_matrix_conf_file_path, "r") as reader:
+    with open(postgres_matrix_conf_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         yaml_content = yaml.load(reader, yaml.BaseLoader)
 
     # nightly version is the last element in the postgres matrix
@@ -600,8 +602,8 @@ def match_release_version(versions_dictionary, package_version: str):
         for numeric_version in numeric_versions_of_config:
             if numeric_version > package_version_numeric:
                 break
-            else:
-                last_smallest_version = numeric_version
+
+            last_smallest_version = numeric_version
 
         if last_smallest_version < 0:
             version_in_str = versions[0]

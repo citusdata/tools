@@ -14,7 +14,8 @@ from parameters_validation import non_blank, non_empty, validate_parameters
 
 from .common_tool_methods import (run_with_output, PackageType, transform_key_into_base64_str,
                                   get_gpg_fingerprints_by_name, str_array_to_str,
-                                  get_supported_postgres_release_versions, get_supported_postgres_nightly_versions)
+                                  get_supported_postgres_release_versions, get_supported_postgres_nightly_versions,
+                                  DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER)
 from .packaging_warning_handler import validate_output
 
 GPG_KEY_NAME = "packaging@citusdata.com"
@@ -171,7 +172,8 @@ def write_postgres_versions_into_file(input_files_dir: str, package_version: str
     nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
     release_version_str = ','.join(release_versions)
     nightly_version_str = ','.join(nightly_versions)
-    with open(f"{input_files_dir}/{POSTGRES_VERSION_FILE}", 'w') as f:
+    with open(f"{input_files_dir}/{POSTGRES_VERSION_FILE}", 'w', encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as f:
         f.write(f"release_versions={release_version_str}\n")
         f.write(f"nightly_versions={nightly_version_str}\n")
 

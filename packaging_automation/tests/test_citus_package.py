@@ -12,7 +12,7 @@ from ..common_tool_methods import (run, delete_rpm_key_by_name, get_gpg_fingerpr
                                    get_private_key_by_fingerprint_with_passphrase, define_rpm_public_key_to_machine,
                                    transform_key_into_base64_str,
                                    verify_rpm_signature_in_dir, delete_all_gpg_keys_by_name,
-                                   get_supported_postgres_release_versions, get_supported_postgres_nightly_versions)
+                                   get_supported_postgres_release_versions)
 from ..upload_to_package_cloud import (upload_files_in_directory_to_package_cloud, delete_package_from_package_cloud,
                                        package_exists)
 
