@@ -117,7 +117,7 @@ def publish_docker_image_manually(manual_trigger_type_param: ManualTriggerType, 
             publish_main_docker_images(it, will_be_published)
     elif manual_trigger_type_param == ManualTriggerType.tags and tag_name:
         for it in regular_images_to_be_built(docker_image_type):
-            publish_tagged_docker_images(it, tag_name)
+            publish_tagged_docker_images(it, tag_name, will_be_published)
     elif manual_trigger_type_param == ManualTriggerType.nightly:
         publish_nightly_docker_image(will_be_published)
 
