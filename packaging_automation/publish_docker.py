@@ -226,8 +226,7 @@ def get_image_publish_status(github_ref: str, is_test: bool):
     if triggering_event_info == GithubTriggerEventSource.tag_push:
         if not is_tag_on_branch(tag_name=resource_name, branch_name=DEFAULT_BRANCH_NAME):
             return False
-        else:
-            return True
+        return True
     current_branch = get_current_branch(os.getcwd())
     if current_branch != DEFAULT_BRANCH_NAME:
         return False
