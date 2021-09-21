@@ -86,21 +86,16 @@ PACKAGES_DIR_NAME = "packages"
 
 
 def decode_os_and_release(platform_name: str) -> Tuple[str, str]:
-    separator = "," if "," in platform_name else "/"
-    parts = platform_name.split(separator)
+    parts = platform_name.split("/")
 
     if len(parts) == 0 or len(parts) > 2 or (len(parts) == 1 and parts[0] != "pgxn"):
-        raise ValueError("Platforms should have two parts divided by '/',',' or should be 'pgxn' ")
+        raise ValueError("Platforms should have two parts divided by '/' or should be 'pgxn' ")
     if len(parts) == 1 and parts[0] == "pgxn":
         os_name = "pgxn"
         os_release = ""
     else:
         os_name = parts[0]
         os_release = parts[1]
-        # When building packaging images oraclelinux and centos is used instead of el and ol
-        # Below two lines handles conversion betwwen them
-        os_name = os_name if os_name != "oraclelinux" else "ol"
-        os_name = os_name if os_name != "centos" else "el"
         if os_name not in supported_platforms:
             raise ValueError(
                 f"{os_name} is not among supported operating systems. Supported operating systems are as below:\n "
