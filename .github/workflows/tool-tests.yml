@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Define git credentials
         run: git config --global user.email "${MICROSOFT_EMAIL}"&& git config --global user.name "${USER_NAME}"
