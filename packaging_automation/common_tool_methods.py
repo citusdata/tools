@@ -11,7 +11,7 @@ from typing import Tuple
 import gnupg
 import pathlib2
 import requests
-from git import Repo,GitCommandError
+from git import Repo, GitCommandError
 import git
 from github import Repository, PullRequest, Commit, Github
 from jinja2 import Environment, FileSystemLoader
@@ -300,6 +300,7 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
 
     return has_match
 
+
 def is_tag_on_branch(tag_name: str, branch_name: str):
     g = git.Git(os.getcwd())
     try:
@@ -314,15 +315,10 @@ def is_tag_on_branch(tag_name: str, branch_name: str):
         return False
 
 
-
-
 def get_current_branch(working_dir: str) -> str:
     repo = get_new_repo(working_dir)
-    try:
-        branch_name = repo.active_branch.name
-    except TypeError:
-        branch_name = 'Detached'
-    return branch_name
+
+    return repo.active_branch.name
 
 
 def remote_branch_exists(branch_name: str, working_dir: str) -> bool:
