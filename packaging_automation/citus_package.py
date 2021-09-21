@@ -238,7 +238,7 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
 # pylint: disable=no-value-for-parameter
 def build_package(github_token: non_empty(non_blank(str)),
                   build_type: BuildType, docker_platform: str, postgres_version: str,
-                  input_output_parameters: InputOutputParameters,is_test: bool = False):
+                  input_output_parameters: InputOutputParameters, is_test: bool = False):
     docker_image_name = "packaging" if not is_test else "packaging-test"
     postgres_extension = "all" if postgres_version == "all" else f"pg{postgres_version}"
     os.environ["GITHUB_TOKEN"] = github_token
@@ -276,7 +276,7 @@ def get_docker_image_name(platform: str):
 def build_packages(github_token: non_empty(non_blank(str)),
                    platform: non_empty(non_blank(str)),
                    build_type: BuildType, signing_credentials: SigningCredentials,
-                   input_output_parameters: InputOutputParameters,is_test: bool = False) -> None:
+                   input_output_parameters: InputOutputParameters, is_test: bool = False) -> None:
     os_name, os_version = decode_os_and_release(platform)
     release_versions, nightly_versions = get_postgres_versions(os_name, input_output_parameters.input_files_dir)
     signing_credentials = get_signing_credentials(signing_credentials.secret_key, signing_credentials.passphrase)
@@ -295,7 +295,7 @@ def build_packages(github_token: non_empty(non_blank(str)),
     for postgres_version in postgres_versions:
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} started... ")
         build_package(github_token, build_type, docker_image_name,
-                      postgres_version, input_output_parameters,is_test)
+                      postgres_version, input_output_parameters, is_test)
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} finished ")
 
     sign_packages(output_sub_folder, signing_credentials, input_output_parameters)
