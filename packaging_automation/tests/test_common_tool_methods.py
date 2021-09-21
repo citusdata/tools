@@ -61,8 +61,11 @@ def test_get_version_details():
 
 
 def test_is_tag_on_branch():
+    current_branch = get_current_branch(os.getcwd())
+    run("git checkout develop")
     assert is_tag_on_branch("v0.8.3", "develop")
     assert not is_tag_on_branch("v1.8.3", "develop")
+    run(f"git checkout {current_branch}")
 
 
 def test_replace_line_in_file():
