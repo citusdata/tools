@@ -19,17 +19,20 @@ class SupportedDockerImages(Enum):
     docker_compose = 2
     alpine = 3
     postgres12 = 4
+    postgres14 = 5
 
 
 docker_templates = {SupportedDockerImages.latest: "latest/latest.tmpl.dockerfile",
                     SupportedDockerImages.docker_compose: "latest/docker-compose.tmpl.yml",
                     SupportedDockerImages.alpine: "alpine/alpine.tmpl.dockerfile",
-                    SupportedDockerImages.postgres12: "postgres-12/postgres-12.tmpl.dockerfile"}
+                    SupportedDockerImages.postgres12: "postgres-12/postgres-12.tmpl.dockerfile",
+                    SupportedDockerImages.postgres14: "postgres-14/postgres-14.tmpl.dockerfile"}
 
 docker_outputs = {SupportedDockerImages.latest: "Dockerfile",
                   SupportedDockerImages.docker_compose: "docker-compose.yml",
                   SupportedDockerImages.alpine: "alpine/Dockerfile",
-                  SupportedDockerImages.postgres12: "postgres-12/Dockerfile"}
+                  SupportedDockerImages.postgres12: "postgres-12/Dockerfile",
+                  SupportedDockerImages.postgres14: "postgres-14/Dockerfile"}
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
@@ -61,6 +64,17 @@ def update_docker_file_for_postgres12(project_version: str, template_path: str, 
                                     docker_templates[SupportedDockerImages.postgres12])
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres12]}"
     write_to_file(content, dest_file_name)
+
+
+def update_docker_file_for_postgres14(project_version: str, template_path: str, exec_path: str):
+    content = process_template_file(project_version, template_path,
+                                    docker_templates[SupportedDockerImages.postgres14])
+    dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres14]}"
+    dir_name=os.path.dirname(dest_file_name)
+    if not (os.path.exists(dir_name)):
+        os.makedirs(dir_name)
+    write_to_file(content, dest_file_name)
+
 
 
 def get_new_changelog_entry(project_version: str, postgres_version: str = ""):
@@ -103,6 +117,7 @@ def update_all_docker_files(project_version: str, exec_path: str, postgres_versi
     update_regular_docker_compose_file(project_version, template_path, exec_path)
     update_docker_file_alpine(project_version, template_path, exec_path, persisted_postgres_version)
     update_docker_file_for_postgres12(project_version, template_path, exec_path)
+    update_docker_file_for_postgres14(project_version, template_path, exec_path)
     update_changelog(project_version, exec_path, postgres_version)
 
 
@@ -122,7 +137,7 @@ def read_postgres_version(pkgvars_file: str) -> str:
                 raise ValueError("pkgvars file should include a line with key latest_postgres_version")
     else:
         # Setting it because pkgvars does not exist initially
-        postgres_version = "13.2"
+        postgres_version = "13.4"
     return postgres_version
 
 

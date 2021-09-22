@@ -359,7 +359,7 @@ def process_template_file(project_version: str, templates_path: str, template_fi
 
 
 def write_to_file(content: str, dest_file_name: str):
-    with open(dest_file_name, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+    with open(dest_file_name, "w+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
         writer.write(content)
 
