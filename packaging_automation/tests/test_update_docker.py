@@ -109,7 +109,7 @@ def test_update_postgres_version():
         test_pkgvar_postgres_version_existence()
         assert read_postgres_version(PKGVARS_FILE) == POSTGRES_VERSION
     else:
-        assert read_postgres_version(PKGVARS_FILE) == "13.2"
+        assert read_postgres_version(PKGVARS_FILE) == "13.4"
         update_pkgvars(project_version=PROJECT_VERSION, postgres_version=POSTGRES_VERSION, template_path=TEMPLATE_PATH,
                        pkgvars_file=PKGVARS_FILE)
         assert os.path.exists(PKGVARS_FILE)
