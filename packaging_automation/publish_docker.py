@@ -93,43 +93,43 @@ def get_image_tag(tag_prefix: str, docker_image_type: DockerImageType) -> str:
     return f"{tag_prefix}{tag_suffix}"
 
 
-def publish_docker_image_on_push(docker_image_type: DockerImageType, github_ref: str, publish: bool):
+def publish_docker_image_on_push(docker_image_type: DockerImageType, github_ref: str, will_image_be_published: bool):
     triggering_event_info, resource_name = decode_triggering_event_info(github_ref)
     for regular_image_type in regular_images_to_be_built(docker_image_type):
         if triggering_event_info == GithubTriggerEventSource.branch_push:
-            publish_main_docker_images(regular_image_type, publish)
+            publish_main_docker_images(regular_image_type, will_image_be_published)
         else:
-            publish_tagged_docker_images(regular_image_type, resource_name, publish)
+            publish_tagged_docker_images(regular_image_type, resource_name, will_image_be_published)
 
 
-def publish_docker_image_on_schedule(docker_image_type: DockerImageType, publish: bool):
+def publish_docker_image_on_schedule(docker_image_type: DockerImageType, will_image_be_published: bool):
     if docker_image_type == DockerImageType.nightly:
-        publish_nightly_docker_image(publish)
+        publish_nightly_docker_image(will_image_be_published)
     else:
         for regular_image_type in regular_images_to_be_built(docker_image_type):
-            publish_main_docker_images(regular_image_type, publish)
+            publish_main_docker_images(regular_image_type, will_image_be_published)
 
 
-def publish_docker_image_manually(manual_trigger_type_param: ManualTriggerType, publish: bool,
+def publish_docker_image_manually(manual_trigger_type_param: ManualTriggerType, will_image_be_published: bool,
                                   docker_image_type: DockerImageType, tag_name: str = "") -> None:
     if manual_trigger_type_param == ManualTriggerType.main and not tag_name:
         for it in regular_images_to_be_built(docker_image_type):
-            publish_main_docker_images(it, publish)
+            publish_main_docker_images(it, will_image_be_published)
     elif manual_trigger_type_param == ManualTriggerType.tags and tag_name:
         for it in regular_images_to_be_built(docker_image_type):
-            publish_tagged_docker_images(it, tag_name, publish)
+            publish_tagged_docker_images(it, tag_name, will_image_be_published)
     elif manual_trigger_type_param == ManualTriggerType.nightly:
-        publish_nightly_docker_image(publish)
+        publish_nightly_docker_image(will_image_be_published)
 
 
-def publish_main_docker_images(docker_image_type: DockerImageType, publish: bool):
+def publish_main_docker_images(docker_image_type: DockerImageType, will_image_be_published: bool):
     print(f"Building main docker image for {docker_image_type.name}...")
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_type.name}"
     docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
                                tag=docker_image_name,
                                path=".")
     print(f"Main docker image for {docker_image_type.name} built.")
-    if publish:
+    if will_image_be_published:
         print(f"Publishing main docker image for {docker_image_type.name}...")
         docker_client.images.push(DOCKER_IMAGE_NAME, tag=docker_image_type.name)
         print(f"Publishing main docker image for {docker_image_type.name} finished")
@@ -141,7 +141,7 @@ def publish_main_docker_images(docker_image_type: DockerImageType, publish: bool
                 f"{DEFAULT_BRANCH_NAME} {docker_image_name} will not be pushed.")
 
 
-def publish_tagged_docker_images(docker_image_type, tag_name: str, publish: bool):
+def publish_tagged_docker_images(docker_image_type, tag_name: str, will_image_be_published: bool):
     print(f"Building and publishing tagged image {docker_image_type.name} for tag {tag_name}...")
     tag_parts = decode_tag_parts(tag_name)
     tag_version_part = ""
@@ -156,18 +156,18 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, publish: bool
         print(f"Tagging {docker_image_name} with the tag {image_tag}...")
         docker_api_client.tag(docker_image_name, docker_image_name, image_tag)
         print(f"Tagging {docker_image_name} with the tag {image_tag} finished.")
-        if publish:
+        if will_image_be_published:
             print(f"Pushing {docker_image_name} with the tag {image_tag}...")
             docker_client.images.push(DOCKER_IMAGE_NAME, tag=image_tag)
             print(f"Pushing {docker_image_name} with the tag {image_tag} finished")
         else:
-            print(f"Skipped pushing {docker_image_type} with the tag {image_tag} since publish flag is false")
+            print(f"Skipped pushing {docker_image_type} with the tag {image_tag} since will_image_be_published flag is false")
 
         tag_version_part = tag_version_part + "."
     print(f"Building and publishing tagged image {docker_image_type.name} for tag {tag_name} finished.")
 
 
-def publish_nightly_docker_image(publish: bool):
+def publish_nightly_docker_image(will_image_be_published: bool):
     print("Building nightly image...")
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_info_dict[DockerImageType.nightly]['docker-tag']}"
     docker_client.images.build(dockerfile=docker_image_info_dict[DockerImageType.nightly]['file-name'],
@@ -175,12 +175,12 @@ def publish_nightly_docker_image(publish: bool):
                                path=".")
     print("Nightly image build finished.")
 
-    if publish:
+    if will_image_be_published:
         print("Pushing nightly image...")
         docker_client.images.push(DOCKER_IMAGE_NAME, tag=docker_image_info_dict[DockerImageType.nightly]['docker-tag'])
         print("Nightly image push finished.")
     else:
-        print("Nightly image will not be pushed since publish flag is false")
+        print("Nightly image will not be pushed since will_image_be_published flag is false")
 
 
 def validate_and_extract_general_parameters(docker_image_type_param: str, pipeline_trigger_type_param: str) -> Tuple[
@@ -252,7 +252,7 @@ if __name__ == "__main__":
     if pipeline_trigger_type == GithubPipelineTriggerType.workflow_dispatch:
         manual_trigger_type = validate_and_extract_manual_exec_params(args.manual_trigger_type, args.tag_name)
         publish_docker_image_manually(manual_trigger_type_param=manual_trigger_type,
-                                      publish=publish_status,
+                                      will_image_be_published=publish_status,
                                       docker_image_type=image_type, tag_name=args.tag_name)
     elif pipeline_trigger_type == GithubPipelineTriggerType.push:
         publish_docker_image_on_push(image_type, args.github_ref, publish_status)
