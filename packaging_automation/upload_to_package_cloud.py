@@ -13,6 +13,7 @@ supported_distros = {
     "el/7": 140,
     "el/8": 205,
     "ol/7": 146,
+    "debian/bullseye": 207,
     "debian/buster": 150,
     "debian/stretch": 149,
     "ubuntu/focal": 210,
