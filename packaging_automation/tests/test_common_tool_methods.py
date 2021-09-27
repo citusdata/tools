@@ -8,15 +8,34 @@ from github import Github
 
 from .test_utils import generate_new_gpg_key
 from ..common_tool_methods import (
-    find_nth_occurrence_position, is_major_release,
-    str_array_to_str, run, remove_text_with_parenthesis, get_version_details,
-    replace_line_in_file, get_upcoming_minor_version,
-    get_project_version_from_tag_name, find_nth_matching_line_and_line_number, get_minor_version,
-    get_patch_version_regex, append_line_in_file, prepend_line_in_file, remote_branch_exists, get_current_branch,
-    local_branch_exists, get_last_commit_message, get_prs_for_patch_release, filter_prs_by_label, process_template_file,
-    remove_prefix, delete_all_gpg_keys_by_name, define_rpm_public_key_to_machine,
-    delete_rpm_key_by_name, get_gpg_fingerprints_by_name, run_with_output, rpm_key_matches_summary,
-    DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER, is_tag_on_branch)
+    DEFAULT_ENCODING_FOR_FILE_HANDLING,
+    DEFAULT_UNICODE_ERROR_HANDLER,
+    append_line_in_file,
+    define_rpm_public_key_to_machine,
+    delete_all_gpg_keys_by_name,
+    delete_rpm_key_by_name,
+    filter_prs_by_label,
+    find_nth_matching_line_and_line_number,
+    find_nth_occurrence_position,
+    get_current_branch,
+    get_gpg_fingerprints_by_name,
+    get_last_commit_message,
+    get_minor_version,
+    get_patch_version_regex,
+    get_project_version_from_tag_name,
+    get_prs_for_patch_release,
+    get_upcoming_minor_version, get_version_details,
+    is_major_release,
+    is_tag_on_branch,
+    local_branch_exists,
+    prepend_line_in_file,
+    process_template_file,
+    remote_branch_exists,
+    remove_prefix,
+    remove_text_with_parenthesis,
+    replace_line_in_file,
+    rpm_key_matches_summary,
+    run, run_with_output, str_array_to_str)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 BASE_PATH = pathlib2.Path(__file__).parents[1]

@@ -1,19 +1,17 @@
-import base64
 import os
 import re
 import shlex
 import subprocess
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List
-from typing import Tuple
+from typing import Dict, List,Tuple
 
+import git
 import gnupg
 import pathlib2
 import requests
-from git import Repo, GitCommandError
-import git
-from github import Repository, PullRequest, Commit, Github
+from git import GitCommandError,Repo
+from github import Commit, Github, PullRequest,Repository
 from jinja2 import Environment, FileSystemLoader
 from parameters_validation import validate_parameters
 
