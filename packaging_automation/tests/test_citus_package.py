@@ -24,6 +24,7 @@ package_counts = {
     "ol/7": 4,
     "debian/stretch": 4,
     "debian/buster": 4,
+    "debian/bullseye": 4,
     "ubuntu/xenial": 2,
     "ubuntu/bionic": 4,
     "ubuntu/focal": 4
