@@ -24,7 +24,7 @@ def test_deb_filter_warning_lines():
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         lines = reader.read().splitlines()
         base_warning_lines, package_specific_warning_lines = filter_warning_lines(lines, PackageType.deb)
-        assert len(base_warning_lines) == 11 and len(package_specific_warning_lines) == 6
+        assert len(base_warning_lines) == 11 and len(package_specific_warning_lines) == 7
 
 
 def test_rpm_filter_warning_lines():
@@ -58,7 +58,7 @@ def test_get_debian_warnings_to_be_raised():
             f"{TEST_BASE_PATH}/files/packaging_warning/packaging_ignore.yml", PackageType.deb)
         debian_warnings_to_be_raised = get_warnings_to_be_raised(debian_ignore_list,
                                                                  package_specific_warning_lines)
-        assert len(debian_warnings_to_be_raised) == 1
+        assert len(debian_warnings_to_be_raised) == 2
 
 
 def test_get_error_message():
@@ -75,7 +75,8 @@ def test_get_error_message():
                                                                  debian_warning_lines)
         error_message = get_error_message(base_warnings_to_be_raised, debian_warnings_to_be_raised, PackageType.deb)
         assert error_message == "Warning lines:\nWarning: Unhandled\nDebian Warning lines:\n" \
-                                "citus-enterprise100_11.x86_64: W: invalid-date-format\n"
+                                "citus-enterprise100_11.x86_64: W: invalid-date-format\n" \
+                                "citus-enterprise100_11.x86_64: E: zero-length /usr/pgsql-/usr/lib/share/extension/\n"
 
 
 def test_get_error_message_empty_package_specific_errors():
