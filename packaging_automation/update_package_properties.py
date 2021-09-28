@@ -73,7 +73,7 @@ class PackagePropertiesParams:
     changelog_entry: str = ""
 
     @property
-    def changelog_version_entry(self):
+    def changelog_version_entry(self)->str:
         return f"{self.project_version}-{self.fancy_version_number}"
 
     @property

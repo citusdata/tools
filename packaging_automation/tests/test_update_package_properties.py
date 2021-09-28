@@ -80,7 +80,7 @@ def verify_prepend_debian_changelog(changelog_file_path):
     assert content == expected_content
 
 
-def test_convert_citus_changelog_into_rpm_changelog():
+def test_rpm_changelog():
     changelog_param = default_changelog_param_for_test(CHANGELOG_DATE)
     changelog = get_rpm_changelog(changelog_param)
     with open(f"{TEST_BASE_PATH}/files/verify/rpm_latest_changelog_reference.txt", "r",
