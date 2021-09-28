@@ -8,14 +8,18 @@ from enum import Enum
 
 import pathlib2
 import string_utils
-from github import Github
-from parameters_validation import (non_blank, non_empty, validate_parameters,
+from parameters_validation import (validate_parameters,
                                    parameter_validation)
 
-from .common_tool_methods import (find_nth_matching_line_and_line_number, find_nth_occurrence_position,
-                                  get_project_version_from_tag_name, get_template_environment, initialize_env, run,
-                                  create_pr, remove_cloned_code, DEFAULT_ENCODING_FOR_FILE_HANDLING,
-                                  DEFAULT_UNICODE_ERROR_HANDLER)
+from .common_tool_methods import (DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                                  DEFAULT_UNICODE_ERROR_HANDLER,
+                                  create_pr,
+                                  find_nth_occurrence_position,
+                                  get_project_version_from_tag_name,
+                                  get_template_environment,
+                                  initialize_env,
+                                  remove_cloned_code,
+                                  run)
 from .common_validations import (is_version, is_tag)
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -65,12 +69,12 @@ class PackagePropertiesParams:
     fancy_version_number: int
     microsoft_email: str = ""
     name_surname: str = ""
-    latest_changelog: str = ""
     changelog_date: datetime = datetime.now()
+    changelog_entry: str = ""
 
     @property
-    def should_add_changelog(self) -> bool:
-        return not self.fancy or self.fancy_version_number == 1
+    def changelog_version_entry(self)->str:
+        return f"{self.project_version}-{self.fancy_version_number}"
 
     @property
     def spec_file_name(self) -> str:
@@ -105,7 +109,7 @@ class PackagePropertiesParams:
             else f".{self.project.value.version_suffix}")
 
     @property
-    def rpm_changelog_project_name(self) -> str:
+    def changelog_project_name(self) -> str:
         return self.project.value.name.replace("-", " ").replace("_", " ").title()
 
     @property
@@ -116,15 +120,15 @@ class PackagePropertiesParams:
 
     @property
     def debian_trailer(self):
-        formatted_date = self.changelog_date.strftime("%a, %d %b %Y %H:%M:%S %z ")
-        return f" -- {self.name_surname} <{self.microsoft_email}>  {formatted_date} \n "
+        formatted_date = self.changelog_date.strftime("%a, %d %b %Y %H:%M:%S %z")
+        return f" -- {self.name_surname} <{self.microsoft_email}>  {formatted_date}\n"
 
 
-def get_enum_from_changelog_project_name(changelog_project_name) -> SupportedProject:
+def get_enum_from_changelog_project_name(project_name) -> SupportedProject:
     for e in SupportedProject:
-        if e.value.changelog_project_name == changelog_project_name:
+        if e.value.changelog_project_name == project_name:
             return e
-    raise ValueError(f"{changelog_project_name} could not be found in supported project changelog names.")
+    raise ValueError(f"{project_name} could not be found in supported project changelog names.")
 
 
 def spec_file_name(project_name: str) -> str:
@@ -143,43 +147,16 @@ def get_last_changelog_content(all_changelog_content: str) -> str:
     return changelogs
 
 
-def get_last_changelog_content_from_debian(all_changelog_content: str) -> str:
-    second_changelog_index, _ = find_nth_matching_line_and_line_number(all_changelog_content,
-                                                                       "^[a-zA-Z]", 2)
-    lines = all_changelog_content.splitlines()
-    changelogs = "\n".join(lines[:second_changelog_index - 1]) + "\n"
-    if len(lines) < 1:
-        raise ValueError("At least one line should be in changelog")
-    return changelogs
-
-
 def remove_paranthesis_from_string(param: str) -> str:
     return re.sub(r"[(\[].*?[)\]]", "", param)
-
-
-def changelog_for_tag(github_token: str, github_repo_name: str, tag_name: str) -> str:
-    g = Github(github_token)
-    repo = g.get_repo(f"citusdata/{github_repo_name}")
-    all_changelog_content = repo.get_contents("CHANGELOG.md", ref=tag_name)
-    last_changelog_content = get_last_changelog_content(all_changelog_content.decoded_content.decode())
-    return last_changelog_content
 
 
 # truncates # chars , get the version an put paranthesis around version number adds 'stable; urgency=low' at the end
 # changelog_header=> ### citus v8.3.3 (March 23, 2021) ###
 # debian header =>   citus (10.0.3.citus-1) stable; urgency=low
 @validate_parameters
-def debian_changelog_header(changelog_header: is_project_changelog_header(str), fancy: bool,
+def debian_changelog_header(supported_project: SupportedProject, project_version: str, fancy: bool,
                             fancy_version_number: int) -> str:
-    hash_removed_string = changelog_header.lstrip("### ").rstrip(" ###")
-    paranthesis_removed_string = remove_paranthesis_from_string(hash_removed_string)
-    words = paranthesis_removed_string.strip().split(" ")
-    if len(words) != 2:
-        raise ValueError("Two words should be included in striped version header")
-    project_name = words[0]
-    project_version = words[1].lstrip("v")
-
-    supported_project = get_enum_from_changelog_project_name(project_name)
     package_properties_params = PackagePropertiesParams(project=supported_project,
                                                         project_version=project_version,
                                                         fancy=fancy, fancy_version_number=fancy_version_number)
@@ -189,24 +166,28 @@ def debian_changelog_header(changelog_header: is_project_changelog_header(str), 
     return f"{supported_project.value.name} ({version_on_changelog}) stable; urgency=low"
 
 
-def convert_citus_changelog_into_debian_changelog(package_properties_params: PackagePropertiesParams) -> str:
-    lines = package_properties_params.latest_changelog.splitlines()
-    lines[0] = debian_changelog_header(lines[0], package_properties_params.fancy,
-                                       package_properties_params.fancy_version_number)
+def get_debian_latest_changelog(package_properties_params: PackagePropertiesParams) -> str:
+    lines = []
+    lines.append(
+        debian_changelog_header(package_properties_params.project,
+                                package_properties_params.project_version,
+                                package_properties_params.fancy,
+                                package_properties_params.fancy_version_number))
+    lines.append(f"  * {get_changelog_entry(package_properties_params)}")
     lines.append(package_properties_params.debian_trailer)
     debian_latest_changelog = ""
     for i, line in enumerate(lines):
-        append_line = line if i in (0, len(lines) - 1) else '  ' + line
-        debian_latest_changelog = debian_latest_changelog + append_line + "\n"
-    return debian_latest_changelog
+        append_line = line if i in (0, len(lines) - 1) else '' + line
+        debian_latest_changelog = debian_latest_changelog + append_line + "\n\n"
+    return debian_latest_changelog[:-1]
 
 
 def prepend_latest_changelog_into_debian_changelog(package_properties_params: PackagePropertiesParams,
                                                    changelog_file_path: str) -> None:
-    debian_latest_changelog = convert_citus_changelog_into_debian_changelog(package_properties_params)
+    debian_latest_changelog = get_debian_latest_changelog(package_properties_params)
     with open(changelog_file_path, mode="r+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
-        if not (f"({package_properties_params.project_version}" in reader.readline()):
+        if not (package_properties_params.changelog_version_entry in reader.readline()):
             reader.seek(0, 0)
             old_changelog = reader.read()
             changelog = f"{debian_latest_changelog}{old_changelog}"
@@ -240,10 +221,19 @@ def rpm_changelog_history(spec_file_path: str) -> str:
     return changelog_content
 
 
-def convert_citus_changelog_into_rpm_changelog(package_properties_params: PackagePropertiesParams) -> str:
+def get_changelog_entry(package_properties_params: PackagePropertiesParams):
+    default_changelog_entry = f"Official {package_properties_params.project_version} release of " \
+                              f"{package_properties_params.changelog_project_name}"
+    return (
+        package_properties_params.changelog_entry if package_properties_params.changelog_entry
+        else default_changelog_entry)
+
+
+def get_rpm_changelog(package_properties_params: PackagePropertiesParams) -> str:
+    changelog = (package_properties_params.changelog_entry if package_properties_params.changelog_entry
+                 else get_changelog_entry(package_properties_params))
     header = package_properties_params.rpm_header
-    rpm_changelog = f"{header.strip()}\n- Official {package_properties_params.project_version} release of " \
-                    f"{package_properties_params.rpm_changelog_project_name}"
+    rpm_changelog = f"{header.strip()}\n- {changelog}"
 
     return rpm_changelog
 
@@ -254,16 +244,15 @@ def update_rpm_spec(package_properties_params: PackagePropertiesParams, spec_ful
 
     rpm_version = package_properties_params.rpm_version
     template = env.get_template(package_properties_params.rpm_spec_template_file_name)
-    if package_properties_params.should_add_changelog:
-        history_lines = rpm_changelog_history(spec_full_path).splitlines()
 
-        if len(history_lines) > 0 and package_properties_params.project_version in history_lines[1]:
-            raise ValueError(f"{package_properties_params.project_version} already exists in rpm spec file")
+    history_lines = rpm_changelog_history(spec_full_path).splitlines()
 
-        latest_changelog = convert_citus_changelog_into_rpm_changelog(package_properties_params)
-        changelog = f"{latest_changelog}\n\n{rpm_changelog_history(spec_full_path)}"
-    else:
-        changelog = rpm_changelog_history(spec_full_path)
+    if len(history_lines) > 0 and package_properties_params.version_number_with_project_name in history_lines[0]:
+        raise ValueError(f"{package_properties_params.project_version} already exists in rpm spec file")
+
+    latest_changelog = get_rpm_changelog(package_properties_params)
+    changelog = f"{latest_changelog}\n\n{rpm_changelog_history(spec_full_path)}"
+
     content = template.render(version=package_properties_params.project_version, rpm_version=rpm_version,
                               project_name=package_properties_params.project.value.name,
                               fancy_version_no=package_properties_params.fancy_version_number, changelog=changelog)
@@ -283,20 +272,13 @@ def validate_package_properties_params_for_update_all_changes(package_props: Pac
 
 
 @validate_parameters
-# disabled since this is related to parameter_validations library methods
-# pylint: disable=no-value-for-parameter
-def update_all_changes(github_token: non_empty(non_blank(str)), package_properties_params: PackagePropertiesParams,
-                       tag_name: is_tag(str),
+def update_all_changes(package_properties_params: PackagePropertiesParams,
                        packaging_path: str):
     validate_package_properties_params_for_update_all_changes(package_properties_params)
     templates_path = f"{BASE_PATH}/templates"
     update_pkgvars(package_properties_params, templates_path,
                    f"{packaging_path}")
-    latest_changelog = changelog_for_tag(github_token,
-                                         package_properties_params.project.value.github_repo_name, tag_name)
-    package_properties_params.latest_changelog = latest_changelog
-    if package_properties_params.should_add_changelog:
-        prepend_latest_changelog_into_debian_changelog(package_properties_params, f"{packaging_path}/debian/changelog")
+    prepend_latest_changelog_into_debian_changelog(package_properties_params, f"{packaging_path}/debian/changelog")
     spec_full_path = f"{packaging_path}/{package_properties_params.spec_file_name}"
     update_rpm_spec(package_properties_params, spec_full_path, templates_path)
 
@@ -314,6 +296,7 @@ if __name__ == "__main__":
     parser.add_argument("--pipeline", action="store_true")
     parser.add_argument('--exec_path')
     parser.add_argument('--is_test', action="store_true")
+    parser.add_argument('--changelog_entry')
     arguments = parser.parse_args()
 
     prj_ver = get_project_version_from_tag_name(arguments.tag_name)
@@ -323,13 +306,13 @@ if __name__ == "__main__":
         if not arguments.exec_path:
             raise ValueError("exec_path should be defined")
         execution_path = arguments.exec_path
+        os.chdir(execution_path)
 
     else:
         execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
         initialize_env(execution_path, PROJECT_NAME, execution_path)
+        os.chdir(execution_path)
         run(f"git checkout {project.value.packaging_branch}")
-
-    os.chdir(execution_path)
 
     pr_branch = f"{project.value.packaging_branch}-{prj_ver}-{uuid.uuid4()}"
     run(f"git checkout -b {pr_branch}")
@@ -343,8 +326,8 @@ if __name__ == "__main__":
                                                  project_version=prj_ver, fancy=fancy,
                                                  fancy_version_number=arguments.fancy_ver_no,
                                                  name_surname=arguments.name, microsoft_email=arguments.email,
-                                                 changelog_date=exec_date)
-    update_all_changes(arguments.gh_token, package_properties, arguments.tag_name, execution_path)
+                                                 changelog_date=exec_date, changelog_entry=arguments.changelog_entry)
+    update_all_changes(package_properties, execution_path)
 
     commit_message = f"Bump to {arguments.prj_name} {prj_ver}"
     run(f'git commit -am "{commit_message}"')

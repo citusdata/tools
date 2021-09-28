@@ -48,13 +48,13 @@ if __name__ == "__main__":
         if not args.exec_path:
             raise ValueError("exec_path should be defined")
         execution_path = args.exec_path
+        os.chdir(execution_path)
     else:
         execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
         initialize_env(execution_path, PROJECT_NAME, execution_path)
+        os.chdir(execution_path)
+        run(f"git checkout {main_branch}")
 
-    os.chdir(execution_path)
-
-    run(f"git checkout {main_branch}")
     pr_branch = f"pgxn-citus-push-{args.prj_ver}-{uuid.uuid4()}"
     run(f"git checkout -b {pr_branch}")
     template_path = f"{BASE_PATH}/templates/pgxn"
