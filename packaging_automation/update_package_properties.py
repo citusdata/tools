@@ -8,13 +8,18 @@ from enum import Enum
 
 import pathlib2
 import string_utils
-from parameters_validation import ( validate_parameters,
+from parameters_validation import (validate_parameters,
                                    parameter_validation)
 
-from .common_tool_methods import (find_nth_occurrence_position,
-                                  get_project_version_from_tag_name, get_template_environment, initialize_env, run,
-                                  create_pr, remove_cloned_code, DEFAULT_ENCODING_FOR_FILE_HANDLING,
-                                  DEFAULT_UNICODE_ERROR_HANDLER)
+from .common_tool_methods import (DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                                  DEFAULT_UNICODE_ERROR_HANDLER,
+                                  create_pr,
+                                  find_nth_occurrence_position,
+                                  get_project_version_from_tag_name,
+                                  get_template_environment,
+                                  initialize_env,
+                                  remove_cloned_code,
+                                  run)
 from .common_validations import (is_version, is_tag)
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()

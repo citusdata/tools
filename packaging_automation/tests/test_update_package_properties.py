@@ -6,13 +6,18 @@ from shutil import copyfile
 import pathlib2
 import pytest
 
-from .test_utils import are_strings_equal
-from ..common_tool_methods import DEFAULT_UNICODE_ERROR_HANDLER, DEFAULT_ENCODING_FOR_FILE_HANDLING
+from ..common_tool_methods import (DEFAULT_UNICODE_ERROR_HANDLER,
+                                   DEFAULT_ENCODING_FOR_FILE_HANDLING)
 from ..update_package_properties import (PackagePropertiesParams,
-                                         debian_changelog_header, get_rpm_changelog,
+                                         SupportedProject,
+                                         debian_changelog_header,
+                                         get_rpm_changelog,
                                          prepend_latest_changelog_into_debian_changelog,
-                                         spec_file_name, update_rpm_spec,
-                                         update_pkgvars, update_all_changes, SupportedProject)
+                                         spec_file_name,
+                                         update_rpm_spec,
+                                         update_pkgvars,
+                                         update_all_changes)
+from .test_utils import are_strings_equal
 
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[1])
@@ -29,8 +34,8 @@ CHANGELOG_DATE = datetime.strptime(CHANGELOG_DATE_STR, '%a, %d %b %Y %H:%M:%S %z
 def default_changelog_param_for_test(changelog_date):
     changelog_param = PackagePropertiesParams(project=SupportedProject.citus,
                                               project_version=PROJECT_VERSION, fancy=True,
-                                              fancy_version_number=1, microsoft_email=MICROSOFT_EMAIL,
-                                              name_surname=NAME_SURNAME, changelog_date=changelog_date)
+                                              fancy_version_number=1, name_surname=NAME_SURNAME,
+                                              microsoft_email=MICROSOFT_EMAIL, changelog_date=changelog_date)
     return changelog_param
 
 
@@ -72,7 +77,7 @@ def verify_prepend_debian_changelog(changelog_file_path):
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         expected_content = reader.read()
-    assert  content== expected_content
+    assert content == expected_content
 
 
 def test_convert_citus_changelog_into_rpm_changelog():
