@@ -64,4 +64,5 @@ if __name__ == "__main__":
     if not args.is_test:
         run(f'git push --set-upstream origin {pr_branch}')
         create_pr(github_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME, main_branch)
+    if not args.is_test and not args.pipeline:
         remove_cloned_code(execution_path)
