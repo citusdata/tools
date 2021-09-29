@@ -46,6 +46,7 @@ docker_image_names = {
 package_docker_platform_dict = {
     "centos,8": "el/8",
     "centos,7": "el/7",
+    "debian,bullseye": "debian/bullseye",
     "debian,buster": "debian/buster",
     "debian,stretch": "debian/stretch",
     "oraclelinux,8": "ol/8",

@@ -50,9 +50,9 @@ def setup_module():
             f" {PACKAGING_EXEC_FOLDER}")
 
 
-# def teardown_module():
-#     if os.path.exists("packaging_test"):
-#         run("rm -r packaging_test")
+def teardown_module():
+    if os.path.exists("packaging_test"):
+        run("rm -r packaging_test")
 
 
 def test_build_packages():
