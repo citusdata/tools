@@ -24,17 +24,15 @@ PACKAGING_EXEC_FOLDER = f"{TEST_BASE_PATH}/{PACKAGING_SOURCE_FOLDER}"
 BASE_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
 
 single_postgres_package_counts = {
-    "el/7": 4,
-    "el/8": 6,
-    "ol/7": 4,
-    "ol/8": 6,
-    "debian/stretch": 4,
-    "debian/buster": 4,
-    "debian/bullseye": 4,
+    "el/7": 2,
+    "el/8": 3,
+    "ol/7": 2,
+    "debian/stretch": 2,
+    "debian/buster": 2,
+    "debian/bullseye": 2,
     "ubuntu/xenial": 2,
-    "ubuntu/bionic": 4,
-    "ubuntu/focal": 4,
-    "pgxn": 1
+    "ubuntu/bionic": 2,
+    "ubuntu/focal": 2
 }
 
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
