@@ -75,15 +75,10 @@ def test_build_packages():
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     assert len(os.listdir(release_output_folder)) == package_counts[PLATFORM]
 
+
 def test_decode_os_packages():
-    os,release = decode_os_and_release("el/7")
-    assert os == "el" and release =="7"
-
-    os, release = decode_os_and_release("centos,7")
+    os, release = decode_os_and_release("el/7")
     assert os == "el" and release == "7"
-
-    os, release = decode_os_and_release("oraclelinux,7")
-    assert os == "ol" and release == "7"
 
 
 def test_upload_to_package_cloud():
