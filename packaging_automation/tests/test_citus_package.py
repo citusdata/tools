@@ -5,8 +5,7 @@ import pathlib2
 from .test_utils import generate_new_gpg_key
 from ..citus_package import (build_packages, BuildType, decode_os_and_release, get_release_package_folder_name,
                              SigningCredentials, InputOutputParameters, get_build_platform,
-                             POSTGRES_VERSION_FILE, get_package_version_from_pkgvars, POSTGRES_MATRIX_FILE_NAME,
-                             SigningCredentials, InputOutputParameters)
+                             POSTGRES_VERSION_FILE, get_package_version_from_pkgvars, POSTGRES_MATRIX_FILE_NAME)
 
 from ..common_tool_methods import (run, delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
                                    get_private_key_by_fingerprint_with_passphrase, define_rpm_public_key_to_machine,
@@ -24,7 +23,7 @@ PACKAGING_SOURCE_FOLDER = "packaging_test"
 PACKAGING_EXEC_FOLDER = f"{TEST_BASE_PATH}/{PACKAGING_SOURCE_FOLDER}"
 BASE_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
 
-package_counts = {
+single_postgres_package_counts = {
     "el/7": 4,
     "el/8": 6,
     "ol/7": 4,
