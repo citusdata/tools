@@ -19,7 +19,7 @@ from .packaging_warning_handler import validate_output
 GPG_KEY_NAME = "packaging@citusdata.com"
 
 supported_platforms = {
-    "debian": ["buster", "stretch", "jessie", "wheezy","bullseye"],
+    "debian": ["bullseye", "buster", "stretch", "jessie", "wheezy"],
     "el": ["8", "7", "6"],
     "ol": ["7", "8"],
     "ubuntu": ["focal", "bionic", "xenial", "trusty"]
