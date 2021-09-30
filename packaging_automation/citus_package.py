@@ -19,7 +19,7 @@ from .packaging_warning_handler import validate_output
 GPG_KEY_NAME = "packaging@citusdata.com"
 
 supported_platforms = {
-    "debian": ["buster", "stretch", "jessie", "wheezy","bullseye"],
+    "debian": ["bullseye", "buster", "stretch", "jessie", "wheezy"],
     "el": ["8", "7", "6"],
     "ol": ["7", "8"],
     "ubuntu": ["focal", "bionic", "xenial", "trusty"]
@@ -40,6 +40,21 @@ docker_image_names = {
     "el": "centos",
     "ol": "oraclelinux",
     "ubuntu": "ubuntu",
+    "pgxn": "pgxn"
+}
+
+package_docker_platform_dict = {
+    "centos,8": "el/8",
+    "centos,7": "el/7",
+    "debian,bullseye": "debian/bullseye",
+    "debian,buster": "debian/buster",
+    "debian,stretch": "debian/stretch",
+    "oraclelinux,8": "ol/8",
+    "oraclelinux,7": "ol/7",
+    "oraclelinux,6": "ol/6",
+    "ubuntu,focal": "ubuntu/focal",
+    "ubuntu,bionic": "ubuntu/bionic",
+    "ubuntu,xenial": "ubuntu/xenial",
     "pgxn": "pgxn"
 }
 
@@ -243,7 +258,7 @@ def get_release_package_folder_name(os_name: str, os_version: str) -> str:
 
 def get_docker_image_name(platform: str):
     os_name, os_version = decode_os_and_release(platform)
-    return f'{docker_image_names[os_name]}-{os_version}'
+    return f'{docker_image_names[os_name]}-{os_version}' if os_version else f'{docker_image_names[os_name]}'
 
 
 @validate_parameters
@@ -274,10 +289,16 @@ def build_packages(github_token: non_empty(non_blank(str)),
     sign_packages(output_sub_folder, signing_credentials, input_output_parameters)
 
 
+def get_build_platform(packaging_platform: str, packaging_docker_platform: str) -> str:
+    return (
+        package_docker_platform_dict[packaging_docker_platform] if packaging_docker_platform else packaging_platform)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token', required=True)
-    parser.add_argument('--platform', required=True, choices=platform_names())
+    parser.add_argument('--platform', required=False, choices=platform_names())
+    parser.add_argument('--packaging_docker_platform', required=False, choices=package_docker_platform_dict.keys())
     parser.add_argument('--build_type', choices=[b.name for b in BuildType])
     parser.add_argument('--secret_key', required=True)
     parser.add_argument('--passphrase', required=True)
@@ -287,7 +308,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if args.platform and args.packaging_docker_platform:
+        raise ValueError("Either platform or packaging_docker_platform should be set.")
+    build_platform = get_build_platform(args.platform, args.packaging_docker_platform)
+
     io_parameters = InputOutputParameters.build(args.input_files_dir, args.output_dir, args.output_validation)
     sign_credentials = SigningCredentials(args.secret_key, args.passphrase)
-    build_packages(args.gh_token, args.platform, BuildType[args.build_type], sign_credentials,
+    build_packages(args.gh_token, build_platform, BuildType[args.build_type], sign_credentials,
                    io_parameters)
