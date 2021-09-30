@@ -25,6 +25,7 @@ from ..common_tool_methods import (
     get_project_version_from_tag_name,
     get_prs_for_patch_release,
     get_supported_postgres_release_versions,
+    get_supported_postgres_nightly_versions,
     get_upcoming_minor_version,
     get_version_details,
     is_major_release,

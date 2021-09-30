@@ -1,16 +1,17 @@
+import base64
 import os
 import re
 import shlex
 import subprocess
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Any,Tuple
+from typing import Dict, List, Tuple
 
-import base64
 import git
 import gnupg
 import pathlib2
 import requests
+import yaml
 from git import GitCommandError, Repo
 from github import Commit, Github, PullRequest, Repository
 from jinja2 import Environment, FileSystemLoader
@@ -18,8 +19,6 @@ from parameters_validation import validate_parameters
 
 from .common_validations import (is_tag, is_version)
 from .dbconfig import RequestLog, RequestType
-
-import yaml
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = r"\.\d{1,3}"
