@@ -70,11 +70,10 @@ def update_docker_file_for_postgres14(project_version: str, template_path: str, 
     content = process_template_file(project_version, template_path,
                                     docker_templates[SupportedDockerImages.postgres14])
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres14]}"
-    dir_name=os.path.dirname(dest_file_name)
-    if not (os.path.exists(dir_name)):
+    dir_name = os.path.dirname(dest_file_name)
+    if not os.path.exists(dir_name):
         os.makedirs(dir_name)
     write_to_file(content, dest_file_name)
-
 
 
 def get_new_changelog_entry(project_version: str, postgres_version: str = ""):
