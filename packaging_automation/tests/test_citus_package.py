@@ -78,7 +78,7 @@ def test_build_packages():
     input_output_parameters = InputOutputParameters.build(PACKAGING_EXEC_FOLDER, BASE_OUTPUT_FOLDER,
                                                           output_validation=False)
 
-    build_packages(GH_TOKEN, PLATFORM, BuildType.release, signing_credentials, input_output_parameters, is_test=False)
+    build_packages(GH_TOKEN, PLATFORM, BuildType.release, signing_credentials, input_output_parameters, is_test=True)
     verify_rpm_signature_in_dir(BASE_OUTPUT_FOLDER)
     os_name, os_version = decode_os_and_release(PLATFORM)
     sub_folder = get_release_package_folder_name(os_name, os_version)
