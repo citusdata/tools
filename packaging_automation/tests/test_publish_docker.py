@@ -55,7 +55,7 @@ def test_publish_main_docker_images():
 
     try:
         run_with_output("git checkout -b docker-unit-test")
-        publish_main_docker_images(DockerImageType.latest, EXEC_PATH)
+        publish_main_docker_images(DockerImageType.latest, False)
         docker_client.images.get("citusdata/citus:latest")
     finally:
         run_with_output("git checkout master")
@@ -67,7 +67,7 @@ def test_publish_tagged_docker_images_latest():
     os.chdir("docker")
     try:
         run_with_output("git checkout -b docker-unit-test")
-        publish_tagged_docker_images(DockerImageType.latest, TAG_NAME, EXEC_PATH)
+        publish_tagged_docker_images(DockerImageType.latest, "v10.0.3", False)
         docker_client.images.get("citusdata/citus:10")
         docker_client.images.get("citusdata/citus:10.0")
         docker_client.images.get("citusdata/citus:10.0.3")
@@ -81,7 +81,7 @@ def test_publish_tagged_docker_images_alpine():
     os.chdir("docker")
     try:
         run_with_output("git checkout -b docker-unit-test")
-        publish_tagged_docker_images(DockerImageType.alpine, TAG_NAME, EXEC_PATH)
+        publish_tagged_docker_images(DockerImageType.alpine, TAG_NAME, False)
         docker_client.images.get("citusdata/citus:10-alpine")
         docker_client.images.get("citusdata/citus:10.0-alpine")
         docker_client.images.get("citusdata/citus:10.0.3-alpine")
@@ -95,13 +95,11 @@ def test_publish_nightly_docker_image():
     os.chdir("docker")
     try:
         run_with_output("git checkout -b docker-unit-test")
-        publish_nightly_docker_image(NON_DEFAULT_BRANCH_NAME)
+        publish_nightly_docker_image(False)
         docker_client.images.get("citusdata/citus:nightly")
     finally:
         run_with_output("git checkout master")
         run_with_output("git branch -D docker-unit-test")
-
-
 
 
 def clear_env():

@@ -1,18 +1,18 @@
-import base64
 import os
 import re
 import shlex
 import subprocess
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List
-from typing import Tuple
+from typing import Dict, List, Tuple
 
+import base64
+import git
 import gnupg
 import pathlib2
 import requests
-from git import Repo
-from github import Repository, PullRequest, Commit, Github
+from git import GitCommandError, Repo
+from github import Commit, Github, PullRequest, Repository
 from jinja2 import Environment, FileSystemLoader
 from parameters_validation import validate_parameters
 
@@ -300,8 +300,25 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
     return has_match
 
 
+def is_tag_on_branch(tag_name: str, branch_name: str):
+    g = git.Git(os.getcwd())
+    try:
+        branches_str = g.execute(["git", "branch", "--contains", f"tags/{tag_name}"])
+        branches = remove_prefix(branches_str, "*").split("\n")
+        print("Branches str:" + branches_str)
+        if len(branches) > 0:
+            for branch in branches:
+                if branch.strip() == branch_name:
+                    return True
+        return False
+    except GitCommandError as e:
+        print("Error:" + str(e))
+        return False
+
+
 def get_current_branch(working_dir: str) -> str:
     repo = get_new_repo(working_dir)
+
     return repo.active_branch.name
 
 
