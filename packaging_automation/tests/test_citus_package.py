@@ -90,7 +90,7 @@ def test_build_packages():
     assert os.path.exists(postgres_version_file_path)
     config = dotenv_values(postgres_version_file_path)
     assert config["release_versions"] == "11,12,13"
-    assert config["nightly_versions"] == "12,13"
+    assert config["nightly_versions"] == "12,13,14"
 
 def test_get_required_package_count():
     assert get_required_package_count(PACKAGING_EXEC_FOLDER, platform="el/8") == 9
