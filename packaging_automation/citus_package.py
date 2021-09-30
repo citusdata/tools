@@ -237,9 +237,6 @@ def build_package(github_token: non_empty(non_blank(str)),
         f'docker run --rm -v {input_output_parameters.output_dir}:/packages -v '
         f'{input_output_parameters.input_files_dir}:/buildfiles:ro -e '
         f'GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE '
-        # TODO The below line should be deleted after PG14 official release
-        # This line is to override pg_buildext supported PG releases
-        f'-e DEB_PG_SUPPORTED_VERSIONS="10\n11\n12\n13\n14" '  
         f'citus/packaging:{docker_platform}-{postgres_extension} {build_type.name}', text=True)
 
     if output.stdout:
