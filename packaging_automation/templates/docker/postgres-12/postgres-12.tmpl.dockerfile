@@ -1,6 +1,6 @@
 # This file is auto generated from it's template,
 # see citusdata/tools/packaging_automation/templates/docker/postgres-12/postgres-12.tmpl.dockerfile.
-FROM postgres:12.6
+FROM postgres:12.8
 ARG VERSION={{project_version}}
 LABEL maintainer="Citus Data https://citusdata.com" \
       org.label-schema.name="Citus" \
@@ -20,8 +20,8 @@ RUN apt-get update \
        curl \
     && curl -s https://install.citusdata.com/community/deb.sh | bash \
     && apt-get install -y postgresql-$PG_MAJOR-citus-{{project_minor_version}}.=$CITUS_VERSION \
-                          postgresql-$PG_MAJOR-hll=2.15.citus-1 \
-                          postgresql-$PG_MAJOR-topn=2.3.1 \
+                          postgresql-$PG_MAJOR-hll=2.16.citus-1 \
+                          postgresql-$PG_MAJOR-topn=2.4.0 \
     && apt-get purge -y --auto-remove curl \
     && rm -rf /var/lib/apt/lists/*
 
