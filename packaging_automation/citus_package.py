@@ -23,7 +23,7 @@ from .packaging_warning_handler import validate_output
 
 GPG_KEY_NAME = "packaging@citusdata.com"
 
-POSTGRES_VERSION_FILE = "supported-postgres"
+POSTGRES_VERSION_FILE = "supported-postgres.txt"
 POSTGRES_MATRIX_FILE_NAME = "postgres-matrix.yml"
 
 supported_platforms = {
