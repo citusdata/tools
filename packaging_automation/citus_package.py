@@ -254,7 +254,7 @@ def build_package(github_token: non_empty(non_blank(str)),
         f'docker run --rm -v {input_output_parameters.output_dir}:/packages -v '
         f'{input_output_parameters.input_files_dir}:/buildfiles:ro -e '
         f'GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE '
-        f'citus/docker_image_name:{docker_platform}-{postgres_extension} {build_type.name}', text=True)
+        f'citus/{docker_image_name}:{docker_platform}-{postgres_extension} {build_type.name}', text=True)
 
     if output.stdout:
         print("Output:" + output.stdout)
