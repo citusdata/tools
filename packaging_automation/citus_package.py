@@ -12,15 +12,18 @@ from attr import dataclass
 from dotenv import dotenv_values
 from parameters_validation import non_blank, non_empty, validate_parameters
 
-from .common_tool_methods import (run_with_output, PackageType, transform_key_into_base64_str,
-                                  get_gpg_fingerprints_by_name, str_array_to_str,
-                                  get_supported_postgres_release_versions, get_supported_postgres_nightly_versions,
-                                  DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER)
+from .common_tool_methods import (DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                                  DEFAULT_UNICODE_ERROR_HANDLER, PackageType,
+                                  get_gpg_fingerprints_by_name,
+                                  get_supported_postgres_nightly_versions,
+                                  get_supported_postgres_release_versions,
+                                  run_with_output, str_array_to_str,
+                                  transform_key_into_base64_str)
 from .packaging_warning_handler import validate_output
 
 GPG_KEY_NAME = "packaging@citusdata.com"
 
-POSTGRES_VERSION_FILE = "supported-postgres.txt"
+POSTGRES_VERSION_FILE = "supported-postgres"
 POSTGRES_MATRIX_FILE_NAME = "postgres-matrix.yml"
 
 supported_platforms = {
@@ -342,4 +345,4 @@ if __name__ == "__main__":
     io_parameters = InputOutputParameters.build(args.input_files_dir, args.output_dir, args.output_validation)
     sign_credentials = SigningCredentials(args.secret_key, args.passphrase)
     build_packages(args.gh_token, build_platform, BuildType[args.build_type], sign_credentials,
-                   io_parameters,args.is_test)
+                   io_parameters, args.is_test)

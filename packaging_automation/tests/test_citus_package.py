@@ -3,17 +3,20 @@ import os
 import pathlib2
 
 from .test_utils import generate_new_gpg_key
-from ..citus_package import (build_packages, BuildType, decode_os_and_release, get_release_package_folder_name,
-                             SigningCredentials, InputOutputParameters, get_build_platform,
-                             POSTGRES_VERSION_FILE, get_package_version_from_pkgvars, POSTGRES_MATRIX_FILE_NAME)
+from ..citus_package import (POSTGRES_MATRIX_FILE_NAME, POSTGRES_VERSION_FILE,
+                             BuildType, InputOutputParameters,
+                             SigningCredentials, build_packages,
+                             decode_os_and_release, get_build_platform,
+                             get_package_version_from_pkgvars,
+                             get_release_package_folder_name)
 
-from ..common_tool_methods import (run, delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
-                                   get_private_key_by_fingerprint_with_passphrase, define_rpm_public_key_to_machine,
-                                   transform_key_into_base64_str,
-                                   verify_rpm_signature_in_dir, delete_all_gpg_keys_by_name,
-                                   get_supported_postgres_release_versions)
-from ..upload_to_package_cloud import (upload_files_in_directory_to_package_cloud, delete_package_from_package_cloud,
-                                       package_exists)
+from ..common_tool_methods import (define_rpm_public_key_to_machine, delete_all_gpg_keys_by_name,
+                                   delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
+                                   get_private_key_by_fingerprint_with_passphrase,
+                                   get_supported_postgres_release_versions, run,
+                                   transform_key_into_base64_str, verify_rpm_signature_in_dir)
+from ..upload_to_package_cloud import (delete_package_from_package_cloud, package_exists,
+                                       upload_files_in_directory_to_package_cloud)
 
 from dotenv import dotenv_values
 
@@ -91,6 +94,7 @@ def test_build_packages():
     config = dotenv_values(postgres_version_file_path)
     assert config["release_versions"] == "11,12,13"
     assert config["nightly_versions"] == "12,13,14"
+
 
 def test_get_required_package_count():
     assert get_required_package_count(PACKAGING_EXEC_FOLDER, platform="el/8") == 9
