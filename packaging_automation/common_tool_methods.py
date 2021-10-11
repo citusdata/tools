@@ -1,3 +1,4 @@
+import base64
 import os
 import re
 import shlex
@@ -6,11 +7,11 @@ from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Tuple
 
-import base64
 import git
 import gnupg
 import pathlib2
 import requests
+import yaml
 from git import GitCommandError, Repo
 from github import Commit, Github, PullRequest, Repository
 from jinja2 import Environment, FileSystemLoader
@@ -20,6 +21,8 @@ from .common_validations import (is_tag, is_version)
 from .dbconfig import RequestLog, RequestType
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
+PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = r"\.\d{1,3}"
+POSTGRES_MATRIX_FLIE_NAME = "postgres-matrix.yml"
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = r"\.\d{1,3}"
 
 # http://python-notes.curiousefficiency.org/en/latest/python3/text_file_processing.html
@@ -318,7 +321,6 @@ def is_tag_on_branch(tag_name: str, branch_name: str):
 
 def get_current_branch(working_dir: str) -> str:
     repo = get_new_repo(working_dir)
-
     return repo.active_branch.name
 
 
@@ -557,3 +559,67 @@ def stat_get_request(request_address: str, request_type: RequestType, session):
     finally:
         session.commit()
     return result
+
+
+def get_supported_postgres_release_versions(postgres_matrix_conf_file_path: str,
+                                            package_version: is_version(str)) -> List[str]:
+    with open(postgres_matrix_conf_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+        yaml_content = yaml.load(reader, yaml.BaseLoader)
+
+    versions_dictionary = {}
+    for version_info in yaml_content['version_matrix']:
+        versions_dictionary[list(version_info.keys())[0]] = \
+            version_info[list(version_info.keys())[0]]['postgres_versions']
+    release_versions = match_release_version(versions_dictionary, package_version)
+
+    return release_versions
+
+
+def get_supported_postgres_nightly_versions(postgres_matrix_conf_file_path: str) -> List[str]:
+    with open(postgres_matrix_conf_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+        yaml_content = yaml.load(reader, yaml.BaseLoader)
+
+    # nightly version is the last element in the postgres matrix
+    latest_version_info = yaml_content['version_matrix'][-1]
+    nightly_versions = latest_version_info[list(latest_version_info.keys())[0]]["postgres_versions"]
+    return nightly_versions
+
+
+def match_release_version(versions_dictionary, package_version: str):
+    versions = list(versions_dictionary.keys())
+    numeric_versions_of_config: Dict[int, str] = {}
+    for version in versions:
+        numeric_versions_of_config[get_numeric_counterpart_of_version(version)] = version
+    package_version_numeric = get_numeric_counterpart_of_version(package_version)
+
+    if package_version_numeric in numeric_versions_of_config:
+        version_in_str = numeric_versions_of_config[package_version_numeric]
+    else:
+        last_smallest_version = -1
+        for numeric_version in numeric_versions_of_config:
+            if numeric_version > package_version_numeric:
+                break
+
+            last_smallest_version = numeric_version
+
+        if last_smallest_version < 0:
+            version_in_str = versions[0]
+        else:
+            version_in_str = numeric_versions_of_config[last_smallest_version]
+
+    return versions_dictionary[version_in_str]
+
+
+def get_numeric_counterpart_of_version(package_version: str):
+    numbers_in_version = package_version.split(".")
+    # add a 0 if version is minor to calculate and match for patch releases accurately
+    if len(numbers_in_version) == 2:
+        numbers_in_version.append('0')
+    multiplier = 1
+    numeric_counterpart = 0
+    for num in reversed(numbers_in_version):
+        numeric_counterpart = numeric_counterpart + int(num) * multiplier
+        multiplier = multiplier * 100
+    return numeric_counterpart

@@ -3,14 +3,22 @@ import os
 import pathlib2
 
 from .test_utils import generate_new_gpg_key
-from ..citus_package import (build_packages, BuildType, decode_os_and_release, get_release_package_folder_name,
-                             SigningCredentials, InputOutputParameters, get_build_platform)
-from ..common_tool_methods import (run, delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
-                                   get_private_key_by_fingerprint_with_passphrase, define_rpm_public_key_to_machine,
-                                   transform_key_into_base64_str,
-                                   verify_rpm_signature_in_dir, delete_all_gpg_keys_by_name)
-from ..upload_to_package_cloud import (upload_files_in_directory_to_package_cloud, delete_package_from_package_cloud,
-                                       package_exists)
+from ..citus_package import (POSTGRES_MATRIX_FILE_NAME, POSTGRES_VERSION_FILE,
+                             BuildType, InputOutputParameters,
+                             SigningCredentials, build_packages,
+                             decode_os_and_release, get_build_platform,
+                             get_package_version_from_pkgvars,
+                             get_release_package_folder_name)
+
+from ..common_tool_methods import (define_rpm_public_key_to_machine, delete_all_gpg_keys_by_name,
+                                   delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
+                                   get_private_key_by_fingerprint_with_passphrase,
+                                   get_supported_postgres_release_versions, run,
+                                   transform_key_into_base64_str, verify_rpm_signature_in_dir)
+from ..upload_to_package_cloud import (delete_package_from_package_cloud, package_exists,
+                                       upload_files_in_directory_to_package_cloud)
+
+from dotenv import dotenv_values
 
 TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 
@@ -18,18 +26,16 @@ PACKAGING_SOURCE_FOLDER = "packaging_test"
 PACKAGING_EXEC_FOLDER = f"{TEST_BASE_PATH}/{PACKAGING_SOURCE_FOLDER}"
 BASE_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
 
-package_counts = {
-    "el/7": 4,
-    "el/8": 6,
-    "ol/7": 4,
-    "ol/8": 6,
-    "debian/stretch": 4,
-    "debian/buster": 4,
-    "debian/bullseye": 4,
-    "ubuntu/xenial": 2,
-    "ubuntu/bionic": 4,
-    "ubuntu/focal": 4,
-    "pgxn": 1
+single_postgres_package_counts = {
+    "el/7": 2,
+    "el/8": 3,
+    "ol/7": 2,
+    "debian/stretch": 2,
+    "debian/buster": 2,
+    "debian/bullseye": 2,
+    "ubuntu/xenial": 1,
+    "ubuntu/bionic": 2,
+    "ubuntu/focal": 2
 }
 
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
@@ -38,6 +44,13 @@ GH_TOKEN = os.getenv("GH_TOKEN")
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 PLATFORM = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_PLATFORM"))
+
+
+def get_required_package_count(input_files_dir: str, platform: str):
+    package_version = get_package_version_from_pkgvars(input_files_dir)
+    release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
+                                                               package_version)
+    return len(release_versions) * single_postgres_package_counts[platform]
 
 
 def setup_module():
@@ -67,13 +80,24 @@ def test_build_packages():
     signing_credentials = SigningCredentials(secret_key, TEST_GPG_KEY_PASSPHRASE)
     input_output_parameters = InputOutputParameters.build(PACKAGING_EXEC_FOLDER, BASE_OUTPUT_FOLDER,
                                                           output_validation=False)
-    build_packages(GH_TOKEN, PLATFORM, BuildType.release, signing_credentials, input_output_parameters)
+
+    build_packages(GH_TOKEN, PLATFORM, BuildType.release, signing_credentials, input_output_parameters, is_test=True)
     verify_rpm_signature_in_dir(BASE_OUTPUT_FOLDER)
     os_name, os_version = decode_os_and_release(PLATFORM)
     sub_folder = get_release_package_folder_name(os_name, os_version)
     release_output_folder = f"{BASE_OUTPUT_FOLDER}/{sub_folder}"
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
-    assert len(os.listdir(release_output_folder)) == package_counts[PLATFORM]
+    assert len(os.listdir(release_output_folder)) == get_required_package_count(input_files_dir=PACKAGING_EXEC_FOLDER,
+                                                                                platform=PLATFORM)
+    postgres_version_file_path = f"{PACKAGING_EXEC_FOLDER}/{POSTGRES_VERSION_FILE}"
+    assert os.path.exists(postgres_version_file_path)
+    config = dotenv_values(postgres_version_file_path)
+    assert config["release_versions"] == "11,12,13"
+    assert config["nightly_versions"] == "12,13,14"
+
+
+def test_get_required_package_count():
+    assert get_required_package_count(PACKAGING_EXEC_FOLDER, platform="el/8") == 9
 
 
 def test_decode_os_packages():

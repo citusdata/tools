@@ -24,7 +24,10 @@ from ..common_tool_methods import (
     get_patch_version_regex,
     get_project_version_from_tag_name,
     get_prs_for_patch_release,
-    get_upcoming_minor_version, get_version_details,
+    get_supported_postgres_release_versions,
+    get_supported_postgres_nightly_versions,
+    get_upcoming_minor_version,
+    get_version_details,
     is_major_release,
     is_tag_on_branch,
     local_branch_exists,
@@ -256,3 +259,33 @@ def test_delete_rpm_key_by_name():
     key_lines = output.splitlines()
     for key_line in key_lines:
         assert not rpm_key_matches_summary(key_line, TEST_GPG_KEY_NAME)
+
+
+def test_get_supported_postgres_versions():
+    postgres_release_versions_10_0_0 = get_supported_postgres_release_versions(
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.0.0")
+    assert postgres_release_versions_10_0_0 == (['11', '12', '13'])
+
+    postgres_release_versions_9_2_1 = get_supported_postgres_release_versions(
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "9.2.1")
+    assert postgres_release_versions_9_2_1 == (['11', '12'])
+
+    postgres_release_versions_10_1_1 = get_supported_postgres_release_versions(
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.1.1")
+    assert postgres_release_versions_10_1_1 == (['12', '13'])
+
+    postgres_release_versions_7_2_1 = get_supported_postgres_release_versions(
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "7.2.1")
+    assert postgres_release_versions_7_2_1 == (['10', '11'])
+
+    postgres_release_versions_10_2_0 = get_supported_postgres_release_versions(
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.2.0")
+    assert postgres_release_versions_10_2_0 == (['12', '13', '14'])
+
+    postgres_release_versions_10_2_1 = get_supported_postgres_release_versions(
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.2.1")
+    assert postgres_release_versions_10_2_1 == (['12', '13', '14'])
+
+    postgres_nightly_versions_10_2_1 = get_supported_postgres_nightly_versions(
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml")
+    assert postgres_nightly_versions_10_2_1 == (['12', '13', '14'])
