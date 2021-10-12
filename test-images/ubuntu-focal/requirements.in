@@ -1,0 +1,16 @@
+docker
+GitPython
+Jinja2
+parameters_validation
+pathlib2
+pycurl
+PyGithub
+pytest
+python-gnupg
+python-string-utils
+PyYAML
+requests
+SQLAlchemy
+urllib3
+wheel
+python-dotenv
