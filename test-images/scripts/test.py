@@ -1,6 +1,10 @@
 import subprocess
 import shlex
 from enum import Enum
+import os
+
+CITUS_VERSION = os.getenv("CITUS_VERSION")
+POSTGRES_VERSION = os.getenv("POSTGRES_VERSION")
 
 
 def run_with_output(command, *args, **kwargs):
@@ -43,9 +47,7 @@ def verify_output(result, expected_result, verification_type: VerificationType =
 
 def test_citus():
     assert verify_output(run_with_output('pg_ctl -D citus -o "-p 9700" -l citus/citus_logfile start'),
-                  "waiting for server to start.... done\nserver started\n")
+                         "waiting for server to start.... done\nserver started\n")
     assert verify_output(run_with_output('psql -p 9700 -c "CREATE EXTENSION citus;"'), 'CREATE EXTENSION\n')
     assert verify_output(run_with_output('psql -p 9700 -c "select citus_version();"'),
-                  " Citus 10.2.1 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu",VerificationType.contains)
-
-
+                         f" Citus {CITUS_VERSION} on x86_64-pc-linux-gnu, compiled by gcc", VerificationType.contains)

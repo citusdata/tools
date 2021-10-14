@@ -1,18 +1,15 @@
-# This file is auto generated from it's template,
-# see citusdata/tools/packaging_automation/templates/docker/latest/latest.tmpl.dockerfile.
 FROM ubuntu:focal
-ARG VERSION
+ARG CITUS_VERSION
+# FOrmat should be XY and should not include dots e.g for 10.2.1=>102
+ARG CITUS_MAJOR_VERSION
 ARG PG_MAJOR
-LABEL maintainer="Citus Data https://citusdata.com" \
-      org.label-schema.name="Citus" \
-      org.label-schema.description="Scalable PostgreSQL for multi-tenant and real-time workloads" \
-      org.label-schema.url="https://www.citusdata.com" \
-      org.label-schema.vcs-url="https://github.com/citusdata/citus" \
-      org.label-schema.vendor="Citus Data, Inc." \
-      org.label-schema.version=${VERSION} \
-      org.label-schema.schema-version="1.0"
+ARG FANCY=1
+ARG HLL_VERSION=2.16.citus-1
+ARG TOPN_VERSION=2.4.0
 
-ENV CITUS_VERSION ${VERSION}.citus-1
+ENV CITUS_VERSION ${CITUS_VERSION}
+
+ENV PG_MAJOR ${PG_MAJOR}
 
 ENV TZ=Europe/Istanbul
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -39,22 +36,22 @@ RUN apt-get update \
        ca-certificates \
        curl \
     && curl -s https://install.citusdata.com/community/deb.sh | bash
-RUN apt-get install -y postgresql-$PG_MAJOR-citus-10.2=$CITUS_VERSION \
-                          postgresql-$PG_MAJOR-hll=2.16.citus-1 \
-                          postgresql-$PG_MAJOR-topn=2.4.0 \
+RUN apt-get install -y postgresql-${PG_MAJOR}-citus-${CITUS_MAJOR_VERSION}=${CITUS_VERSION}.citus-${FANCY} \
+                       postgresql-$PG_MAJOR-hll=${HLL_VERSION} \
+                       postgresql-$PG_MAJOR-topn=${TOPN_VERSION} \
     && apt-get purge -y --auto-remove curl \
     && rm -rf /var/lib/apt/lists/*12
 
 
 
 ARG POSTGRES_HOME=/var/lib/postgresql/
-ENV PATH=${PATH}:/usr/lib/postgresql/14/bin:$POSTGRES_HOME
+ENV PATH=${PATH}:/usr/lib/postgresql/${PG_MAJOR}/bin:${POSTGRES_HOME}
 
-WORKDIR /var/lib/postgresql/
+WORKDIR ${POSTGRES_HOME}
 
 RUN mkdir citus && chown postgres citus
 
-COPY test.sh test_internal.sh requirements.in test.py ./
+COPY scripts/* ./
 
 RUN  pip-compile && python3.8 -m pip install -r requirements.txt
 
