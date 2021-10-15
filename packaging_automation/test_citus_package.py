@@ -4,6 +4,7 @@ import subprocess
 import shlex
 import requests
 from enum import Enum
+import sys
 
 from .common_tool_methods import (get_supported_postgres_release_versions, get_minor_version)
 
@@ -77,7 +78,7 @@ if __name__ == "__main__":
         print(build_command)
         return_build = run_command(build_command)
         return_run = run_command(
-            f"docker run -it {docker_image_name}")
+            f"docker run  {docker_image_name}")
         return_codes[f"{docker_image_name}-build"] = return_build
         return_codes[f"{docker_image_name}-run"] = return_run
 
@@ -89,3 +90,6 @@ if __name__ == "__main__":
         print(f"{key}: {'Success' if value == 0 else f'Fail. ErrorCode: {value}'}")
     summary_error = 'FAILED :(' if error_exists else 'SUCCESS :)'
     print(f'{summary_error}-------------------------------------------------')
+
+    if error_exists:
+        sys.exit("Failed")
