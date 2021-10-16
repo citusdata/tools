@@ -43,5 +43,4 @@ jobs:
         run: |
           python -m  packaging_automation.test_citus_package \
           --prj_ver 10.2.1 \
-          --os_release ${{ matrix.platform }} \
-          --pg_major_version 14
+          --os_release ${{ matrix.platform }}
