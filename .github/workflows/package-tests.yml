@@ -18,13 +18,13 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - centos/8
-          - centos/7
-          - ol/7
-          - debian/stretch
-          - debian/buster
-          - debian/bullseye
-          - ubuntu/bionic
+          #          - centos/8
+          #          - centos/7
+          #          - ol/7
+          #          - debian/stretch
+          #          - debian/buster
+          #          - debian/bullseye
+          #          - ubuntu/bionic
           - ubuntu/focal
     env:
       PLATFORM: ${{ matrix.platform }}
