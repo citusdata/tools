@@ -59,8 +59,8 @@ RUN  pip-compile && python3.8 -m pip install -r requirements.txt
 USER postgres
 RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citus/postgresql.conf
 
-RUN ls -la /
-CMD ["/var/lib/postgresql//test_internal.sh"]
+RUN ls -la /var/lib/postgresql
+CMD ["/var/lib/postgresql/test_internal.sh"]
 
 
 
