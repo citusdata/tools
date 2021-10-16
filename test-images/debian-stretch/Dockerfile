@@ -78,7 +78,7 @@ USER postgres
 
 WORKDIR ${POSTGRES_HOME}
 
-CMD ["/test_internal.sh"]
+CMD ["test_internal.sh"]
 
 
 

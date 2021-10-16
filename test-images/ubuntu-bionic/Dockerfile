@@ -75,7 +75,7 @@ RUN pip-compile && python3.8 -m pip install -r requirements.txt
 USER postgres
 
 
-CMD ["/test_internal.sh"]
+CMD ["test_internal.sh"]
 
 
 
