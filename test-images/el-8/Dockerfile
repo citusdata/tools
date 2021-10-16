@@ -1,4 +1,4 @@
-FROM oraclelinux:7
+FROM registry.access.redhat.com/ubi8
 
 ARG CITUS_VERSION
 # Format should be XY and should not include dots e.g for 10.2.1=>102
@@ -7,7 +7,7 @@ ARG PG_MAJOR
 ARG FANCY=1
 ARG HLL_VERSION=2.16.citus-1
 ARG TOPN_VERSION=2.4.0.citus-1
-ARG PACKAGE_RELEASE_SUFFIX=el7
+ARG PACKAGE_RELEASE_SUFFIX=el8
 
 ENV CITUS_VERSION ${CITUS_VERSION}
 
@@ -18,9 +18,7 @@ RUN yum update -y && \
     yum install -y curl
 
 
-
-RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-
+# TODO Parameterize Citus and postgres version
 RUN export CITUS_MAJOR_VER=${CITUS_MAJOR_VERSION//./} && \
     curl https://install.citusdata.com/community/rpm.sh |  bash && \
     yum install -y citus${CITUS_MAJOR_VER}_${PG_MAJOR}-${CITUS_VERSION}.citus-${FANCY}.${PACKAGE_RELEASE_SUFFIX} \
@@ -45,7 +43,7 @@ RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citu
 
 USER root
 # Install python 3.8 and its dependencies
-RUN yum groupinstall -y 'Development Tools' && \
+RUN yum install -y gcc make && \
     yum -y install  libcurl-devel \
                     openssl-devel \
                     bzip2-devel \

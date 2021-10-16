@@ -22,8 +22,8 @@ def run_command(command: str) -> int:
 
 
 class TestPlatform(Enum):
-    el_7 = {"name": "el/7", "docker_image_name": "ubi-7"}
-    el_8 = {"name": "el/8", "docker_image_name": "ubi-8"}
+    el_7 = {"name": "el/7", "docker_image_name": "el-7"}
+    el_8 = {"name": "el/8", "docker_image_name": "el-8"}
     centos_8 = {"name": "centos/8", "docker_image_name": "centos-8"}
     centos_7 = {"name": "centos/7", "docker_image_name": "centos-7"}
     ol_7 = {"name": "ol/7", "docker_image_name": "ol-7"}
@@ -63,9 +63,10 @@ if __name__ == "__main__":
     os.chdir("test-images")
     return_codes = dict()
 
-    if not args.pg_major_version:
-        postgres_versions = [p for p in postgres_versions if p in postgres_versions]
+    if args.pg_major_version:
+        postgres_versions = [p for p in postgres_versions if p == args.pg_major_version]
 
+    print(postgres_versions)
     if len(postgres_versions) == 0:
         raise ValueError("At least one supported postgres version is required")
 

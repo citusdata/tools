@@ -60,7 +60,7 @@ USER postgres
 RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citus/postgresql.conf
 
 
-CMD ["test_internal.sh"]
+CMD ["/test_internal.sh"]
 
 
 
