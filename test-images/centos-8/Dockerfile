@@ -62,6 +62,7 @@ RUN pip-compile && python3.8 -m pip install -r requirements.txt
 
 USER postgres
 
-RUN ls -la /var/lib/postgresql
-CMD ["/var/lib/postgresqltest_internal.sh"]
+WORKDIR ${POSTGRES_HOME}
+
+CMD ["test_internal.sh"]
 
