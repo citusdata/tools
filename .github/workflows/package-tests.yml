@@ -12,8 +12,21 @@ on:
         required: true
 
 jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    outputs:
+      pg_versions: ${{ steps.generate-postgres.outputs.pg_versions }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - name: generate postgres
+        id: generate-postgres
+        run: echo "::set-output name=pg_versions::[12,13,14]"
   test_execution:
     runs-on: ubuntu-latest
+    needs: metadata
     strategy:
       fail-fast: false
       matrix:
@@ -26,7 +39,7 @@ jobs:
           - debian/bullseye
           - ubuntu/bionic
           - ubuntu/focal
-        pg: ${{ fromJson('[12, 13, 14]') }}
+        pg: ${{ fromJson(needs.metadata.outputs.pg_versions) }}
     env:
       PLATFORM: ${{ matrix.platform }}
 
