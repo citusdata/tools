@@ -62,5 +62,6 @@ RUN pip-compile && python3.8 -m pip install -r requirements.txt
 
 USER postgres
 
-CMD ["/test_internal.sh"]
+RUN ls -la /
+CMD ["/var/lib/pgsql/test_internal.sh"]
 
