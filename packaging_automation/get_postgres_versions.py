@@ -10,4 +10,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     postgres_versions = get_postgres_versions_from_matrix_file(args.prj_ver)
-    os.environ["POSTGRES_VERSIONS"] = json.dumps(postgres_versions)
+    print(json.dumps(postgres_versions))
