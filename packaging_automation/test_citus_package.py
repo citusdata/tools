@@ -44,6 +44,14 @@ def parse_os_release(os_release: str) -> TestPlatform:
     return result
 
 
+def get_postgres_versions_from_matrix_file(project_version: str):
+    r = requests.get(POSTGRES_MATRIX_WEB_ADDRESS, allow_redirects=True)
+
+    open(POSTGRES_MATRIX_FILE, 'wb').write(r.content)
+    pg_versions = get_supported_postgres_release_versions(POSTGRES_MATRIX_FILE, project_version)
+    return pg_versions
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--prj_ver', required=True)
@@ -59,7 +67,9 @@ if __name__ == "__main__":
     r = requests.get(POSTGRES_MATRIX_WEB_ADDRESS, allow_redirects=True)
 
     open(POSTGRES_MATRIX_FILE, 'wb').write(r.content)
-    postgres_versions = get_supported_postgres_release_versions(POSTGRES_MATRIX_FILE, args.prj_ver)
+
+    postgres_versions = get_postgres_versions_from_matrix_file(args.prj_ver)
+
     os.chdir("test-images")
     return_codes = dict()
 
