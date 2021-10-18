@@ -9,7 +9,6 @@ on:
     inputs:
       prj_ver:
         description: "The version to be released"
-        default: 10.2.1
         required: true
 
 jobs:
@@ -64,6 +63,7 @@ jobs:
       - name: Citus package tests
         run: |
           export PROJECT_VERSION="${{ github.event.inputs.name }}"
+          export PROJECT_VERSION="${PROJECT_VERSION:-10.2.1}"
           python -m  packaging_automation.test_citus_package \
           --prj_ver "${{ github.event.inputs.prj_ver }}" \
           --os_release ${{ matrix.platform }} \
