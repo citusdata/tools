@@ -95,7 +95,7 @@ if __name__ == "__main__":
         print(build_command)
         return_build = run_command(build_command)
         return_run = run_command(
-            f"docker run  {docker_image_name}")
+            f"docker run  -e POSTGRES_VERSION={postgres_version} {docker_image_name} ")
         return_codes[f"{docker_image_name}-build"] = return_build
         return_codes[f"{docker_image_name}-run"] = return_run
 

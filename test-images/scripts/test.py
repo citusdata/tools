@@ -2,6 +2,7 @@ import subprocess
 import shlex
 from enum import Enum
 import os
+import re
 
 CITUS_VERSION = os.getenv("CITUS_VERSION")
 POSTGRES_VERSION = os.getenv("POSTGRES_VERSION")
@@ -29,27 +30,30 @@ def verify(output, expected_result, verification_type: VerificationType = Verifi
         return False
 
 
-def verify_output(result, expected_result, verification_type: VerificationType = VerificationType.equals) -> bool:
+def verify_output(result, expected_result) -> bool:
     if result.returncode != 0:
         print(result.stderr.decode("utf-8"))
         print(f"Error: Error Code : {result.returncode}")
         return False
     else:
         output = result.stdout.decode("utf-8")
-        if verify(output, expected_result, verification_type):
+        print("Result:")
+        print(output)
+        if re.match(expected_result, repr(output)):
             print(output)
             return True
         else:
-            print(f"Expected Result: {expected_result}")
-            print(f"Actual Result: {output}")
+            print(rf"Expected Result: {expected_result}")
+            print(rf"Actual Result: {repr(output)}")
             return False
 
 
 def test_citus():
     assert verify_output(run_with_output('pg_ctl -D citus -o "-p 9700" -l citus/citus_logfile start'),
-                         "waiting for server to start.... done\nserver started\n")
-    assert verify_output(run_with_output('psql -p 9700 -c "CREATE EXTENSION citus;"'), 'CREATE EXTENSION\n')
-    print(run_with_output('psql -p 9700 -c "select version();"'))
+                         r"^'waiting for server to start.... done\\nserver started\\n'$")
+    assert verify_output(run_with_output('psql -p 9700 -c "CREATE EXTENSION citus;"'), r"^'CREATE EXTENSION\\n'$")
+    assert verify_output(run_with_output('psql -p 9700 -c "select version();"'),
+                         rf".*PostgreSQL {POSTGRES_VERSION}.* on x86_64-pc-linux-gnu, compiled by gcc \(.*")
+    # Since version info for ol and el 7 contains undefined, undefined was needed to add as expected param for pc
     assert verify_output(run_with_output('psql -p 9700 -c "select citus_version();"'),
-                         f" Citus {CITUS_VERSION} on x86_64-pc-linux-gnu, compiled by gcc", VerificationType.contains)
-
+                         rf".*Citus {CITUS_VERSION} on x86_64-(pc|undefined)-linux-gnu, compiled by gcc.*")
