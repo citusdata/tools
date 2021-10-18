@@ -56,4 +56,4 @@ def test_citus():
                          rf".*PostgreSQL {POSTGRES_VERSION}.* on x86_64-pc-linux-gnu, compiled by gcc \(.*")
     # Since version info for ol and el 7 contains undefined, undefined was needed to add as expected param for pc
     assert verify_output(run_with_output('psql -p 9700 -c "select citus_version();"'),
-                         rf".*Citus {CITUS_VERSION} on x86_64-(pc|undefined)-linux-gnu, compiled by gcc.*")
+                         rf".*Citus {CITUS_VERSION} on x86_64-(pc|unknown)-linux-gnu, compiled by gcc.*")
