@@ -23,11 +23,8 @@ RUN apt-get update \
                             curl \
                             gnupg2 \
                             software-properties-common \
-                            python3.8 \
-                            python3-pip \
                             libcurl4-openssl-dev \
-                            libssl-dev \
-    && pip install pip-tools
+                            libssl-dev
 
 
 # install Citus
@@ -51,13 +48,30 @@ WORKDIR ${POSTGRES_HOME}
 
 RUN mkdir citus && chown postgres citus
 
-COPY scripts/* ./
-
-RUN  pip-compile && python3.8 -m pip install -r requirements.txt
-
-
 USER postgres
 RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citus/postgresql.conf
+
+USER root
+# Install python 3.8 and its dependencies
+RUN apt-get install -y  build-essential \
+                    libcurl4-openssl-dev \
+                    libssl-dev \
+                    zlib1g-dev zlibc \
+                    curl \
+                    libffi-dev \
+                    gnupg2 && \
+      curl  https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz --output Python-3.8.12.tgz &&\
+      tar xvf Python-3.8.12.tgz &&\
+      cd Python-3.8.*/ && \
+      ./configure --enable-optimizations && \
+       make altinstall && \
+       python3.8 -m pip install pip-tools
+
+COPY scripts/* ./
+
+RUN pip-compile && python3.8 -m pip install -r requirements.txt
+
+USER postgres
 
 WORKDIR ${POSTGRES_HOME}
 

@@ -48,9 +48,6 @@ WORKDIR ${POSTGRES_HOME}
 
 RUN mkdir citus && chown postgres citus
 
-COPY scripts/* ./
-
-
 USER postgres
 RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citus/postgresql.conf
 
@@ -70,10 +67,13 @@ RUN apt-get install -y  build-essential \
        make altinstall && \
        python3.8 -m pip install pip-tools
 
+COPY scripts/* ./
+
 RUN pip-compile && python3.8 -m pip install -r requirements.txt
 
 USER postgres
 
+WORKDIR ${POSTGRES_HOME}
 
 CMD ["test_internal.sh"]
 

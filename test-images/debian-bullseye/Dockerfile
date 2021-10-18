@@ -48,13 +48,8 @@ WORKDIR ${POSTGRES_HOME}
 
 RUN mkdir citus && chown postgres citus
 
-COPY scripts/* ./
-
-
-
 USER postgres
 RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citus/postgresql.conf
-
 
 USER root
 # Install python 3.8 and its dependencies
@@ -71,6 +66,8 @@ RUN apt-get install -y  build-essential \
       ./configure --enable-optimizations && \
        make altinstall && \
        python3.8 -m pip install pip-tools
+
+COPY scripts/* ./
 
 RUN pip-compile && python3.8 -m pip install -r requirements.txt
 

@@ -34,7 +34,7 @@ WORKDIR ${POSTGRES_HOME}
 
 RUN mkdir citus && chown postgres citus
 
-COPY scripts/* ./
+
 
 
 
@@ -57,6 +57,9 @@ RUN yum install -y gcc make && \
       ./configure --enable-optimizations && \
        make altinstall && \
        python3.8 -m pip install pip-tools
+
+COPY scripts/* ./
+
 RUN pip-compile && python3.8 -m pip install -r requirements.txt
 
 

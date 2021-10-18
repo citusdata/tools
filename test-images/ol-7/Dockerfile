@@ -36,7 +36,7 @@ WORKDIR ${POSTGRES_HOME}
 
 RUN mkdir citus && chown postgres citus
 
-COPY scripts/* ./
+
 
 
 
@@ -45,7 +45,7 @@ RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citu
 
 USER root
 # Install python 3.8 and its dependencies
-RUN yum groupinstall -y 'Development Tools' && \
+RUN yum install -y gcc make && \
     yum -y install  libcurl-devel \
                     openssl-devel \
                     bzip2-devel \
@@ -59,6 +59,9 @@ RUN yum groupinstall -y 'Development Tools' && \
       ./configure --enable-optimizations && \
        make altinstall && \
        python3.8 -m pip install pip-tools
+
+COPY scripts/* ./
+
 RUN pip-compile && python3.8 -m pip install -r requirements.txt
 
 
