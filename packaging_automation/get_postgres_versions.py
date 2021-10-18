@@ -1,6 +1,5 @@
 import argparse
 import json
-import os
 
 from .test_citus_package import (get_postgres_versions_from_matrix_file)
 

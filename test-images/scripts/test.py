@@ -35,17 +35,16 @@ def verify_output(result, expected_result) -> bool:
         print(result.stderr.decode("utf-8"))
         print(f"Error: Error Code : {result.returncode}")
         return False
-    else:
-        output = result.stdout.decode("utf-8")
-        print("Result:")
+    output = result.stdout.decode("utf-8")
+    print("Result:")
+    print(output)
+    if re.match(expected_result, repr(output)):
         print(output)
-        if re.match(expected_result, repr(output)):
-            print(output)
-            return True
-        else:
-            print(rf"Expected Result: {expected_result}")
-            print(rf"Actual Result: {repr(output)}")
-            return False
+        return True
+
+    print(rf"Expected Result: {expected_result}")
+    print(rf"Actual Result: {repr(output)}")
+    return False
 
 
 def test_citus():

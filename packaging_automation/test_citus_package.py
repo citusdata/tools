@@ -13,8 +13,7 @@ POSTGRES_MATRIX_WEB_ADDRESS = "https://raw.githubusercontent.com/citusdata/packa
 
 
 def run_command(command: str) -> int:
-    process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    with process.stdout:
+    with subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
         for line in iter(process.stdout.readline, b''):  # b'\n'-separated lines
             print(line.decode("utf-8"), end=" ")
     exitcode = process.wait()
@@ -47,9 +46,10 @@ def parse_os_release(os_release: str) -> TestPlatform:
 def get_postgres_versions_from_matrix_file(project_version: str):
     r = requests.get(POSTGRES_MATRIX_WEB_ADDRESS, allow_redirects=True)
 
-    open(POSTGRES_MATRIX_FILE, 'wb').write(r.content)
+    with open(POSTGRES_MATRIX_FILE, 'wb') as writer:
+        writer.write(r.content)
     pg_versions = get_supported_postgres_release_versions(POSTGRES_MATRIX_FILE, project_version)
-    #Since string expressions with double quotes cause problems in pipeline, string is converted into int
+    # Since string expressions with double quotes cause problems in pipeline, string is converted into int
     # pg_versions = [int(pg_ver) for pg_ver in pg_versions]
 
     return pg_versions
@@ -67,17 +67,13 @@ if __name__ == "__main__":
 
     platform = args.os_release
 
-    r = requests.get(POSTGRES_MATRIX_WEB_ADDRESS, allow_redirects=True)
-
-    open(POSTGRES_MATRIX_FILE, 'wb').write(r.content)
-
     postgres_versions = get_postgres_versions_from_matrix_file(args.prj_ver)
 
     print("Pg Versions: ")
     print(postgres_versions)
 
     os.chdir("test-images")
-    return_codes = dict()
+    return_codes = {}
 
     if args.pg_major_version:
         postgres_versions = [p for p in postgres_versions if p == args.pg_major_version]
