@@ -49,6 +49,9 @@ def get_postgres_versions_from_matrix_file(project_version: str):
 
     open(POSTGRES_MATRIX_FILE, 'wb').write(r.content)
     pg_versions = get_supported_postgres_release_versions(POSTGRES_MATRIX_FILE, project_version)
+    #Since string expressions with double quotes cause problems in pipeline, string is converted into int
+    pg_versions = [int(pg_ver) for pg_ver in pg_versions]
+
     return pg_versions
 
 
