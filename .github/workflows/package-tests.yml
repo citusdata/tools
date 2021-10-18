@@ -29,6 +29,7 @@ jobs:
         id: generate-postgres
         run: |
           python -m packaging_automation.get_postgres_versions --prj_ver 10.2.1
+          echo ${POSTGRES_VERSIONS}
           echo "::set-output name=pg_versions::${POSTGRES_VERSIONS}"
   test_execution:
     runs-on: ubuntu-latest
