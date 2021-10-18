@@ -26,8 +26,8 @@ def verify(output, expected_result, verification_type: VerificationType = Verifi
         return output == expected_result
     elif VerificationType.contains:
         return expected_result in output
-    else:
-        return False
+
+    return False
 
 
 def verify_output(result, expected_result) -> bool:
