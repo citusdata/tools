@@ -21,6 +21,10 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
+      - name: Install python requirements
+        run: python -m pip install -r packaging_automation/requirements.txt
       - name: generate postgres
         id: generate-postgres
         run: |
