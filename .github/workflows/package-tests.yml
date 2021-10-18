@@ -65,6 +65,6 @@ jobs:
           export PROJECT_VERSION="${{ github.event.inputs.name }}"
           [ -z ${PROJECT_VERSION} ]&& export PROJECT_VERSION=10.2.1
           python -m  packaging_automation.test_citus_package \
-          --prj_ver "${{ github.event.inputs.prj_ver }}" \
+          --prj_ver "${PROJECT_VERSION}" \
           --os_release ${{ matrix.platform }} \
           --pg_major_version ${{ matrix.pg }}
