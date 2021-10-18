@@ -23,11 +23,12 @@ class VerificationType(Enum):
 
 def verify(output, expected_result, verification_type: VerificationType = VerificationType.equals) -> bool:
     if verification_type == VerificationType.equals:
-        return output == expected_result
+        return_value = output == expected_result
     elif VerificationType.contains:
-        return expected_result in output
-
-    return False
+        return_value = expected_result in output
+    else:
+        return_value = False
+    return return_value
 
 
 def verify_output(result, expected_result) -> bool:
