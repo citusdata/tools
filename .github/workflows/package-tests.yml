@@ -28,7 +28,7 @@ jobs:
       - name: generate postgres
         id: generate-postgres
         run: |
-          POSTGRES_VERSIONS = $(python -m packaging_automation.get_postgres_versions --prj_ver 10.2.1)
+          POSTGRES_VERSIONS=$(python -m packaging_automation.get_postgres_versions --prj_ver 10.2.1)
           echo "Postgres Version: ${POSTGRES_VERSIONS}"
           echo "::set-output name=pg_versions::${POSTGRES_VERSIONS}"
   test_execution:
