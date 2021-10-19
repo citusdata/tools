@@ -19,10 +19,10 @@ RUN yum update -y && \
 
 
 
-RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+#RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 
 RUN export CITUS_MAJOR_VER=${CITUS_MAJOR_VERSION//./} && \
-    curl https://install.citusdata.com/community/rpm.sh |  bash && \
+    curl https://raw.githubusercontent.com/citusdata/packaging/ol_problems/community/rpm.sh |  bash && \
     yum install -y citus${CITUS_MAJOR_VER}_${PG_MAJOR}-${CITUS_VERSION}.citus-${FANCY}.${PACKAGE_RELEASE_SUFFIX} \
            hll_${PG_MAJOR}-${HLL_VERSION}.${PACKAGE_RELEASE_SUFFIX} \
            topn_${PG_MAJOR}-${TOPN_VERSION}.${PACKAGE_RELEASE_SUFFIX}
