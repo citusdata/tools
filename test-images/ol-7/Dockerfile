@@ -1,7 +1,7 @@
 FROM oraclelinux:7
 
 ARG CITUS_VERSION
-# Format should be XY and should not include dots e.g for 10.2.1=>102
+# Format should be X.Y and should include dots e.g for 10.2.1=>10.2
 ARG CITUS_MAJOR_VERSION
 ARG PG_MAJOR
 ARG FANCY=1
@@ -18,16 +18,11 @@ RUN yum update -y && \
     yum install -y curl
 
 
-
-#RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-
 RUN export CITUS_MAJOR_VER=${CITUS_MAJOR_VERSION//./} && \
-    curl https://raw.githubusercontent.com/citusdata/packaging/ol_problems/community/rpm.sh |  bash && \
+    curl https://install.citusdata.com/community/rpm.sh | bash && \
     yum install -y citus${CITUS_MAJOR_VER}_${PG_MAJOR}-${CITUS_VERSION}.citus-${FANCY}.${PACKAGE_RELEASE_SUFFIX} \
            hll_${PG_MAJOR}-${HLL_VERSION}.${PACKAGE_RELEASE_SUFFIX} \
            topn_${PG_MAJOR}-${TOPN_VERSION}.${PACKAGE_RELEASE_SUFFIX}
-
-
 
 ARG POSTGRES_HOME=/var/lib/pgsql
 ENV PATH=/usr/pgsql-${PG_MAJOR}/bin:${PATH}:${POSTGRES_HOME}
@@ -35,10 +30,6 @@ ENV PATH=/usr/pgsql-${PG_MAJOR}/bin:${PATH}:${POSTGRES_HOME}
 WORKDIR ${POSTGRES_HOME}
 
 RUN mkdir citus && chown postgres citus
-
-
-
-
 
 USER postgres
 RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citus/postgresql.conf
