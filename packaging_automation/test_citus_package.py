@@ -76,11 +76,12 @@ if __name__ == "__main__":
     if args.pg_major_version:
         postgres_versions = [p for p in postgres_versions if p == args.pg_major_version]
 
-    print(f'Testing package for following pg version: {postgres_version}')
+
     if len(postgres_versions) == 0:
         raise ValueError("At least one supported postgres version is required")
 
     for postgres_version in postgres_versions:
+        print(f'Testing package for following pg version: {postgres_version}')
         docker_image_name = f"test:{test_platform.value['docker_image_name']}-{postgres_version}"
         build_command = (f"docker build -t {docker_image_name} "
                          f"-f {test_platform.value['docker_image_name']}/Dockerfile "
@@ -100,7 +101,7 @@ if __name__ == "__main__":
             error_exists = True
         print(f"{key}: {'Success' if value == 0 else f'Fail. ErrorCode: {value}'}")
     summary_error = 'FAILED :(' if error_exists else 'SUCCESS :)'
-    print(f'------------------------{summary_error}'------------------------')
+    print(f'------------------------{summary_error}------------------------')
 
     if error_exists:
         sys.exit("Failed")
