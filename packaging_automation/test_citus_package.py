@@ -68,8 +68,7 @@ if __name__ == "__main__":
 
     postgres_versions = get_postgres_versions_from_matrix_file(args.prj_ver)
 
-    print("Pg Versions: ")
-    print(postgres_versions)
+    print(f'This version of Citus supports following pg versions: {postgres_versions}')
 
     os.chdir("test-images")
     return_codes = {}
@@ -77,7 +76,7 @@ if __name__ == "__main__":
     if args.pg_major_version:
         postgres_versions = [p for p in postgres_versions if p == args.pg_major_version]
 
-    print(postgres_versions)
+    print(f'Testing package for following pg version: {postgres_version}')
     if len(postgres_versions) == 0:
         raise ValueError("At least one supported postgres version is required")
 
@@ -101,7 +100,7 @@ if __name__ == "__main__":
             error_exists = True
         print(f"{key}: {'Success' if value == 0 else f'Fail. ErrorCode: {value}'}")
     summary_error = 'FAILED :(' if error_exists else 'SUCCESS :)'
-    print(f'{summary_error}-------------------------------------------------')
+    print(f'------------------------{summary_error}'------------------------')
 
     if error_exists:
         sys.exit("Failed")
