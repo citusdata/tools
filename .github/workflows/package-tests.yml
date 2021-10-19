@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       prj_ver:
-        description: "The version to be released"
+        description: "The version to be tested"
         required: true
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
         id: generate-postgres
         run: |
           export PROJECT_VERSION="${{ github.event.inputs.name }}"
-          [ -z ${PROJECT_VERSION} ]&& export PROJECT_VERSION=10.2.1
+          [ -z ${PROJECT_VERSION} ] && export PROJECT_VERSION=10.2.1
           POSTGRES_VERSIONS=$(python -m packaging_automation.get_postgres_versions --prj_ver ${PROJECT_VERSION})
           echo "Postgres Version: ${POSTGRES_VERSIONS}"
           echo "::set-output name=pg_versions::${POSTGRES_VERSIONS}"

@@ -5,6 +5,7 @@ import shlex
 import requests
 from enum import Enum
 import sys
+from typing import List
 
 from .common_tool_methods import (get_supported_postgres_release_versions, get_minor_version)
 
@@ -35,7 +36,7 @@ class TestPlatform(Enum):
     undefined = {"name": "undefined", "docker_image_name": "undefined"}
 
 
-def parse_os_release(os_release: str) -> TestPlatform:
+def get_test_platform_for_os_release(os_release: str) -> TestPlatform:
     result = TestPlatform.undefined
     for tp in TestPlatform:
         if tp.value["name"] == os_release:
@@ -43,14 +44,12 @@ def parse_os_release(os_release: str) -> TestPlatform:
     return result
 
 
-def get_postgres_versions_from_matrix_file(project_version: str):
+def get_postgres_versions_from_matrix_file(project_version: str) -> List[str]:
     r = requests.get(POSTGRES_MATRIX_WEB_ADDRESS, allow_redirects=True)
 
     with open(POSTGRES_MATRIX_FILE, 'wb') as writer:
         writer.write(r.content)
     pg_versions = get_supported_postgres_release_versions(POSTGRES_MATRIX_FILE, project_version)
-    # Since string expressions with double quotes cause problems in pipeline, string is converted into int
-    # pg_versions = [int(pg_ver) for pg_ver in pg_versions]
 
     return pg_versions
 
@@ -62,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("--os_release", choices=[t.value["name"] for t in TestPlatform])
 
     args = parser.parse_args()
-    test_platform = parse_os_release(args.os_release)
+    test_platform = get_test_platform_for_os_release(args.os_release)
     minor_prj_ver = get_minor_version(args.prj_ver)
 
     platform = args.os_release
