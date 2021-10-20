@@ -36,6 +36,21 @@ DEFAULT_UNICODE_ERROR_HANDLER = "surrogateescape"
 # all resources after the code execution.
 referenced_repos: List[Repo] = []
 
+supported_platforms = {
+    "debian": ["bullseye", "buster", "stretch", "jessie", "wheezy"],
+    "el": ["8", "7", "6"],
+    "ol": ["7", "8"],
+    "ubuntu": ["focal", "bionic", "xenial", "trusty"]
+}
+
+def platform_names() -> List[str]:
+    platforms = []
+    for platform_os, platform_releases in supported_platforms.items():
+        for platform_release in platform_releases:
+            platforms.append(f"{platform_os}/{platform_release}")
+    platforms.append("pgxn")
+    return platforms
+
 
 def get_new_repo(working_dir: str) -> Repo:
     repo = Repo(working_dir)

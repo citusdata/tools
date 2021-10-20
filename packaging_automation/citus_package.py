@@ -17,7 +17,9 @@ from .common_tool_methods import (DEFAULT_ENCODING_FOR_FILE_HANDLING,
                                   get_gpg_fingerprints_by_name,
                                   get_supported_postgres_nightly_versions,
                                   get_supported_postgres_release_versions,
+                                  platform_names,
                                   run_with_output, str_array_to_str,
+                                  supported_platforms,
                                   transform_key_into_base64_str)
 from .packaging_warning_handler import validate_output
 
@@ -25,23 +27,6 @@ GPG_KEY_NAME = "packaging@citusdata.com"
 
 POSTGRES_VERSION_FILE = "supported-postgres"
 POSTGRES_MATRIX_FILE_NAME = "postgres-matrix.yml"
-
-supported_platforms = {
-    "debian": ["bullseye", "buster", "stretch", "jessie", "wheezy"],
-    "el": ["8", "7", "6"],
-    "ol": ["7", "8"],
-    "ubuntu": ["focal", "bionic", "xenial", "trusty"]
-}
-
-
-def platform_names() -> List[str]:
-    platforms = []
-    for platform_os, platform_releases in supported_platforms.items():
-        for platform_release in platform_releases:
-            platforms.append(f"{platform_os}/{platform_release}")
-    platforms.append("pgxn")
-    return platforms
-
 
 docker_image_names = {
     "debian": "debian",
