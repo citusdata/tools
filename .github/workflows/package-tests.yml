@@ -1,26 +1,33 @@
 name: Citus package tests
-
 on:
   push:
     branches:
       - "**"
-
   workflow_dispatch:
     inputs:
       prj_ver:
         description: "The version to be tested"
         required: true
+  repository_dispatch:
+    types: [package_test]
 
 jobs:
   metadata:
     runs-on: ubuntu-latest
     outputs:
       pg_versions: ${{ steps.generate-postgres.outputs.pg_versions }}
+      citus_version: ${{ steps.get-citus-version.outputs.citus_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
+      - name: Package version
+        id: get-citus-version
+        run: |
+          echo ${{ github.event.client_payload.ref }}
+          echo "Version: ${{ github.event.client_payload.version }}"
+          echo ::set-output name=citus_version::"${{ github.event.client_payload.version }}"
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
       - name: Install python requirements
@@ -64,8 +71,15 @@ jobs:
 
       - name: Citus package tests
         run: |
-          export PROJECT_VERSION="${{ github.event.inputs.name }}"
-          [ -z ${PROJECT_VERSION} ]&& export PROJECT_VERSION=10.2.1
+          export PROJECT_VERSION_FROM_PACKAGING="${{ needs.metadata.outputs.citus_version }}"
+          if [[ ! -z ${PROJECT_VERSION_FROM_PACKAGING} ]]
+          then
+            export PROJECT_VERSION=${PROJECT_VERSION_FROM_PACKAGING}
+          else
+            export PROJECT_VERSION="${{ github.event.inputs.prj_ver }}"
+          fi
+          echo "Citus Version: ${PROJECT_VERSION} "
+          [ -z ${PROJECT_VERSION} ] && export PROJECT_VERSION=10.2.1
           python -m  packaging_automation.test_citus_package \
           --prj_ver "${PROJECT_VERSION}" \
           --os_release ${{ matrix.platform }} \
