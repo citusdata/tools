@@ -70,7 +70,7 @@ def regular_images_to_be_built(docker_image_type: DockerImageType = None) -> Lis
 
 # When pipeline triggered, if the event source is
 # triggered by branch push or a schedule on pipeline, github_ref format is : refs/heads/{branch_name}
-# if tiggered by tag push, github_ref format is: refs/heads/{tag_name}
+# if triggered by tag push, github_ref format is: refs/tags/{tag_name}
 def decode_triggering_event_info(github_ref: str) -> Tuple[GithubTriggerEventSource, str]:
     parts = github_ref.split("/")
     if len(parts) != 3 or parts[1] not in ("tags", "heads"):
@@ -161,7 +161,8 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, will_image_be
             docker_client.images.push(DOCKER_IMAGE_NAME, tag=image_tag)
             print(f"Pushing {docker_image_name} with the tag {image_tag} finished")
         else:
-            print(f"Skipped pushing {docker_image_type} with the tag {image_tag} since will_image_be_published flag is false")
+            print(
+                f"Skipped pushing {docker_image_type} with the tag {image_tag} since will_image_be_published flag is false")
 
         tag_version_part = tag_version_part + "."
     print(f"Building and publishing tagged image {docker_image_type.name} for tag {tag_name} finished.")
@@ -221,14 +222,19 @@ def validate_and_extract_manual_exec_params(manual_trigger_type_param: str, tag_
 
 def get_image_publish_status(github_ref: str, is_test: bool):
     if is_test:
+        print("Image will not be pushed since script is in test mode")
         return False
     triggering_event_info, resource_name = decode_triggering_event_info(github_ref)
     if triggering_event_info == GithubTriggerEventSource.tag_push:
         if not is_tag_on_branch(tag_name=resource_name, branch_name=DEFAULT_BRANCH_NAME):
+            print("Image will not be pushed since tag is not on default branch")
             return False
         return True
     current_branch = get_current_branch(os.getcwd())
     if current_branch != DEFAULT_BRANCH_NAME:
+        print(
+            f"Image will not be pushed since current branch {current_branch}"
+            f" is not on default branch {DEFAULT_BRANCH_NAME}")
         return False
     return True
 
