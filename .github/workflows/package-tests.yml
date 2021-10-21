@@ -1,15 +1,15 @@
-name: Citus package tests
+name: citus-package-tests
+
 on:
   push:
     branches:
       - "**"
+
   workflow_dispatch:
     inputs:
       prj_ver:
         description: "The version to be tested"
         required: true
-  repository_dispatch:
-    types: [package_test]
 
 jobs:
   metadata:
@@ -71,13 +71,7 @@ jobs:
 
       - name: Citus package tests
         run: |
-          export PROJECT_VERSION_FROM_PACKAGING="${{ needs.metadata.outputs.citus_version }}"
-          if [[ ! -z ${PROJECT_VERSION_FROM_PACKAGING} ]]
-          then
-            export PROJECT_VERSION=${PROJECT_VERSION_FROM_PACKAGING}
-          else
-            export PROJECT_VERSION="${{ github.event.inputs.prj_ver }}"
-          fi
+          export PROJECT_VERSION="${{ github.event.inputs.prj_ver }}"
           echo "Citus Version: ${PROJECT_VERSION} "
           [ -z ${PROJECT_VERSION} ] && export PROJECT_VERSION=10.2.1
           python -m  packaging_automation.test_citus_package \
