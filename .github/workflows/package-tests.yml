@@ -36,6 +36,8 @@ jobs:
         id: generate-postgres
         run: |
           export PROJECT_VERSION="${{ github.event.inputs.name }}"
+          # To be able to test pipeline without triggering with prj_ver parameter using workflow_dispatch parameter,
+          # if workflow_dispatch parameter is empty, 10.2.1 parameter is set to execute pipeline.
           [ -z ${PROJECT_VERSION} ] && export PROJECT_VERSION=10.2.1
           POSTGRES_VERSIONS=$(python -m packaging_automation.get_postgres_versions --prj_ver ${PROJECT_VERSION})
           echo "Postgres Version: ${POSTGRES_VERSIONS}"
