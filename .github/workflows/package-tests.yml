@@ -1,4 +1,4 @@
-name: Citus package tests
+name: citus-package-tests
 
 on:
   push:
@@ -16,11 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       pg_versions: ${{ steps.generate-postgres.outputs.pg_versions }}
+      citus_version: ${{ steps.get-citus-version.outputs.citus_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
+      - name: Package version
+        id: get-citus-version
+        run: |
+          echo ${{ github.event.client_payload.ref }}
+          echo "Version: ${{ github.event.client_payload.version }}"
+          echo ::set-output name=citus_version::"${{ github.event.client_payload.version }}"
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
       - name: Install python requirements
@@ -29,6 +36,8 @@ jobs:
         id: generate-postgres
         run: |
           export PROJECT_VERSION="${{ github.event.inputs.name }}"
+          # To be able to test pipeline without triggering with prj_ver parameter using workflow_dispatch parameter,
+          # if workflow_dispatch parameter is empty, 10.2.1 parameter is set to execute pipeline.
           [ -z ${PROJECT_VERSION} ] && export PROJECT_VERSION=10.2.1
           POSTGRES_VERSIONS=$(python -m packaging_automation.get_postgres_versions --prj_ver ${PROJECT_VERSION})
           echo "Postgres Version: ${POSTGRES_VERSIONS}"
@@ -64,8 +73,9 @@ jobs:
 
       - name: Citus package tests
         run: |
-          export PROJECT_VERSION="${{ github.event.inputs.name }}"
-          [ -z ${PROJECT_VERSION} ]&& export PROJECT_VERSION=10.2.1
+          export PROJECT_VERSION="${{ github.event.inputs.prj_ver }}"
+          echo "Citus Version: ${PROJECT_VERSION} "
+          [ -z ${PROJECT_VERSION} ] && export PROJECT_VERSION=10.2.1
           python -m  packaging_automation.test_citus_package \
           --prj_ver "${PROJECT_VERSION}" \
           --os_release ${{ matrix.platform }} \
