@@ -1,0 +1,53 @@
+name: Code coverage
+
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  MICROSOFT_EMAIL: gindibay@microsoft.com
+  USER_NAME: Gurkan Indibay
+  MAIN_BRANCH: all-citus
+  DB_USER_NAME: ${{ secrets.STATS_DB_USER_NAME }}
+  DB_PASSWORD: ${{ secrets.STATS_DB_PASSWORD }}
+  DB_HOST_AND_PORT: ${{ secrets.STATS_DB_HOST_AND_PORT }}
+  DB_NAME: ${{ secrets.STATS_DB_NAME }}
+  PACKAGE_CLOUD_API_TOKEN: ${{ secrets.PACKAGE_CLOUD_API_TOKEN }}
+  PACKAGE_CLOUD_ADMIN_API_TOKEN: ${{ secrets.PACKAGE_CLOUD_ADMIN_API_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+  PACKAGING_PASSPHRASE: ${{ secrets.PACKAGING_PASSPHRASE }}
+  PLATFORM: el/8
+on:
+  push:
+    branches:
+      - "**"
+
+  workflow_dispatch:
+
+jobs:
+  make-install:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Install all scripts
+        run: make && sudo make install
+
+  code_coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Define git credentials
+        run: git config --global user.email "${MICROSOFT_EMAIL}"&& git config --global user.name "${USER_NAME}"
+
+      - name: Install package dependencies
+        run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
+
+      - name: Install python requirements
+        run: python -m pip install -r packaging_automation/requirements.txt
+
+      - name: Run code coverage
+        run: python -m pytest --cov=packaging_automation packaging_automation/tests/

@@ -16,3 +16,4 @@ urllib3
 wheel
 python-dotenv
 prospector[with_everything]
+pytest-cov

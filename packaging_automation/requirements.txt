@@ -20,6 +20,8 @@ cffi==1.14.5
     # via pynacl
 chardet==4.0.0
     # via requests
+coverage[toml]==6.0.2
+    # via pytest-cov
 deprecated==1.2.12
     # via pygithub
 docker==5.0.0
@@ -130,8 +132,12 @@ pyparsing==2.4.7
     # via packaging
 pyroma==3.2
     # via prospector
-pytest==6.2.4
+pytest-cov==3.0.0
     # via -r requirements.in
+pytest==6.2.4
+    # via
+    #   -r requirements.in
+    #   pytest-cov
 python-dotenv==0.19.0
     # via -r requirements.in
 python-gnupg==0.4.7
@@ -173,6 +179,8 @@ toml==0.10.2
     #   pylint
     #   pytest
     #   vulture
+tomli==1.2.1
+    # via coverage
 typing-extensions==3.10.0.2
     # via mypy
 urllib3==1.26.6
