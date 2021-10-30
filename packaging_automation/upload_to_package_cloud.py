@@ -18,7 +18,6 @@ supported_distros = {
     "debian/stretch": 149,
     "ubuntu/focal": 210,
     "ubuntu/bionic": 190,
-    "ubuntu/xenial": 165
 }
 
 supported_repos = ["sample",

@@ -40,7 +40,7 @@ supported_platforms = {
     "debian": ["bullseye", "buster", "stretch", "jessie", "wheezy"],
     "el": ["8", "7", "6"],
     "ol": ["7", "8"],
-    "ubuntu": ["focal", "bionic", "xenial", "trusty"]
+    "ubuntu": ["focal", "bionic", "trusty"]
 }
 
 def platform_names() -> List[str]:
