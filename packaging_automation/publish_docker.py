@@ -2,7 +2,6 @@ import argparse
 import os
 from enum import Enum
 from typing import Tuple, List
-import json
 
 import docker
 import pathlib2
