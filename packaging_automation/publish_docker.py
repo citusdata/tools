@@ -2,6 +2,7 @@ import argparse
 import os
 from enum import Enum
 from typing import Tuple, List
+import json
 
 import docker
 import pathlib2
@@ -125,9 +126,13 @@ def publish_docker_image_manually(manual_trigger_type_param: ManualTriggerType, 
 def publish_main_docker_images(docker_image_type: DockerImageType, will_image_be_published: bool):
     print(f"Building main docker image for {docker_image_type.name}...")
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_type.name}"
-    docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
-                               tag=docker_image_name,
-                               path=".")
+    _, logs = docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
+                                         tag=docker_image_name,
+                                         path=".")
+    for log in logs:
+        log_str = log.get("stream")
+        if log_str:
+            print(log_str, end='')
     print(f"Main docker image for {docker_image_type.name} built.")
     if will_image_be_published:
         print(f"Publishing main docker image for {docker_image_type.name}...")
@@ -146,9 +151,13 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, will_image_be
     tag_parts = decode_tag_parts(tag_name)
     tag_version_part = ""
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_type.name}"
-    docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
-                               tag=docker_image_name,
-                               path=".")
+    _, logs = docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
+                                         tag=docker_image_name,
+                                         path=".")
+    for log in logs:
+        log_str = log.get("stream")
+        if log_str:
+            print(log_str, end='')
     print(f"{docker_image_type.name} image built.Now starting tagging and pushing...")
     for tag_part in tag_parts:
         tag_version_part = tag_version_part + tag_part
@@ -158,10 +167,13 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, will_image_be
         print(f"Tagging {docker_image_name} with the tag {image_tag} finished.")
         if will_image_be_published:
             print(f"Pushing {docker_image_name} with the tag {image_tag}...")
-            docker_client.images.push(DOCKER_IMAGE_NAME, tag=image_tag)
+            push_logs = docker_client.images.push(DOCKER_IMAGE_NAME, tag=image_tag)
+            print("Push logs:")
+            print(push_logs)
             print(f"Pushing {docker_image_name} with the tag {image_tag} finished")
         else:
-            print(f"Skipped pushing {docker_image_type} with the tag {image_tag} since will_image_be_published flag is false")
+            print(
+                f"Skipped pushing {docker_image_type} with the tag {image_tag} since will_image_be_published flag is false")
 
         tag_version_part = tag_version_part + "."
     print(f"Building and publishing tagged image {docker_image_type.name} for tag {tag_name} finished.")
@@ -170,9 +182,13 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, will_image_be
 def publish_nightly_docker_image(will_image_be_published: bool):
     print("Building nightly image...")
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_info_dict[DockerImageType.nightly]['docker-tag']}"
-    docker_client.images.build(dockerfile=docker_image_info_dict[DockerImageType.nightly]['file-name'],
-                               tag=docker_image_name,
-                               path=".")
+    _, logs = docker_client.images.build(dockerfile=docker_image_info_dict[DockerImageType.nightly]['file-name'],
+                                         tag=docker_image_name,
+                                         path=".")
+    for log in logs:
+        log_str = log.get("stream")
+        if log_str:
+            print(log_str, end='')
     print("Nightly image build finished.")
 
     if will_image_be_published:
