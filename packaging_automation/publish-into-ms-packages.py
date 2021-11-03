@@ -13,7 +13,6 @@ ms_package_repo_map = {
     "debian/jessie": "debian-jessie",
     "debian/stretch": "debian-stretch",
     "ubuntu/bionic": "ubuntu-bionic",
-    "ubuntu/xenial": "ubuntu-xenial",
     "ubuntu/focal": "ubuntu-focal"
 }
 
