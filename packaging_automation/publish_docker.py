@@ -128,10 +128,7 @@ def publish_main_docker_images(docker_image_type: DockerImageType, will_image_be
     _, logs = docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
                                          tag=docker_image_name,
                                          path=".")
-    for log in logs:
-        log_str = log.get("stream")
-        if log_str:
-            print(log_str, end='')
+    flush_logs(logs)
     print(f"Main docker image for {docker_image_type.name} built.")
     if will_image_be_published:
         print(f"Publishing main docker image for {docker_image_type.name}...")
@@ -145,6 +142,13 @@ def publish_main_docker_images(docker_image_type: DockerImageType, will_image_be
                 f"{DEFAULT_BRANCH_NAME} {docker_image_name} will not be pushed.")
 
 
+def flush_logs(logs):
+    for log in logs:
+        log_str = log.get("stream")
+        if log_str:
+            print(log_str, end='')
+
+
 def publish_tagged_docker_images(docker_image_type, tag_name: str, will_image_be_published: bool):
     print(f"Building and publishing tagged image {docker_image_type.name} for tag {tag_name}...")
     tag_parts = decode_tag_parts(tag_name)
@@ -153,10 +157,7 @@ def publish_tagged_docker_images(docker_image_type, tag_name: str, will_image_be
     _, logs = docker_client.images.build(dockerfile=docker_image_info_dict[docker_image_type]['file-name'],
                                          tag=docker_image_name,
                                          path=".")
-    for log in logs:
-        log_str = log.get("stream")
-        if log_str:
-            print(log_str, end='')
+    flush_logs(logs)
     print(f"{docker_image_type.name} image built.Now starting tagging and pushing...")
     for tag_part in tag_parts:
         tag_version_part = tag_version_part + tag_part
@@ -184,10 +185,7 @@ def publish_nightly_docker_image(will_image_be_published: bool):
     _, logs = docker_client.images.build(dockerfile=docker_image_info_dict[DockerImageType.nightly]['file-name'],
                                          tag=docker_image_name,
                                          path=".")
-    for log in logs:
-        log_str = log.get("stream")
-        if log_str:
-            print(log_str, end='')
+    flush_logs(logs)
     print("Nightly image build finished.")
 
     if will_image_be_published:
