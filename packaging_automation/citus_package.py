@@ -300,15 +300,15 @@ def get_package_version_from_pkgvars(input_files_dir: str):
     pkgvars_config = dotenv_values(f"{input_files_dir}/pkgvars")
     package_version_with_suffix = pkgvars_config["pkglatest"]
     version_parts = package_version_with_suffix.split(".")
-    # hll is working with minor release format
-    minor_release = False
+    # hll is working with minor release format e.g. 2.16.citus-1
+    pkg_name = pkgvars_config["pkgname"]
+    is_hll_version = False if pkg_name == 'hll' else True
+
     if len(version_parts) < 3:
         raise ValueError("Version should at least contains three parts seperated with '.'. e.g 10.0.2-1")
-    if len(version_parts) == 3 and "citus" in version_parts[2]:
-        minor_release = True
     third_part_splitted = version_parts[2].split("-")
 
-    if minor_release:
+    if is_hll_version:
         package_version = f"{version_parts[0]}.{version_parts[1]}"
     else:
         package_version = f"{version_parts[0]}.{version_parts[1]}.{third_part_splitted[0]}"
