@@ -25,9 +25,8 @@ jobs:
       - name: Package version
         id: get-citus-version
         run: |
-          echo ${{ github.event.client_payload.ref }}
-          echo "Version: ${{ github.event.client_payload.version }}"
-          echo ::set-output name=citus_version::"${{ github.event.client_payload.version }}"
+          echo ${{ github.event.inputs.prj_ver }}
+          echo "Version: ${{ github.event.inputs.prj_ver }}"
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
       - name: Install python requirements
@@ -35,7 +34,8 @@ jobs:
       - name: generate postgres
         id: generate-postgres
         run: |
-          export PROJECT_VERSION="${{ github.event.inputs.name }}"
+          export PROJECT_VERSION="${{ github.event.inputs.prj_ver }}"
+          echo "Prj_ver: ${{ github.event.inputs.prj_ver }}"
           # To be able to test pipeline without triggering with prj_ver parameter using workflow_dispatch parameter,
           # if workflow_dispatch parameter is empty, 10.2.1 parameter is set to execute pipeline.
           [ -z ${PROJECT_VERSION} ] && export PROJECT_VERSION=10.2.1
