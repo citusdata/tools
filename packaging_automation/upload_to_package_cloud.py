@@ -21,7 +21,7 @@ supported_distros = {
     "ubuntu/bionic": 190,
 }
 
-supported_repos = ["sample",
+supported_repos = ["citus-bot/sample",
                    "citusdata/enterprise",
                    "citusdata/community",
                    "citusdata/community-nightlies",
