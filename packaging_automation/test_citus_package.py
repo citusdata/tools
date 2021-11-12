@@ -56,17 +56,17 @@ def get_postgres_versions_from_matrix_file(project_version: str) -> List[str]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--prj_ver', required=True)
+    parser.add_argument('--project_version', required=True)
     parser.add_argument('--pg_major_version')
     parser.add_argument("--os_release", choices=[t.value["name"] for t in TestPlatform])
 
     args = parser.parse_args()
     test_platform = get_test_platform_for_os_release(args.os_release)
-    minor_prj_ver = get_minor_version(args.prj_ver)
+    minor_project_version = get_minor_version(args.project_version)
 
     platform = args.os_release
 
-    postgres_versions = get_postgres_versions_from_matrix_file(args.prj_ver)
+    postgres_versions = get_postgres_versions_from_matrix_file(args.project_version)
 
     print(f'This version of Citus supports following pg versions: {postgres_versions}')
 
@@ -85,8 +85,8 @@ if __name__ == "__main__":
         docker_image_name = f"test:{test_platform.value['docker_image_name']}-{postgres_version}"
         build_command = (f"docker build -t {docker_image_name} "
                          f"-f {test_platform.value['docker_image_name']}/Dockerfile "
-                         f"--build-arg CITUS_VERSION={args.prj_ver} --build-arg PG_MAJOR={postgres_version}   "
-                         f"--build-arg CITUS_MAJOR_VERSION={minor_prj_ver} .")
+                         f"--build-arg CITUS_VERSION={args.project_version} --build-arg PG_MAJOR={postgres_version}   "
+                         f"--build-arg CITUS_MAJOR_VERSION={minor_project_version} .")
         print(build_command)
         return_build = run_command(build_command)
         return_run = run_command(
