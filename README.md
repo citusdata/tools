@@ -7,7 +7,8 @@ Guides for getting things done, programming well, and programming in style.
 * [OS Packaging](/packaging)
 * [Travis CI](/travis)
 * [Uncrustify Formatter](/uncrustify)
+* [Packaging Automation](/packaging_automation)
 
 ## License
 
-Copyright © 2016–2017 Citus Data, Inc.
+Copyright © Citus Data, Inc.
