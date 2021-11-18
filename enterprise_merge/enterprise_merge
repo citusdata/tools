@@ -1,0 +1,90 @@
+#!/bin/bash
+
+set -eu
+
+# heavily inspired by the design in https://www.unix.com/302919322-post15.html
+
+function die {
+	echo "$1"
+	exit 1
+}
+
+function usage {
+	cat <<-HELP_USAGE
+
+		$0  branch_name [force_enterprise_merge_step]
+
+		branch_name                   branch name on community repo
+		force_enterprise_merge_step   optional step number for enterprise merges
+
+	HELP_USAGE
+}
+
+case "$#" in
+1)
+	PR_BRANCH=$1
+
+	if [ -f last_enterprise_merge_step ]; then
+		read -r CURRENT_STEP <last_enterprise_merge_step
+	else
+		CURRENT_STEP=1
+	fi
+	;;
+2)
+	PR_BRANCH=$1
+	CURRENT_STEP="$2"
+	;;
+*)
+	usage
+	exit 1
+	;;
+esac
+
+# finish ongoing git merges if there are any
+if [ -f .git/MERGE_HEAD ]; then
+	git merge --continue
+fi
+
+# go through the actual steps for enterprise merges
+FINISHED=0
+while [ "$FINISHED" -eq 0 ]; do
+	case "$CURRENT_STEP" in
+	1)
+		git checkout enterprise-master
+		;;
+	2)
+		git pull
+		;;
+	3)
+		git fetch community
+		;;
+	4)
+		git checkout -B "$PR_BRANCH" enterprise-master
+		;;
+	5)
+		git merge community/master ||
+			die "Failed to merge community/master. Please resolve conflicts and re-run the script"
+		;;
+	6)
+		git merge "community/$PR_BRANCH" ||
+			die "Failed to merge community/$PR_BRANCH. Please resolve conflicts and re-run the script"
+		;;
+	7)
+		git push origin "$PR_BRANCH"
+		;;
+	8)
+		gh pr create --head "$PR_BRANCH" \
+			--title "Merge to enterprise for branch $PR_BRANCH" \
+			--body "Enterprise merge for PR"
+		;;
+	*)
+		FINISHED=1
+		;;
+	esac
+
+	CURRENT_STEP=$((CURRENT_STEP + 1))
+	echo $CURRENT_STEP >last_enterprise_merge_step
+done
+
+echo "Completed all steps for enterprise merge, removing flag file"
+rm -f last_enterprise_merge_step
