@@ -146,7 +146,6 @@ Removing tools/CHANGELOG.md
 Removing tools/HomebrewFormula/
 Removing tools/Makefile
 Removing tools/README.md
-Removing tools/automated_packaging/
 Removing tools/citus_dev/
 Removing tools/dashboard/
 Removing tools/packaging/Makefile
