@@ -45,19 +45,19 @@ jobs:
         run: python -m prospector
 
       - name: Unit tests for "Common tools"
-        run: python -m pytest -q packaging_automation/tests/test_common_tool_methods.py
+        run: coverage run  -m pytest -q packaging_automation/tests/test_common_tool_methods.py
 
       - name: Unit tests for "Update Package Properties"
-        run: python -m pytest -q packaging_automation/tests/test_update_package_properties.py
+        run: coverage run --cov-append -m pytest -q packaging_automation/tests/test_update_package_properties.py
 
       - name: Unit tests for "Prepare Release"
-        run: python -m pytest -q packaging_automation/tests/test_prepare_release.py
+        run: coverage run --cov-append -m pytest -q packaging_automation/tests/test_prepare_release.py
 
       - name: Unit tests for "Update Docker"
-        run: python -m pytest -q packaging_automation/tests/test_update_docker.py
+        run: coverage run --cov-append -m pytest -q packaging_automation/tests/test_update_docker.py
 
       - name: Unit tests for "Update Pgxn"
-        run: python -m pytest -q packaging_automation/tests/test_update_pgxn.py
+        run: coverage run --cov-append -m pytest -q packaging_automation/tests/test_update_pgxn.py
 
       - name: Packaging Warning Handler
-        run: python -m pytest -q packaging_automation/tests/test_packaging_warning_handler.py
+        run: coverage run --cov-append -m pytest -q packaging_automation/tests/test_packaging_warning_handler.py
