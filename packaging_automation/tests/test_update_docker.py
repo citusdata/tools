@@ -12,7 +12,7 @@ from ..update_docker import (update_docker_file_for_latest_postgres, update_regu
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 TEST_BASE_PATH = f"{BASE_PATH}/docker"
 PROJECT_VERSION = "10.0.3"
-POSTGRES_VERSION = "14.0"
+POSTGRES_VERSION = "14.1"
 PROJECT_NAME = "citus"
 version_details = get_version_details(PROJECT_VERSION)
 TEMPLATE_PATH = f"{BASE_PATH}/packaging_automation/templates/docker"
