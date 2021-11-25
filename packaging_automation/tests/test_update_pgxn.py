@@ -41,4 +41,4 @@ def test_update_pkgvars():
         content = reader.read()
         lines = content.splitlines()
         assert lines[2] == f'pkglatest={PROJECT_VERSION}'
-        assert len(lines) == 4
+        assert len(lines) == 3
