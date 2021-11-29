@@ -120,10 +120,8 @@ def test_update_changelog_without_postgres():
         assert not lines[4].startswith("* Bump PostgreSQL version to")
 
 
-
-
 def test_pkgvar_postgres_version_existence():
-  config = dotenv_values(PKGVARS_FILE)
-  assert config["postgres_14_version"]
-  assert config["postgres_13_version"]
-  assert config["postgres_12_version"]
+    config = dotenv_values(PKGVARS_FILE)
+    assert config["postgres_14_version"]
+    assert config["postgres_13_version"]
+    assert config["postgres_12_version"]
