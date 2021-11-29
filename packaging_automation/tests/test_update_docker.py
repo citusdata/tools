@@ -8,8 +8,7 @@ from ..common_tool_methods import (run, get_version_details, DEFAULT_ENCODING_FO
 from dotenv import dotenv_values
 from ..update_docker import (update_docker_file_for_latest_postgres, update_regular_docker_compose_file,
                              update_docker_file_alpine, update_docker_file_for_postgres12,
-                             update_docker_file_for_postgres13, update_changelog,
-                             update_pkgvars, read_postgres_version)
+                             update_docker_file_for_postgres13, update_changelog)
 
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 TEST_BASE_PATH = f"{BASE_PATH}/docker"

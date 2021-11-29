@@ -129,12 +129,6 @@ def read_postgres_version(pkgvars_file: str) -> Tuple[str, str, str]:
     return "14.1", "13.5", "12.9"
 
 
-def update_pkgvars(project_version: str, template_path: str, pkgvars_file: str, postgres_version: str):
-    content = process_template_file(project_version, template_path, "docker-pkgvars.tmpl", postgres_version)
-    with open(pkgvars_file, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
-        writer.write(content)
-
 
 CHECKOUT_DIR = "docker_temp"
 
