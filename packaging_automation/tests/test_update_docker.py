@@ -5,8 +5,10 @@ import pathlib2
 
 from ..common_tool_methods import (run, get_version_details, DEFAULT_ENCODING_FOR_FILE_HANDLING,
                                    DEFAULT_UNICODE_ERROR_HANDLER)
+from dotenv import dotenv_values
 from ..update_docker import (update_docker_file_for_latest_postgres, update_regular_docker_compose_file,
-                             update_docker_file_alpine, update_docker_file_for_postgres12, update_changelog,
+                             update_docker_file_alpine, update_docker_file_for_postgres12,
+                             update_docker_file_for_postgres13, update_changelog,
                              update_pkgvars, read_postgres_version)
 
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
@@ -25,7 +27,6 @@ def setup_module():
     if not os.path.exists("docker"):
         # TODO Remove branch name after merge of docker/PR# 281
         run("git clone --branch add_pkgvars https://github.com/citusdata/docker.git")
-
 
 
 def teardown_module():
@@ -84,7 +85,7 @@ def test_update_docker_file_for_postgres12():
 
 
 def test_update_docker_file_for_postgres13():
-    update_docker_file_for_postgres12(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_13_VERSION)
+    update_docker_file_for_postgres13(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_13_VERSION)
     with open(f"{TEST_BASE_PATH}/postgres-13/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
@@ -120,30 +121,10 @@ def test_update_changelog_without_postgres():
         assert not lines[4].startswith("* Bump PostgreSQL version to")
 
 
-def test_update_postgres_version():
-    if os.path.exists(PKGVARS_FILE):
-        update_pkgvars(project_version=PROJECT_VERSION, postgres_version=POSTGRES_14_VERSION,
-                       template_path=TEMPLATE_PATH,
-                       pkgvars_file=PKGVARS_FILE)
-        test_pkgvar_postgres_version_existence()
-        assert read_postgres_version(PKGVARS_FILE) == POSTGRES_14_VERSION
-    else:
-        assert read_postgres_version(PKGVARS_FILE) == "13.4"
-        update_pkgvars(project_version=PROJECT_VERSION, postgres_version=POSTGRES_14_VERSION,
-                       template_path=TEMPLATE_PATH,
-                       pkgvars_file=PKGVARS_FILE)
-        assert os.path.exists(PKGVARS_FILE)
-        test_pkgvar_postgres_version_existence()
-        assert read_postgres_version(PKGVARS_FILE) == POSTGRES_14_VERSION
 
 
 def test_pkgvar_postgres_version_existence():
-    with open(PKGVARS_FILE, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
-        content = reader.read()
-        lines = content.splitlines()
-        for line in lines:
-            if line.startswith("latest_postgres_version"):
-                has_match = True
-                assert line.strip() == f"latest_postgres_version={POSTGRES_14_VERSION}"
-        assert has_match
+  config = dotenv_values(PKGVARS_FILE)
+  assert config["postgres_14_version"]
+  assert config["postgres_13_version"]
+  assert config["postgres_12_version"]
