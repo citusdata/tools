@@ -71,7 +71,7 @@ def test_update_docker_file_alpine():
 
 
 def test_update_docker_file_for_postgres12():
-    update_docker_file_for_postgres12(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH)
+    update_docker_file_for_postgres12(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_12_VERSION)
     with open(f"{TEST_BASE_PATH}/postgres-12/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
@@ -82,8 +82,9 @@ def test_update_docker_file_for_postgres12():
                f"{version_details['major']}.{version_details['minor']}.=$CITUS_VERSION" in lines[21]
         assert len(lines) == 42
 
+
 def test_update_docker_file_for_postgres13():
-    update_docker_file_for_postgres12(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH)
+    update_docker_file_for_postgres12(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_13_VERSION)
     with open(f"{TEST_BASE_PATH}/postgres-13/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
@@ -121,13 +122,15 @@ def test_update_changelog_without_postgres():
 
 def test_update_postgres_version():
     if os.path.exists(PKGVARS_FILE):
-        update_pkgvars(project_version=PROJECT_VERSION, postgres_version=POSTGRES_14_VERSION, template_path=TEMPLATE_PATH,
+        update_pkgvars(project_version=PROJECT_VERSION, postgres_version=POSTGRES_14_VERSION,
+                       template_path=TEMPLATE_PATH,
                        pkgvars_file=PKGVARS_FILE)
         test_pkgvar_postgres_version_existence()
         assert read_postgres_version(PKGVARS_FILE) == POSTGRES_14_VERSION
     else:
         assert read_postgres_version(PKGVARS_FILE) == "13.4"
-        update_pkgvars(project_version=PROJECT_VERSION, postgres_version=POSTGRES_14_VERSION, template_path=TEMPLATE_PATH,
+        update_pkgvars(project_version=PROJECT_VERSION, postgres_version=POSTGRES_14_VERSION,
+                       template_path=TEMPLATE_PATH,
                        pkgvars_file=PKGVARS_FILE)
         assert os.path.exists(PKGVARS_FILE)
         test_pkgvar_postgres_version_existence()

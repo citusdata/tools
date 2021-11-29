@@ -105,24 +105,20 @@ def update_changelog(project_version: str, exec_path: str, postgres_version: str
             raise ValueError(f"Already using version {project_version} in the changelog")
 
 
-def update_all_docker_files(project_version: str, exec_path: str, postgres_version: str):
+def update_all_docker_files(project_version: str, exec_path: str):
     template_path = f"{BASE_PATH}/templates/docker"
     pkgvars_file = f"{exec_path}/pkgvars"
-
-    if postgres_version:
-        update_pkgvars(project_version, template_path, pkgvars_file, postgres_version)
 
     postgres_14_version, postgres_13_version, postgres_12_version = read_postgres_version(pkgvars_file)
 
     latest_postgres_version = postgres_14_version
 
-    update_docker_file_for_latest_postgres(project_version, template_path, exec_path, postgres_14_version,
-                                           postgres_13_version, postgres_12_version)
+    update_docker_file_for_latest_postgres(project_version, template_path, exec_path, latest_postgres_version)
     update_regular_docker_compose_file(project_version, template_path, exec_path)
     update_docker_file_alpine(project_version, template_path, exec_path, latest_postgres_version)
-    update_docker_file_for_postgres12(project_version, template_path, exec_path)
-    update_docker_file_for_postgres13(project_version, template_path, exec_path)
-    update_changelog(project_version, exec_path, postgres_version)
+    update_docker_file_for_postgres12(project_version, template_path, exec_path, postgres_12_version)
+    update_docker_file_for_postgres13(project_version, template_path, exec_path, postgres_13_version)
+    update_changelog(project_version, exec_path, latest_postgres_version)
 
 
 def read_postgres_version(pkgvars_file: str) -> Tuple[str, str, str]:
@@ -146,7 +142,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--prj_ver', required=True)
     parser.add_argument('--gh_token', required=True)
-    parser.add_argument('--postgres_version')
     parser.add_argument("--pipeline", action="store_true")
     parser.add_argument('--exec_path')
     parser.add_argument('--is_test', action="store_true")
@@ -163,7 +158,7 @@ if __name__ == "__main__":
     os.chdir(execution_path)
     pr_branch = f"release-{args.prj_ver}-{uuid.uuid4()}"
     run(f"git checkout -b {pr_branch}")
-    update_all_docker_files(args.prj_ver, execution_path, args.postgres_version)
+    update_all_docker_files(args.prj_ver, execution_path)
     run("git add .")
 
     commit_message = f"Bump docker to version {args.prj_ver}"
