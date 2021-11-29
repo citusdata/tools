@@ -24,8 +24,8 @@ PKGVARS_FILE = f"{TEST_BASE_PATH}/pkgvars"
 def setup_module():
     if not os.path.exists("docker"):
         run("git clone https://github.com/citusdata/docker.git")
-    # TODO Remove after merge of docker/PR# 281
-    run("git checkout add_pkgvars")
+        # TODO Remove after merge of docker/PR# 281
+        run("git checkout add_pkgvars")
 
 
 def teardown_module():
