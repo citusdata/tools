@@ -125,8 +125,8 @@ def read_postgres_version(pkgvars_file: str) -> Tuple[str, str, str]:
     if os.path.exists(pkgvars_file):
         config = dotenv_values(pkgvars_file)
         return config["postgres_14_version"], config["postgres_13_version"], config["postgres_12_version"]
-    else:
-        return "14.1", "13.5", "12.9"
+
+    return "14.1", "13.5", "12.9"
 
 
 def update_pkgvars(project_version: str, template_path: str, pkgvars_file: str, postgres_version: str):
