@@ -3,6 +3,8 @@ import os
 import uuid
 from datetime import datetime
 from enum import Enum
+from dotenv import dotenv_values
+from typing import Tuple
 
 import pathlib2
 
@@ -59,16 +61,16 @@ def update_docker_file_alpine(project_version: str, template_path: str, exec_pat
     write_to_file(content, dest_file_name)
 
 
-def update_docker_file_for_postgres12(project_version: str, template_path: str, exec_path: str):
+def update_docker_file_for_postgres12(project_version: str, template_path: str, exec_path: str, postgres_version: str):
     content = process_template_file(project_version, template_path,
-                                    docker_templates[SupportedDockerImages.postgres12])
+                                    docker_templates[SupportedDockerImages.postgres12], postgres_version)
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres12]}"
     write_to_file(content, dest_file_name)
 
 
-def update_docker_file_for_postgres13(project_version: str, template_path: str, exec_path: str):
+def update_docker_file_for_postgres13(project_version: str, template_path: str, exec_path: str, postgres_version: str):
     content = process_template_file(project_version, template_path,
-                                    docker_templates[SupportedDockerImages.postgres13])
+                                    docker_templates[SupportedDockerImages.postgres13], postgres_version)
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres13]}"
     dir_name = os.path.dirname(dest_file_name)
     if not os.path.exists(dir_name):
@@ -110,34 +112,25 @@ def update_all_docker_files(project_version: str, exec_path: str, postgres_versi
     if postgres_version:
         update_pkgvars(project_version, template_path, pkgvars_file, postgres_version)
 
-    persisted_postgres_version = read_postgres_version(pkgvars_file)
+    postgres_14_version, postgres_13_version, postgres_12_version = read_postgres_version(pkgvars_file)
 
-    update_docker_file_for_latest_postgres(project_version, template_path, exec_path, persisted_postgres_version)
+    latest_postgres_version = postgres_14_version
+
+    update_docker_file_for_latest_postgres(project_version, template_path, exec_path, postgres_14_version,
+                                           postgres_13_version, postgres_12_version)
     update_regular_docker_compose_file(project_version, template_path, exec_path)
-    update_docker_file_alpine(project_version, template_path, exec_path, persisted_postgres_version)
+    update_docker_file_alpine(project_version, template_path, exec_path, latest_postgres_version)
     update_docker_file_for_postgres12(project_version, template_path, exec_path)
     update_docker_file_for_postgres13(project_version, template_path, exec_path)
     update_changelog(project_version, exec_path, postgres_version)
 
 
-def read_postgres_version(pkgvars_file: str) -> str:
+def read_postgres_version(pkgvars_file: str) -> Tuple[str, str, str]:
     if os.path.exists(pkgvars_file):
-        with open(pkgvars_file, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
-            lines = reader.readlines()
-            for line in lines:
-                if line.startswith("latest_postgres_version"):
-                    line_parts = line.split("=")
-                    if len(line_parts) != 2:
-                        raise ValueError("keys and values should be seperated with '=' sign")
-                    postgres_version = line_parts[1].rstrip("\n")
-                    break
-            if not postgres_version:
-                raise ValueError("pkgvars file should include a line with key latest_postgres_version")
+        config = dotenv_values(pkgvars_file)
+        return config["postgres_14_version"], config["postgres_13_version"], config["postgres_12_version"]
     else:
-        # Setting it because pkgvars does not exist initially
-        postgres_version = "13.4"
-    return postgres_version
+        return "14.1", "13.5", "12.9"
 
 
 def update_pkgvars(project_version: str, template_path: str, pkgvars_file: str, postgres_version: str):

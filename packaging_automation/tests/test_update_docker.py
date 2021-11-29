@@ -12,7 +12,9 @@ from ..update_docker import (update_docker_file_for_latest_postgres, update_regu
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 TEST_BASE_PATH = f"{BASE_PATH}/docker"
 PROJECT_VERSION = "10.0.3"
-POSTGRES_VERSION = "14.1"
+POSTGRES_14_VERSION = "14.1"
+POSTGRES_13_VERSION = "13.5"
+POSTGRES_12_VERSION = "12.9"
 PROJECT_NAME = "citus"
 version_details = get_version_details(PROJECT_VERSION)
 TEMPLATE_PATH = f"{BASE_PATH}/packaging_automation/templates/docker"
@@ -22,6 +24,8 @@ PKGVARS_FILE = f"{TEST_BASE_PATH}/pkgvars"
 def setup_module():
     if not os.path.exists("docker"):
         run("git clone https://github.com/citusdata/docker.git")
+    # TODO Remove after merge of docker/PR# 281
+    run("git checkout add_pkgvars")
 
 
 def teardown_module():
@@ -31,12 +35,12 @@ def teardown_module():
 
 
 def test_update_docker_file_for_latest_postgres():
-    update_docker_file_for_latest_postgres(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_VERSION)
+    update_docker_file_for_latest_postgres(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_14_VERSION)
     with open(f"{TEST_BASE_PATH}/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
         lines = content.splitlines()
-        assert lines[2].strip() == f"FROM postgres:{POSTGRES_VERSION}"
+        assert lines[2].strip() == f"FROM postgres:{POSTGRES_14_VERSION}"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert f"postgresql-$PG_MAJOR-{PROJECT_NAME}-" \
                f"{version_details['major']}.{version_details['minor']}.=$CITUS_VERSION" in lines[21]
@@ -56,12 +60,12 @@ def test_update_regular_docker_compose_file():
 
 
 def test_update_docker_file_alpine():
-    update_docker_file_alpine(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_VERSION)
+    update_docker_file_alpine(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_14_VERSION)
     with open(f"{TEST_BASE_PATH}/alpine/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
         lines = content.splitlines()
-        assert lines[2].strip() == f"FROM postgres:{POSTGRES_VERSION}-alpine"
+        assert lines[2].strip() == f"FROM postgres:{POSTGRES_14_VERSION}-alpine"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert len(lines) == 55
 
@@ -72,6 +76,19 @@ def test_update_docker_file_for_postgres12():
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
         lines = content.splitlines()
+        assert lines[2].strip() == f"FROM postgres:{POSTGRES_12_VERSION}"
+        assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
+        assert f"postgresql-$PG_MAJOR-{PROJECT_NAME}-" \
+               f"{version_details['major']}.{version_details['minor']}.=$CITUS_VERSION" in lines[21]
+        assert len(lines) == 42
+
+def test_update_docker_file_for_postgres13():
+    update_docker_file_for_postgres12(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH)
+    with open(f"{TEST_BASE_PATH}/postgres-13/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+        content = reader.read()
+        lines = content.splitlines()
+        assert lines[2].strip() == f"FROM postgres:{POSTGRES_13_VERSION}"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert f"postgresql-$PG_MAJOR-{PROJECT_NAME}-" \
                f"{version_details['major']}.{version_details['minor']}.=$CITUS_VERSION" in lines[21]
@@ -79,7 +96,7 @@ def test_update_docker_file_for_postgres12():
 
 
 def test_update_changelog_with_postgres():
-    update_changelog(PROJECT_VERSION, TEST_BASE_PATH, POSTGRES_VERSION)
+    update_changelog(PROJECT_VERSION, TEST_BASE_PATH, POSTGRES_14_VERSION)
     with open(f"{TEST_BASE_PATH}/CHANGELOG.md", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
@@ -87,7 +104,7 @@ def test_update_changelog_with_postgres():
         assert lines[0] == f"### citus-docker v{PROJECT_VERSION}.docker " \
                            f"({datetime.strftime(datetime.now(), '%B %d,%Y')}) ###"
         assert lines[2] == f"* Bump Citus version to {PROJECT_VERSION}"
-        assert lines[4] == f"* Bump PostgreSQL version to {POSTGRES_VERSION}"
+        assert lines[4] == f"* Bump PostgreSQL version to {POSTGRES_14_VERSION}"
 
 
 def test_update_changelog_without_postgres():
@@ -104,17 +121,17 @@ def test_update_changelog_without_postgres():
 
 def test_update_postgres_version():
     if os.path.exists(PKGVARS_FILE):
-        update_pkgvars(project_version=PROJECT_VERSION, postgres_version=POSTGRES_VERSION, template_path=TEMPLATE_PATH,
+        update_pkgvars(project_version=PROJECT_VERSION, postgres_version=POSTGRES_14_VERSION, template_path=TEMPLATE_PATH,
                        pkgvars_file=PKGVARS_FILE)
         test_pkgvar_postgres_version_existence()
-        assert read_postgres_version(PKGVARS_FILE) == POSTGRES_VERSION
+        assert read_postgres_version(PKGVARS_FILE) == POSTGRES_14_VERSION
     else:
         assert read_postgres_version(PKGVARS_FILE) == "13.4"
-        update_pkgvars(project_version=PROJECT_VERSION, postgres_version=POSTGRES_VERSION, template_path=TEMPLATE_PATH,
+        update_pkgvars(project_version=PROJECT_VERSION, postgres_version=POSTGRES_14_VERSION, template_path=TEMPLATE_PATH,
                        pkgvars_file=PKGVARS_FILE)
         assert os.path.exists(PKGVARS_FILE)
         test_pkgvar_postgres_version_existence()
-        assert read_postgres_version(PKGVARS_FILE) == POSTGRES_VERSION
+        assert read_postgres_version(PKGVARS_FILE) == POSTGRES_14_VERSION
 
 
 def test_pkgvar_postgres_version_existence():
@@ -125,5 +142,5 @@ def test_pkgvar_postgres_version_existence():
         for line in lines:
             if line.startswith("latest_postgres_version"):
                 has_match = True
-                assert line.strip() == f"latest_postgres_version={POSTGRES_VERSION}"
+                assert line.strip() == f"latest_postgres_version={POSTGRES_14_VERSION}"
         assert has_match
