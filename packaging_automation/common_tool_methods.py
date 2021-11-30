@@ -321,17 +321,18 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
 def is_tag_on_branch(tag_name: str, branch_name: str):
     g = git.Git(os.getcwd())
     try:
-        branches_str = g.execute(["git", "branch", "--contains", f"tags/{tag_name}"])
-        branches = remove_prefix(branches_str, "*").split("\n")
-        print("Branches str:" + branches_str)
-        if len(branches) > 0:
-            for branch in branches:
-                if branch.strip() == branch_name:
+        tags = g.execute(["git", "tag", "--merged", f"{branch_name}"])
+        tags = tags.split()
+        print("Tags:", tags)
+        if len(tags) > 0:
+            for tag in tags:
+                if tag.strip() == tag_name:
                     return True
         return False
     except GitCommandError as e:
         print("Error:" + str(e))
         return False
+
 
 
 def get_current_branch(working_dir: str) -> str:

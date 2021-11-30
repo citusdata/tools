@@ -44,6 +44,7 @@ GITHUB_TOKEN = os.getenv("GH_TOKEN")
 BASE_PATH = pathlib2.Path(__file__).parents[1]
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
+UNIT_TEST_BRANCH_NAME = "unit_test_branch"
 
 
 def test_find_nth_occurrence_position():
@@ -84,9 +85,9 @@ def test_get_version_details():
 
 def test_is_tag_on_branch():
     current_branch = get_current_branch(os.getcwd())
-    run("git checkout develop")
-    assert is_tag_on_branch("v0.8.3", "develop")
-    assert not is_tag_on_branch("v1.8.3", "develop")
+    run(f"git checkout {UNIT_TEST_BRANCH_NAME}")
+    assert is_tag_on_branch("test_tag", "unit_test_branch")
+    assert not is_tag_on_branch("nonexistent_tag", "unit_test_branch")
     run(f"git checkout {current_branch}")
 
 
