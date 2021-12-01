@@ -18,7 +18,8 @@ PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 PACKAGE_CLOUD_ADMIN_API_TOKEN = os.getenv("PACKAGE_CLOUD_ADMIN_API_TOKEN")
 REPO = PackageCloudRepo.azure
 ORGANIZATION = PackageCloudOrganization.citusdata
-db_parameters = DbParams(user_name=DB_USER_NAME, password=DB_PASSWORD, host_and_port=DB_HOST_AND_PORT, db_name=DB_NAME)
+db_parameters = DbParams(user_name=DB_USER_NAME, password=DB_PASSWORD,
+                         host_and_port=DB_HOST_AND_PORT, db_name=DB_NAME)
 # 7 Records are fetched for each package from package cloud. To check the record count, we need to multiply package
 # count with 7
 PACKAGE_SAVED_HISTORIC_RECORD_COUNT = 7
@@ -29,8 +30,10 @@ PACKAGE_CLOUD_PARAMETERS = PackageCloudParams(admin_api_token=PACKAGE_CLOUD_ADMI
 
 
 def test_fetch_and_save_package_cloud_stats():
-    db = create_engine(db_connection_string(db_params=db_parameters, is_test=True))
-    db.execute(text(f'DROP TABLE IF EXISTS {PackageCloudDownloadStats.__tablename__}'))
+    db = create_engine(db_connection_string(
+        db_params=db_parameters, is_test=True))
+    db.execute(
+        text(f'DROP TABLE IF EXISTS {PackageCloudDownloadStats.__tablename__}'))
     session = db_session(db_params=db_parameters, is_test=True)
     page_record_count = 3
     parallel_count = 3
@@ -46,14 +49,16 @@ def test_fetch_and_save_package_cloud_stats():
 
     records = session.query(PackageCloudDownloadStats).all()
 
-    assert len(records) == filtered_package_count * PACKAGE_SAVED_HISTORIC_RECORD_COUNT
+    assert len(records) == filtered_package_count * \
+        PACKAGE_SAVED_HISTORIC_RECORD_COUNT
 
 
 def get_filtered_package_count(session) -> int:
     # Since package count for our test repo is lower than 100, we get the total package details by getting all the
     # packages in one call
     result = stat_get_request(
-        package_list_with_pagination_request_address(PACKAGE_CLOUD_PARAMETERS, 1, 100),
+        package_list_with_pagination_request_address(
+            PACKAGE_CLOUD_PARAMETERS, 1, 100),
         RequestType.package_cloud_list_package, session)
     package_info_list = json.loads(result.content)
     package_list = list(filter(

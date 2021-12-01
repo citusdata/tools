@@ -25,19 +25,24 @@ def fetch_and_store_docker_statistics(repository_name: str, db_parameters: DbPar
                                       test_day_shift_index: int = 0,
                                       test_total_pull_count: int = 0):
     if repository_name not in docker_repositories:
-        raise ValueError(f"Repository name should be in {str_array_to_str(docker_repositories)}")
+        raise ValueError(
+            f"Repository name should be in {str_array_to_str(docker_repositories)}")
     if not is_test and (test_day_shift_index != 0 or test_total_pull_count != 0):
         raise ValueError("test_day_shift_index and test_total_pull_count parameters are test "
                          "parameters. Please don't use these parameters other than testing.")
 
-    result = requests.get(f"https://hub.docker.com/v2/repositories/citusdata/{repository_name}/")
-    total_pull_count = int(result.json()["pull_count"]) if test_total_pull_count == 0 else test_total_pull_count
+    result = requests.get(
+        f"https://hub.docker.com/v2/repositories/citusdata/{repository_name}/")
+    total_pull_count = int(result.json()[
+                           "pull_count"]) if test_total_pull_count == 0 else test_total_pull_count
 
-    session = db_session(db_params=db_parameters, is_test=is_test, create_db_objects=True)
+    session = db_session(db_params=db_parameters,
+                         is_test=is_test, create_db_objects=True)
 
     fetch_date = datetime.now() + timedelta(days=test_day_shift_index)
     validate_same_day_record_existence(fetch_date, session)
-    day_diff, mod_pull_diff, pull_diff = calculate_diff_params(fetch_date, session, total_pull_count)
+    day_diff, mod_pull_diff, pull_diff = calculate_diff_params(
+        fetch_date, session, total_pull_count)
     for i in range(0, day_diff):
         daily_pull_count = ((pull_diff - mod_pull_diff) / day_diff
                             if i > 0 else (pull_diff - mod_pull_diff) / day_diff + mod_pull_diff)
@@ -49,17 +54,22 @@ def fetch_and_store_docker_statistics(repository_name: str, db_parameters: DbPar
 
 
 def calculate_diff_params(fetch_date, session, total_pull_count):
-    last_stat_record = session.query(DockerStats).order_by(desc(DockerStats.stat_date)).first()
-    day_diff = (fetch_date.date() - last_stat_record.stat_date).days if last_stat_record else 1
-    pull_diff = total_pull_count - last_stat_record.total_pull_count if last_stat_record else total_pull_count
+    last_stat_record = session.query(DockerStats).order_by(
+        desc(DockerStats.stat_date)).first()
+    day_diff = (fetch_date.date() -
+                last_stat_record.stat_date).days if last_stat_record else 1
+    pull_diff = total_pull_count - \
+        last_stat_record.total_pull_count if last_stat_record else total_pull_count
     mod_pull_diff = pull_diff % day_diff
     return day_diff, mod_pull_diff, pull_diff
 
 
 def validate_same_day_record_existence(fetch_date, session):
-    same_day_record = session.query(DockerStats).filter_by(stat_date=fetch_date.date()).first()
+    same_day_record = session.query(DockerStats).filter_by(
+        stat_date=fetch_date.date()).first()
     if same_day_record:
-        print(f"Docker download record for date {fetch_date.date()} already exists. No need to add record.")
+        print(
+            f"Docker download record for date {fetch_date.date()} already exists. No need to add record.")
         sys.exit(0)
 
 
@@ -79,5 +89,6 @@ if __name__ == "__main__":
                          host_and_port=arguments.db_host_and_port, db_name=arguments.db_name)
 
     fetch_and_store_docker_statistics(repository_name=arguments.repo_name, is_test=arguments.is_test,
-                                      db_parameters=db_params, test_day_shift_index=int(arguments.test_day_shift_index),
+                                      db_parameters=db_params, test_day_shift_index=int(
+                                          arguments.test_day_shift_index),
                                       test_total_pull_count=int(arguments.test_total_pull_count))

@@ -38,6 +38,7 @@ fixopen = distutils.spawn.find_executable("postgres.fixopen")
 if fixopen:
     pgctl_flags += f' -p "{fixopen}"'
 
+
 def run(command, *args, **kwargs):
     print(command)
     result = subprocess.run(command, *args, check=True, shell=True, **kwargs)
@@ -61,17 +62,22 @@ def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
 
     if usessl:
         run(f'echo "ssl = on" >> {clustername}/{nodename}/postgresql.conf')
-        run(f"echo \"citus.node_conninfo = 'sslmode=require'\" >> {clustername}/{nodename}/postgresql.conf")
-        run(f"openssl req -new -x509 -days 365 -nodes -text -out {clustername}/{nodename}/server.crt -keyout {clustername}/{nodename}/server.key -subj '/CN={nodename}'")
+        run(
+            f"echo \"citus.node_conninfo = 'sslmode=require'\" >> {clustername}/{nodename}/postgresql.conf")
+        run(
+            f"openssl req -new -x509 -days 365 -nodes -text -out {clustername}/{nodename}/server.crt -keyout {clustername}/{nodename}/server.key -subj '/CN={nodename}'")
         run(f"chmod 0600 {clustername}/{nodename}/server.key")
 
     if mx:
-        run(f"echo \"citus.replication_model = 'streaming'\" >> {clustername}/{nodename}/postgresql.conf")
+        run(
+            f"echo \"citus.replication_model = 'streaming'\" >> {clustername}/{nodename}/postgresql.conf")
+
 
 def createPgBouncerUsers(clustername):
     username = getpass.getuser()
     with open(f"{clustername}/users.txt", "w") as f:
         f.write(f'"{username}" ""')
+
 
 def createPgBouncerConfig(clustername, port, index):
     workerPort = port + index + 1
@@ -110,7 +116,6 @@ def main(arguments):
         if arguments['--destroy']:
             stopCluster(clustername, True)
             run(f'rm -rf {clustername}')
-
 
         createNodeCommands(
             clustername,
@@ -177,24 +182,23 @@ def main(arguments):
             # need to start pgbouncers and configure pg_dist_poolinfo
             for i in range(size):
                 coordinatorPort = port
-                workerPort = port + i + 1 
+                workerPort = port + i + 1
                 bouncerPort = port + i + 101
                 run(f'pgbouncer -d {clustername}/worker{i}.pgbouncer.ini')
                 run(f"psql -p {coordinatorPort} -c \"INSERT INTO pg_dist_poolinfo SELECT nodeid, 'host=localhost port={bouncerPort}' AS poolinfo FROM pg_dist_node WHERE nodeport = {workerPort};\"")
-
 
         if arguments['--init-with']:
             run(f'psql -p {cport} -f {arguments["--init-with"]} -v ON_ERROR_STOP=1')
         if arguments['--init-worker-with']:
             for i in range(size):
                 workerport = port + 1 + i
-                run(f'psql -p {workerport} -f {arguments["--init-worker-with"]} -v ON_ERROR_STOP=1')
+                run(
+                    f'psql -p {workerport} -f {arguments["--init-worker-with"]} -v ON_ERROR_STOP=1')
 
     elif arguments["stop"]:
         clusterName = arguments["<name>"]
         always = arguments["--force"]
         stopCluster(clusterName, always)
-
 
     elif arguments["start"]:
         clustername = arguments["<name>"]
@@ -204,8 +208,6 @@ def main(arguments):
             port += 1
         for bouncerConfig in getPgBouncerConfigs(clustername):
             run(f'pgbouncer -d {clustername}/{bouncerConfig}')
-
-
 
     elif arguments["restart"]:
         clustername = arguments["<name>"]
@@ -222,17 +224,18 @@ def main(arguments):
                 run(f'pg_ctl {pgctl_flags} restart -D {clustername}/{role} -o "-p {cport}" -l {role}_logfile')
                 cport += 1
 
-
     else:
         print("unknown command")
         exit(1)
 
+
 def getPgBouncerPort(clustername, configfile):
     with open(f"{clustername}/{configfile}") as f:
-            for line in f.readlines():
-                if line.find("listen_port") >= 0:
-                    lineParts = line.split("=")
-                    return int(lineParts[1])
+        for line in f.readlines():
+            if line.find("listen_port") >= 0:
+                lineParts = line.split("=")
+                return int(lineParts[1])
+
 
 def stopCluster(clustername, always=False):
     for bouncerConfig in getPgBouncerConfigs(clustername):
@@ -247,9 +250,11 @@ def stopCluster(clustername, always=False):
     for role in getRoles(clustername):
         run(f"pg_ctl {pgctl_flags} stop -D {clustername}/{role} {pipeTrue}")
 
+
 def getPgBouncerConfigs(clustername):
     try:
-        bouncerFiles = [f.name for f in os.scandir(clustername) if f.name.find("pgbouncer.ini") >= 0]
+        bouncerFiles = [f.name for f in os.scandir(
+            clustername) if f.name.find("pgbouncer.ini") >= 0]
         return bouncerFiles
     except FileNotFoundError:
         return []

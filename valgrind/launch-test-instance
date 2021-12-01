@@ -2,13 +2,7 @@
 
 set -euo pipefail
 
-REPORT_EMAIL=${REPORT_EMAIL:-burak@citusdata.com \
-                             furkan@citusdata.com \
-                             metin@citusdata.com \
-                             Burak.Yucesoy@microsoft.com \
-                             Furkan.Sahin@microsoft.com \
-                             Hanefi.Onaldi@microsoft.com \
-                             Metin.Doslu@microsoft.com }
+REPORT_EMAIL=${REPORT_EMAIL:-burak@citusdata.com                              furkan@citusdata.com                              metin@citusdata.com                              Burak.Yucesoy@microsoft.com                              Furkan.Sahin@microsoft.com                              Hanefi.Onaldi@microsoft.com                              Metin.Doslu@microsoft.com }
 POSTGRES_GITREF=${POSTGRES_GITREF:-REL_11_STABLE}
 CITUS_GITREF=${CITUS_GITREF:-master}
 
@@ -19,14 +13,14 @@ echo "     CITUS_GITREF:" $CITUS_GITREF
 
 # when running in a tty wait for the human to press enter, this is to allow the human to verify the settings
 # when running as a crontab it will just continue
-if [ -t 1 ] ; then
+if [ -t 1 ]; then
     read -p "Press enter to continue"
 fi
 
 # create a key pair just for valgrind tests and store it in valgrind-test.pem
 echo "Creating key pair..."
 key_name=valgrind_$RANDOM
-aws ec2 create-key-pair --key-name $key_name --query 'KeyMaterial' --output text > $key_name.pem
+aws ec2 create-key-pair --key-name $key_name --query 'KeyMaterial' --output text >$key_name.pem
 chmod 600 $key_name.pem
 
 # start an instance with ami-f4cc1de2 image(i.e. Ubuntu Xenial 16.04)

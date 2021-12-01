@@ -18,10 +18,13 @@ REPO_NAME = "citus"
 
 
 def test_github_stats_collector():
-    db_params = DbParams(user_name=DB_USER_NAME, password=DB_PASSWORD, host_and_port=DB_HOST_AND_PORT, db_name=DB_NAME)
+    db_params = DbParams(user_name=DB_USER_NAME, password=DB_PASSWORD,
+                         host_and_port=DB_HOST_AND_PORT, db_name=DB_NAME)
     db = create_engine(db_connection_string(db_params=db_params, is_test=True))
-    db.execute(text(f'DROP TABLE IF EXISTS {GithubCloneStatsTransactionsDetail.__tablename__}'))
-    db.execute(text(f'DROP TABLE IF EXISTS {GithubCloneStatsTransactionsMain.__tablename__}'))
+    db.execute(
+        text(f'DROP TABLE IF EXISTS {GithubCloneStatsTransactionsDetail.__tablename__}'))
+    db.execute(
+        text(f'DROP TABLE IF EXISTS {GithubCloneStatsTransactionsMain.__tablename__}'))
     db.execute(text(f'DROP TABLE IF EXISTS {GithubCloneStats.__tablename__}'))
 
     fetch_and_store_github_stats(organization_name=ORGANIZATION_NAME, repo_name=REPO_NAME, github_token=GH_TOKEN,
@@ -49,9 +52,11 @@ def test_github_stats_collector():
 
     records = session.query(GithubCloneStats).all()
     assert len(records) == previous_record_length
-    today_record = session.query(GithubCloneStats).filter_by(clone_date=datetime.today())
+    today_record = session.query(GithubCloneStats).filter_by(
+        clone_date=datetime.today())
     assert not today_record.first()
 
-    release_records = session.query(GitHubReleases).filter_by(tag_name="v10.0.3").all()
+    release_records = session.query(
+        GitHubReleases).filter_by(tag_name="v10.0.3").all()
 
     assert len(release_records) > 0

@@ -56,7 +56,7 @@ echo %{pginstdir}/share/extension/%{sname}.control >> installation_files.list
     echo %{pginstdir}/lib/bitcode/%{sname}/*.bc >> installation_files.list
     echo %{pginstdir}/lib/bitcode/%{sname}*.bc >> installation_files.list
     echo %{pginstdir}/lib/bitcode/%{sname}/*/*.bc >> installation_files.list
-    
+
     # Columnar does not exist in Citus versions < 10.0
     # At this point, we don't have %{pginstdir},
     # so first check build directory for columnar.

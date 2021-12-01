@@ -25,10 +25,13 @@ GITHUB_TOKEN = os.getenv("GH_TOKEN")
 PROJECT_VERSION = os.getenv("PROJECT_VERSION", default="10.0.3")
 TAG_NAME = os.getenv("TAG_NAME", default="v10.0.3")
 PROJECT_NAME = os.getenv("PROJECT_NAME", default="citus")
-MICROSOFT_EMAIL = os.getenv("MICROSOFT_EMAIL", default="gindibay@microsoft.com")
+MICROSOFT_EMAIL = os.getenv(
+    "MICROSOFT_EMAIL", default="gindibay@microsoft.com")
 NAME_SURNAME = os.getenv("NAME_SURNAME", default="Gurkan Indibay")
-CHANGELOG_DATE_STR = os.getenv("CHANGELOG_DATE", 'Thu, 18 Mar 2021 01:40:08 +0000')
-CHANGELOG_DATE = datetime.strptime(CHANGELOG_DATE_STR, '%a, %d %b %Y %H:%M:%S %z')
+CHANGELOG_DATE_STR = os.getenv(
+    "CHANGELOG_DATE", 'Thu, 18 Mar 2021 01:40:08 +0000')
+CHANGELOG_DATE = datetime.strptime(
+    CHANGELOG_DATE_STR, '%a, %d %b %Y %H:%M:%S %z')
 
 
 def default_changelog_param_for_test(changelog_date):
@@ -39,7 +42,8 @@ def default_changelog_param_for_test(changelog_date):
     return changelog_param
 
 
-DEFAULT_CHANGELOG_PARAM_FOR_TEST = default_changelog_param_for_test(CHANGELOG_DATE)
+DEFAULT_CHANGELOG_PARAM_FOR_TEST = default_changelog_param_for_test(
+    CHANGELOG_DATE)
 
 
 def test_get_version_number():
@@ -63,7 +67,8 @@ def test_prepend_latest_changelog_into_debian_changelog():
     changelog_param = default_changelog_param_for_test(CHANGELOG_DATE)
 
     try:
-        prepend_latest_changelog_into_debian_changelog(changelog_param, changelog_file_path)
+        prepend_latest_changelog_into_debian_changelog(
+            changelog_param, changelog_file_path)
         verify_prepend_debian_changelog(changelog_file_path)
     finally:
         os.remove(changelog_file_path)
@@ -138,7 +143,8 @@ def test_update_pkg_vars():
     copyfile(pkgvars_path, pkgvars_copy_path)
 
     try:
-        update_pkgvars(DEFAULT_CHANGELOG_PARAM_FOR_TEST, templates_path, f"{TEST_BASE_PATH}/files/")
+        update_pkgvars(DEFAULT_CHANGELOG_PARAM_FOR_TEST,
+                       templates_path, f"{TEST_BASE_PATH}/files/")
         verify_pkgvars(pkgvars_path)
     finally:
         copyfile(pkgvars_copy_path, pkgvars_path)
@@ -188,4 +194,5 @@ def test_update_all_changes():
 
 
 def test_regex():
-    print(re.match(r"^### \w+\sv\d+\.\d+\.\d+\s\(\w+\s\d+,\s\d+\)\s###$", "### citus v10.0.3 (March 16, 2021) ###"))
+    print(re.match(r"^### \w+\sv\d+\.\d+\.\d+\s\(\w+\s\d+,\s\d+\)\s###$",
+          "### citus v10.0.3 (March 16, 2021) ###"))

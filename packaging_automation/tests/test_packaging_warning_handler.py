@@ -23,8 +23,10 @@ def test_deb_filter_warning_lines():
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         lines = reader.read().splitlines()
-        base_warning_lines, package_specific_warning_lines = filter_warning_lines(lines, PackageType.deb)
-        assert len(base_warning_lines) == 11 and len(package_specific_warning_lines) == 7
+        base_warning_lines, package_specific_warning_lines = filter_warning_lines(
+            lines, PackageType.deb)
+        assert len(base_warning_lines) == 11 and len(
+            package_specific_warning_lines) == 7
 
 
 def test_rpm_filter_warning_lines():
@@ -32,8 +34,10 @@ def test_rpm_filter_warning_lines():
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         lines = reader.read().splitlines()
-        base_warning_lines, package_specific_warning_lines = filter_warning_lines(lines, PackageType.rpm)
-        assert len(base_warning_lines) == 10 and len(package_specific_warning_lines) == 1
+        base_warning_lines, package_specific_warning_lines = filter_warning_lines(
+            lines, PackageType.rpm)
+        assert len(base_warning_lines) == 10 and len(
+            package_specific_warning_lines) == 1
 
 
 def test_get_base_warnings_to_be_raised():
@@ -44,7 +48,8 @@ def test_get_base_warnings_to_be_raised():
         base_warning_lines, _ = filter_warning_lines(lines, PackageType.deb)
         base_ignore_list, _ = parse_ignore_lists(
             f"{TEST_BASE_PATH}/files/packaging_warning/packaging_ignore.yml", PackageType.deb)
-        base_warnings_to_be_raised = get_warnings_to_be_raised(base_ignore_list, base_warning_lines)
+        base_warnings_to_be_raised = get_warnings_to_be_raised(
+            base_ignore_list, base_warning_lines)
         assert len(base_warnings_to_be_raised) == 1
 
 
@@ -53,7 +58,8 @@ def test_get_debian_warnings_to_be_raised():
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         lines = reader.read().splitlines()
-        _, package_specific_warning_lines = filter_warning_lines(lines, PackageType.deb)
+        _, package_specific_warning_lines = filter_warning_lines(
+            lines, PackageType.deb)
         _, debian_ignore_list = parse_ignore_lists(
             f"{TEST_BASE_PATH}/files/packaging_warning/packaging_ignore.yml", PackageType.deb)
         debian_warnings_to_be_raised = get_warnings_to_be_raised(debian_ignore_list,
@@ -66,14 +72,16 @@ def test_get_error_message():
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         lines = reader.read().splitlines()
-        base_warning_lines, debian_warning_lines = filter_warning_lines(lines, PackageType.deb)
+        base_warning_lines, debian_warning_lines = filter_warning_lines(
+            lines, PackageType.deb)
         base_ignore_list, debian_ignore_list = parse_ignore_lists(
             f"{TEST_BASE_PATH}/files/packaging_warning/packaging_ignore.yml", PackageType.deb)
         base_warnings_to_be_raised = get_warnings_to_be_raised(base_ignore_list,
                                                                base_warning_lines)
         debian_warnings_to_be_raised = get_warnings_to_be_raised(debian_ignore_list,
                                                                  debian_warning_lines)
-        error_message = get_error_message(base_warnings_to_be_raised, debian_warnings_to_be_raised, PackageType.deb)
+        error_message = get_error_message(
+            base_warnings_to_be_raised, debian_warnings_to_be_raised, PackageType.deb)
         assert error_message == "Warning lines:\nWarning: Unhandled\nDebian Warning lines:\n" \
                                 "citus-enterprise100_11.x86_64: W: invalid-date-format\n" \
                                 "citus-enterprise100_11.x86_64: E: zero-length /usr/pgsql-/usr/lib/share/extension/\n"
@@ -84,14 +92,16 @@ def test_get_error_message_empty_package_specific_errors():
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         lines = reader.read().splitlines()
-        base_warning_lines, debian_warning_lines = filter_warning_lines(lines, PackageType.deb)
+        base_warning_lines, debian_warning_lines = filter_warning_lines(
+            lines, PackageType.deb)
         base_ignore_list, debian_ignore_list = parse_ignore_lists(
             f"{TEST_BASE_PATH}/files/packaging_warning/packaging_ignore.yml", PackageType.deb)
         base_warnings_to_be_raised = get_warnings_to_be_raised(base_ignore_list,
                                                                base_warning_lines)
         debian_warnings_to_be_raised = get_warnings_to_be_raised(debian_ignore_list,
                                                                  debian_warning_lines)
-        error_message = get_error_message(base_warnings_to_be_raised, debian_warnings_to_be_raised, PackageType.deb)
+        error_message = get_error_message(
+            base_warnings_to_be_raised, debian_warnings_to_be_raised, PackageType.deb)
         assert error_message == "Warning lines:\nWarning: Unhandled\n"
 
 

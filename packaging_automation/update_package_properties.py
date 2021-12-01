@@ -73,7 +73,7 @@ class PackagePropertiesParams:
     changelog_entry: str = ""
 
     @property
-    def changelog_version_entry(self)->str:
+    def changelog_version_entry(self) -> str:
         return f"{self.project_version}-{self.fancy_version_number}"
 
     @property
@@ -120,7 +120,8 @@ class PackagePropertiesParams:
 
     @property
     def debian_trailer(self):
-        formatted_date = self.changelog_date.strftime("%a, %d %b %Y %H:%M:%S %z")
+        formatted_date = self.changelog_date.strftime(
+            "%a, %d %b %Y %H:%M:%S %z")
         return f" -- {self.name_surname} <{self.microsoft_email}>  {formatted_date}\n"
 
 
@@ -128,7 +129,8 @@ def get_enum_from_changelog_project_name(project_name) -> SupportedProject:
     for e in SupportedProject:
         if e.value.changelog_project_name == project_name:
             return e
-    raise ValueError(f"{project_name} could not be found in supported project changelog names.")
+    raise ValueError(
+        f"{project_name} could not be found in supported project changelog names.")
 
 
 def spec_file_name(project_name: str) -> str:
@@ -136,7 +138,8 @@ def spec_file_name(project_name: str) -> str:
 
 
 def get_last_changelog_content(all_changelog_content: str) -> str:
-    second_changelog_index = find_nth_occurrence_position(all_changelog_content, "###", 3)
+    second_changelog_index = find_nth_occurrence_position(
+        all_changelog_content, "###", 3)
     changelogs = all_changelog_content[:second_changelog_index]
     lines = changelogs.splitlines()
     if len(lines) < 1:
@@ -184,7 +187,8 @@ def get_debian_latest_changelog(package_properties_params: PackagePropertiesPara
 
 def prepend_latest_changelog_into_debian_changelog(package_properties_params: PackagePropertiesParams,
                                                    changelog_file_path: str) -> None:
-    debian_latest_changelog = get_debian_latest_changelog(package_properties_params)
+    debian_latest_changelog = get_debian_latest_changelog(
+        package_properties_params)
     with open(changelog_file_path, mode="r+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         if not (package_properties_params.changelog_version_entry in reader.readline()):
@@ -203,7 +207,8 @@ def update_pkgvars(package_properties_params: PackagePropertiesParams, templates
 
     version_str = package_properties_params.version_number_with_project_name
 
-    template = env.get_template(package_properties_params.pkgvars_template_file_name)
+    template = env.get_template(
+        package_properties_params.pkgvars_template_file_name)
 
     pkgvars_content = f"{template.render(version=version_str)}\n"
     with open(f'{pkgvars_path}/pkgvars', "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
@@ -216,7 +221,8 @@ def rpm_changelog_history(spec_file_path: str) -> str:
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         spec_content = reader.read()
         changelog_index = spec_content.find("%changelog")
-        changelog_content = spec_content[changelog_index + len("%changelog") + 1:]
+        changelog_content = spec_content[changelog_index +
+                                         len("%changelog") + 1:]
 
     return changelog_content
 
@@ -243,12 +249,14 @@ def update_rpm_spec(package_properties_params: PackagePropertiesParams, spec_ful
     env = get_template_environment(templates_path)
 
     rpm_version = package_properties_params.rpm_version
-    template = env.get_template(package_properties_params.rpm_spec_template_file_name)
+    template = env.get_template(
+        package_properties_params.rpm_spec_template_file_name)
 
     history_lines = rpm_changelog_history(spec_full_path).splitlines()
 
     if len(history_lines) > 0 and package_properties_params.version_number_with_project_name in history_lines[0]:
-        raise ValueError(f"{package_properties_params.project_version} already exists in rpm spec file")
+        raise ValueError(
+            f"{package_properties_params.project_version} already exists in rpm spec file")
 
     latest_changelog = get_rpm_changelog(package_properties_params)
     changelog = f"{latest_changelog}\n\n{rpm_changelog_history(spec_full_path)}"
@@ -274,11 +282,13 @@ def validate_package_properties_params_for_update_all_changes(package_props: Pac
 @validate_parameters
 def update_all_changes(package_properties_params: PackagePropertiesParams,
                        packaging_path: str):
-    validate_package_properties_params_for_update_all_changes(package_properties_params)
+    validate_package_properties_params_for_update_all_changes(
+        package_properties_params)
     templates_path = f"{BASE_PATH}/templates"
     update_pkgvars(package_properties_params, templates_path,
                    f"{packaging_path}")
-    prepend_latest_changelog_into_debian_changelog(package_properties_params, f"{packaging_path}/debian/changelog")
+    prepend_latest_changelog_into_debian_changelog(
+        package_properties_params, f"{packaging_path}/debian/changelog")
     spec_full_path = f"{packaging_path}/{package_properties_params.spec_file_name}"
     update_rpm_spec(package_properties_params, spec_full_path, templates_path)
 
@@ -287,9 +297,11 @@ CHECKOUT_DIR = "update_properties_temp"
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token', required=True)
-    parser.add_argument('--prj_name', choices=[r.name for r in SupportedProject])
+    parser.add_argument(
+        '--prj_name', choices=[r.name for r in SupportedProject])
     parser.add_argument('--tag_name', required=True)
-    parser.add_argument('--fancy_ver_no', type=int, choices=range(1, 10), default=1)
+    parser.add_argument('--fancy_ver_no', type=int,
+                        choices=range(1, 10), default=1)
     parser.add_argument('--email', required=True)
     parser.add_argument('--name', required=True)
     parser.add_argument('--date')

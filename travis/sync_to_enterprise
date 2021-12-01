@@ -10,8 +10,8 @@ success=0
 if [ "${TRAVIS_REPO_SLUG}" != 'citusdata/citus' ]; then
     echo "Not building citusdata/citus repo; skipping enterprise sync..." >&2
     exit $success
-elif [[ "${TRAVIS_BRANCH}" != 'master'    ]] &&
-     [[ "${TRAVIS_BRANCH}" != 'release-'* ]]; then
+elif [[ "${TRAVIS_BRANCH}" != 'master' ]] &&
+    [[ "${TRAVIS_BRANCH}" != 'release-'* ]]; then
     echo "Not on master or release branch; skipping enterprise sync..." >&2
     exit $success
 fi
@@ -20,7 +20,7 @@ creds="citus-github:${GITHUB_TOKEN}"
 ghurl=https://${creds}@github.com/citusdata/citus-enterprise
 refspec="${TRAVIS_BRANCH}:open-${TRAVIS_BRANCH}"
 
-git push -q "${ghurl}" "${refspec}" > /dev/null 2>&1
+git push -q "${ghurl}" "${refspec}" >/dev/null 2>&1
 
 echo "Successfully synced ${TRAVIS_BRANCH} to enterprise repo!" >&2
 

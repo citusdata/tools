@@ -23,7 +23,8 @@ AMD_SUFFIX = "amd64.deb"
 
 
 def publish_single_package(package_path: str, repo):
-    result = run_with_output(f"repoclient package add --repoID {repo['id']} {package_path}")
+    result = run_with_output(
+        f"repoclient package add --repoID {repo['id']} {package_path}")
 
     return json.loads(result.stdout)
 
@@ -46,14 +47,16 @@ def get_citus_repos():
             name = re.sub(r"(\d+)", r"-\1", name)
         repos[name] = repo
     # Adding ubuntu-focal manually because list does not include ubuntu-focal
-    repos["ubuntu-focal"] = {"url": "ubuntu-focal", "distribution": "focal", "id": UBUNTU_FOCAL_REPO_ID}
+    repos["ubuntu-focal"] = {"url": "ubuntu-focal",
+                             "distribution": "focal", "id": UBUNTU_FOCAL_REPO_ID}
     return repos
 
 
 # Ensure deb packages contain the distribution, so they do not conflict
 def suffix_deb_package_with_distribution(repository, package_file_path):
     if not package_file_path.endswith(AMD_SUFFIX):
-        raise ValueError(f"Package should have ended with {AMD_SUFFIX}: {package_file_path}")
+        raise ValueError(
+            f"Package should have ended with {AMD_SUFFIX}: {package_file_path}")
     old_package_path = package_file_path
     package_prefix = package_file_path[: -len(AMD_SUFFIX)]
     package_file_path = f"{package_prefix}+{repository['distribution']}_{AMD_SUFFIX}"
@@ -73,7 +76,8 @@ def publish_packages(target_platform, citus_repos, packages_dir: str):
         # Ensure deb packages contain the distribution, so they do not conflict
         if repo["url"] in DEB_BASED_REPOS:
             if repo["distribution"] not in package_file:
-                package_path = suffix_deb_package_with_distribution(repo, package_path)
+                package_path = suffix_deb_package_with_distribution(
+                    repo, package_path)
 
         # Publish packages
         if os.path.isfile(package_path) and package_file.endswith((".rpm", ".deb")):
@@ -126,6 +130,7 @@ if __name__ == "__main__":
 
     citus_repos = get_citus_repos()
 
-    submission_responses = publish_packages(args.platform, citus_repos, args.packages_dir)
+    submission_responses = publish_packages(
+        args.platform, citus_repos, args.packages_dir)
 
     check_submissions(submission_responses)

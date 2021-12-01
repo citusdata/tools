@@ -8,5 +8,6 @@ if __name__ == "__main__":
     parser.add_argument('--project_version', required=True)
 
     args = parser.parse_args()
-    postgres_versions = get_postgres_versions_from_matrix_file(args.project_version)
+    postgres_versions = get_postgres_versions_from_matrix_file(
+        args.project_version)
     print(json.dumps(postgres_versions))

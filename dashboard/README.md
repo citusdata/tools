@@ -4,11 +4,11 @@ These scripts are intended for use within daily cron scripts (presently running 
 
 ## Getting Started
 
-You probably shouldn't need to do anything with this, but if anything changes, log into that box, use `curl` or `wget` to get the latest version of the `citusdata/tools` repository, then `sudo make -C dashboard install`. Check the latest cron configuration using `crontab -l`, and see whether any cron failures have sent mail using `mail`.
+You probably shouldn't need to do anything with this, but if anything changes, log into that box, use `curl` or `wget` to get the latest version of the `citusdata/tools` repository, then `sudo make -C dashboard install` . Check the latest cron configuration using `crontab -l` , and see whether any cron failures have sent mail using `mail` .
 
 ## What's Included
 
-All non `update_*` scripts emit (to standard out) CSV files suitable for loading into PostgreSQL tables defined in `schema.dll`. Most have pretty good usage messages, so check those out if needed.
+All non `update_*` scripts emit (to standard out) CSV files suitable for loading into PostgreSQL tables defined in `schema.dll` . Most have pretty good usage messages, so check those out if needed.
 
 `pkg.jq` is a huge mishmash of `jq` helper normalization functions for massaging API data into the right state before ingest.
 

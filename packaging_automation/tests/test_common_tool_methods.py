@@ -51,8 +51,10 @@ def test_find_nth_occurrence_position():
 
 
 def test_find_nth_matching_line_number_by_regex():
-    assert find_nth_matching_line_and_line_number("citusx\n citusx\ncitusx", "^citusx$", 2)[0] == 2
-    assert find_nth_matching_line_and_line_number("citusx\n citusx\ncitusx", "^citusy$", 2)[0] == -1
+    assert find_nth_matching_line_and_line_number(
+        "citusx\n citusx\ncitusx", "^citusx$", 2)[0] == 2
+    assert find_nth_matching_line_and_line_number(
+        "citusx\n citusx\ncitusx", "^citusy$", 2)[0] == -1
 
 
 def test_is_major_release():
@@ -75,11 +77,13 @@ def test_run():
 
 
 def test_remove_paranthesis_from_string():
-    assert remove_text_with_parenthesis("out of paranthesis (inside paranthesis)") == "out of paranthesis "
+    assert remove_text_with_parenthesis(
+        "out of paranthesis (inside paranthesis)") == "out of paranthesis "
 
 
 def test_get_version_details():
-    assert get_version_details("10.0.1") == {"major": "10", "minor": "0", "patch": "1"}
+    assert get_version_details("10.0.1") == {
+        "major": "10", "minor": "0", "patch": "1"}
 
 
 def test_is_tag_on_branch():
@@ -235,7 +239,8 @@ def test_getprs_with_backlog_label():
 
 
 def test_process_template_file():
-    content = process_template_file("10.0.3", f"{BASE_PATH}/templates", "docker/alpine/alpine.tmpl.dockerfile", "13.2")
+    content = process_template_file(
+        "10.0.3", f"{BASE_PATH}/templates", "docker/alpine/alpine.tmpl.dockerfile", "13.2")
     with open(f"{TEST_BASE_PATH}/files/verify/expected_alpine_10.0.3.txt", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         expected_content = reader.read()
@@ -249,7 +254,8 @@ def test_remove_prefix():
 
 def test_delete_rpm_key_by_name():
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
-    generate_new_gpg_key(f"{TEST_BASE_PATH}/files/gpg/packaging_with_passphrase.gpg")
+    generate_new_gpg_key(
+        f"{TEST_BASE_PATH}/files/gpg/packaging_with_passphrase.gpg")
     fingerprints = get_gpg_fingerprints_by_name(TEST_GPG_KEY_NAME)
     assert len(fingerprints) > 0
     define_rpm_public_key_to_machine(fingerprints[0])

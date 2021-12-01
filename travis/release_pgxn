@@ -21,8 +21,8 @@ cd pgxn
 
 # TODO: use pgxnclient in Travis to only release on new versions
 httpcode=$(curl -sL -u "${pgxnuser}:${PGXN_PASSWORD}" \
-           -F "archive=@${archive};type=application/zip" \
-           -o /dev/null -w '%{http_code}' "${pgxnurl}")
+    -F "archive=@${archive};type=application/zip" \
+    -o /dev/null -w '%{http_code}' "${pgxnurl}")
 
 if [ "${httpcode}" -eq 200 ]; then
     echo "Successfully uploaded ${archive} to PGXN!" >&2

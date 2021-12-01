@@ -34,7 +34,8 @@ class GithubCloneStatsTransactionsDetail(Base):
     clone_date = Column(DATE, nullable=False)
     count = Column(INTEGER, nullable=False)
     uniques = Column(INTEGER, nullable=False)
-    parent_id = Column(INTEGER, ForeignKey('github_stats_clone_transactions_main.id'), nullable=False)
+    parent_id = Column(INTEGER, ForeignKey(
+        'github_stats_clone_transactions_main.id'), nullable=False)
 
 
 class GithubCloneStats(Base):
@@ -45,7 +46,8 @@ class GithubCloneStats(Base):
     clone_date = Column(DATE, nullable=False)
     count = Column(INTEGER, nullable=False)
     uniques = Column(INTEGER, nullable=False)
-    __table_args__ = (UniqueConstraint('repo_name', 'clone_date', name='repo_name_clone_date_uq'),)
+    __table_args__ = (UniqueConstraint(
+        'repo_name', 'clone_date', name='repo_name_clone_date_uq'),)
 
 
 class GitHubReleases(Base):
@@ -58,12 +60,14 @@ class GitHubReleases(Base):
 
 
 def clone_record_exists(record_time: datetime.date, session) -> bool:
-    db_record = session.query(GithubCloneStats).filter_by(clone_date=record_time).first()
+    db_record = session.query(GithubCloneStats).filter_by(
+        clone_date=record_time).first()
     return db_record is not None
 
 
 def release_record_exists(tag_name: str, session) -> bool:
-    db_record = session.query(GitHubReleases).filter_by(tag_name=tag_name).first()
+    db_record = session.query(GitHubReleases).filter_by(
+        tag_name=tag_name).first()
     return db_record is not None
 
 
@@ -81,8 +85,10 @@ def github_releases(github_token: str, organization_name: str, repo_name: str):
 
 def fetch_and_store_github_stats(organization_name: str, repo_name: str, db_parameters: DbParams, github_token: str,
                                  is_test: bool):
-    fetch_and_store_github_clones(organization_name, repo_name, db_parameters, github_token, is_test)
-    fetch_and_store_github_releases(organization_name, repo_name, db_parameters, github_token, is_test)
+    fetch_and_store_github_clones(
+        organization_name, repo_name, db_parameters, github_token, is_test)
+    fetch_and_store_github_releases(
+        organization_name, repo_name, db_parameters, github_token, is_test)
 
 
 def fetch_and_store_github_releases(organization_name: str, repo_name: str, db_parameters: DbParams, github_token: str,

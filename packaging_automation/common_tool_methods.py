@@ -43,6 +43,7 @@ supported_platforms = {
     "ubuntu": ["focal", "bionic", "trusty"]
 }
 
+
 def platform_names() -> List[str]:
     platforms = []
     for platform_os, platform_releases in supported_platforms.items():
@@ -140,7 +141,8 @@ def run_with_output(command, *args, **kwargs):
     # this method's main objective is to return output. Therefore it is caller's responsibility to handle
     # success status
     # pylint: disable=subprocess-run-check
-    result = subprocess.run(shlex.split(command), *args, capture_output=True, **kwargs)
+    result = subprocess.run(shlex.split(command), *args,
+                            capture_output=True, **kwargs)
     return result
 
 
@@ -149,7 +151,8 @@ def cherry_pick_prs(prs: List[PullRequest.PullRequest]):
         commits = pr.get_commits()
         for single_commit in commits:
             if not is_merge_commit(single_commit):
-                cp_result = run(f"git cherry-pick -x {single_commit.commit.sha}")
+                cp_result = run(
+                    f"git cherry-pick -x {single_commit.commit.sha}")
                 print(
                     f"Cherry pick result for PR no {pr.number} and commit sha {single_commit.commit.sha}: {cp_result}")
 
@@ -204,7 +207,8 @@ def str_array_to_str(str_array: List[str]) -> str:
 
 def get_prs_for_patch_release(repo: Repository.Repository, earliest_date: datetime, base_branch: str,
                               last_date: datetime = None):
-    pull_requests = repo.get_pulls(state="closed", base=base_branch, sort="created", direction="desc")
+    pull_requests = repo.get_pulls(
+        state="closed", base=base_branch, sort="created", direction="desc")
 
     # filter pull requests according to given time interval
     filtered_pull_requests = []
@@ -220,7 +224,8 @@ def get_prs_for_patch_release(repo: Repository.Repository, earliest_date: dateti
         filtered_pull_requests.append(pull_request)
 
     # finally, sort the pr's by their merge date
-    sorted_pull_requests = sorted(filtered_pull_requests, key=lambda p: p.merged_at)
+    sorted_pull_requests = sorted(
+        filtered_pull_requests, key=lambda p: p.merged_at)
     return sorted_pull_requests
 
 
@@ -284,7 +289,8 @@ def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
                     # increment of appended_line_index is 2 since copy_lines appended_line_index+1 includes
                     # append_str
                     lines_to_be_shifted = lines[line_number + 1:]
-                    copy_lines = copy_lines[0:appended_line_index + 2] + lines_to_be_shifted
+                    copy_lines = copy_lines[0:appended_line_index +
+                                            2] + lines_to_be_shifted
                 else:
                     copy_lines.append(append_str)
             appended_line_index = appended_line_index + 1
@@ -309,7 +315,8 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
                 # Since line is added before  matched string shift index start with line_number
                 # increment of prepend_line_index is 1 line after prepended_line_index should be shifted
                 lines_to_be_shifted = lines[line_number:]
-                copy_lines = copy_lines[0:prepended_line_index + 1] + lines_to_be_shifted
+                copy_lines = copy_lines[0:prepended_line_index +
+                                        1] + lines_to_be_shifted
             prepended_line_index = prepended_line_index + 1
         edited_content = str_array_to_str(copy_lines)
     with open(file, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
@@ -321,7 +328,8 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
 def is_tag_on_branch(tag_name: str, branch_name: str):
     g = git.Git(os.getcwd())
     try:
-        branches_str = g.execute(["git", "branch", "--contains", f"tags/{tag_name}"])
+        branches_str = g.execute(
+            ["git", "branch", "--contains", f"tags/{tag_name}"])
         branches = remove_prefix(branches_str, "*").split("\n")
         print("Branches str:" + branches_str)
         if len(branches) > 0:
@@ -401,7 +409,8 @@ def write_to_file(content: str, dest_file_name: str):
 def get_gpg_fingerprints_by_name(name: str) -> List[str]:
     '''Returns GPG fingerprint by its unique key name. We use this function to determine the fingerprint that
        we should use when signing packages'''
-    result = subprocess.run(shlex.split("gpg --list-keys"), check=True, stdout=subprocess.PIPE)
+    result = subprocess.run(shlex.split("gpg --list-keys"),
+                            check=True, stdout=subprocess.PIPE)
     lines = result.stdout.decode("ascii").splitlines()
     finger_prints = []
     previous_line = ""
@@ -454,7 +463,8 @@ def delete_all_gpg_keys_by_name(name: str):
 def get_private_key_by_fingerprint_without_passphrase(fingerprint: str) -> str:
     gpg = gnupg.GPG()
 
-    private_key = gpg.export_keys(fingerprint, secret=True, expect_passphrase=False)
+    private_key = gpg.export_keys(
+        fingerprint, secret=True, expect_passphrase=False)
     if not private_key:
         raise ValueError(
             "Error while getting key. Most probably packaging key is stored with passphrase. "
@@ -465,7 +475,8 @@ def get_private_key_by_fingerprint_without_passphrase(fingerprint: str) -> str:
 def get_private_key_by_fingerprint_with_passphrase(fingerprint: str, passphrase: str) -> str:
     gpg = gnupg.GPG()
 
-    private_key = gpg.export_keys(fingerprint, secret=True, passphrase=passphrase)
+    private_key = gpg.export_keys(
+        fingerprint, secret=True, passphrase=passphrase)
     if not private_key:
         raise ValueError(
             "Error while getting key. Most probably packaging key is stored with passphrase. "
@@ -482,7 +493,8 @@ def transform_key_into_base64_str(key: str) -> str:
 def define_rpm_public_key_to_machine(fingerprint: str):
     with open("rpm_public.key", "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
-        subprocess.run(shlex.split(f"gpg --export -a {fingerprint}"), stdout=writer, check=True)
+        subprocess.run(shlex.split(
+            f"gpg --export -a {fingerprint}"), stdout=writer, check=True)
     run("rpm --import rpm_public.key")
     os.remove("rpm_public.key")
 
@@ -524,7 +536,8 @@ def verify_rpm_signature_in_dir(rpm_dir_path: str):
     rpm_files = filter(lambda file_name: file_name.endswith("rpm"), files)
     for file in rpm_files:
         if not is_rpm_file_signed(f"{file}"):
-            raise ValueError(f"File {file} is not signed or there is a signature check problem")
+            raise ValueError(
+                f"File {file} is not signed or there is a signature check problem")
 
 
 def remove_prefix(text, prefix):
@@ -546,13 +559,15 @@ def remove_suffix(initial_str: str, suffix: str) -> str:
 def initialize_env(exec_path: str, project_name: str, checkout_dir: str):
     remove_cloned_code(f"{exec_path}/{checkout_dir}")
     if not os.path.exists(checkout_dir):
-        run(f"git clone https://github.com/citusdata/{project_name}.git {checkout_dir}")
+        run(
+            f"git clone https://github.com/citusdata/{project_name}.git {checkout_dir}")
 
 
 def create_pr(gh_token: str, pr_branch: str, pr_title: str, repo_owner: str, project_name: str, base_branch: str):
     g = Github(gh_token)
     repository = g.get_repo(f"{repo_owner}/{project_name}")
-    create_pr_with_repo(repo=repository, pr_branch=pr_branch, pr_title=pr_title, base_branch=base_branch)
+    create_pr_with_repo(repo=repository, pr_branch=pr_branch,
+                        pr_title=pr_title, base_branch=base_branch)
 
 
 def create_pr_with_repo(repo: Repository, pr_branch: str, pr_title: str, base_branch: str):
@@ -560,7 +575,8 @@ def create_pr_with_repo(repo: Repository, pr_branch: str, pr_title: str, base_br
 
 
 def stat_get_request(request_address: str, request_type: RequestType, session):
-    request_log = RequestLog(request_time=datetime.now(), request_type=request_type)
+    request_log = RequestLog(
+        request_time=datetime.now(), request_type=request_type)
     session.add(request_log)
     session.commit()
     try:
@@ -570,7 +586,8 @@ def stat_get_request(request_address: str, request_type: RequestType, session):
     except requests.exceptions.RequestException as e:
         result = e.response
         request_log.status_code = -1
-        request_log.response = e.response.content.decode("ascii") if e.response.content.decode("ascii") else str(e)
+        request_log.response = e.response.content.decode(
+            "ascii") if e.response.content.decode("ascii") else str(e)
     finally:
         session.commit()
     return result
@@ -586,7 +603,8 @@ def get_supported_postgres_release_versions(postgres_matrix_conf_file_path: str,
     for version_info in yaml_content['version_matrix']:
         versions_dictionary[list(version_info.keys())[0]] = \
             version_info[list(version_info.keys())[0]]['postgres_versions']
-    release_versions = match_release_version(versions_dictionary, package_version)
+    release_versions = match_release_version(
+        versions_dictionary, package_version)
 
     return release_versions
 
@@ -598,7 +616,8 @@ def get_supported_postgres_nightly_versions(postgres_matrix_conf_file_path: str)
 
     # nightly version is the last element in the postgres matrix
     latest_version_info = yaml_content['version_matrix'][-1]
-    nightly_versions = latest_version_info[list(latest_version_info.keys())[0]]["postgres_versions"]
+    nightly_versions = latest_version_info[list(latest_version_info.keys())[
+        0]]["postgres_versions"]
     return nightly_versions
 
 
@@ -606,8 +625,10 @@ def match_release_version(versions_dictionary, package_version: str):
     versions = list(versions_dictionary.keys())
     numeric_versions_of_config: Dict[int, str] = {}
     for version in versions:
-        numeric_versions_of_config[get_numeric_counterpart_of_version(version)] = version
-    package_version_numeric = get_numeric_counterpart_of_version(package_version)
+        numeric_versions_of_config[get_numeric_counterpart_of_version(
+            version)] = version
+    package_version_numeric = get_numeric_counterpart_of_version(
+        package_version)
 
     if package_version_numeric in numeric_versions_of_config:
         version_in_str = numeric_versions_of_config[package_version_numeric]

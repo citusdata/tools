@@ -46,15 +46,15 @@ mjobs="$((procs + 1))"
 # configure, build, and install PostgreSQL
 cd postgresql
 ./configure --enable-cassert --enable-debug --enable-depend --with-openssl \
-    --mandir="/usr/share/postgresql/${PGVERSION}/man" \
-    --docdir="/usr/share/doc/postgresql-doc-${PGVERSION}" \
-    --sysconfdir=/etc/postgresql-common \
-    --datarootdir=/usr/share/ \
-    --datadir="/usr/share/postgresql/${PGVERSION}" \
-    --bindir="/usr/lib/postgresql/${PGVERSION}/bin" \
-    --libdir=/usr/lib/x86_64-linux-gnu/ \
-    --libexecdir=/usr/lib/postgresql/ \
-    --includedir=/usr/include/postgresql/ \
+  --mandir="/usr/share/postgresql/${PGVERSION}/man" \
+  --docdir="/usr/share/doc/postgresql-doc-${PGVERSION}" \
+  --sysconfdir=/etc/postgresql-common \
+  --datarootdir=/usr/share/ \
+  --datadir="/usr/share/postgresql/${PGVERSION}" \
+  --bindir="/usr/lib/postgresql/${PGVERSION}/bin" \
+  --libdir=/usr/lib/x86_64-linux-gnu/ \
+  --libexecdir=/usr/lib/postgresql/ \
+  --includedir=/usr/include/postgresql/
 
 make -j "${mjobs}" -s all
 make -j "${mjobs}" -s -C src/test/isolation

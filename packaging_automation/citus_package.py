@@ -82,7 +82,8 @@ def decode_os_and_release(platform_name: str) -> Tuple[str, str]:
     parts = platform_name.split("/")
 
     if len(parts) == 0 or len(parts) > 2 or (len(parts) == 1 and parts[0] != "pgxn"):
-        raise ValueError("Platforms should have two parts divided by '/' or should be 'pgxn' ")
+        raise ValueError(
+            "Platforms should have two parts divided by '/' or should be 'pgxn' ")
     if len(parts) == 1 and parts[0] == "pgxn":
         os_name = "pgxn"
         os_release = ""
@@ -104,7 +105,7 @@ def is_docker_running() -> bool:
         docker_client = docker.from_env()
         docker_client.ping()
         return True
-    ## Exception type is not defined in API so I keep as is
+    # Exception type is not defined in API so I keep as is
     except:  # noqa: E722 # pylint: disable=bare-except
         return False
 
@@ -146,7 +147,8 @@ def get_signing_credentials(packaging_secret_key: str,
 
         gpg = gnupg.GPG()
 
-        private_key = gpg.export_keys(fingerprints[0], secret=True, passphrase=packaging_passphrase)
+        private_key = gpg.export_keys(
+            fingerprints[0], secret=True, passphrase=packaging_passphrase)
         secret_key = transform_key_into_base64_str(private_key)
 
     passphrase = packaging_passphrase
@@ -156,7 +158,8 @@ def get_signing_credentials(packaging_secret_key: str,
 def write_postgres_versions_into_file(input_files_dir: str, package_version: str):
     release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
                                                                package_version)
-    nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
+    nightly_versions = get_supported_postgres_nightly_versions(
+        f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
     release_version_str = ','.join(release_versions)
     nightly_version_str = ','.join(nightly_versions)
     with open(f"{input_files_dir}/{POSTGRES_VERSION_FILE}", 'w', encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
@@ -181,9 +184,11 @@ def sign_packages(sub_folder: str, signing_credentials: SigningCredentials,
         print(f"Result:{output}")
 
         if result.returncode != 0:
-            raise ValueError(f"Error while signing rpm files.Err:{result.stderr}")
+            raise ValueError(
+                f"Error while signing rpm files.Err:{result.stderr}")
         if input_output_parameters.output_validation:
-            validate_output(output, f"{input_output_parameters.input_files_dir}/packaging_ignore.yml", PackageType.rpm)
+            validate_output(
+                output, f"{input_output_parameters.input_files_dir}/packaging_ignore.yml", PackageType.rpm)
 
         print("RPM signing finished successfully.")
 
@@ -200,7 +205,8 @@ def sign_packages(sub_folder: str, signing_credentials: SigningCredentials,
         print(f"Result:{output}")
 
         if result.returncode != 0:
-            raise ValueError(f"Error while signing deb files.Err:{result.stdout}")
+            raise ValueError(
+                f"Error while signing deb files.Err:{result.stdout}")
 
         if input_output_parameters.output_validation:
             validate_output(result.stdout, f"{input_output_parameters.input_files_dir}/packaging_ignore.yml",
@@ -217,7 +223,8 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
         package_version = get_package_version_from_pkgvars(input_files_dir)
         release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
                                                                    package_version)
-        nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
+        nightly_versions = get_supported_postgres_nightly_versions(
+            f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
 
     return release_versions, nightly_versions
 
@@ -267,11 +274,15 @@ def build_packages(github_token: non_empty(non_blank(str)),
                    build_type: BuildType, signing_credentials: SigningCredentials,
                    input_output_parameters: InputOutputParameters, is_test: bool = False) -> None:
     os_name, os_version = decode_os_and_release(platform)
-    release_versions, nightly_versions = get_postgres_versions(os_name, input_output_parameters.input_files_dir)
-    signing_credentials = get_signing_credentials(signing_credentials.secret_key, signing_credentials.passphrase)
+    release_versions, nightly_versions = get_postgres_versions(
+        os_name, input_output_parameters.input_files_dir)
+    signing_credentials = get_signing_credentials(
+        signing_credentials.secret_key, signing_credentials.passphrase)
 
-    package_version = get_package_version_from_pkgvars(input_output_parameters.input_files_dir)
-    write_postgres_versions_into_file(input_output_parameters.input_files_dir, package_version)
+    package_version = get_package_version_from_pkgvars(
+        input_output_parameters.input_files_dir)
+    write_postgres_versions_into_file(
+        input_output_parameters.input_files_dir, package_version)
 
     if not signing_credentials.passphrase:
         raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")
@@ -282,12 +293,15 @@ def build_packages(github_token: non_empty(non_blank(str)),
     output_sub_folder = get_release_package_folder_name(os_name, os_version)
     input_output_parameters.output_dir = f"{input_output_parameters.output_dir}/{output_sub_folder}"
     for postgres_version in postgres_versions:
-        print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} started... ")
+        print(
+            f"Package build for {os_name}-{os_version} for postgres {postgres_version} started... ")
         build_package(github_token, build_type, docker_image_name,
                       postgres_version, input_output_parameters, is_test)
-        print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} finished ")
+        print(
+            f"Package build for {os_name}-{os_version} for postgres {postgres_version} finished ")
 
-    sign_packages(output_sub_folder, signing_credentials, input_output_parameters)
+    sign_packages(output_sub_folder, signing_credentials,
+                  input_output_parameters)
 
 
 def get_build_platform(packaging_platform: str, packaging_docker_platform: str) -> str:
@@ -303,7 +317,8 @@ def get_package_version_from_pkgvars(input_files_dir: str):
     pkg_name = pkgvars_config["pkgname"]
 
     if len(version_parts) < 3:
-        raise ValueError("Version should at least contains three parts seperated with '.'. e.g 10.0.2-1")
+        raise ValueError(
+            "Version should at least contains three parts seperated with '.'. e.g 10.0.2-1")
     third_part_splitted = version_parts[2].split("-")
 
     if pkg_name == 'hll':
@@ -317,7 +332,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token', required=True)
     parser.add_argument('--platform', required=False, choices=platform_names())
-    parser.add_argument('--packaging_docker_platform', required=False, choices=package_docker_platform_dict.keys())
+    parser.add_argument('--packaging_docker_platform', required=False,
+                        choices=package_docker_platform_dict.keys())
     parser.add_argument('--build_type', choices=[b.name for b in BuildType])
     parser.add_argument('--secret_key', required=True)
     parser.add_argument('--passphrase', required=True)
@@ -329,10 +345,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.platform and args.packaging_docker_platform:
-        raise ValueError("Either platform or packaging_docker_platform should be set.")
-    build_platform = get_build_platform(args.platform, args.packaging_docker_platform)
+        raise ValueError(
+            "Either platform or packaging_docker_platform should be set.")
+    build_platform = get_build_platform(
+        args.platform, args.packaging_docker_platform)
 
-    io_parameters = InputOutputParameters.build(args.input_files_dir, args.output_dir, args.output_validation)
+    io_parameters = InputOutputParameters.build(
+        args.input_files_dir, args.output_dir, args.output_validation)
     sign_credentials = SigningCredentials(args.secret_key, args.passphrase)
     build_packages(args.gh_token, build_platform, BuildType[args.build_type], sign_credentials,
                    io_parameters, args.is_test)
