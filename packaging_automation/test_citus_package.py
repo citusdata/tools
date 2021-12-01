@@ -7,7 +7,8 @@ from enum import Enum
 import sys
 from typing import List
 
-from .common_tool_methods import (get_supported_postgres_release_versions, get_minor_version)
+from .common_tool_methods import (
+    get_supported_postgres_release_versions, get_minor_version)
 
 POSTGRES_MATRIX_FILE = "postgres-matrix.yml"
 POSTGRES_MATRIX_WEB_ADDRESS = "https://raw.githubusercontent.com/citusdata/packaging/all-citus-unit-tests/postgres-matrix.yml"
@@ -28,11 +29,16 @@ class TestPlatform(Enum):
     centos_7 = {"name": "centos/7", "docker_image_name": "centos-7"}
     ol_7 = {"name": "ol/7", "docker_image_name": "ol-7"}
     ol_8 = {"name": "ol/8", "docker_image_name": "ol-8"}
-    debian_buster = {"name": "debian/buster", "docker_image_name": "debian-buster", }
-    debian_bullseye = {"name": "debian/bullseye", "docker_image_name": "debian-bullseye"}
-    debian_stretch = {"name": "debian/stretch", "docker_image_name": "debian-stretch"}
-    ubuntu_bionic = {"name": "ubuntu/bionic", "docker_image_name": "ubuntu-bionic"}
-    ubuntu_focal = {"name": "ubuntu/focal", "docker_image_name": "ubuntu-focal"}
+    debian_buster = {"name": "debian/buster",
+                     "docker_image_name": "debian-buster", }
+    debian_bullseye = {"name": "debian/bullseye",
+                       "docker_image_name": "debian-bullseye"}
+    debian_stretch = {"name": "debian/stretch",
+                      "docker_image_name": "debian-stretch"}
+    ubuntu_bionic = {"name": "ubuntu/bionic",
+                     "docker_image_name": "ubuntu-bionic"}
+    ubuntu_focal = {"name": "ubuntu/focal",
+                    "docker_image_name": "ubuntu-focal"}
     undefined = {"name": "undefined", "docker_image_name": "undefined"}
 
 
@@ -49,7 +55,8 @@ def get_postgres_versions_from_matrix_file(project_version: str) -> List[str]:
 
     with open(POSTGRES_MATRIX_FILE, 'wb') as writer:
         writer.write(r.content)
-    pg_versions = get_supported_postgres_release_versions(POSTGRES_MATRIX_FILE, project_version)
+    pg_versions = get_supported_postgres_release_versions(
+        POSTGRES_MATRIX_FILE, project_version)
 
     return pg_versions
 
@@ -58,7 +65,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--project_version', required=True)
     parser.add_argument('--pg_major_version')
-    parser.add_argument("--os_release", choices=[t.value["name"] for t in TestPlatform])
+    parser.add_argument(
+        "--os_release", choices=[t.value["name"] for t in TestPlatform])
 
     args = parser.parse_args()
     test_platform = get_test_platform_for_os_release(args.os_release)
@@ -66,16 +74,18 @@ if __name__ == "__main__":
 
     platform = args.os_release
 
-    postgres_versions = get_postgres_versions_from_matrix_file(args.project_version)
+    postgres_versions = get_postgres_versions_from_matrix_file(
+        args.project_version)
 
-    print(f'This version of Citus supports following pg versions: {postgres_versions}')
+    print(
+        f'This version of Citus supports following pg versions: {postgres_versions}')
 
     os.chdir("test-images")
     return_codes = {}
 
     if args.pg_major_version:
-        postgres_versions = [p for p in postgres_versions if p == args.pg_major_version]
-
+        postgres_versions = [
+            p for p in postgres_versions if p == args.pg_major_version]
 
     if len(postgres_versions) == 0:
         raise ValueError("At least one supported postgres version is required")

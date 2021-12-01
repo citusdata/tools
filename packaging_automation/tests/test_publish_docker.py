@@ -26,26 +26,31 @@ def initialize_env():
 
 
 def test_decode_triggering_event_info():
-    event_source, branch_name = decode_triggering_event_info(f"refs/heads/{NON_DEFAULT_BRANCH_NAME}")
+    event_source, branch_name = decode_triggering_event_info(
+        f"refs/heads/{NON_DEFAULT_BRANCH_NAME}")
     assert event_source == GithubTriggerEventSource.branch_push and branch_name == NON_DEFAULT_BRANCH_NAME
 
-    event_source, tag_name = decode_triggering_event_info(f"refs/tags/{TAG_NAME}")
+    event_source, tag_name = decode_triggering_event_info(
+        f"refs/tags/{TAG_NAME}")
     assert event_source == GithubTriggerEventSource.tag_push and tag_name == TAG_NAME
 
 
 def test_decode_tag_parts():
     tag_parts = decode_tag_parts(TAG_NAME)
-    assert len(tag_parts) == 3 and tag_parts[0] == "10" and tag_parts[1] == "0" and tag_parts[2] == "3"
+    assert len(
+        tag_parts) == 3 and tag_parts[0] == "10" and tag_parts[1] == "0" and tag_parts[2] == "3"
 
     with pytest.raises(ValueError):
         decode_tag_parts(INVALID_TAG_NAME)
 
 
 def test_get_image_tag():
-    image_name = get_image_tag(remove_prefix(TAG_NAME, "v"), DockerImageType.latest)
+    image_name = get_image_tag(remove_prefix(
+        TAG_NAME, "v"), DockerImageType.latest)
     assert image_name == "10.0.3"
 
-    image_name = get_image_tag(remove_prefix(TAG_NAME, "v"), DockerImageType.postgres_12)
+    image_name = get_image_tag(remove_prefix(
+        TAG_NAME, "v"), DockerImageType.postgres_12)
     assert image_name == "10.0.3-pg12"
 
 

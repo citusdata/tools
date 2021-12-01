@@ -14,7 +14,7 @@ jq=$(which jq)
 
 # outputs usage message on specified device before exiting with provided status
 usage() {
-    cat << 'E_O_USAGE' >&"$1"
+  cat <<'E_O_USAGE' >&"$1"
 usage: rubygem_installs repo [since]
 
     repo : a RubyGems.org gem name
@@ -27,7 +27,7 @@ most recent time point's date as the 'since' parameter will cause this program
 to exit without emitting data if that parameter is on or after today's date.
 E_O_USAGE
 
-    exit "${2}";
+  exit "${2}"
 }
 
 if [ "$#" -eq 1 ]; then
@@ -53,4 +53,4 @@ gem=${1}
 versionsurl="https://rubygems.org/api/v1/versions/${gem}.json"
 
 curl -sf "${versionsurl}" |
-${jq} -r "include \"pkg\"; makegemrows(\"${gem}\") | .[] | @csv"
+  ${jq} -r "include \"pkg\"; makegemrows(\"${gem}\") | .[] | @csv"

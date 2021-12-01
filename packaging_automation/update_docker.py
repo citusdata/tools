@@ -89,7 +89,8 @@ def get_new_changelog_entry(project_version: str, postgres_version: str = ""):
 
 
 def update_changelog(project_version: str, exec_path: str, postgres_version: str = ""):
-    latest_changelog = get_new_changelog_entry(project_version, postgres_version)
+    latest_changelog = get_new_changelog_entry(
+        project_version, postgres_version)
     changelog_file_path = f"{exec_path}/CHANGELOG.md"
     with open(changelog_file_path, "r+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
@@ -100,7 +101,8 @@ def update_changelog(project_version: str, exec_path: str, postgres_version: str
             reader.seek(0, 0)
             reader.write(changelog)
         else:
-            raise ValueError(f"Already using version {project_version} in the changelog")
+            raise ValueError(
+                f"Already using version {project_version} in the changelog")
 
 
 def update_all_docker_files(project_version: str, exec_path: str, postgres_version: str):
@@ -108,15 +110,21 @@ def update_all_docker_files(project_version: str, exec_path: str, postgres_versi
     pkgvars_file = f"{exec_path}/pkgvars"
 
     if postgres_version:
-        update_pkgvars(project_version, template_path, pkgvars_file, postgres_version)
+        update_pkgvars(project_version, template_path,
+                       pkgvars_file, postgres_version)
 
     persisted_postgres_version = read_postgres_version(pkgvars_file)
 
-    update_docker_file_for_latest_postgres(project_version, template_path, exec_path, persisted_postgres_version)
-    update_regular_docker_compose_file(project_version, template_path, exec_path)
-    update_docker_file_alpine(project_version, template_path, exec_path, persisted_postgres_version)
-    update_docker_file_for_postgres12(project_version, template_path, exec_path)
-    update_docker_file_for_postgres14(project_version, template_path, exec_path)
+    update_docker_file_for_latest_postgres(
+        project_version, template_path, exec_path, persisted_postgres_version)
+    update_regular_docker_compose_file(
+        project_version, template_path, exec_path)
+    update_docker_file_alpine(
+        project_version, template_path, exec_path, persisted_postgres_version)
+    update_docker_file_for_postgres12(
+        project_version, template_path, exec_path)
+    update_docker_file_for_postgres14(
+        project_version, template_path, exec_path)
     update_changelog(project_version, exec_path, postgres_version)
 
 
@@ -129,11 +137,13 @@ def read_postgres_version(pkgvars_file: str) -> str:
                 if line.startswith("latest_postgres_version"):
                     line_parts = line.split("=")
                     if len(line_parts) != 2:
-                        raise ValueError("keys and values should be seperated with '=' sign")
+                        raise ValueError(
+                            "keys and values should be seperated with '=' sign")
                     postgres_version = line_parts[1].rstrip("\n")
                     break
             if not postgres_version:
-                raise ValueError("pkgvars file should include a line with key latest_postgres_version")
+                raise ValueError(
+                    "pkgvars file should include a line with key latest_postgres_version")
     else:
         # Setting it because pkgvars does not exist initially
         postgres_version = "13.4"
@@ -141,7 +151,8 @@ def read_postgres_version(pkgvars_file: str) -> str:
 
 
 def update_pkgvars(project_version: str, template_path: str, pkgvars_file: str, postgres_version: str):
-    content = process_template_file(project_version, template_path, "docker-pkgvars.tmpl", postgres_version)
+    content = process_template_file(
+        project_version, template_path, "docker-pkgvars.tmpl", postgres_version)
     with open(pkgvars_file, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
         writer.write(content)
@@ -170,12 +181,14 @@ if __name__ == "__main__":
     os.chdir(execution_path)
     pr_branch = f"release-{args.prj_ver}-{uuid.uuid4()}"
     run(f"git checkout -b {pr_branch}")
-    update_all_docker_files(args.prj_ver, execution_path, args.postgres_version)
+    update_all_docker_files(
+        args.prj_ver, execution_path, args.postgres_version)
     run("git add .")
 
     commit_message = f"Bump docker to version {args.prj_ver}"
     run(f'git commit -m "{commit_message}"')
     if not args.is_test:
         run(f'git push --set-upstream origin {pr_branch}')
-        create_pr(args.gh_token, pr_branch, commit_message, REPO_OWNER, PROJECT_NAME, MAIN_BRANCH)
+        create_pr(args.gh_token, pr_branch, commit_message,
+                  REPO_OWNER, PROJECT_NAME, MAIN_BRANCH)
         remove_cloned_code(execution_path)

@@ -2,13 +2,7 @@
 
 set -euo pipefail
 
-REPORT_EMAIL=${REPORT_EMAIL:-burak@citusdata.com \
-                             furkan@citusdata.com \
-                             metin@citusdata.com \
-                             Burak.Yucesoy@microsoft.com \
-                             Furkan.Sahin@microsoft.com \
-                             Hanefi.Onaldi@microsoft.com \
-                             Metin.Doslu@microsoft.com }
+REPORT_EMAIL=${REPORT_EMAIL:-burak@citusdata.com                              furkan@citusdata.com                              metin@citusdata.com                              Burak.Yucesoy@microsoft.com                              Furkan.Sahin@microsoft.com                              Hanefi.Onaldi@microsoft.com                              Metin.Doslu@microsoft.com }
 CITUS_GITREF=${CITUS_GITREF:-master}
 POSTGRES_GITREF=${POSTGRES_GITREF:-REL_11_STABLE}
 
@@ -76,9 +70,9 @@ if [ -s regression.diffs ]; then
 fi
 
 if [ -z "$attachments" ]; then
-    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Success" $REPORT_EMAIL < /dev/null
+    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Success" $REPORT_EMAIL </dev/null
 else
-    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Failure" $attachments $REPORT_EMAIL < /dev/null
+    mail -aFrom:valgrind-test@citusdata.com -s "[Valgrind Test Results] - Failure" $attachments $REPORT_EMAIL </dev/null
 fi
 
 # just to ensure everything is completed in the test instance

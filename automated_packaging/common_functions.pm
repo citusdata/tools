@@ -150,7 +150,7 @@ sub create_release_changelog {
             foreach $line (@log_output) {
                 if ($line =~ /^DESCRIPTION: */) {
                     $description_part = substr($line, length($&), -1);
-                    
+
                     if (length($description_part) > 78) {
                         print("You have to shorten PR message $description_part of $pr_url\n");
                         print("Description should not be longer than 78 charachters, please manually shorten this description\n");

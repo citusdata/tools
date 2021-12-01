@@ -17,7 +17,7 @@ jq=$(which jq)
 
 # outputs usage message on specified device before exiting with provided status
 usage() {
-    cat << 'E_O_USAGE' >&"$1"
+  cat <<'E_O_USAGE' >&"$1"
 usage: github_clones repo [since]
 
     repo : a citusdata GitHub repository name
@@ -29,7 +29,7 @@ custom start date: without one, all known data is requested, though GitHub's
 maximum window is only two weeks long.
 E_O_USAGE
 
-    exit "${2}";
+  exit "${2}"
 }
 
 if [ "$#" -eq 1 ]; then
@@ -49,4 +49,4 @@ repo=${1}
 trafficurl="https://api.github.com/repos/citusdata/${repo}/traffic/clones"
 
 curl -sf -H "${hubauth}" -H "${preview}" "${trafficurl}" |
-${jq} -r "include \"pkg\"; .clones[] | filterdate(\"${since}\") | makeclonerows(\"${repo}\") | @csv"
+  ${jq} -r "include \"pkg\"; .clones[] | filterdate(\"${since}\") | makeclonerows(\"${repo}\") | @csv"

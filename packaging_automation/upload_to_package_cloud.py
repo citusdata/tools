@@ -75,7 +75,8 @@ def upload_files_in_directory_to_package_cloud(directoryName: str, distro_name: 
     if not main_branch:
         raise ValueError("main_branch should be defined")
     if main_branch != current_branch:
-        print(f"Package publishing skipped since current branch is not equal to {main_branch}")
+        print(
+            f"Package publishing skipped since current branch is not equal to {main_branch}")
         return MultipleReturnValue(ret_vals=[])
 
     ret_status: List[ReturnValue] = []
@@ -105,7 +106,8 @@ def package_exists(package_cloud_token: str, repo_owner: str, repo_name: str, pa
                    platform: str) -> bool:
     query_url = (f"https://packagecloud.io/api/v1/repos/{repo_owner}/{repo_name}/search?"
                  f"q={package_name}&filter=all&dist={urllib.parse.quote(platform, safe='')}")
-    response = requests.get(query_url, auth=HTTPBasicAuth(package_cloud_token, ''))
+    response = requests.get(
+        query_url, auth=HTTPBasicAuth(package_cloud_token, ''))
     return response.ok
 
 
@@ -113,7 +115,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--platform', choices=supported_distros.keys())
     parser.add_argument('--package_cloud_api_token', required=True)
-    parser.add_argument('--repository_name', required=True, choices=supported_repos)
+    parser.add_argument('--repository_name', required=True,
+                        choices=supported_repos)
     parser.add_argument('--output_file_path', required=True)
     parser.add_argument('--current_branch', required=True)
     parser.add_argument('--main_branch', required=True)
@@ -136,4 +139,5 @@ if __name__ == "__main__":
             print(f'File successfully uploaded. Distro: {rv.distro} File Name: {os.path.basename(rv.file_name)} '
                   f'Repo Name: {rv.repo}')
     if not multiple_return_value.success_status():
-        raise ValueError("There were some errors while uploading some packages")
+        raise ValueError(
+            "There were some errors while uploading some packages")

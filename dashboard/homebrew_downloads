@@ -14,7 +14,7 @@ jq=$(which jq)
 
 # outputs usage message on specified device before exiting with provided status
 usage() {
-    cat << 'E_O_USAGE' >&"$1"
+  cat <<'E_O_USAGE' >&"$1"
 usage: homebrew_downloads package [since]
 
     package : a package name, such as citus
@@ -27,7 +27,7 @@ present (i.e. "6.0.0_1"), they are normalized to the upstream version (in the
 previous case, "6.0.0") and have their installs aggregated under that.
 E_O_USAGE
 
-    exit "${2}";
+  exit "${2}"
 }
 
 if [ "$#" -eq 1 ]; then
@@ -42,12 +42,12 @@ else
 fi
 
 case "${OSTYPE}" in
-  darwin*)
-    enddate=$(date -v-1d "+%Y-%m-%d")
-    ;;
-  *)
-    enddate=$(date -d "1 days ago" "+%Y-%m-%d")
-    ;;
+darwin*)
+  enddate=$(date -v-1d "+%Y-%m-%d")
+  ;;
+*)
+  enddate=$(date -d "1 days ago" "+%Y-%m-%d")
+  ;;
 esac
 
 echo '"os","release","name","pg_version","version","date","downloads"'

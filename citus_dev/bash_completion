@@ -12,7 +12,7 @@ _citus_dev()
         make)
             return 0
             ;;
-        
+
         start|stop|restart)
             clusters=$(for x in `find . -type d -name 'coordinator' | awk -F '/' '{print $2}'`; do echo ${x} ; done );
             COMPREPLY=($( compgen -W "${clusters}" -- "${cur}" ));

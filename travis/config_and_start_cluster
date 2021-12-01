@@ -12,8 +12,7 @@ make all PG_CONFIG="/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
 sudo make install PG_CONFIG="/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
 
 # Preload library if asked to do so
-if [ "${PG_PRELOAD+1}" ]
-then
+if [ "${PG_PRELOAD+1}" ]; then
   echo "shared_preload_libraries = '$PG_PRELOAD'" >> \
     "/etc/postgresql/${PGVERSION}/test/postgresql.conf"
 fi

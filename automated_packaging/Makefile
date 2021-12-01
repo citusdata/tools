@@ -4,7 +4,7 @@ INSTALL := install -c
 INSTALL_SCRIPT := $(INSTALL) -m 755
 AUTOMATION_SCRIPTS := $(filter-out Makefile,$(wildcard *))
 
-all: 
+all:
 
 clean:
 
@@ -13,5 +13,5 @@ installdirs:
 
 install: all installdirs
 	$(INSTALL_SCRIPT) $(AUTOMATION_SCRIPTS) $(DESTDIR)$(bindir)
-	
+
 .PHONY: clean installdirs install

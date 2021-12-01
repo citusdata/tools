@@ -5,7 +5,8 @@ from typing import List, Tuple
 
 import yaml
 
-from .common_tool_methods import (PackageType, DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER)
+from .common_tool_methods import (
+    PackageType, DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER)
 
 
 class PackagingWarningIgnoreType(Enum):
@@ -15,20 +16,26 @@ class PackagingWarningIgnoreType(Enum):
 
 
 def validate_output(output: str, ignore_file_path: str, package_type: PackageType):
-    base_ignore_list, package_type_specific_ignore_list = parse_ignore_lists(ignore_file_path, package_type)
+    base_ignore_list, package_type_specific_ignore_list = parse_ignore_lists(
+        ignore_file_path, package_type)
 
     output_lines = output.splitlines()
-    warning_lines, package_type_specific_warning_lines = filter_warning_lines(output_lines, package_type)
+    warning_lines, package_type_specific_warning_lines = filter_warning_lines(
+        output_lines, package_type)
     print("Checking build output for warnings")
     print("Package Type:" + package_type.name)
-    print(f"Package type specific warnings:{package_type_specific_warning_lines}")
+    print(
+        f"Package type specific warnings:{package_type_specific_warning_lines}")
 
-    base_warnings_to_be_raised = get_warnings_to_be_raised(base_ignore_list, warning_lines)
+    base_warnings_to_be_raised = get_warnings_to_be_raised(
+        base_ignore_list, warning_lines)
     package_type_specific_warnings_to_be_raised = get_warnings_to_be_raised(package_type_specific_ignore_list,
                                                                             package_type_specific_warning_lines)
 
-    print(f"Package type specific ignore list:{package_type_specific_ignore_list}")
-    print(f"Package type specific warnings to be raised:{package_type_specific_warnings_to_be_raised}")
+    print(
+        f"Package type specific ignore list:{package_type_specific_ignore_list}")
+    print(
+        f"Package type specific warnings to be raised:{package_type_specific_warnings_to_be_raised}")
     print(f"Base warnings to be raised:{base_warnings_to_be_raised}")
 
     if len(base_warnings_to_be_raised) > 0 or len(package_type_specific_warnings_to_be_raised) > 0:
@@ -56,7 +63,8 @@ def filter_warning_lines(output_lines: List[str], package_type: PackageType) -> 
                 is_deb_warning_line = True
             elif "warning" in output_line.lower() or is_deb_warning_line:
                 if is_deb_warning_line:
-                    match = re.match(lintian_warning_error_pattern, output_line)
+                    match = re.match(
+                        lintian_warning_error_pattern, output_line)
                     if match:
                         package_specific_warning_lines.append(output_line)
                     else:

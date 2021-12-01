@@ -31,7 +31,8 @@ def teardown_module():
 
 
 def test_update_docker_file_for_latest_postgres():
-    update_docker_file_for_latest_postgres(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_VERSION)
+    update_docker_file_for_latest_postgres(
+        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_VERSION)
     with open(f"{TEST_BASE_PATH}/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
@@ -44,7 +45,8 @@ def test_update_docker_file_for_latest_postgres():
 
 
 def test_update_regular_docker_compose_file():
-    update_regular_docker_compose_file(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH)
+    update_regular_docker_compose_file(
+        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH)
     parameterized_str = f'    image: "citusdata/{PROJECT_NAME}:{PROJECT_VERSION}"'
     with open(f"{TEST_BASE_PATH}/docker-compose.yml", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
@@ -56,7 +58,8 @@ def test_update_regular_docker_compose_file():
 
 
 def test_update_docker_file_alpine():
-    update_docker_file_alpine(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_VERSION)
+    update_docker_file_alpine(
+        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_VERSION)
     with open(f"{TEST_BASE_PATH}/alpine/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
@@ -67,7 +70,8 @@ def test_update_docker_file_alpine():
 
 
 def test_update_docker_file_for_postgres12():
-    update_docker_file_for_postgres12(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH)
+    update_docker_file_for_postgres12(
+        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH)
     with open(f"{TEST_BASE_PATH}/postgres-12/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
@@ -125,5 +129,6 @@ def test_pkgvar_postgres_version_existence():
         for line in lines:
             if line.startswith("latest_postgres_version"):
                 has_match = True
-                assert line.strip() == f"latest_postgres_version={POSTGRES_VERSION}"
+                assert line.strip(
+                ) == f"latest_postgres_version={POSTGRES_VERSION}"
         assert has_match
