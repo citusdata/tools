@@ -83,9 +83,11 @@ if __name__ == "__main__":
     for postgres_version in postgres_versions:
         print(f'Testing package for following pg version: {postgres_version}')
         docker_image_name = f"test:{test_platform.value['docker_image_name']}-{postgres_version}"
-        build_command = (f"docker build  --pull --no-cache -t {docker_image_name} "
+        build_command = (f"docker build --pull --no-cache "
+                         f"-t {docker_image_name} "
                          f"-f {test_platform.value['docker_image_name']}/Dockerfile "
-                         f"--build-arg CITUS_VERSION={args.project_version} --build-arg PG_MAJOR={postgres_version}   "
+                         f"--build-arg CITUS_VERSION={args.project_version} "
+                         f"--build-arg PG_MAJOR={postgres_version} "
                          f"--build-arg CITUS_MAJOR_VERSION={minor_project_version} .")
         print(build_command)
         return_build = run_command(build_command)
