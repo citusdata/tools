@@ -44,7 +44,6 @@ GITHUB_TOKEN = os.getenv("GH_TOKEN")
 BASE_PATH = pathlib2.Path(__file__).parents[1]
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
-UNIT_TEST_BRANCH = "unit_test_branch"
 
 
 def test_find_nth_occurrence_position():
