@@ -65,6 +65,7 @@ def update_docker_file_for_postgres12(project_version: str, template_path: str, 
     content = process_template_file(project_version, template_path,
                                     docker_templates[SupportedDockerImages.postgres12], postgres_version)
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres12]}"
+    create_directory_if_not_exists(dest_file_name)
     write_to_file(content, dest_file_name)
 
 
@@ -72,10 +73,14 @@ def update_docker_file_for_postgres13(project_version: str, template_path: str, 
     content = process_template_file(project_version, template_path,
                                     docker_templates[SupportedDockerImages.postgres13], postgres_version)
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres13]}"
+    create_directory_if_not_exists(dest_file_name)
+    write_to_file(content, dest_file_name)
+
+
+def create_directory_if_not_exists(dest_file_name):
     dir_name = os.path.dirname(dest_file_name)
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
-    write_to_file(content, dest_file_name)
 
 
 def get_new_changelog_entry(project_version: str, postgres_version: str = ""):
@@ -109,7 +114,7 @@ def update_all_docker_files(project_version: str, exec_path: str):
     template_path = f"{BASE_PATH}/templates/docker"
     pkgvars_file = f"{exec_path}/pkgvars"
 
-    postgres_14_version, postgres_13_version, postgres_12_version = read_postgres_version(pkgvars_file)
+    postgres_14_version, postgres_13_version, postgres_12_version = read_postgres_versions(pkgvars_file)
 
     latest_postgres_version = postgres_14_version
 
@@ -121,7 +126,7 @@ def update_all_docker_files(project_version: str, exec_path: str):
     update_changelog(project_version, exec_path, latest_postgres_version)
 
 
-def read_postgres_version(pkgvars_file: str) -> Tuple[str, str, str]:
+def read_postgres_versions(pkgvars_file: str) -> Tuple[str, str, str]:
     if os.path.exists(pkgvars_file):
         config = dotenv_values(pkgvars_file)
         return config["postgres_14_version"], config["postgres_13_version"], config["postgres_12_version"]
