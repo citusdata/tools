@@ -43,7 +43,7 @@ def test_update_docker_file_for_latest_postgres():
         assert lines[2].strip() == f"FROM postgres:{POSTGRES_14_VERSION}"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert f"postgresql-$PG_MAJOR-{PROJECT_NAME}-" \
-               f"{version_details['major']}.{version_details['minor']}.=$CITUS_VERSION" in lines[21]
+               f"{version_details['major']}.{version_details['minor']}=$CITUS_VERSION" in lines[21]
         assert len(lines) == 42
 
 
@@ -79,7 +79,7 @@ def test_update_docker_file_for_postgres12():
         assert lines[2].strip() == f"FROM postgres:{POSTGRES_12_VERSION}"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert f"postgresql-$PG_MAJOR-{PROJECT_NAME}-" \
-               f"{version_details['major']}.{version_details['minor']}.=$CITUS_VERSION" in lines[21]
+               f"{version_details['major']}.{version_details['minor']}=$CITUS_VERSION" in lines[21]
         assert len(lines) == 42
 
 
@@ -92,7 +92,7 @@ def test_update_docker_file_for_postgres13():
         assert lines[2].strip() == f"FROM postgres:{POSTGRES_13_VERSION}"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert f"postgresql-$PG_MAJOR-{PROJECT_NAME}-" \
-               f"{version_details['major']}.{version_details['minor']}.=$CITUS_VERSION" in lines[21]
+               f"{version_details['major']}.{version_details['minor']}=$CITUS_VERSION" in lines[21]
         assert len(lines) == 42
 
 
