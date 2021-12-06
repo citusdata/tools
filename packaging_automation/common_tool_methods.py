@@ -322,11 +322,11 @@ def is_tag_on_branch(tag_name: str, branch_name: str):
     g = git.Git(os.getcwd())
     try:
         branches_str = g.execute(["git", "branch", "--contains", f"tags/{tag_name}"])
-        branches = remove_prefix(branches_str, "*").split("\n")
+        branches = branches_str.split("\n")
         print("Branches str:" + branches_str)
         if len(branches) > 0:
             for branch in branches:
-                if branch.strip() == branch_name:
+                if remove_prefix(branch, "*").strip() == branch_name:
                     return True
         return False
     except GitCommandError as e:
