@@ -38,7 +38,10 @@ from ..common_tool_methods import (
     remove_text_with_parenthesis,
     replace_line_in_file,
     rpm_key_matches_summary,
-    run, run_with_output, str_array_to_str)
+    run,
+    run_with_output,
+    str_array_to_str,
+)
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 BASE_PATH = pathlib2.Path(__file__).parents[1]
@@ -51,8 +54,18 @@ def test_find_nth_occurrence_position():
 
 
 def test_find_nth_matching_line_number_by_regex():
-    assert find_nth_matching_line_and_line_number("citusx\n citusx\ncitusx", "^citusx$", 2)[0] == 2
-    assert find_nth_matching_line_and_line_number("citusx\n citusx\ncitusx", "^citusy$", 2)[0] == -1
+    assert (
+        find_nth_matching_line_and_line_number(
+            "citusx\n citusx\ncitusx", "^citusx$", 2
+        )[0]
+        == 2
+    )
+    assert (
+        find_nth_matching_line_and_line_number(
+            "citusx\n citusx\ncitusx", "^citusy$", 2
+        )[0]
+        == -1
+    )
 
 
 def test_is_major_release():
@@ -75,7 +88,10 @@ def test_run():
 
 
 def test_remove_paranthesis_from_string():
-    assert remove_text_with_parenthesis("out of paranthesis (inside paranthesis)") == "out of paranthesis "
+    assert (
+        remove_text_with_parenthesis("out of paranthesis (inside paranthesis)")
+        == "out of paranthesis "
+    )
 
 
 def test_get_version_details():
@@ -96,8 +112,12 @@ def test_replace_line_in_file():
     copyfile(f"{TEST_BASE_PATH}/files/citus.spec", copy_file_path)
     replace_line_in_file(copy_file_path, r"^Summary:	*", replace_str)
     try:
-        with open(copy_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+        with open(
+            copy_file_path,
+            "r",
+            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        ) as reader:
             content = reader.read()
             lines = content.splitlines()
             assert lines[5] == replace_str
@@ -114,8 +134,12 @@ def test_get_last_commit_message():
     test_branch_name = f"test{uuid.uuid4()}"
     run(f"git checkout -b {test_branch_name}")
     try:
-        with open(test_branch_name, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
+        with open(
+            test_branch_name,
+            "w",
+            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        ) as writer:
             writer.write("Test content")
         run("git add .")
         commit_message = f"Test message for {test_branch_name}"
@@ -159,8 +183,12 @@ def test_get_patch_version_regex():
 def test_append_line_in_file():
     test_file = "test_append.txt"
     try:
-        with open(test_file, "a", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
+        with open(
+            test_file,
+            "a",
+            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        ) as writer:
             writer.write("Test line 1\n")
             writer.write("Test line 2\n")
             writer.write("Test line 3\n")
@@ -173,8 +201,12 @@ def test_append_line_in_file():
         append_line_in_file(test_file, "^Test line 2", "Test line 2.5")
         append_line_in_file(test_file, "^Test line 5", "Test line 5.5")
 
-        with open(test_file, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+        with open(
+            test_file,
+            "r",
+            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        ) as reader:
             lines = reader.readlines()
             assert len(lines) == 11
             assert lines[0] == "Test line 1\n"
@@ -188,8 +220,12 @@ def test_append_line_in_file():
 def test_prepend_line_in_file():
     test_file = "test_prepend.txt"
     try:
-        with open(test_file, "a", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
+        with open(
+            test_file,
+            "a",
+            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        ) as writer:
             writer.write("Test line 1\n")
             writer.write("Test line 2\n")
             writer.write("Test line 3\n")
@@ -202,8 +238,12 @@ def test_prepend_line_in_file():
         prepend_line_in_file(test_file, "^Test line 2", "Test line 1.5")
         prepend_line_in_file(test_file, "^Test line 5", "Test line 4.5")
 
-        with open(test_file, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+        with open(
+            test_file,
+            "r",
+            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        ) as reader:
             lines = reader.readlines()
             assert len(lines) == 11
             assert lines[0] == "Test line 0.5\n"
@@ -218,8 +258,12 @@ def test_getprs():
     # created at is not seen on Github. Should be checked on API result
     g = Github(GITHUB_TOKEN)
     repository = g.get_repo("citusdata/citus")
-    prs = get_prs_for_patch_release(repository, datetime.strptime('2021.02.26', '%Y.%m.%d'), "master",
-                                    datetime.strptime('2021.03.02', '%Y.%m.%d'))
+    prs = get_prs_for_patch_release(
+        repository,
+        datetime.strptime("2021.02.26", "%Y.%m.%d"),
+        "master",
+        datetime.strptime("2021.03.02", "%Y.%m.%d"),
+    )
     assert len(prs) == 6
     assert prs[0].number == 4748
 
@@ -227,17 +271,29 @@ def test_getprs():
 def test_getprs_with_backlog_label():
     g = Github(GITHUB_TOKEN)
     repository = g.get_repo("citusdata/citus")
-    prs = get_prs_for_patch_release(repository, datetime.strptime('2021.02.20', '%Y.%m.%d'), "master",
-                                    datetime.strptime('2021.02.27', '%Y.%m.%d'))
+    prs = get_prs_for_patch_release(
+        repository,
+        datetime.strptime("2021.02.20", "%Y.%m.%d"),
+        "master",
+        datetime.strptime("2021.02.27", "%Y.%m.%d"),
+    )
     prs_backlog = filter_prs_by_label(prs, "backport")
     assert len(prs_backlog) == 1
     assert prs_backlog[0].number == 4746
 
 
 def test_process_template_file():
-    content = process_template_file("10.0.3", f"{BASE_PATH}/templates", "docker/alpine/alpine.tmpl.dockerfile", "13.2")
-    with open(f"{TEST_BASE_PATH}/files/verify/expected_alpine_10.0.3.txt", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+    content = process_template_file(
+        "10.0.3",
+        f"{BASE_PATH}/templates",
+        "docker/alpine/alpine.tmpl.dockerfile",
+        "13.2",
+    )
+    with open(
+        f"{TEST_BASE_PATH}/files/verify/expected_alpine_10.0.3.txt",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as reader:
         expected_content = reader.read()
         assert expected_content == content
 
@@ -263,29 +319,36 @@ def test_delete_rpm_key_by_name():
 
 def test_get_supported_postgres_versions():
     postgres_release_versions_10_0_0 = get_supported_postgres_release_versions(
-        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.0.0")
-    assert postgres_release_versions_10_0_0 == (['11', '12', '13'])
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.0.0"
+    )
+    assert postgres_release_versions_10_0_0 == (["11", "12", "13"])
 
     postgres_release_versions_9_2_1 = get_supported_postgres_release_versions(
-        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "9.2.1")
-    assert postgres_release_versions_9_2_1 == (['11', '12'])
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "9.2.1"
+    )
+    assert postgres_release_versions_9_2_1 == (["11", "12"])
 
     postgres_release_versions_10_1_1 = get_supported_postgres_release_versions(
-        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.1.1")
-    assert postgres_release_versions_10_1_1 == (['12', '13'])
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.1.1"
+    )
+    assert postgres_release_versions_10_1_1 == (["12", "13"])
 
     postgres_release_versions_7_2_1 = get_supported_postgres_release_versions(
-        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "7.2.1")
-    assert postgres_release_versions_7_2_1 == (['10', '11'])
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "7.2.1"
+    )
+    assert postgres_release_versions_7_2_1 == (["10", "11"])
 
     postgres_release_versions_10_2_0 = get_supported_postgres_release_versions(
-        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.2.0")
-    assert postgres_release_versions_10_2_0 == (['12', '13', '14'])
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.2.0"
+    )
+    assert postgres_release_versions_10_2_0 == (["12", "13", "14"])
 
     postgres_release_versions_10_2_1 = get_supported_postgres_release_versions(
-        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.2.1")
-    assert postgres_release_versions_10_2_1 == (['12', '13', '14'])
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml", "10.2.1"
+    )
+    assert postgres_release_versions_10_2_1 == (["12", "13", "14"])
 
     postgres_nightly_versions_10_2_1 = get_supported_postgres_nightly_versions(
-        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml")
-    assert postgres_nightly_versions_10_2_1 == (['12', '13', '14'])
+        f"{TEST_BASE_PATH}/files/postgres-matrix/postgres-matrix-success.yml"
+    )
+    assert postgres_nightly_versions_10_2_1 == (["12", "13", "14"])
