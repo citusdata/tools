@@ -75,7 +75,7 @@ while [ "$FINISHED" -eq 0 ]; do
 	8)
 		gh pr create --head "$PR_BRANCH" \
 			--title "Merge to enterprise for branch $PR_BRANCH" \
-			--body "Enterprise merge for PR"
+			--body "This PR is created automagically via https://github.com/citusdata/tools/tree/develop/enterprise_merge"
 		;;
 	*)
 		FINISHED=1
