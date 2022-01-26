@@ -5,6 +5,7 @@ import argparse
 from enum import Enum
 
 PAGE_RECORD_COUNT = 100
+PACKAGE_DELETION_DAYS_THRESHOLD = 10
 
 
 class PackageRepository(Enum):
@@ -26,9 +27,10 @@ def delete_packages(repo: PackageRepository, package_cloud_api_token: str) -> No
         if len(package_info_list) == 0 or end_of_limits_reached:
             break
         for package_info in package_info_list:
-            package_upload_date = datetime.strptime(package_info['created_at'], "%Y-%m-%dT%H:%M:%S.000Z")
+            package_upload_date = datetime.strptime(package_info['created_at'],
+                                                    "%Y-%m-%dT%H:%M:%S.000Z")
             diff = datetime.now() - package_upload_date
-            if diff.days > 10:
+            if diff.days > PACKAGE_DELETION_DAYS_THRESHOLD:
                 delete_url = f"{url_prefix}{package_info['destroy_url']}"
 
                 del_result = requests.delete(delete_url)
@@ -41,17 +43,21 @@ def delete_packages(repo: PackageRepository, package_cloud_api_token: str) -> No
                         f"{package_info['filename']} could not be deleted. Error Code:{del_result.status_code} "
                         f"Error message:{del_result.content}")
             else:
+                # no more packages older than PACKAGE_DELETION_DAYS_THRESHOLD
                 end_of_limits_reached = True
 
-    print("Deletion Stats")
+    print("Deletion Stats:")
     print(f"Succesful Count: {successful_count}")
     print(f"Error Count:{error_count}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--package_repo', choices=[r.value for r in PackageRepository], required=True)
+    parser.add_argument('--package_repo',
+                        choices=[r.value for r in PackageRepository],
+                        required=True)
     parser.add_argument('--package_cloud_api_token', required=True)
     args = parser.parse_args()
 
-    delete_packages(repo=PackageRepository(args.package_repo), package_cloud_api_token=args.package_cloud_api_token)
+    delete_packages(repo=PackageRepository(args.package_repo),
+                    package_cloud_api_token=args.package_cloud_api_token)

@@ -8,10 +8,11 @@ on:
     branches:
       - "**"
     schedule:
+      # https://crontab.guru/#0_18_*_*_*
       - cron: "0 18 * * *"
 
 jobs:
-  unit_test_execution:
+  delete_packagecloud_packages:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -30,7 +31,7 @@ jobs:
       - name: Install python requirements
         run: python -m pip install -r packaging_automation/requirements.txt
 
-      - name: Delete PackageCloud packages
+      - name: Delete Old Nightly PackageCloud Packages
         run: |
           python -m packaging_automation.delete_packages_on_packagecloud \
           --package_repo ${{ matrix.package_repository }} \
