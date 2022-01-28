@@ -7,9 +7,9 @@ on:
   push:
     branches:
       - "**"
-    schedule:
-      # https://crontab.guru/#0_18_*_*_*
-      - cron: "0 18 * * *"
+  schedule:
+    # https://crontab.guru/#0_18_*_*_*
+    - cron: "0 18 * * *"
 
 jobs:
   delete_packagecloud_packages:
