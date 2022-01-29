@@ -1,0 +1,35 @@
+name: PackageCloud nightly package delete schedule
+
+env:
+  PACKAGE_CLOUD_API_TOKEN: ${{ secrets.PACKAGE_CLOUD_API_TOKEN }}
+
+on:
+  schedule:
+    # https://crontab.guru/#0_18_*_*_*
+    - cron: "0 18 * * *"
+
+jobs:
+  delete_packagecloud_packages:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package_repository:
+          - community-nightlies
+          - enterprise-nightlies
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
+
+      - name: Install python requirements
+        run: python -m pip install -r packaging_automation/requirements.txt
+
+      - name: Delete Old Nightly PackageCloud Packages
+        run: |
+          python -m packaging_automation.delete_packages_on_packagecloud \
+          --package_repo ${{ matrix.package_repository }} \
+          --package_cloud_api_token ${PACKAGE_CLOUD_API_TOKEN}
