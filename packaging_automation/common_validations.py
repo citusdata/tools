@@ -13,7 +13,8 @@ def is_version(version: str):
         raise ValueError("version should be non-empty and should not be None")
     if not re.match(CITUS_PATCH_VERSION_PATTERN, version):
         raise ValueError(
-            "version should include three level of digits separated by dots, e.g: 10.0.1")
+            "version should include three level of digits separated by dots, e.g: 10.0.1"
+        )
 
 
 @parameter_validation
@@ -22,7 +23,8 @@ def is_tag(tag: str):
         raise ValueError("tag should be non-empty and should not be None")
     if not re.match(f"v{CITUS_PATCH_VERSION_PATTERN}", tag):
         raise ValueError(
-            "tag should start with 'v' and should include three level of digits separated by dots, e.g: v10.0.1")
+            "tag should start with 'v' and should include three level of digits separated by dots, e.g: v10.0.1"
+        )
 
 
 @parameter_validation
