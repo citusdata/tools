@@ -51,6 +51,11 @@ class SupportedProject(Enum):
                                                  packaging_branch="all-pgautofailover-enterprise")
 
 
+class ReleaseType(Enum):
+    stable = 'stable'
+    beta = 'beta'
+
+
 @parameter_validation
 def is_project_changelog_header(header: str):
     if not header:
@@ -67,13 +72,14 @@ class PackagePropertiesParams:
     project_version: str
     fancy: bool
     fancy_version_number: int
+    release_type: ReleaseType = ReleaseType.stable
     microsoft_email: str = ""
     name_surname: str = ""
     changelog_date: datetime = datetime.now()
     changelog_entry: str = ""
 
     @property
-    def changelog_version_entry(self)->str:
+    def changelog_version_entry(self) -> str:
         return f"{self.project_version}-{self.fancy_version_number}"
 
     @property
@@ -205,7 +211,7 @@ def update_pkgvars(package_properties_params: PackagePropertiesParams, templates
 
     template = env.get_template(package_properties_params.pkgvars_template_file_name)
 
-    pkgvars_content = f"{template.render(version=version_str)}\n"
+    pkgvars_content = f"{template.render(version=version_str, release_type=package_properties_params.release_type.name)}\n"
     with open(f'{pkgvars_path}/pkgvars', "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
         writer.write(pkgvars_content)
@@ -290,6 +296,8 @@ if __name__ == "__main__":
     parser.add_argument('--prj_name', choices=[r.name for r in SupportedProject])
     parser.add_argument('--tag_name', required=True)
     parser.add_argument('--fancy_ver_no', type=int, choices=range(1, 10), default=1)
+    parser.add_argument('--release_type', type=str, choices=[r.name for r in ReleaseType],
+                        default=ReleaseType.stable.name)
     parser.add_argument('--email', required=True)
     parser.add_argument('--name', required=True)
     parser.add_argument('--date')
@@ -302,6 +310,7 @@ if __name__ == "__main__":
     prj_ver = get_project_version_from_tag_name(arguments.tag_name)
 
     project = SupportedProject[arguments.prj_name]
+    release_type = ReleaseType[arguments.release_type]
     if arguments.pipeline:
         if not arguments.exec_path:
             raise ValueError("exec_path should be defined")
@@ -326,7 +335,8 @@ if __name__ == "__main__":
                                                  project_version=prj_ver, fancy=fancy,
                                                  fancy_version_number=arguments.fancy_ver_no,
                                                  name_surname=arguments.name, microsoft_email=arguments.email,
-                                                 changelog_date=exec_date, changelog_entry=arguments.changelog_entry)
+                                                 changelog_date=exec_date, changelog_entry=arguments.changelog_entry,
+                                                 release_type=release_type)
     update_all_changes(package_properties, execution_path)
 
     commit_message = f"Bump to {arguments.prj_name} {prj_ver}"
