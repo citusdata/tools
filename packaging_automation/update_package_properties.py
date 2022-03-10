@@ -51,11 +51,6 @@ class SupportedProject(Enum):
                                                  packaging_branch="all-pgautofailover-enterprise")
 
 
-class ReleaseType(Enum):
-    stable = 'stable'
-    beta = 'beta'
-
-
 @parameter_validation
 def is_project_changelog_header(header: str):
     if not header:
@@ -72,7 +67,6 @@ class PackagePropertiesParams:
     project_version: str
     fancy: bool
     fancy_version_number: int
-    release_type: ReleaseType = ReleaseType.stable
     microsoft_email: str = ""
     name_surname: str = ""
     changelog_date: datetime = datetime.now()
@@ -107,6 +101,17 @@ class PackagePropertiesParams:
     @property
     def rpm_version(self) -> str:
         return f"{self.project_version}{self.project_name_suffix}"
+
+    # debian changelog does not allow '_' character to be used in changelog. Therefore, we replace '_' with '-'
+    # to be able to release package without error
+    @property
+    def debian_changelog_project_version(self):
+        return f"{self.project_version.replace('_', '-')}"
+
+    @property
+    def debian_changelog_version_header(self):
+        fancy_suffix = f"{self.fancy_version_number}" if self.fancy else "1"
+        return f"{self.debian_changelog_project_version}{self.project_name_suffix}-{fancy_suffix}"
 
     @property
     def project_name_suffix(self) -> str:
@@ -167,7 +172,7 @@ def debian_changelog_header(supported_project: SupportedProject, project_version
                                                         project_version=project_version,
                                                         fancy=fancy, fancy_version_number=fancy_version_number)
 
-    version_on_changelog = package_properties_params.version_number_with_project_name
+    version_on_changelog = package_properties_params.debian_changelog_version_header
 
     return f"{supported_project.value.name} ({version_on_changelog}) stable; urgency=low"
 
@@ -211,7 +216,7 @@ def update_pkgvars(package_properties_params: PackagePropertiesParams, templates
 
     template = env.get_template(package_properties_params.pkgvars_template_file_name)
 
-    pkgvars_content = f"{template.render(version=version_str, release_type=package_properties_params.release_type.name)}\n"
+    pkgvars_content = f"{template.render(version=version_str)}\n"
     with open(f'{pkgvars_path}/pkgvars', "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
         writer.write(pkgvars_content)
@@ -228,7 +233,7 @@ def rpm_changelog_history(spec_file_path: str) -> str:
 
 
 def get_changelog_entry(package_properties_params: PackagePropertiesParams):
-    default_changelog_entry = f"Official {package_properties_params.project_version} release of " \
+    default_changelog_entry = f"Official {package_properties_params.debian_changelog_project_version} release of " \
                               f"{package_properties_params.changelog_project_name}"
     return (
         package_properties_params.changelog_entry if package_properties_params.changelog_entry
@@ -296,8 +301,6 @@ if __name__ == "__main__":
     parser.add_argument('--prj_name', choices=[r.name for r in SupportedProject])
     parser.add_argument('--tag_name', required=True)
     parser.add_argument('--fancy_ver_no', type=int, choices=range(1, 10), default=1)
-    parser.add_argument('--release_type', type=str, choices=[r.name for r in ReleaseType],
-                        default=ReleaseType.stable.name)
     parser.add_argument('--email', required=True)
     parser.add_argument('--name', required=True)
     parser.add_argument('--date')
@@ -310,7 +313,6 @@ if __name__ == "__main__":
     prj_ver = get_project_version_from_tag_name(arguments.tag_name)
 
     project = SupportedProject[arguments.prj_name]
-    release_type = ReleaseType[arguments.release_type]
     if arguments.pipeline:
         if not arguments.exec_path:
             raise ValueError("exec_path should be defined")
@@ -335,8 +337,7 @@ if __name__ == "__main__":
                                                  project_version=prj_ver, fancy=fancy,
                                                  fancy_version_number=arguments.fancy_ver_no,
                                                  name_surname=arguments.name, microsoft_email=arguments.email,
-                                                 changelog_date=exec_date, changelog_entry=arguments.changelog_entry,
-                                                 release_type=release_type)
+                                                 changelog_date=exec_date, changelog_entry=arguments.changelog_entry)
     update_all_changes(package_properties, execution_path)
 
     commit_message = f"Bump to {arguments.prj_name} {prj_ver}"
