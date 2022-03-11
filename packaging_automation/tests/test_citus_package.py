@@ -57,10 +57,10 @@ def get_required_package_count(input_files_dir: str, platform: str):
 def setup_module():
     # Run tests against "all-citus-unit-tests" since we don't want to deal with the changes
     # made to "all-citus" in each release.
-    packaging_branch_name = "pgxn-citus" if PLATFORM == "pgxn" else "all-citus-unit-tests"
+    packaging_branch_name = "pgxn-citus" if PLATFORM == "pgxn" else PACKAGING_BRANCH_NAME
     if not os.path.exists(PACKAGING_EXEC_FOLDER):
         run(
-            f"git clone --branch {PACKAGING_BRANCH_NAME} https://github.com/citusdata/packaging.git"
+            f"git clone --branch {packaging_branch_name} https://github.com/citusdata/packaging.git"
             f" {PACKAGING_EXEC_FOLDER}")
 
 
