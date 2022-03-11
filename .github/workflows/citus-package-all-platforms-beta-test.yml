@@ -50,4 +50,4 @@ jobs:
         run: python -m pip install -r packaging_automation/requirements.txt
 
       - name: Citus package tests
-        run: python -m pytest -q packaging_automation/tests/test_citus_package.py
+        run: python -m pytest -q packaging_automation/tests/test_citus_package.py -s
