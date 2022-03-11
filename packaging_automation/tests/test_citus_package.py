@@ -44,6 +44,7 @@ GH_TOKEN = os.getenv("GH_TOKEN")
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 PLATFORM = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_PLATFORM"))
+PACKAGING_BRANCH_NAME = os.getenv("PACKAGING_BRANCH_NAME", "all-citus-unit-tests")
 
 
 def get_required_package_count(input_files_dir: str, platform: str):
@@ -59,7 +60,7 @@ def setup_module():
     packaging_branch_name = "pgxn-citus" if PLATFORM == "pgxn" else "all-citus-unit-tests"
     if not os.path.exists(PACKAGING_EXEC_FOLDER):
         run(
-            f"git clone --branch {packaging_branch_name} https://github.com/citusdata/packaging.git"
+            f"git clone --branch {PACKAGING_BRANCH_NAME} https://github.com/citusdata/packaging.git"
             f" {PACKAGING_EXEC_FOLDER}")
 
 
