@@ -7,7 +7,7 @@ from ..citus_package import (POSTGRES_MATRIX_FILE_NAME, POSTGRES_VERSION_FILE,
                              BuildType, InputOutputParameters,
                              SigningCredentials, build_packages,
                              decode_os_and_release, get_build_platform,
-                             get_package_version_from_pkgvars,
+                             get_package_version_without_release_stage_from_pkgvars,
                              get_release_package_folder_name)
 
 from ..common_tool_methods import (define_rpm_public_key_to_machine, delete_all_gpg_keys_by_name,
@@ -47,7 +47,7 @@ PLATFORM = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_
 
 
 def get_required_package_count(input_files_dir: str, platform: str):
-    package_version = get_package_version_from_pkgvars(input_files_dir)
+    package_version = get_package_version_without_release_stage_from_pkgvars(input_files_dir)
     release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
                                                                package_version)
     return len(release_versions) * single_postgres_package_counts[platform]
@@ -92,7 +92,7 @@ def test_build_packages():
     postgres_version_file_path = f"{PACKAGING_EXEC_FOLDER}/{POSTGRES_VERSION_FILE}"
     assert os.path.exists(postgres_version_file_path)
     config = dotenv_values(postgres_version_file_path)
-    assert config["release_versions"] == "11,12,13"
+    assert config["release_versions"] == "12,13,14"
     assert config["nightly_versions"] == "12,13,14"
 
 
