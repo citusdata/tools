@@ -14,7 +14,7 @@ ENV CITUS_VERSION ${CITUS_VERSION}
 ENV PG_MAJOR ${PG_MAJOR}
 
 RUN cd /etc/yum.repos.d/ && sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* \
-    && sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.epel.cloud|g' /etc/yum.repos.d/CentOS-* \
+    && sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.epel.cloud|g' /etc/yum.repos.d/CentOS-*
 
 RUN yum update -y && \
     yum install -y curl
