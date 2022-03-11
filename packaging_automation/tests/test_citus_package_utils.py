@@ -6,7 +6,8 @@ import pytest
 
 from .test_utils import generate_new_gpg_key
 from ..citus_package import (decode_os_and_release, is_docker_running, get_signing_credentials, get_postgres_versions,
-                             build_package, BuildType, sign_packages, SigningCredentials, InputOutputParameters)
+                             build_package, BuildType, sign_packages, SigningCredentials, InputOutputParameters,
+                             get_package_version_without_release_stage_from_pkgvars, write_postgres_versions_into_file)
 from ..common_tool_methods import (delete_all_gpg_keys_by_name, get_gpg_fingerprints_by_name, run,
                                    get_private_key_by_fingerprint_without_passphrase, define_rpm_public_key_to_machine,
                                    delete_rpm_key_by_name, get_private_key_by_fingerprint_with_passphrase,
@@ -101,6 +102,9 @@ def test_get_postgres_versions():
 def test_build_package_debian():
     input_output_parameters = InputOutputParameters.build(PACKAGING_EXEC_FOLDER, f"{OUTPUT_FOLDER}/debian-stretch",
                                                           output_validation=False)
+
+    package_version = get_package_version_without_release_stage_from_pkgvars(input_output_parameters.input_files_dir)
+    write_postgres_versions_into_file(input_output_parameters.input_files_dir, package_version)
 
     build_package(github_token=GH_TOKEN, build_type=BuildType.release,
                   docker_platform="debian-stretch", postgres_version="all",
