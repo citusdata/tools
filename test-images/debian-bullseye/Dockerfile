@@ -36,7 +36,6 @@ RUN apt-get update \
 RUN apt-get install -y postgresql-${PG_MAJOR}-citus-${CITUS_MAJOR_VERSION}=${CITUS_VERSION}.citus-${FANCY} \
                        postgresql-$PG_MAJOR-hll=${HLL_VERSION} \
                        postgresql-$PG_MAJOR-topn=${TOPN_VERSION} \
-    && apt-get purge -y --auto-remove curl \
     && rm -rf /var/lib/apt/lists/*12
 
 
