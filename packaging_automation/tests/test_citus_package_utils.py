@@ -104,7 +104,7 @@ def test_build_package_debian():
 
     build_package(github_token=GH_TOKEN, build_type=BuildType.release,
                   docker_platform="debian-stretch", postgres_version="all",
-                  input_output_parameters=input_output_parameters)
+                  input_output_parameters=input_output_parameters, is_test=True)
 
 
 def test_build_package_rpm():
@@ -112,7 +112,8 @@ def test_build_package_rpm():
                                                           output_validation=False)
 
     build_package(github_token=GH_TOKEN, build_type=BuildType.release,
-                  docker_platform="centos-8", postgres_version="13", input_output_parameters=input_output_parameters)
+                  docker_platform="centos-8", postgres_version="13", input_output_parameters=input_output_parameters,
+                  is_test=True)
 
 
 def test_sign_packages():
