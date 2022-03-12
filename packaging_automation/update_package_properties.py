@@ -73,7 +73,7 @@ class PackagePropertiesParams:
     changelog_entry: str = ""
 
     @property
-    def changelog_version_entry(self)->str:
+    def changelog_version_entry(self) -> str:
         return f"{self.project_version}-{self.fancy_version_number}"
 
     @property
@@ -101,6 +101,17 @@ class PackagePropertiesParams:
     @property
     def rpm_version(self) -> str:
         return f"{self.project_version}{self.project_name_suffix}"
+
+    # debian changelog does not allow '_' character to be used in changelog. Therefore, we replace '_' with '-'
+    # to be able to release package without error
+    @property
+    def debian_changelog_project_version(self):
+        return f"{self.project_version.replace('_', '-')}"
+
+    @property
+    def debian_changelog_version_header(self):
+        fancy_suffix = f"{self.fancy_version_number}" if self.fancy else "1"
+        return f"{self.debian_changelog_project_version}{self.project_name_suffix}-{fancy_suffix}"
 
     @property
     def project_name_suffix(self) -> str:
@@ -161,7 +172,7 @@ def debian_changelog_header(supported_project: SupportedProject, project_version
                                                         project_version=project_version,
                                                         fancy=fancy, fancy_version_number=fancy_version_number)
 
-    version_on_changelog = package_properties_params.version_number_with_project_name
+    version_on_changelog = package_properties_params.debian_changelog_version_header
 
     return f"{supported_project.value.name} ({version_on_changelog}) stable; urgency=low"
 
@@ -222,7 +233,7 @@ def rpm_changelog_history(spec_file_path: str) -> str:
 
 
 def get_changelog_entry(package_properties_params: PackagePropertiesParams):
-    default_changelog_entry = f"Official {package_properties_params.project_version} release of " \
+    default_changelog_entry = f"Official {package_properties_params.debian_changelog_project_version} release of " \
                               f"{package_properties_params.changelog_project_name}"
     return (
         package_properties_params.changelog_entry if package_properties_params.changelog_entry
