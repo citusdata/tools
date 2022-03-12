@@ -89,15 +89,15 @@ def test_build_packages():
     release_output_folder = f"{BASE_OUTPUT_FOLDER}/{sub_folder}"
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
 
+    postgres_version_file_path = f"{PACKAGING_EXEC_FOLDER}/{POSTGRES_VERSION_FILE}"
     if PLATFORM != "pgxn":
         assert len(os.listdir(release_output_folder)) == get_required_package_count(
             input_files_dir=PACKAGING_EXEC_FOLDER,
             platform=PLATFORM)
-    postgres_version_file_path = f"{PACKAGING_EXEC_FOLDER}/{POSTGRES_VERSION_FILE}"
-    assert os.path.exists(postgres_version_file_path)
-    config = dotenv_values(postgres_version_file_path)
-    assert config["release_versions"] == "12,13,14"
-    assert config["nightly_versions"] == "12,13,14"
+        assert os.path.exists(postgres_version_file_path)
+        config = dotenv_values(postgres_version_file_path)
+        assert config["release_versions"] == "12,13,14"
+        assert config["nightly_versions"] == "12,13,14"
 
 
 def test_get_required_package_count():
