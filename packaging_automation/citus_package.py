@@ -269,9 +269,10 @@ def build_packages(github_token: non_empty(non_blank(str)),
     os_name, os_version = decode_os_and_release(platform)
     release_versions, nightly_versions = get_postgres_versions(os_name, input_output_parameters.input_files_dir)
     signing_credentials = get_signing_credentials(signing_credentials.secret_key, signing_credentials.passphrase)
-
-    package_version = get_package_version_without_release_stage_from_pkgvars(input_output_parameters.input_files_dir)
-    write_postgres_versions_into_file(input_output_parameters.input_files_dir, package_version)
+    if platform != "pgxn":
+        package_version = get_package_version_without_release_stage_from_pkgvars(
+            input_output_parameters.input_files_dir)
+        write_postgres_versions_into_file(input_output_parameters.input_files_dir, package_version)
 
     if not signing_credentials.passphrase:
         raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")
