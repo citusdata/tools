@@ -88,8 +88,11 @@ def test_build_packages():
     sub_folder = get_release_package_folder_name(os_name, os_version)
     release_output_folder = f"{BASE_OUTPUT_FOLDER}/{sub_folder}"
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
-    assert len(os.listdir(release_output_folder)) == get_required_package_count(input_files_dir=PACKAGING_EXEC_FOLDER,
-                                                                                platform=PLATFORM)
+
+    if PLATFORM != "pgxn":
+        assert len(os.listdir(release_output_folder)) == get_required_package_count(
+            input_files_dir=PACKAGING_EXEC_FOLDER,
+            platform=PLATFORM)
     postgres_version_file_path = f"{PACKAGING_EXEC_FOLDER}/{POSTGRES_VERSION_FILE}"
     assert os.path.exists(postgres_version_file_path)
     config = dotenv_values(postgres_version_file_path)
