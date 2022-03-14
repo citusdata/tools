@@ -8,8 +8,9 @@ from typing import Tuple
 
 import pathlib2
 
-from .common_tool_methods import (process_template_file, write_to_file, run, initialize_env, create_pr,
-                                  remove_cloned_code, DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER)
+from .common_tool_methods import (process_template_file_with_minor, write_to_file, run, initialize_env, create_pr,
+                                  remove_cloned_code, DEFAULT_ENCODING_FOR_FILE_HANDLING, DEFAULT_UNICODE_ERROR_HANDLER,
+                                  get_minor_project_version_for_docker)
 
 REPO_OWNER = "citusdata"
 PROJECT_NAME = "docker"
@@ -41,37 +42,49 @@ BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
 def update_docker_file_for_latest_postgres(project_version: str, template_path: str, exec_path: str,
                                            postgres_version: str):
-    content = process_template_file(project_version, template_path,
-                                    docker_templates[SupportedDockerImages.latest], postgres_version)
+    minor_version = get_minor_project_version_for_docker(project_version)
+    debian_project_version = project_version.replace("_", "-")
+    content = process_template_file_with_minor(debian_project_version, template_path,
+                                               docker_templates[SupportedDockerImages.latest], minor_version,
+                                               postgres_version)
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.latest]}"
     write_to_file(content, dest_file_name)
 
 
 def update_regular_docker_compose_file(project_version: str, template_path: str, exec_path: str):
-    content = process_template_file(project_version, template_path,
-                                    docker_templates[SupportedDockerImages.docker_compose])
+    minor_version = get_minor_project_version_for_docker(project_version)
+    content = process_template_file_with_minor(project_version, template_path,
+                                               docker_templates[SupportedDockerImages.docker_compose], minor_version)
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.docker_compose]}"
     write_to_file(content, dest_file_name)
 
 
 def update_docker_file_alpine(project_version: str, template_path: str, exec_path: str, postgres_version: str):
-    content = process_template_file(project_version, template_path,
-                                    docker_templates[SupportedDockerImages.alpine], postgres_version)
+    minor_version = get_minor_project_version_for_docker(project_version)
+    content = process_template_file_with_minor(project_version, template_path,
+                                               docker_templates[SupportedDockerImages.alpine], minor_version,
+                                               postgres_version)
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.alpine]}"
     write_to_file(content, dest_file_name)
 
 
 def update_docker_file_for_postgres12(project_version: str, template_path: str, exec_path: str, postgres_version: str):
-    content = process_template_file(project_version, template_path,
-                                    docker_templates[SupportedDockerImages.postgres12], postgres_version)
+    minor_version = get_minor_project_version_for_docker(project_version)
+    debian_project_version = project_version.replace("_", "-")
+    content = process_template_file_with_minor(debian_project_version, template_path,
+                                               docker_templates[SupportedDockerImages.postgres12], minor_version,
+                                               postgres_version)
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres12]}"
     create_directory_if_not_exists(dest_file_name)
     write_to_file(content, dest_file_name)
 
 
 def update_docker_file_for_postgres13(project_version: str, template_path: str, exec_path: str, postgres_version: str):
-    content = process_template_file(project_version, template_path,
-                                    docker_templates[SupportedDockerImages.postgres13], postgres_version)
+    minor_version = get_minor_project_version_for_docker(project_version)
+    debian_project_version = project_version.replace("_", "-")
+    content = process_template_file_with_minor(debian_project_version, template_path,
+                                               docker_templates[SupportedDockerImages.postgres13], minor_version,
+                                               postgres_version)
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres13]}"
     create_directory_if_not_exists(dest_file_name)
     write_to_file(content, dest_file_name)
@@ -132,7 +145,6 @@ def read_postgres_versions(pkgvars_file: str) -> Tuple[str, str, str]:
         return config["postgres_14_version"], config["postgres_13_version"], config["postgres_12_version"]
 
     return "14.1", "13.5", "12.9"
-
 
 
 CHECKOUT_DIR = "docker_temp"

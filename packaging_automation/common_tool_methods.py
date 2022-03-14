@@ -43,6 +43,7 @@ supported_platforms = {
     "ubuntu": ["focal", "bionic", "trusty"]
 }
 
+
 def platform_names() -> List[str]:
     platforms = []
     for platform_os, platform_releases in supported_platforms.items():
@@ -83,6 +84,18 @@ def get_spec_file_name(project_name: str) -> str:
 def get_minor_project_version(project_version: str) -> str:
     project_version_details = get_version_details(project_version)
     return f'{project_version_details["major"]}.{project_version_details["minor"]}'
+
+
+def does_project_version_contain_release_stage(project_version: str) -> bool:
+    return "_" in project_version
+
+
+def get_minor_project_version_for_docker(project_version: str) -> str:
+    project_version_details = get_version_details(project_version)
+    minor_version = f'{project_version_details["major"]}.{project_version_details["minor"]}'
+    if does_project_version_contain_release_stage(project_version):
+        return f'{project_version_details["stage"]}-{minor_version}'
+    return minor_version
 
 
 def append_fancy_suffix_to_version(version: str, fancy_release_number: int) -> str:
@@ -171,7 +184,12 @@ def is_merge_commit(commit: Commit):
 @validate_parameters
 def get_version_details(version: is_version(str)) -> Dict[str, str]:
     version_parts = version.split(".")
-    return {"major": version_parts[0], "minor": version_parts[1], "patch": version_parts[2]}
+    release_stage = 'stable'
+    if len(version_parts) == 3:
+        if '_' in version:
+            stage_parts = version_parts[2].split('_')
+            release_stage = stage_parts[1]
+    return {"major": version_parts[0], "minor": version_parts[1], "patch": version_parts[2], "stage": release_stage}
 
 
 @validate_parameters
@@ -376,20 +394,26 @@ def remove_cloned_code(exec_path: str):
                   f"Please delete them manually or they will be deleted before next execution")
 
 
-def process_template_file(project_version: str, templates_path: str, template_file_path: str,
-                          postgres_version: str = ""):
+def process_template_file_with_minor(project_version: str, templates_path: str, template_file_path: str,
+                                     minor_version: str,postgres_version: str = ""):
     ''' This function gets the template files, changes tha parameters inside the file and returns the output.
         Template files are stored under packaging_automation/templates and these files include parametric items in the
         format of {{parameter_name}}. This function is used while creating docker files and pgxn files which include
         "project_name" as parameter. Example usage is in "test_common_tool_methods/test_process_template_file".
         Jinja2 is used as th the template engine and render function gets the file change parameters in the file
          with the given input parameters and returns the output.'''
-    minor_version = get_minor_project_version(project_version)
     env = get_template_environment(templates_path)
     template = env.get_template(template_file_path)
     rendered_output = template.render(project_version=project_version, postgres_version=postgres_version,
                                       project_minor_version=minor_version)
     return f"{rendered_output}\n"
+
+
+def process_template_file(project_version: str, templates_path: str, template_file_path: str,
+                          postgres_version: str = ""):
+    minor_version = get_minor_project_version(project_version)
+    return process_template_file_with_minor(project_version, templates_path, template_file_path, minor_version,
+                                            postgres_version)
 
 
 def write_to_file(content: str, dest_file_name: str):
