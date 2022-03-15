@@ -86,14 +86,14 @@ def get_minor_project_version(project_version: str) -> str:
     return f'{project_version_details["major"]}.{project_version_details["minor"]}'
 
 
-def does_project_version_contain_release_stage(project_version: str) -> bool:
+def project_version_contains_release_type(project_version: str) -> bool:
     return "_" in project_version
 
 
 def get_minor_project_version_for_docker(project_version: str) -> str:
     project_version_details = get_version_details(project_version)
     minor_version = f'{project_version_details["major"]}.{project_version_details["minor"]}'
-    if does_project_version_contain_release_stage(project_version):
+    if project_version_contains_release_type(project_version):
         return f'{project_version_details["stage"]}-{minor_version}'
     return minor_version
 
