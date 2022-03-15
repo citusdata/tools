@@ -3,7 +3,7 @@ GitPython
 Jinja2
 parameters_validation
 pathlib2
-pycurl
+pycurl<7.45.0
 PyGithub
 pytest
 python-gnupg

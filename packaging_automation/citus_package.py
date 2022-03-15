@@ -214,7 +214,7 @@ def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str]
         release_versions = ["all"]
         nightly_versions = ["all"]
     else:
-        package_version = get_package_version_from_pkgvars(input_files_dir)
+        package_version = get_package_version_without_release_stage_from_pkgvars(input_files_dir)
         release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
                                                                    package_version)
         nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
@@ -269,9 +269,10 @@ def build_packages(github_token: non_empty(non_blank(str)),
     os_name, os_version = decode_os_and_release(platform)
     release_versions, nightly_versions = get_postgres_versions(os_name, input_output_parameters.input_files_dir)
     signing_credentials = get_signing_credentials(signing_credentials.secret_key, signing_credentials.passphrase)
-
-    package_version = get_package_version_from_pkgvars(input_output_parameters.input_files_dir)
-    write_postgres_versions_into_file(input_output_parameters.input_files_dir, package_version)
+    if platform != "pgxn":
+        package_version = get_package_version_without_release_stage_from_pkgvars(
+            input_output_parameters.input_files_dir)
+        write_postgres_versions_into_file(input_output_parameters.input_files_dir, package_version)
 
     if not signing_credentials.passphrase:
         raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")
@@ -304,6 +305,7 @@ def get_package_version_from_pkgvars(input_files_dir: str):
 
     if len(version_parts) < 3:
         raise ValueError("Version should at least contains three parts seperated with '.'. e.g 10.0.2-1")
+
     third_part_splitted = version_parts[2].split("-")
 
     if pkg_name == 'hll':
@@ -311,6 +313,15 @@ def get_package_version_from_pkgvars(input_files_dir: str):
     else:
         package_version = f"{version_parts[0]}.{version_parts[1]}.{third_part_splitted[0]}"
     return package_version
+
+
+def get_package_version_without_release_stage_from_pkgvars(input_files_dir: str):
+    version = get_package_version_from_pkgvars(input_files_dir)
+    return tear_release_stage_from_package_version(version)
+
+
+def tear_release_stage_from_package_version(package_version: str) -> str:
+    return package_version.split("_")[0]
 
 
 if __name__ == "__main__":

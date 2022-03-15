@@ -7,7 +7,7 @@ from ..citus_package import (POSTGRES_MATRIX_FILE_NAME, POSTGRES_VERSION_FILE,
                              BuildType, InputOutputParameters,
                              SigningCredentials, build_packages,
                              decode_os_and_release, get_build_platform,
-                             get_package_version_from_pkgvars,
+                             get_package_version_without_release_stage_from_pkgvars,
                              get_release_package_folder_name)
 
 from ..common_tool_methods import (define_rpm_public_key_to_machine, delete_all_gpg_keys_by_name,
@@ -44,10 +44,11 @@ GH_TOKEN = os.getenv("GH_TOKEN")
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 PLATFORM = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_PLATFORM"))
+PACKAGING_BRANCH_NAME = os.getenv("PACKAGING_BRANCH_NAME", "all-citus-unit-tests")
 
 
 def get_required_package_count(input_files_dir: str, platform: str):
-    package_version = get_package_version_from_pkgvars(input_files_dir)
+    package_version = get_package_version_without_release_stage_from_pkgvars(input_files_dir)
     release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
                                                                package_version)
     return len(release_versions) * single_postgres_package_counts[platform]
@@ -56,7 +57,7 @@ def get_required_package_count(input_files_dir: str, platform: str):
 def setup_module():
     # Run tests against "all-citus-unit-tests" since we don't want to deal with the changes
     # made to "all-citus" in each release.
-    packaging_branch_name = "pgxn-citus" if PLATFORM == "pgxn" else "all-citus-unit-tests"
+    packaging_branch_name = "pgxn-citus" if PLATFORM == "pgxn" else PACKAGING_BRANCH_NAME
     if not os.path.exists(PACKAGING_EXEC_FOLDER):
         run(
             f"git clone --branch {packaging_branch_name} https://github.com/citusdata/packaging.git"
@@ -87,13 +88,16 @@ def test_build_packages():
     sub_folder = get_release_package_folder_name(os_name, os_version)
     release_output_folder = f"{BASE_OUTPUT_FOLDER}/{sub_folder}"
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
-    assert len(os.listdir(release_output_folder)) == get_required_package_count(input_files_dir=PACKAGING_EXEC_FOLDER,
-                                                                                platform=PLATFORM)
+
     postgres_version_file_path = f"{PACKAGING_EXEC_FOLDER}/{POSTGRES_VERSION_FILE}"
-    assert os.path.exists(postgres_version_file_path)
-    config = dotenv_values(postgres_version_file_path)
-    assert config["release_versions"] == "11,12,13"
-    assert config["nightly_versions"] == "12,13,14"
+    if PLATFORM != "pgxn":
+        assert len(os.listdir(release_output_folder)) == get_required_package_count(
+            input_files_dir=PACKAGING_EXEC_FOLDER,
+            platform=PLATFORM)
+        assert os.path.exists(postgres_version_file_path)
+        config = dotenv_values(postgres_version_file_path)
+        assert config["release_versions"] == "12,13,14"
+        assert config["nightly_versions"] == "12,13,14"
 
 
 def test_get_required_package_count():

@@ -1,4 +1,4 @@
-name: Citus package all platforms tests
+name: Citus package all platforms beta tests
 
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -8,6 +8,7 @@ env:
   USER_NAME: Gurkan Indibay
   MAIN_BRANCH: all-citus
   PACKAGE_CLOUD_API_TOKEN: ${{ secrets.PACKAGE_CLOUD_API_TOKEN }}
+  PACKAGING_BRANCH_NAME: all-citus-unit-tests-beta
 
 on:
   push:
