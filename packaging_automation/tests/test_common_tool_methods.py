@@ -79,7 +79,7 @@ def test_remove_paranthesis_from_string():
 
 
 def test_get_version_details():
-    assert get_version_details("10.0.1") == {"major": "10", "minor": "0", "patch": "1"}
+    assert get_version_details("10.0.1") == {"major": "10", "minor": "0", "patch": "1","stage":"stable"}
 
 
 def test_is_tag_on_branch():

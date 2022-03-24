@@ -66,7 +66,7 @@ def test_update_docker_file_alpine():
         lines = content.splitlines()
         assert lines[2].strip() == f"FROM postgres:{POSTGRES_14_VERSION}-alpine"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
-        assert len(lines) == 55
+        assert len(lines) == 56
 
 
 def test_update_docker_file_for_postgres12():

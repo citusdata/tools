@@ -15,6 +15,7 @@ LABEL maintainer="Citus Data https://citusdata.com" \
 RUN apk add --no-cache \
             --virtual builddeps \
         build-base \
+        krb5-dev \
         curl \
         curl-dev \
         openssl-dev \
