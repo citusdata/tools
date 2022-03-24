@@ -7,7 +7,7 @@ export mandir := $(datarootdir)/man
 export sysconfdir := $(prefix)/etc
 export pkgsysconfdir := $(sysconfdir)/$(PACKAGE_NAME)
 
-DIRNAMES = automated_packaging packaging uncrustify valgrind
+DIRNAMES = packaging uncrustify valgrind
 ifeq ($(TRAVIS), true)
 	DIRNAMES += travis
 endif
