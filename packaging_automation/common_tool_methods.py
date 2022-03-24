@@ -185,10 +185,10 @@ def is_merge_commit(commit: Commit):
 def get_version_details(version: is_version(str)) -> Dict[str, str]:
     version_parts = version.split(".")
     release_stage = 'stable'
-    if len(version_parts) == 3:
-        if project_version_contains_release_stage(version):
-            stage_parts = version_parts[2].split('_')
-            release_stage = stage_parts[1]
+    assert len(version_parts) == 3
+    if project_version_contains_release_stage(version):
+        stage_parts = version_parts[2].split('_')
+        release_stage = stage_parts[1]
     return {"major": version_parts[0], "minor": version_parts[1], "patch": version_parts[2], "stage": release_stage}
 
 
