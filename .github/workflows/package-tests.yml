@@ -13,7 +13,6 @@ on:
 jobs:
   test_execution:
     runs-on: ubuntu-latest
-    needs: metadata
     strategy:
       fail-fast: false
       matrix:
@@ -26,9 +25,9 @@ jobs:
           - debian/bullseye
           - ubuntu/bionic
           - ubuntu/focal
-        pg: ${{ fromJson(needs.metadata.outputs.pg_versions) }}
+        pg: [13,14]
     env:
-      PLATFORM: [13, 14]
+      PLATFORM: ${{ matrix.platform }}
 
     steps:
       - name: Checkout repository
