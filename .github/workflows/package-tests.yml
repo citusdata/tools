@@ -1,4 +1,4 @@
-name: citus-package-tests2
+name: citus-package-tests
 
 on:
   push:
