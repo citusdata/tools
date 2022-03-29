@@ -20,6 +20,8 @@ from parameters_validation import validate_parameters
 from .common_validations import (is_tag, is_version)
 from .dbconfig import RequestLog, RequestType
 
+RELEASE_STAGE_SEPARATOR = "_"
+
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX = r"\.\d{1,3}"
 POSTGRES_MATRIX_FLIE_NAME = "postgres-matrix.yml"
@@ -87,7 +89,7 @@ def get_minor_project_version(project_version: str) -> str:
 
 
 def project_version_contains_release_stage(project_version: str) -> bool:
-    return "_" in project_version
+    return RELEASE_STAGE_SEPARATOR in project_version
 
 
 def get_minor_project_version_for_docker(project_version: str) -> str:
@@ -395,7 +397,7 @@ def remove_cloned_code(exec_path: str):
 
 
 def process_template_file_with_minor(project_version: str, templates_path: str, template_file_path: str,
-                                     minor_version: str,postgres_version: str = ""):
+                                     minor_version: str, postgres_version: str = ""):
     ''' This function gets the template files, changes tha parameters inside the file and returns the output.
         Template files are stored under packaging_automation/templates and these files include parametric items in the
         format of {{parameter_name}}. This function is used while creating docker files and pgxn files which include
@@ -652,6 +654,9 @@ def match_release_version(versions_dictionary, package_version: str):
 
 
 def get_numeric_counterpart_of_version(package_version: str):
+    # If there is release stage
+    if project_version_contains_release_stage(project_version=package_version):
+        package_version = package_version.split(RELEASE_STAGE_SEPARATOR)[0]
     numbers_in_version = package_version.split(".")
     # add a 0 if version is minor to calculate and match for patch releases accurately
     if len(numbers_in_version) == 2:

@@ -44,6 +44,7 @@ jobs:
           echo "::set-output name=pg_versions::${POSTGRES_VERSIONS}"
   test_execution:
     runs-on: ubuntu-latest
+    needs: metadata
     strategy:
       fail-fast: false
       matrix:
@@ -56,7 +57,7 @@ jobs:
           - debian/bullseye
           - ubuntu/bionic
           - ubuntu/focal
-        pg: [13,14]
+        pg: ${{ fromJson(needs.metadata.outputs.pg_versions) }}
     env:
       PLATFORM: ${{ matrix.platform }}
 
