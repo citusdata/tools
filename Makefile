@@ -7,10 +7,7 @@ export mandir := $(datarootdir)/man
 export sysconfdir := $(prefix)/etc
 export pkgsysconfdir := $(sysconfdir)/$(PACKAGE_NAME)
 
-DIRNAMES = automated_packaging packaging uncrustify valgrind
-ifeq ($(TRAVIS), true)
-	DIRNAMES += travis
-endif
+DIRNAMES = automated_packaging packaging uncrustify valgrind travis
 
 # logic from http://stackoverflow.com/a/11206700
 SUBDIRS := $(addsuffix /., $(DIRNAMES))
