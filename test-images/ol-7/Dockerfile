@@ -43,6 +43,7 @@ RUN yum install -y gcc make && \
                     libffi-devel \
                     xz-devel \
                     python38-devel \
+                    libzstd-devel \
                     openssl-devel &&\
       curl  https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz --output Python-3.8.12.tgz &&\
       tar xvf Python-3.8.12.tgz &&\
