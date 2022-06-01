@@ -22,12 +22,12 @@ from .test_utils import are_strings_equal
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[1])
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
-PROJECT_VERSION = os.getenv("PROJECT_VERSION", default="10.0.3")
-TAG_NAME = os.getenv("TAG_NAME", default="v10.0.3")
+PROJECT_VERSION = os.getenv("PROJECT_VERSION", default="10.2.4")
+TAG_NAME = os.getenv("TAG_NAME", default="v10.2.4")
 PROJECT_NAME = os.getenv("PROJECT_NAME", default="citus")
 MICROSOFT_EMAIL = os.getenv("MICROSOFT_EMAIL", default="gindibay@microsoft.com")
 NAME_SURNAME = os.getenv("NAME_SURNAME", default="Gurkan Indibay")
-CHANGELOG_DATE_STR = os.getenv("CHANGELOG_DATE", 'Thu, 18 Mar 2021 01:40:08 +0000')
+CHANGELOG_DATE_STR = os.getenv("CHANGELOG_DATE", 'Tue, 01 Feb 2022 12:00:47 +0000')
 CHANGELOG_DATE = datetime.strptime(CHANGELOG_DATE_STR, '%a, %d %b %Y %H:%M:%S %z')
 
 
@@ -43,16 +43,16 @@ DEFAULT_CHANGELOG_PARAM_FOR_TEST = default_changelog_param_for_test(CHANGELOG_DA
 
 
 def test_get_version_number():
-    assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number == "10.0.3-1"
+    assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number == "10.2.4-1"
 
 
 def test_get_version_number_with_project_name():
-    assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number_with_project_name == "10.0.3.citus-1"
+    assert DEFAULT_CHANGELOG_PARAM_FOR_TEST.version_number_with_project_name == "10.2.4.citus-1"
 
 
 def test_get_debian_changelog_header():
-    header = debian_changelog_header(SupportedProject.citus, "10.0.3", True, 2)
-    assert header == "citus (10.0.3.citus-2) stable; urgency=low"
+    header = debian_changelog_header(SupportedProject.citus, "10.2.4", True, 2)
+    assert header == "citus (10.2.4.citus-2) stable; urgency=low"
 
 
 def test_prepend_latest_changelog_into_debian_changelog():
@@ -73,7 +73,7 @@ def verify_prepend_debian_changelog(changelog_file_path):
     with open(changelog_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
-    with open(f"{TEST_BASE_PATH}/files/verify/debian_changelog_with_10.0.3.txt", "r",
+    with open(f"{TEST_BASE_PATH}/files/verify/debian_changelog_with_10.2.4.txt", "r",
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         expected_content = reader.read()
@@ -108,7 +108,7 @@ def test_update_rpm_spec():
 
 def test_update_rpm_spec_include_10_0_3():
     project_name = "citus"
-    spec_file = f"{TEST_BASE_PATH}/files/citus_include_10_0_3.spec"
+    spec_file = f"{TEST_BASE_PATH}/files/citus_include_10_2_4.spec"
     spec_file_copy = f"{os.getcwd()}/{spec_file_name(project_name)}_copy"
     templates_path = f"{BASE_PATH}/templates"
     copyfile(spec_file, spec_file_copy)

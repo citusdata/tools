@@ -1,2 +1,2 @@
-* Thu Mar 18 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.0.3.citus-1
-- Official 10.0.3 release of Citus
+* Tue Feb 01 2022 - Gurkan Indibay <gindibay@microsoft.com> 10.2.4.citus-1
+- Official 10.2.4 release of Citus

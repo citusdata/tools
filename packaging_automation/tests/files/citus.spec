@@ -44,11 +44,11 @@ make %{?_smp_mflags}
 %{__mkdir} -p %{buildroot}%{pginstdir}/doc/extension
 %{__cp} README.md %{buildroot}%{pginstdir}/doc/extension/README-%{sname}.md
 %{__cp} NOTICE %{buildroot}%{pginstdir}/doc/extension/NOTICE-%{sname}
-
 # Set paths to be packaged other than LICENSE, README & CHANGELOG.md
 echo %{pginstdir}/include/server/citus_*.h >> installation_files.list
 echo %{pginstdir}/include/server/distributed/*.h >> installation_files.list
 echo %{pginstdir}/lib/%{sname}.so >> installation_files.list
+[[ -f %{buildroot}%{pginstdir}/lib/citus_columnar.so ]] && echo %{pginstdir}/lib/citus_columnar.so >> installation_files.list
 echo %{pginstdir}/share/extension/%{sname}-*.sql >> installation_files.list
 echo %{pginstdir}/share/extension/%{sname}.control >> installation_files.list
 %ifarch ppc64 ppc64le
@@ -63,6 +63,8 @@ echo %{pginstdir}/share/extension/%{sname}.control >> installation_files.list
     # At this point, we don't have %{pginstdir},
     # so first check build directory for columnar.
     [[ -d %{buildroot}%{pginstdir}/lib/bitcode/columnar/ ]] && echo %{pginstdir}/lib/bitcode/columnar/*.bc >> installation_files.list
+    [[ -d %{buildroot}%{pginstdir}/lib/bitcode/citus_columnar/ ]] && echo %{pginstdir}/lib/bitcode/citus_columnar/*.bc >> installation_files.list
+    [[ -d %{buildroot}%{pginstdir}/lib/bitcode/citus_columnar/safeclib ]] && echo %{pginstdir}/lib/bitcode/citus_columnar/safeclib/*.bc >> installation_files.list
   %endif
 %endif
 
@@ -82,9 +84,6 @@ echo %{pginstdir}/share/extension/%{sname}.control >> installation_files.list
 %doc %{pginstdir}/doc/extension/NOTICE-%{sname}
 
 %changelog
-* Tue Feb 01 2022 - Gurkan Indibay <gindibay@microsoft.com> 10.2.4.citus-1
-- Official 10.2.4 release of Citus
-
 * Tue Feb 01 2022 - Gurkan Indibay <gindibay@microsoft.com> 10.1.4.citus-1
 - Official 10.1.4 release of Citus
 
