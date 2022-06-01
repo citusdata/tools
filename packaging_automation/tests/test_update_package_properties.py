@@ -94,7 +94,7 @@ def test_update_rpm_spec():
     project_name = "citus"
     spec_file = f"{TEST_BASE_PATH}/files/{spec_file_name(project_name)}"
     spec_file_copy = f"{os.getcwd()}/{spec_file_name(project_name)}_copy"
-    spec_file_reference = f"{TEST_BASE_PATH}/files/citus_include_10_0_3.spec"
+    spec_file_reference = f"{TEST_BASE_PATH}/files/citus_include_10_2_4.spec"
     templates_path = f"{BASE_PATH}/templates"
     copyfile(spec_file, spec_file_copy)
     try:
