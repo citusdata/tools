@@ -7,12 +7,12 @@ Summary:	PostgreSQL-based distributed RDBMS
 Name:		%{sname}%{?pkginfix}_%{pgmajorversion}
 Provides:	%{sname}_%{pgmajorversion}
 Conflicts:	%{sname}_%{pgmajorversion}
-Version:	10.0.2.citus
+Version:	10.1.4.citus
 Release:	1%{dist}
 License:	AGPLv3
 Group:		Applications/Databases
-Source0:	https://github.com/citusdata//archive/v10.0.2.tar.gz
-URL:		https://github.com/citusdata/
+Source0:	https://github.com/citusdata/citus/archive/v10.2.4.tar.gz
+URL:		https://github.com/citusdata/citus
 BuildRequires:	postgresql%{pgmajorversion}-devel libcurl-devel
 Requires:	postgresql%{pgmajorversion}-server
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -48,6 +48,7 @@ make %{?_smp_mflags}
 echo %{pginstdir}/include/server/citus_*.h >> installation_files.list
 echo %{pginstdir}/include/server/distributed/*.h >> installation_files.list
 echo %{pginstdir}/lib/%{sname}.so >> installation_files.list
+[[ -f %{buildroot}%{pginstdir}/lib/citus_columnar.so ]] && echo %{pginstdir}/lib/citus_columnar.so >> installation_files.list
 echo %{pginstdir}/share/extension/%{sname}-*.sql >> installation_files.list
 echo %{pginstdir}/share/extension/%{sname}.control >> installation_files.list
 %ifarch ppc64 ppc64le
@@ -57,11 +58,13 @@ echo %{pginstdir}/share/extension/%{sname}.control >> installation_files.list
     echo %{pginstdir}/lib/bitcode/%{sname}/*.bc >> installation_files.list
     echo %{pginstdir}/lib/bitcode/%{sname}*.bc >> installation_files.list
     echo %{pginstdir}/lib/bitcode/%{sname}/*/*.bc >> installation_files.list
-    
+
     # Columnar does not exist in Citus versions < 10.0
     # At this point, we don't have %{pginstdir},
     # so first check build directory for columnar.
     [[ -d %{buildroot}%{pginstdir}/lib/bitcode/columnar/ ]] && echo %{pginstdir}/lib/bitcode/columnar/*.bc >> installation_files.list
+    [[ -d %{buildroot}%{pginstdir}/lib/bitcode/citus_columnar/ ]] && echo %{pginstdir}/lib/bitcode/citus_columnar/*.bc >> installation_files.list
+    [[ -d %{buildroot}%{pginstdir}/lib/bitcode/citus_columnar/safeclib ]] && echo %{pginstdir}/lib/bitcode/citus_columnar/safeclib/*.bc >> installation_files.list
   %endif
 %endif
 
@@ -81,6 +84,66 @@ echo %{pginstdir}/share/extension/%{sname}.control >> installation_files.list
 %doc %{pginstdir}/doc/extension/NOTICE-%{sname}
 
 %changelog
+* Tue Feb 01 2022 - Gurkan Indibay <gindibay@microsoft.com> 10.1.4.citus-1
+- Official 10.1.4 release of Citus
+
+* Mon Nov 29 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.2.3.citus-1
+- Official 10.2.3 release of Citus
+
+* Fri Nov 12 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.0.6.citus-1
+- Official 10.0.6 release of Citus
+
+* Mon Nov 08 2021 - Gurkan Indibay <gindibay@microsoft.com> 9.5.10.citus-1
+- Official 9.5.10 release of Citus
+
+* Thu Nov 04 2021 - Gurkan Indibay <gindibay@microsoft.com> 9.2.8.citus-1
+- Official 9.2.8 release of Citus
+
+* Wed Nov 03 2021 - Gurkan Indibay <gindibay@microsoft.com> 9.2.7.citus-1
+- Official 9.2.7 release of Citus
+
+* Thu Oct 14 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.2.2.citus-1
+- Official 10.2.2 release of Citus
+
+* Fri Sep 24 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.2.1.citus-1
+- Official 10.2.1 release of Citus
+
+* Fri Sep 17 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.1.3.citus-1
+- Official 10.1.3 release of Citus
+
+* Thu Sep 16 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.2.0.citus-1
+- Official 10.2.0 release of Citus
+
+* Tue Aug 17 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.1.2.citus-1
+- Official 10.1.2 release of Citus
+
+* Tue Aug 17 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.0.5.citus-1
+- Official 10.0.5 release of Citus
+
+* Tue Aug 17 2021 - Gurkan Indibay <gindibay@microsoft.com> 9.5.7.citus-1
+- Official 9.5.7 release of Citus
+
+* Wed Aug 11 2021 - Gurkan Indibay <gindibay@microsoft.com> 9.4.6.citus-1
+- Official 9.4.6 release of Citus
+
+* Fri Aug 06 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.1.1.citus-1
+- Official 10.1.1 release of Citus
+
+* Fri Jul 16 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.1.0.citus-1
+- Official 10.1.0 release of Citus
+
+* Fri Jul 16 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.0.4.citus-1
+- Official 10.0.4 release of Citus
+
+* Fri Jul 09 2021 - Gurkan <gindibay@microsoft.com> 9.5.6.citus-1
+- Official 9.5.6 release of Citus
+
+* Thu Jul 08 2021 - Gurkan <gindibay@microsoft.com> 9.4.5.citus-1
+- Official 9.4.5 release of Citus
+
+* Thu Mar 18 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.0.3.citus-1
+- Official 10.0.3 release of Citus
+
 * Thu Mar 4 2021 - Gurkan Indibay <gindibay@microsoft.com> 10.0.2.citus-1
 - Official 10.0.2 release of Citus
 

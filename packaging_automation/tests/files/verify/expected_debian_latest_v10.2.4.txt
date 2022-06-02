@@ -1,6 +1,6 @@
-citus (10.0.3.citus-1) stable; urgency=low
+citus (10.2.4.citus-1) stable; urgency=low
 
-  * Official 10.0.3 release of Citus
+  * Official 10.2.4 release of Citus
 
  -- Gurkan Indibay <gindibay@microsoft.com>  Thu, 18 Mar 2021 01:40:08 +0000
 
