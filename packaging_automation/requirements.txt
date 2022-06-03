@@ -28,10 +28,10 @@ docutils==0.17.1
     # via pyroma
 dodgy==0.2.1
     # via prospector
-flake8-polyfill==1.0.2
-    # via pep8-naming
 flake8==3.8.4
     # via flake8-polyfill
+flake8-polyfill==1.0.2
+    # via pep8-naming
 frosted==1.4.1
     # via prospector
 gitdb==4.0.7
@@ -59,10 +59,10 @@ mccabe==0.6.1
     #   flake8
     #   prospector
     #   pylint
-mypy-extensions==0.4.3
-    # via mypy
 mypy==0.910
     # via prospector
+mypy-extensions==0.4.3
+    # via mypy
 packaging==20.9
     # via pytest
 parameters-validation==1.2.0
@@ -103,8 +103,15 @@ pygithub==1.55
     # via -r requirements.in
 pygments==2.10.0
     # via pyroma
-pyjwt==2.1.0
+pyjwt==2.4.0
     # via pygithub
+pylint==2.10.2
+    # via
+    #   prospector
+    #   pylint-celery
+    #   pylint-django
+    #   pylint-flask
+    #   pylint-plugin-utils
 pylint-celery==0.3
     # via prospector
 pylint-django==2.4.4
@@ -117,13 +124,6 @@ pylint-plugin-utils==0.6
     #   pylint-celery
     #   pylint-django
     #   pylint-flask
-pylint==2.10.2
-    # via
-    #   prospector
-    #   pylint-celery
-    #   pylint-django
-    #   pylint-flask
-    #   pylint-plugin-utils
 pynacl==1.4.0
     # via pygithub
 pyparsing==2.4.7
