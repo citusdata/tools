@@ -47,6 +47,7 @@ package_docker_platform_dict = {
     "oraclelinux,6": "ol/6",
     "ubuntu,focal": "ubuntu/focal",
     "ubuntu,bionic": "ubuntu/bionic",
+    "ubuntu,jammy": "ubuntu/jammy",
     "pgxn": "pgxn"
 }
 
