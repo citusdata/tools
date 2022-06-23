@@ -40,7 +40,7 @@ supported_platforms = {
     "debian": ["bullseye", "buster", "stretch", "jessie", "wheezy"],
     "el": ["8", "7", "6"],
     "ol": ["7", "8"],
-    "ubuntu": ["focal", "bionic", "trusty"]
+    "ubuntu": ["focal", "bionic", "trusty","jammy"]
 }
 
 
