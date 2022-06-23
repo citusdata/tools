@@ -35,7 +35,8 @@ single_postgres_package_counts = {
     "debian/buster": 2,
     "debian/bullseye": 2,
     "ubuntu/bionic": 2,
-    "ubuntu/focal": 2
+    "ubuntu/focal": 2,
+    "ubuntu/jammy": 2
 }
 
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
