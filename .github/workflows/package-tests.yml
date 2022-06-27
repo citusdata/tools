@@ -57,6 +57,7 @@ jobs:
           - debian/bullseye
           - ubuntu/bionic
           - ubuntu/focal
+          - ubuntu/jammy
         pg: ${{ fromJson(needs.metadata.outputs.pg_versions) }}
     env:
       PLATFORM: ${{ matrix.platform }}
