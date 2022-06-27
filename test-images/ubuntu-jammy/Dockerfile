@@ -31,7 +31,7 @@ RUN apt-get update \
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        ca-certificates \
-       curl \
+       curl zlibc\
     && curl -s https://install.citusdata.com/community/deb.sh | bash
 RUN apt-get install -y postgresql-${PG_MAJOR}-citus-${CITUS_MAJOR_VERSION}=${CITUS_VERSION}.citus-${FANCY} \
                        postgresql-$PG_MAJOR-hll=${HLL_VERSION} \
