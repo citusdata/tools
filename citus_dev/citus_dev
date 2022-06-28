@@ -67,6 +67,29 @@ def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
 
     if mx:
         run(f"echo \"citus.replication_model = 'streaming'\" >> {clustername}/{nodename}/postgresql.conf")
+    hba_config = """
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# "local" is for Unix domain socket connections only
+local   all             jelte                                   trust
+# IPv4 local connections:
+host    all             jelte           127.0.0.1/32            trust
+# IPv6 local connections:
+host    all             jelte           ::1/128                 trust
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+local   replication     all                                     trust
+host    replication     all             127.0.0.1/32            trust
+host    replication     jelte           ::1/128                 trust
+
+local   all             all                                     scram-sha-256
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            scram-sha-256
+# IPv6 local connections:
+host    all             all             ::1/128                 scram-sha-256
+"""
+    with open(f"{clustername}/{nodename}/pg_hba.conf", "w") as f:
+        f.write(hba_config)
 
 def createPgBouncerUsers(clustername):
     username = getpass.getuser()
@@ -161,15 +184,13 @@ def main(arguments):
                 run(f'psql -p {nodeport} -c "CREATE EXTENSION citus;"')
 
             # If the cluster size is 0 we add the coordinator as the only node, otherwise we will add all other nodes
-            if size == 0:
-                run(f"psql -p {port} -c \"SELECT * from master_add_node('localhost', {port}, groupId => 0);\"")
-            else:
-                for i in range(size):
-                    workerport = port + 1 + i
-                    run(f"psql -p {port} -c \"SELECT * from master_add_node('localhost', {workerport});\"")
+            run(f"psql -p {port} -c \"SELECT * from master_add_node('localhost', {port}, groupId => 0);\"")
+            for i in range(size):
+                workerport = port + 1 + i
+                run(f"psql -p {port} -c \"SELECT * from master_add_node('localhost', {workerport});\"")
 
-                    if arguments["--mx"]:
-                        run(f"psql -p {port} -c \"SELECT start_metadata_sync_to_node('localhost', {workerport});\"")
+                if arguments["--mx"]:
+                    run(f"psql -p {port} -c \"SELECT start_metadata_sync_to_node('localhost', {workerport});\"")
 
             run(f'psql -p {port} -c "SELECT * from master_get_active_worker_nodes();"')
 
