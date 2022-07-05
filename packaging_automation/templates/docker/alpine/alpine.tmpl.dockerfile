@@ -24,6 +24,8 @@ RUN apk add --no-cache \
         llvm \
         lz4-dev \
         zstd-dev \
+        libxslt-dev \
+        libxml2-dev \
         icu-dev && \
     apk add --no-cache libcurl && \
     curl -sfLO "https://github.com/citusdata/citus/archive/v${VERSION}.tar.gz" && \
