@@ -309,7 +309,7 @@ def get_package_version_from_pkgvars(input_files_dir: str):
 
     third_part_splitted = version_parts[2].split("-")
 
-    if pkg_name in ('hll', 'azure_gdpr'):
+    if pkg_name in ('hll', 'azure_gdpr', 'azuregdpr'):
         package_version = f"{version_parts[0]}.{version_parts[1]}"
     else:
         package_version = f"{version_parts[0]}.{version_parts[1]}.{third_part_splitted[0]}"
