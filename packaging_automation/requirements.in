@@ -3,7 +3,7 @@ GitPython
 Jinja2
 parameters_validation
 pathlib2
-psycopg2
+psycopg2-binary
 pycurl
 PyGithub
 pytest
@@ -16,3 +16,4 @@ urllib3
 wheel
 python-dotenv
 prospector[with_everything]
+setuptools==58
