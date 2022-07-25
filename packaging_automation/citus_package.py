@@ -232,13 +232,14 @@ def build_package(github_token: non_empty(non_blank(str)),
     docker_image_name = "packaging" if not is_test else "packaging-test"
     postgres_extension = "all" if postgres_version == "all" else f"pg{postgres_version}"
     os.environ["GITHUB_TOKEN"] = github_token
+    os.environ["CONTAINER_BUILD_RUN_ENABLED"] = "true"
     if not os.path.exists(input_output_parameters.output_dir):
         os.makedirs(input_output_parameters.output_dir)
 
     output = run_with_output(
         f'docker run --rm -v {input_output_parameters.output_dir}:/packages -v '
         f'{input_output_parameters.input_files_dir}:/buildfiles:ro -e '
-        f'GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE '
+        f'GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE -e CONTAINER_BUILD_RUN_ENABLED'
         f'citus/{docker_image_name}:{docker_platform}-{postgres_extension} {build_type.name}', text=True)
 
     if output.stdout:
