@@ -51,6 +51,7 @@ PACKAGING_BRANCH_NAME = os.getenv("PACKAGING_BRANCH_NAME", "all-citus-pg15-beta"
 def get_required_package_count(input_files_dir: str, platform: str, os_name: str):
     release_versions, _ = get_postgres_versions(os_name=os_name, platform=platform,
                                                 input_files_dir=input_files_dir)
+    print (f"get_required_package_count: Relase versions:{release_versions}:{single_postgres_package_counts[platform]}")
     return len(release_versions) * single_postgres_package_counts[platform]
 
 
