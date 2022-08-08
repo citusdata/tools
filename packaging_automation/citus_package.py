@@ -224,11 +224,16 @@ def get_postgres_versions(os_name: str, platform: str, input_files_dir: str) -> 
                                                                    package_version)
         nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
 
-        exclude_dict = get_exclude_dict(input_files_dir=input_files_dir)
+        exclude_dict_release, exclude_dict_nightly = get_exclude_dict(input_files_dir=input_files_dir)
 
-        if exclude_dict and platform in exclude_dict.keys():
-            release_versions = [v for v in release_versions if v not in exclude_dict[platform]]
-            nightly_versions = [v for v in nightly_versions if v not in exclude_dict[platform]]
+        platform_key_release = "all" if "all" in exclude_dict_release else platform
+        platform_key_nightly = "all" if "all" in exclude_dict_nightly else platform
+
+        if exclude_dict_release and platform_key_release in exclude_dict_release.keys():
+            release_versions = [v for v in release_versions if v not in exclude_dict_release[platform_key_release]]
+
+        if exclude_dict_nightly and platform_key_nightly in exclude_dict_nightly.keys():
+            nightly_versions = [v for v in release_versions if v not in exclude_dict_nightly[platform_key_nightly]]
 
     return release_versions, nightly_versions
 
@@ -337,18 +342,23 @@ def get_package_version_without_release_stage_from_pkgvars(input_files_dir: str)
     return tear_release_stage_from_package_version(version)
 
 
-def get_exclude_dict(input_files_dir: str) -> Dict:
-    exclude_dict = {}
+def get_exclude_dict(input_files_dir: str) -> Tuple[Dict, Dict]:
+    exclude_dict_release = {}
+    exclude_dict_nightly = {}
     exclude_file_path = f"{input_files_dir}/{POSTGRES_EXCLUDE_FILE_NAME}"
     if os.path.exists(exclude_file_path):
         with open(exclude_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
                   errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
             yaml_content = yaml.load(reader, yaml.BaseLoader)
-            for os_release in yaml_content['exclude']:
-                print(os_release)
-                exclude_dict[list(os_release.keys())[0]] = \
-                    os_release[list(os_release.keys())[0]]['postgres_versions']
-    return exclude_dict
+            for os_release, pg_versions in yaml_content['exclude']['release'].items():
+                print(f"{os_release} {pg_versions}")
+                exclude_dict_release[os_release] = \
+                    pg_versions
+            for os_release, pg_versions in yaml_content['exclude']['nightly'].items():
+                print(f"{os_release} {pg_versions}")
+                exclude_dict_nightly[os_release] = \
+                    pg_versions
+    return exclude_dict_release, exclude_dict_nightly
 
 
 def tear_release_stage_from_package_version(package_version: str) -> str:

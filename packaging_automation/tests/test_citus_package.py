@@ -110,12 +110,20 @@ def test_decode_os_packages():
     assert os == "el" and release == "7"
 
 
-def test_get_postgres_versions():
+def test_get_postgres_versions_ol_7():
     release_versions, nightly_versions = get_postgres_versions(os_name="ol",
                                                                input_files_dir=f"{os.getcwd()}/packaging_automation/tests/files/get_postgres_versions_tests",
                                                                platform="ol/7")
     assert len(release_versions) == 2 and release_versions == ['13', '14']
-    assert len(nightly_versions) == 2 and release_versions == ['13', '14']
+    assert len(nightly_versions) == 2 and nightly_versions == ['13', '14']
+
+
+def test_get_postgres_versions_el_7():
+    release_versions, nightly_versions = get_postgres_versions(os_name="el",
+                                                               input_files_dir=f"{os.getcwd()}/packaging_automation/tests/files/get_postgres_versions_tests",
+                                                               platform="el/7")
+    assert len(release_versions) == 2 and release_versions == ['13', '14']
+    assert len(nightly_versions) == 3 and nightly_versions == ['13', '14', '15']
 
 def test_upload_to_package_cloud():
     platform = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_PLATFORM"))
