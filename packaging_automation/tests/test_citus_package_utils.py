@@ -91,11 +91,6 @@ def test_delete_rpm_key_by_name():
 
 def test_get_postgres_versions():
     release_versions, nightly_versions = get_postgres_versions(
-        platform="debian/buster",
-        input_files_dir=f"{TEST_BASE_PATH}/packaging_automation/tests/files")
-    assert release_versions[0] == "all" and nightly_versions[0] == "all"
-
-    release_versions, nightly_versions = get_postgres_versions(
         platform="el/8",
         input_files_dir=f"{TEST_BASE_PATH}/packaging_automation/tests/files")
     assert release_versions == ["11", "12", "13"] and nightly_versions == ["12", "13", "14"]
