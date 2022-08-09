@@ -90,12 +90,14 @@ def test_delete_rpm_key_by_name():
 
 
 def test_get_postgres_versions():
-    release_versions, nightly_versions = get_postgres_versions(os_name="debian", platform="debian/buster",
-                                                               input_files_dir=f"{TEST_BASE_PATH}/packaging_automation/tests/files")
+    release_versions, nightly_versions = get_postgres_versions(
+        platform="debian/buster",
+        input_files_dir=f"{TEST_BASE_PATH}/packaging_automation/tests/files")
     assert release_versions[0] == "all" and nightly_versions[0] == "all"
 
-    release_versions, nightly_versions = get_postgres_versions(os_name="el", platform="el/8",
-                                                               input_files_dir=f"{TEST_BASE_PATH}/packaging_automation/tests/files")
+    release_versions, nightly_versions = get_postgres_versions(
+        platform="el/8",
+        input_files_dir=f"{TEST_BASE_PATH}/packaging_automation/tests/files")
     assert release_versions == ["11", "12", "13"] and nightly_versions == ["12", "13", "14"]
 
 
@@ -109,6 +111,7 @@ def test_build_package_debian():
     build_package(github_token=GH_TOKEN, build_type=BuildType.release,
                   docker_platform="debian-stretch", postgres_version="all",
                   input_output_parameters=input_output_parameters, is_test=True)
+
 
 def test_build_package_rpm():
     input_output_parameters = InputOutputParameters.build(PACKAGING_EXEC_FOLDER, f"{OUTPUT_FOLDER}/debian-stretch",
