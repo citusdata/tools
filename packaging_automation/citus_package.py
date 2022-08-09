@@ -20,8 +20,7 @@ from .common_tool_methods import (DEFAULT_ENCODING_FOR_FILE_HANDLING,
                                   get_supported_postgres_nightly_versions,
                                   get_supported_postgres_release_versions,
                                   platform_names,
-                                  run_with_output, str_array_to_str,
-                                  supported_platforms,
+                                  run_with_output, supported_platforms,
                                   transform_key_into_base64_str)
 from .packaging_warning_handler import validate_output
 
