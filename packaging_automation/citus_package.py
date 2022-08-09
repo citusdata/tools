@@ -3,16 +3,15 @@ import glob
 import os
 import subprocess
 from enum import Enum
+from typing import Dict
 from typing import List
 from typing import Tuple
-from typing import Dict
 
-import json
 import docker
 import gnupg
+import yaml
 from attr import dataclass
 from dotenv import dotenv_values
-import yaml
 from parameters_validation import non_blank, non_empty, validate_parameters
 
 from .common_tool_methods import (DEFAULT_ENCODING_FOR_FILE_HANDLING,
@@ -168,7 +167,7 @@ def write_postgres_versions_into_file(input_files_dir: str, package_version: str
         nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
     else:
         print(f"os: {os_name} platform: {platform}")
-        release_versions, nightly_versions = get_postgres_versions( platform=platform,
+        release_versions, nightly_versions = get_postgres_versions(platform=platform,
                                                                    input_files_dir=input_files_dir)
     release_version_str = ','.join(release_versions)
     nightly_version_str = ','.join(nightly_versions)
@@ -231,11 +230,14 @@ def get_postgres_versions(platform: str, input_files_dir: str) -> Tuple[List[str
 
     exclude_dict_release, exclude_dict_nightly = get_exclude_dict(input_files_dir=input_files_dir)
 
-    if exclude_dict_release and platform in exclude_dict_release.keys():
-        release_versions = [v for v in release_versions if v not in exclude_dict_release[platform]]
+    platform_key_release = "all" if "all" in exclude_dict_release else platform
+    platform_key_nightly = "all" if "all" in exclude_dict_nightly else platform
 
-    if exclude_dict_nightly and platform in exclude_dict_nightly.keys():
-        nightly_versions = [v for v in release_versions if v not in exclude_dict_nightly[platform]]
+    if exclude_dict_release and platform_key_release in exclude_dict_release.keys():
+        release_versions = [v for v in release_versions if v not in exclude_dict_release[platform_key_release]]
+
+    if exclude_dict_nightly and platform_key_nightly in exclude_dict_nightly.keys():
+        nightly_versions = [v for v in release_versions if v not in exclude_dict_nightly[platform_key_nightly]]
 
     return release_versions, nightly_versions
 
@@ -303,7 +305,7 @@ def build_packages(github_token: non_empty(non_blank(str)),
     postgress_versions_to_process = release_versions if build_type == BuildType.release else nightly_versions
 
     postgres_docker_extension_iterator = ["all"] if platform_postgres_version_source[
-                                                      os_name] == PostgresVersionDockerImageType.single \
+                                                        os_name] == PostgresVersionDockerImageType.single \
         else postgress_versions_to_process
 
     print(f"Postgres Versions: {str_array_to_str(postgres_docker_extension_iterator)}")

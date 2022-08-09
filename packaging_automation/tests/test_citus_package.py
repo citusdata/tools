@@ -1,24 +1,21 @@
 import os
 
 import pathlib2
+from dotenv import dotenv_values
 
 from .test_utils import generate_new_gpg_key
-from ..citus_package import (POSTGRES_MATRIX_FILE_NAME, POSTGRES_VERSION_FILE,
+from ..citus_package import (POSTGRES_VERSION_FILE,
                              BuildType, InputOutputParameters,
                              SigningCredentials, build_packages,
                              decode_os_and_release, get_build_platform,
-                             get_package_version_without_release_stage_from_pkgvars,
                              get_release_package_folder_name, get_postgres_versions)
-
 from ..common_tool_methods import (define_rpm_public_key_to_machine, delete_all_gpg_keys_by_name,
                                    delete_rpm_key_by_name, get_gpg_fingerprints_by_name,
                                    get_private_key_by_fingerprint_with_passphrase,
-                                   get_supported_postgres_release_versions, run,
+                                   run,
                                    transform_key_into_base64_str, verify_rpm_signature_in_dir)
 from ..upload_to_package_cloud import (delete_package_from_package_cloud, package_exists,
                                        upload_files_in_directory_to_package_cloud)
-
-from dotenv import dotenv_values
 
 TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 
@@ -45,7 +42,7 @@ GH_TOKEN = os.getenv("GH_TOKEN")
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 PLATFORM = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_PLATFORM"))
-PACKAGING_BRANCH_NAME = os.getenv("PACKAGING_BRANCH_NAME", "all-citus-unit-tests")
+PACKAGING_BRANCH_NAME = os.getenv("PACKAGING_BRANCH_NAME", "all-citus-pg15-beta")
 
 
 def get_required_package_count(input_files_dir: str, platform: str):
@@ -122,6 +119,14 @@ def test_get_postgres_versions_el_7():
     release_versions, nightly_versions = get_postgres_versions(
         input_files_dir=f"{os.getcwd()}/packaging_automation/tests/files/get_postgres_versions_tests",
         platform="el/7")
+    assert len(release_versions) == 2 and release_versions == ['13', '14']
+    assert len(nightly_versions) == 3 and nightly_versions == ['13', '14', '15']
+
+
+def test_get_postgres_versions_debain_bullseye():
+    release_versions, nightly_versions = get_postgres_versions(
+        input_files_dir=f"{os.getcwd()}/packaging_automation/tests/files/get_postgres_versions_tests",
+        platform="debian/bullseye")
     assert len(release_versions) == 2 and release_versions == ['13', '14']
     assert len(nightly_versions) == 3 and nightly_versions == ['13', '14', '15']
 
