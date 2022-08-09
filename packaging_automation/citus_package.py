@@ -285,6 +285,7 @@ def get_docker_image_name(platform: str):
 @validate_parameters
 # disabled since this is related to parameter_validations library methods
 # pylint: disable=no-value-for-parameter
+# pylint: disable= too-many-locals
 def build_packages(github_token: non_empty(non_blank(str)),
                    platform: non_empty(non_blank(str)),
                    build_type: BuildType, signing_credentials: SigningCredentials,
@@ -308,7 +309,6 @@ def build_packages(github_token: non_empty(non_blank(str)),
                                                         os_name] == PostgresVersionDockerImageType.single \
         else postgress_versions_to_process
 
-    print(f"Postgres Versions: {str_array_to_str(postgres_docker_extension_iterator)}")
     docker_image_name = get_docker_image_name(platform)
     output_sub_folder = get_release_package_folder_name(os_name, os_version)
     input_output_parameters.output_dir = f"{input_output_parameters.output_dir}/{output_sub_folder}"
