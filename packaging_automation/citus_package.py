@@ -375,7 +375,6 @@ if __name__ == "__main__":
     parser.add_argument('--passphrase', required=True)
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--input_files_dir', required=True)
-    parser.add_argument('--input_files_dir', required=True)
     parser.add_argument('--output_validation', action="store_true")
     parser.add_argument('--is_test', action="store_true")
 
