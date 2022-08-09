@@ -158,10 +158,16 @@ def get_signing_credentials(packaging_secret_key: str,
     return SigningCredentials(secret_key=secret_key, passphrase=passphrase)
 
 
-def write_postgres_versions_into_file(input_files_dir: str, package_version: str):
-    release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
-                                                               package_version)
-    nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
+def write_postgres_versions_into_file(input_files_dir: str, package_version: str, os_name: str = "",
+                                      platform: str = ""):
+    # In ADO pipelines function without os_name and platform is used. If these parameters are unset
+    if not os_name:
+        release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
+                                                                   package_version)
+        nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
+    else:
+        release_versions, nightly_versions = get_postgres_versions(os_name=os_name, platform=platform,
+                                                                   input_files_dir=input_files_dir)
     release_version_str = ','.join(release_versions)
     nightly_version_str = ','.join(nightly_versions)
     with open(f"{input_files_dir}/{POSTGRES_VERSION_FILE}", 'w', encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
@@ -294,7 +300,7 @@ def build_packages(github_token: non_empty(non_blank(str)),
     if platform != "pgxn":
         package_version = get_package_version_without_release_stage_from_pkgvars(
             input_output_parameters.input_files_dir)
-        write_postgres_versions_into_file(input_output_parameters.input_files_dir, package_version)
+        write_postgres_versions_into_file(input_output_parameters.input_files_dir, package_version, os_name, platform)
 
     if not signing_credentials.passphrase:
         raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")

@@ -110,7 +110,6 @@ def test_build_package_debian():
                   docker_platform="debian-stretch", postgres_version="all",
                   input_output_parameters=input_output_parameters, is_test=True)
 
-
 def test_build_package_rpm():
     input_output_parameters = InputOutputParameters.build(PACKAGING_EXEC_FOLDER, f"{OUTPUT_FOLDER}/debian-stretch",
                                                           output_validation=False)
