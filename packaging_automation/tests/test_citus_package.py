@@ -42,7 +42,7 @@ GH_TOKEN = os.getenv("GH_TOKEN")
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 PLATFORM = get_build_platform(os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_PLATFORM"))
-PACKAGING_BRANCH_NAME = os.getenv("PACKAGING_BRANCH_NAME", "all-citus-pg15-beta")
+PACKAGING_BRANCH_NAME = os.getenv("PACKAGING_BRANCH_NAME", "all-citus-unit-tests")
 
 
 def get_required_package_count(input_files_dir: str, platform: str):
