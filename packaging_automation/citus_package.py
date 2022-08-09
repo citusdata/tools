@@ -162,14 +162,17 @@ def write_postgres_versions_into_file(input_files_dir: str, package_version: str
                                       platform: str = ""):
     # In ADO pipelines function without os_name and platform is used. If these parameters are unset
     if not os_name:
+        print("os name is empty")
         release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
                                                                    package_version)
         nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
     else:
+        print(f"os: {os_name} platform: {platform}")
         release_versions, nightly_versions = get_postgres_versions(os_name=os_name, platform=platform,
                                                                    input_files_dir=input_files_dir)
     release_version_str = ','.join(release_versions)
     nightly_version_str = ','.join(nightly_versions)
+    print(f"Release versions: {release_version_str}, Nightly versions: {nightly_version_str}")
     with open(f"{input_files_dir}/{POSTGRES_VERSION_FILE}", 'w', encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as f:
         f.write(f"release_versions={release_version_str}\n")
