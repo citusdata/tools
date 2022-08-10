@@ -304,9 +304,10 @@ def build_packages(github_token: non_empty(non_blank(str)),
         raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")
     postgress_versions_to_process = release_versions if build_type == BuildType.release else nightly_versions
 
-    postgres_docker_extension_iterator = ["all"] if platform_postgres_version_source[
-                                                        os_name] == PostgresVersionDockerImageType.single \
-        else postgress_versions_to_process
+    if platform_postgres_version_source[os_name] == PostgresVersionDockerImageType.single :
+        postgres_docker_extension_iterator = ["all"] 
+    else :
+        postgres_docker_extension_iterator = postgress_versions_to_process
 
     docker_image_name = get_docker_image_name(platform)
     output_sub_folder = get_release_package_folder_name(os_name, os_version)
