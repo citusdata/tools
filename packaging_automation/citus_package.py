@@ -3,11 +3,13 @@ import glob
 import os
 import subprocess
 from enum import Enum
+from typing import Dict
 from typing import List
 from typing import Tuple
 
 import docker
 import gnupg
+import yaml
 from attr import dataclass
 from dotenv import dotenv_values
 from parameters_validation import non_blank, non_empty, validate_parameters
@@ -18,8 +20,7 @@ from .common_tool_methods import (DEFAULT_ENCODING_FOR_FILE_HANDLING,
                                   get_supported_postgres_nightly_versions,
                                   get_supported_postgres_release_versions,
                                   platform_names,
-                                  run_with_output, str_array_to_str,
-                                  supported_platforms,
+                                  run_with_output, supported_platforms,
                                   transform_key_into_base64_str)
 from .packaging_warning_handler import validate_output
 
@@ -27,6 +28,7 @@ GPG_KEY_NAME = "packaging@citusdata.com"
 
 POSTGRES_VERSION_FILE = "supported-postgres"
 POSTGRES_MATRIX_FILE_NAME = "postgres-matrix.yml"
+POSTGRES_EXCLUDE_FILE_NAME = "pg_exclude.yml"
 
 docker_image_names = {
     "debian": "debian",
@@ -154,12 +156,21 @@ def get_signing_credentials(packaging_secret_key: str,
     return SigningCredentials(secret_key=secret_key, passphrase=passphrase)
 
 
-def write_postgres_versions_into_file(input_files_dir: str, package_version: str):
-    release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
-                                                               package_version)
-    nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
+def write_postgres_versions_into_file(input_files_dir: str, package_version: str, os_name: str = "",
+                                      platform: str = ""):
+    # In ADO pipelines function without os_name and platform is used. If these parameters are unset
+    if not os_name:
+        print("os name is empty")
+        release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
+                                                                   package_version)
+        nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
+    else:
+        print(f"os: {os_name} platform: {platform}")
+        release_versions, nightly_versions = get_postgres_versions(platform=platform,
+                                                                   input_files_dir=input_files_dir)
     release_version_str = ','.join(release_versions)
     nightly_version_str = ','.join(nightly_versions)
+    print(f"Release versions: {release_version_str}, Nightly versions: {nightly_version_str}")
     with open(f"{input_files_dir}/{POSTGRES_VERSION_FILE}", 'w', encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as f:
         f.write(f"release_versions={release_version_str}\n")
@@ -210,15 +221,22 @@ def sign_packages(sub_folder: str, signing_credentials: SigningCredentials,
         print("DEB signing finished successfully.")
 
 
-def get_postgres_versions(os_name: str, input_files_dir: str) -> Tuple[List[str], List[str]]:
-    if platform_postgres_version_source[os_name] == PostgresVersionDockerImageType.single:
-        release_versions = ["all"]
-        nightly_versions = ["all"]
-    else:
-        package_version = get_package_version_without_release_stage_from_pkgvars(input_files_dir)
-        release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
-                                                                   package_version)
-        nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
+def get_postgres_versions(platform: str, input_files_dir: str) -> Tuple[List[str], List[str]]:
+    package_version = get_package_version_without_release_stage_from_pkgvars(input_files_dir)
+    release_versions = get_supported_postgres_release_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}",
+                                                               package_version)
+    nightly_versions = get_supported_postgres_nightly_versions(f"{input_files_dir}/{POSTGRES_MATRIX_FILE_NAME}")
+
+    exclude_dict_release, exclude_dict_nightly = get_exclude_dict(input_files_dir=input_files_dir)
+
+    platform_key_release = "all" if "all" in exclude_dict_release else platform
+    platform_key_nightly = "all" if "all" in exclude_dict_nightly else platform
+
+    if exclude_dict_release and platform_key_release in exclude_dict_release.keys():
+        release_versions = [v for v in release_versions if v not in exclude_dict_release[platform_key_release]]
+
+    if exclude_dict_nightly and platform_key_nightly in exclude_dict_nightly.keys():
+        nightly_versions = [v for v in release_versions if v not in exclude_dict_nightly[platform_key_nightly]]
 
     return release_versions, nightly_versions
 
@@ -236,11 +254,13 @@ def build_package(github_token: non_empty(non_blank(str)),
     if not os.path.exists(input_output_parameters.output_dir):
         os.makedirs(input_output_parameters.output_dir)
 
-    output = run_with_output(
-        f'docker run --rm -v {input_output_parameters.output_dir}:/packages -v '
-        f'{input_output_parameters.input_files_dir}:/buildfiles:ro -e '
-        f'GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE -e CONTAINER_BUILD_RUN_ENABLED '
-        f'citus/{docker_image_name}:{docker_platform}-{postgres_extension} {build_type.name}', text=True)
+    docker_command = (f'docker run --rm -v {input_output_parameters.output_dir}:/packages -v '
+                      f'{input_output_parameters.input_files_dir}:/buildfiles:ro -e '
+                      f'GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE -e CONTAINER_BUILD_RUN_ENABLED '
+                      f'citus/{docker_image_name}:{docker_platform}-{postgres_extension} {build_type.name}')
+
+    print(f"Executing docker command: {docker_command}")
+    output = run_with_output(docker_command, text=True)
 
     if output.stdout:
         print("Output:" + output.stdout)
@@ -264,31 +284,39 @@ def get_docker_image_name(platform: str):
 @validate_parameters
 # disabled since this is related to parameter_validations library methods
 # pylint: disable=no-value-for-parameter
+# pylint: disable= too-many-locals
 def build_packages(github_token: non_empty(non_blank(str)),
                    platform: non_empty(non_blank(str)),
                    build_type: BuildType, signing_credentials: SigningCredentials,
                    input_output_parameters: InputOutputParameters, is_test: bool = False) -> None:
     os_name, os_version = decode_os_and_release(platform)
-    release_versions, nightly_versions = get_postgres_versions(os_name, input_output_parameters.input_files_dir)
+    release_versions, nightly_versions = get_postgres_versions(platform,
+                                                               input_output_parameters.input_files_dir)
+
     signing_credentials = get_signing_credentials(signing_credentials.secret_key, signing_credentials.passphrase)
+
     if platform != "pgxn":
         package_version = get_package_version_without_release_stage_from_pkgvars(
             input_output_parameters.input_files_dir)
-        write_postgres_versions_into_file(input_output_parameters.input_files_dir, package_version)
+        write_postgres_versions_into_file(input_output_parameters.input_files_dir, package_version, os_name, platform)
 
     if not signing_credentials.passphrase:
         raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")
+    postgress_versions_to_process = release_versions if build_type == BuildType.release else nightly_versions
 
-    postgres_versions = release_versions if build_type == BuildType.release else nightly_versions
-    print(f"Postgres Versions: {str_array_to_str(postgres_versions)}")
+    if platform_postgres_version_source[os_name] == PostgresVersionDockerImageType.single :
+        postgres_docker_extension_iterator = ["all"] 
+    else :
+        postgres_docker_extension_iterator = postgress_versions_to_process
+
     docker_image_name = get_docker_image_name(platform)
     output_sub_folder = get_release_package_folder_name(os_name, os_version)
     input_output_parameters.output_dir = f"{input_output_parameters.output_dir}/{output_sub_folder}"
-    for postgres_version in postgres_versions:
-        print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} started... ")
+    for postgres_docker_extension in postgres_docker_extension_iterator:
+        print(f"Package build for {os_name}-{os_version} for postgres {postgres_docker_extension} started... ")
         build_package(github_token, build_type, docker_image_name,
-                      postgres_version, input_output_parameters, is_test)
-        print(f"Package build for {os_name}-{os_version} for postgres {postgres_version} finished ")
+                      postgres_docker_extension, input_output_parameters, is_test)
+        print(f"Package build for {os_name}-{os_version} for postgres {postgres_docker_extension} finished ")
 
     sign_packages(output_sub_folder, signing_credentials, input_output_parameters)
 
@@ -320,6 +348,25 @@ def get_package_version_from_pkgvars(input_files_dir: str):
 def get_package_version_without_release_stage_from_pkgvars(input_files_dir: str):
     version = get_package_version_from_pkgvars(input_files_dir)
     return tear_release_stage_from_package_version(version)
+
+
+def get_exclude_dict(input_files_dir: str) -> Tuple[Dict, Dict]:
+    exclude_dict_release = {}
+    exclude_dict_nightly = {}
+    exclude_file_path = f"{input_files_dir}/{POSTGRES_EXCLUDE_FILE_NAME}"
+    if os.path.exists(exclude_file_path):
+        with open(exclude_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+                  errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+            yaml_content = yaml.load(reader, yaml.BaseLoader)
+            for os_release, pg_versions in yaml_content['exclude']['release'].items():
+                print(f"{os_release} {pg_versions}")
+                exclude_dict_release[os_release] = \
+                    pg_versions
+            for os_release, pg_versions in yaml_content['exclude']['nightly'].items():
+                print(f"{os_release} {pg_versions}")
+                exclude_dict_nightly[os_release] = \
+                    pg_versions
+    return exclude_dict_release, exclude_dict_nightly
 
 
 def tear_release_stage_from_package_version(package_version: str) -> str:
