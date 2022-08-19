@@ -5,8 +5,7 @@
 set -eux
 
 # import the PostgreSQL repository key
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ACCC4CF8
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 7FCC7D46ACCC4CF8
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 
 # wtf, Google?
 sudo rm -f /etc/apt/sources.list.d/google-chrome*
