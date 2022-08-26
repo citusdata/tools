@@ -19,8 +19,8 @@ if [ "${PGVERSION%%.*}" -gt "14" ]; then
     # add a PostgreSQL testing repository
     echo "Adding test repository"
     # Used tee because of this check: https://github.com/koalaman/shellcheck/wiki/SC2024
-    echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg-testing main ${PGVERSION}" | sudo /etc/apt/sources.list.d/postgresql.list > /dev/null
-    echo "Package: *\nPin: release n=$(lsb_release -cs)-pgdg-testing\nPin-Priority: 600" | sudo /etc/apt/preferences.d/postgresql.pref > /dev/null
+    echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg-testing main ${PGVERSION}" | sudo tee -a /etc/apt/sources.list.d/postgresql.list > /dev/null
+    echo "Package: *\nPin: release n=$(lsb_release -cs)-pgdg-testing\nPin-Priority: 600" | sudo tee -a /etc/apt/preferences.d/postgresql.pref > /dev/null
 fi
 echo "List installed repositories"
 sudo grep -rhE ^deb /etc/apt/sources.list*
