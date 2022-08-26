@@ -18,7 +18,7 @@ sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs
 if [ "${PGVERSION%%.*}" -gt "14" ]; then
     # add a PostgreSQL testing repository
     echo "Adding test repository"
-    sudo sh -Ec 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg-testing main ${PGVERSION}" >> /etc/apt/sources.list.d/postgresql.list'
+    sudo sh -Ec 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg-testing main '${PGVERSION}'" >> /etc/apt/sources.list.d/postgresql.list'
 
     sudo sh -c 'echo "Package: *\nPin: release n=$(lsb_release -cs)-pgdg-testing\nPin-Priority: 600" >> /etc/apt/preferences.d/postgresql.pref'
 fi
