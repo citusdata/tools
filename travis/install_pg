@@ -13,7 +13,7 @@ fi
 
 if [ "${PGVERSION}" -gt "14" ]; then
   libpq_version=$(sudo apt-cache show libpq5 | grep -i Version: | awk -F ' ' 'NR==1{print $2}')
-  packages="postgresql-common postgresql-contrib-${PGVERSION} libedit-dev libpam0g-dev libselinux1-dev libpq >= ${libpq_version} "
+  packages="postgresql-common postgresql-contrib-${PGVERSION} libedit-dev libpam0g-dev libselinux1-dev libpq=${libpq_version} "
 else
   packages="postgresql-common postgresql-contrib-${PGVERSION} libedit-dev libpam0g-dev libselinux1-dev "
 fi
