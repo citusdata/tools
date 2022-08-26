@@ -10,12 +10,11 @@ if [ -n "${USE_CUSTOM_PG:-}" ]; then
 fi
 
 # always install postgresql-common
-
+packages="postgresql-common postgresql-contrib-${PGVERSION} libedit-dev libpam0g-dev libselinux1-dev "
+# libpq dependency could not be resolved properly for beta versions so that forced the version to be installed
 if [ "${PGVERSION}" -gt "14" ]; then
   libpq_version=$(sudo apt-cache show libpq5 | grep -i Version: | awk -F ' ' 'NR==1{print $2}')
-  packages="postgresql-common postgresql-contrib-${PGVERSION} libedit-dev libpam0g-dev libselinux1-dev libpq=${libpq_version} "
-else
-  packages="postgresql-common postgresql-contrib-${PGVERSION} libedit-dev libpam0g-dev libselinux1-dev "
+  packages="${packages} libpq5=${libpq_version} "
 fi
 
 
