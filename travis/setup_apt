@@ -15,12 +15,16 @@ sudo rm -f /etc/apt/sources.list.d/pgdg.list
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" >> /etc/apt/sources.list.d/postgresql.list'
 
 # need testing repository after version 14
-if [ "${PGVERSION%%.*}" -gt '14' ]; then
+if [ "${PGVERSION%%.*}" -gt "14" ]; then
     # add a PostgreSQL testing repository
+    echo "Adding test repository"
     sudo sh -Ec 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg-testing main ${PGVERSION}" >> /etc/apt/sources.list.d/postgresql.list'
 
     sudo sh -c 'echo "Package: *\nPin: release n=$(lsb_release -cs)-pgdg-testing\nPin-Priority: 600" >> /etc/apt/preferences.d/postgresql.pref'
 fi
+echo "List installed repositories"
+sudo grep -rhE ^deb /etc/apt/sources.list*
+echo "-------"
 
 # update package index files from sources
 sudo apt-get update -qq
