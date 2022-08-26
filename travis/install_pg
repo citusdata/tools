@@ -10,9 +10,9 @@ if [ -n "${USE_CUSTOM_PG:-}" ]; then
 fi
 
 # always install postgresql-common
-packages="postgresql-common postgresql-contrib-$PGVERSION libedit-dev libpam0g-dev libselinux1-dev"
+packages="postgresql-common postgresql-contrib-${PGVERSION} libedit-dev libpam0g-dev libselinux1-dev"
 
-packages="$packages postgresql-$PGVERSION postgresql-server-dev-$PGVERSION"
+packages="$packages postgresql-${PGVERSION} postgresql-client-${PGVERSION} postgresql-server-dev-${PGVERSION}"
 
 # shellcheck disable=SC2086
 sudo apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install $packages
