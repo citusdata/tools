@@ -14,7 +14,8 @@ packages="postgresql-common postgresql-contrib-${PGVERSION} libedit-dev libpam0g
 # libpq dependency could not be resolved properly for beta versions so that forced the version to be installed
 if [ "${PGVERSION}" -gt "14" ]; then
   libpq_version=$(sudo apt-cache show libpq5 | grep -i Version: | awk -F ' ' 'NR==1{print $2}')
-  packages="${packages} libpq5=${libpq_version} "
+  libpq_dev_version=$(sudo apt-cache show libpq-dev | grep -i Version: | awk -F ' ' 'NR==1{print $2}')
+  packages="${packages} libpq5=${libpq_version} libpq-dev=${libpq_dev_version}"
 fi
 
 
