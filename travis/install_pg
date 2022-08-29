@@ -10,9 +10,8 @@ if [ -n "${USE_CUSTOM_PG:-}" ]; then
 fi
 
 # Read properties files for common properties for tools
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-BASE_DIR=$(builtin cd "${SCRIPT_DIR}";builtin cd ..; pwd )
-source "${BASE_DIR}"/toolsvars
+TOOLS_DIR=${1:-"${SCRIPTPATH}"}
+source "${TOOLS_DIR}"/toolsvars
 
 # always install postgresql-common
 packages="postgresql-common postgresql-contrib-${PGVERSION} libedit-dev libpam0g-dev libselinux1-dev "
