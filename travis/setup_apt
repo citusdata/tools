@@ -5,9 +5,8 @@
 set -eux
 
 # Read properties files for common properties for tools
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-BASE_DIR=$(builtin cd "${SCRIPT_DIR}";builtin cd ..; pwd )
-source "${BASE_DIR}"/toolsvars
+TOOLS_DIR=${1:-"."}
+source "${TOOLS_DIR}"/toolsvars
 
 # import the PostgreSQL repository key
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
