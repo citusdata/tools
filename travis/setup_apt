@@ -4,8 +4,9 @@
 
 set -eux
 
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 # Read properties files for common properties for tools
-TOOLS_DIR=${1:-"."}
+TOOLS_DIR=${1:-"${SCRIPTPATH}"}
 source "${TOOLS_DIR}"/toolsvars
 
 # import the PostgreSQL repository key
