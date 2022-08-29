@@ -9,10 +9,16 @@ if [ -n "${USE_CUSTOM_PG:-}" ]; then
     exit
 fi
 
+# Read properties files for common properties for tools
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+BASE_DIR=$(builtin cd "${SCRIPT_DIR}";builtin cd ..; pwd )
+source "${BASE_DIR}"/toolsvars
+
 # always install postgresql-common
 packages="postgresql-common postgresql-contrib-${PGVERSION} libedit-dev libpam0g-dev libselinux1-dev "
+
 # libpq dependency could not be resolved properly for beta versions so that forced the version to be installed
-if [ "${PGVERSION}" -gt "14" ]; then
+if [ "${PGVERSION}" -gt "${LATEST_STABLE_PG_VERSION}" ]; then
   libpq_version=$(sudo apt-cache show libpq5 | grep -i Version: | awk -F ' ' 'NR==1{print $2}')
   libpq_dev_version=$(sudo apt-cache show libpq-dev | grep -i Version: | awk -F ' ' 'NR==1{print $2}')
   packages="${packages} libpq5=${libpq_version} libpq-dev=${libpq_dev_version}"

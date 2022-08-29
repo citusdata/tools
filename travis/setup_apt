@@ -4,6 +4,11 @@
 
 set -eux
 
+# Read properties files for common properties for tools
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+BASE_DIR=$(builtin cd "${SCRIPT_DIR}";builtin cd ..; pwd )
+source "${BASE_DIR}"/toolsvars
+
 # import the PostgreSQL repository key
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 
@@ -14,17 +19,15 @@ sudo rm -f /etc/apt/sources.list.d/pgdg.list
 # add the PostgreSQL repository
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" >> /etc/apt/sources.list.d/postgresql.list'
 
-# need testing repository after version 14
-if [ "${PGVERSION%%.*}" -gt "14" ]; then
+# since pg14 is the latest stable postgres version,we need to install beta version repo
+# after pg 15 become stable change this parameter into 15
+if [ "${PGVERSION%%.*}" -gt "${LATEST_STABLE_PG_VERSION}" ]; then
     # add a PostgreSQL testing repository
     echo "Adding test repository"
     # Used tee because of this check: https://github.com/koalaman/shellcheck/wiki/SC2024
     echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg-testing main ${PGVERSION}" | sudo tee -a /etc/apt/sources.list.d/postgresql.list > /dev/null
-#    echo "Package: *\nPin: release n=$(lsb_release -cs)-pgdg-testing\nPin-Priority: 600" | sudo tee -a /etc/apt/preferences.d/postgresql.pref > /dev/null
+    echo "Package: *\nPin: release n=$(lsb_release -cs)-pgdg-testing\nPin-Priority: 600" | sudo tee -a /etc/apt/preferences.d/postgresql.pref > /dev/null
 fi
-echo "List installed repositories"
-sudo grep -rhE ^deb /etc/apt/sources.list*
-echo "-------"
 
 # update package index files from sources
 sudo apt-get update -qq
