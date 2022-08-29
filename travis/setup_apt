@@ -4,8 +4,9 @@
 
 set -eux
 
-SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
 # Read properties files for common properties for tools
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 TOOLS_DIR=${1:-"${SCRIPTPATH}"}
 source "${TOOLS_DIR}"/toolsvars
 
