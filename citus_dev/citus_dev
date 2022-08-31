@@ -58,6 +58,8 @@ def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
 
     run(f"echo \"shared_preload_libraries = '{shared_preload_libraries}'\" >> {clustername}/{nodename}/postgresql.conf")
     run(f'echo "wal_level = logical" >> {clustername}/{nodename}/postgresql.conf')
+    run(f'echo "fsync = off" >> {clustername}/{nodename}/postgresql.conf')
+    run(f'echo "citus.node_conninfo = \'keepalives=1 keepalives_idle=30 keepalives_interval=20 keepalives_count=2 tcp_user_timeout=10000 connect_timeout=20 sslmode=require\'" >> {clustername}/{nodename}/postgresql.conf')
 
     if usessl:
         run(f'echo "ssl = on" >> {clustername}/{nodename}/postgresql.conf')
