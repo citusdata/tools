@@ -206,7 +206,7 @@ def main(arguments):
 
 
         if arguments['--init-with']:
-            run(f'psql -p {cport} -f {arguments["--init-with"]} -v ON_ERROR_STOP=1')
+            run(f'psql -p {cport} -f {arguments["--init-with"]} -v ON_ERROR_STOP=1 -v master_port={cport} -v worker_1_port={cport+1} -v worker_2_port={cport+2} --echo-all')
         if arguments['--init-worker-with']:
             for i in range(size):
                 workerport = port + 1 + i
