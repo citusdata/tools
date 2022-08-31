@@ -53,7 +53,7 @@ def get_filtered_package_count(session) -> int:
     # Since package count for our test repo is lower than 100, we get the total package details by getting all the
     # packages in one call
     result = stat_get_request(
-        package_list_with_pagination_request_address(PACKAGE_CLOUD_PARAMETERS, 1, 200),
+        package_list_with_pagination_request_address(PACKAGE_CLOUD_PARAMETERS, 1, 500),
         RequestType.package_cloud_list_package, session)
     package_info_list = json.loads(result.content)
     package_list = list(filter(
