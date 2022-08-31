@@ -108,7 +108,6 @@ def createPgBouncerConfig(clustername, port, index):
 postgres = host=127.0.0.1 port={workerPort}
 
 [pgbouncer]
-application_name_add_host = 1
 pool_mode = transaction
 listen_port = {bouncerPort}
 listen_addr = *
