@@ -20,8 +20,8 @@ sudo rm -f /etc/apt/sources.list.d/pgdg.list
 # add the PostgreSQL repository
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" >> /etc/apt/sources.list.d/postgresql.list'
 
-# since pg14 is the latest stable postgres version,we need to install beta version repo
-# after pg 15 become stable change this parameter into 15
+# Since pg14 is the latest stable postgres version, we need to install beta version repo.
+# After pg 15 become stable change this parameter into 15.
 if [ "${PGVERSION%%.*}" -gt "${LATEST_STABLE_PG_VERSION}" ]; then
     # add a PostgreSQL testing repository
     echo "Adding test repository"
