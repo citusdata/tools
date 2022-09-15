@@ -65,7 +65,7 @@ sub get_sorted_prs {
     my $page_number = 1;
     $merged_date = "2100-12-12";
     do {
-        my $prs_text = `curl -H "Accept: application/vnd.github.v3.full+json" -X GET --user "$github_token:x-oauth-basic" 'https://api.github.com/repos/citusdata/$repo_name/pulls?base=master&state=all&page=$page_number' 2> /dev/null`;
+        my $prs_text = `curl -H "Accept: application/vnd.github.v3.full+json" -X GET --user "$github_token:x-oauth-basic" 'https://api.github.com/repos/citusdata/$repo_name/pulls?state=all&page=$page_number' 2> /dev/null`;
         my @prs = @{decode_json($prs_text)};
 
         foreach my $pr (@prs) {
