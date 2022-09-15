@@ -100,7 +100,7 @@ def test_replace_line_in_file():
                   errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
             content = reader.read()
             lines = content.splitlines()
-            assert lines[5] == replace_str
+            assert lines[6] == replace_str
     finally:
         os.remove(copy_file_path)
 
