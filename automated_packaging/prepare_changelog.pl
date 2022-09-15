@@ -25,10 +25,10 @@ sub add_changelog_header() {
 
 $github_token = get_and_verify_token();
 
-# Checkout the master branch
-`git checkout master`;
+# Checkout the main branch
+`git checkout main`;
 
-# Now create a new branch based on master
+# Now create a new branch based on main
 `git checkout -b $PROJECT-$NEW_VERSION-changelog-$curTime`;
 
 # Read the current changelog
@@ -49,4 +49,4 @@ close(CHANGELOG_FILE);
 # Commit and push the changes, then open a PR
 `git commit -a -m "Add changelog entry for $NEW_VERSION"`;
 `git push origin $PROJECT-$NEW_VERSION-changelog-$curTime`;
-`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump $PROJECT to $NEW_VERSION\", \"base\":\"master\", \"head\":\"$PROJECT-$NEW_VERSION-changelog-$curTime\"}' https://api.github.com/repos/citusdata/$PROJECT/pulls`;
+`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump $PROJECT to $NEW_VERSION\", \"base\":\"main\", \"head\":\"$PROJECT-$NEW_VERSION-changelog-$curTime\"}' https://api.github.com/repos/citusdata/$PROJECT/pulls`;
