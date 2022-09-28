@@ -4,23 +4,30 @@
 
 set -eux
 
+
+# Read properties files for common properties for tools
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+TOOLS_DIR=${1:-"${SCRIPTPATH}"}
+source "${TOOLS_DIR}"/toolsvars
+
 # import the PostgreSQL repository key
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ACCC4CF8
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 7FCC7D46ACCC4CF8
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 
 # wtf, Google?
 sudo rm -f /etc/apt/sources.list.d/google-chrome*
 sudo rm -f /etc/apt/sources.list.d/pgdg.list
 
-# add the PostgreSQL 13 repository
-sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main 13" >> /etc/apt/sources.list.d/postgresql.list'
+# add the PostgreSQL repository
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" >> /etc/apt/sources.list.d/postgresql.list'
 
-# need testing repository after version 13
-if [ "${PGVERSION%%.*}" -gt '13' ]; then
+# Since pg14 is the latest stable postgres version, we need to install beta version repo.
+# After pg 15 become stable change this parameter into 15.
+if [ "${PGVERSION%%.*}" -gt "${LATEST_STABLE_PG_VERSION}" ]; then
     # add a PostgreSQL testing repository
-    sudo sh -Ec 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg-testing main ${PGVERSION}" >> /etc/apt/sources.list.d/postgresql.list'
-
-    sudo sh -c 'echo "Package: *\nPin: release n=$(lsb_release -cs)-pgdg-testing\nPin-Priority: 600" >> /etc/apt/preferences.d/postgresql.pref'
+    echo "Adding test repository"
+    # Used tee because of this check: https://github.com/koalaman/shellcheck/wiki/SC2024
+    echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg-testing main ${PGVERSION}" | sudo tee -a /etc/apt/sources.list.d/postgresql.list > /dev/null
+    echo "Package: *\nPin: release n=$(lsb_release -cs)-pgdg-testing\nPin-Priority: 600" | sudo tee -a /etc/apt/preferences.d/postgresql.pref > /dev/null
 fi
 
 # update package index files from sources
