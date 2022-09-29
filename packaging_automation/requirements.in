@@ -16,4 +16,4 @@ urllib3
 wheel
 python-dotenv
 prospector[with_everything]
-setuptools==58
+setuptools==65.4.0
