@@ -91,7 +91,7 @@ pycodestyle==2.6.0
     #   prospector
 pycparser==2.20
     # via cffi
-pycurl==7.43.0.6
+pycurl==7.45.1
     # via -r requirements.in
 pydocstyle==6.1.1
     # via prospector
