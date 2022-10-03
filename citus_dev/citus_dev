@@ -2,7 +2,7 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer] [--with-shared-preload-libs=<lib1,lib2...>]
   citus_dev restart <name> [--watch] [--port=<port>]
   citus_dev (start|stop) <name> [--port=<port>] [--force]
 
@@ -18,6 +18,7 @@ Options:
   --init-worker-with=<sql_file>   A SQL script to run after creation of the cluster on the workers
   --with-pgbouncer         Setup pgbouncers between worker and coordinator (requires citus enterprise)
   --force                  Forceful shutdown
+  --with-shared-preload-libs=<lib1,lib2...>   Comma separated list of extra shared preload libraries to be added to postgresql.conf of each node
 
 """
 from docopt import docopt
@@ -45,7 +46,7 @@ def run(command, *args, **kwargs):
     return result
 
 
-def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
+def createNodeCommands(clustername, role, index=None, usessl=False, mx=False, extra_preload_libraries=None):
     nodename = role
     if index != None:
         nodename += "%d" % index
@@ -53,6 +54,9 @@ def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
     run(f"initdb -D {clustername}/{nodename}")
 
     shared_preload_libraries = ['citus', 'pg_stat_statements']
+    
+    if extra_preload_libraries:
+        shared_preload_libraries.extend(extra_preload_libraries)
 
     shared_preload_libraries = ','.join(shared_preload_libraries)
 
@@ -110,13 +114,17 @@ def main(arguments):
         if arguments['--destroy']:
             stopCluster(clustername, True)
             run(f'rm -rf {clustername}')
-
+        
+        extra_preload_libraries = []
+        if arguments["--with-shared-preload-libs"]:
+            extra_preload_libraries = arguments["--with-shared-preload-libs"]
 
         createNodeCommands(
             clustername,
             "coordinator",
             usessl=arguments["--use-ssl"],
             mx=arguments["--mx"],
+            extra_preload_libraries=extra_preload_libraries
         )
 
         port = int(arguments["--port"])
@@ -133,6 +141,7 @@ def main(arguments):
                 i,
                 usessl=arguments["--use-ssl"],
                 mx=arguments["--mx"],
+                extra_preload_libraries=extra_preload_libraries
             )
             if pgbouncer:
                 createPgBouncerConfig(clustername, port, i)
