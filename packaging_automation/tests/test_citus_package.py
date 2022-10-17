@@ -48,7 +48,7 @@ PACKAGING_BRANCH_NAME = os.getenv("PACKAGING_BRANCH_NAME", "all-citus-unit-tests
 def get_required_package_count(input_files_dir: str, platform: str):
     release_versions, _ = get_postgres_versions(platform=platform,
                                                 input_files_dir=input_files_dir)
-    print(f"get_required_package_count: Relase versions:{release_versions}:{single_postgres_package_counts[platform]}")
+    print(f"get_required_package_count: Release versions:{release_versions}:{single_postgres_package_counts[platform]}")
     return len(release_versions) * single_postgres_package_counts[platform]
 
 
@@ -99,7 +99,7 @@ def test_build_packages():
 
 
 def test_get_required_package_count():
-    assert get_required_package_count(input_files_dir=PACKAGING_EXEC_FOLDER, platform="el/8") == 9
+    assert get_required_package_count(input_files_dir=PACKAGING_EXEC_FOLDER, platform="el/8") == 6
 
 
 def test_decode_os_packages():
