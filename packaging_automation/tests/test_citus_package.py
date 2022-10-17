@@ -94,12 +94,12 @@ def test_build_packages():
             platform=PLATFORM)
         assert os.path.exists(postgres_version_file_path)
         config = dotenv_values(postgres_version_file_path)
-        assert config["release_versions"] == "13,14"
+        assert config["release_versions"] == "12,13,14"
         assert config["nightly_versions"] == "13,14"
 
 
 def test_get_required_package_count():
-    assert get_required_package_count(input_files_dir=PACKAGING_EXEC_FOLDER, platform="el/8") == 6
+    assert get_required_package_count(input_files_dir=PACKAGING_EXEC_FOLDER, platform="el/8") == 9
 
 
 def test_decode_os_packages():
