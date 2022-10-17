@@ -7,7 +7,7 @@ from ..common_tool_methods import (run, get_version_details, DEFAULT_ENCODING_FO
                                    DEFAULT_UNICODE_ERROR_HANDLER)
 from dotenv import dotenv_values
 from ..update_docker import (update_docker_file_for_latest_postgres, update_regular_docker_compose_file,
-                             update_docker_file_alpine, update_docker_file_for_postgres12,
+                             update_docker_file_alpine, update_docker_file_for_postgres14,
                              update_docker_file_for_postgres13, update_changelog)
 
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
@@ -69,8 +69,8 @@ def test_update_docker_file_alpine():
         assert len(lines) == 56
 
 
-def test_update_docker_file_for_postgres12():
-    update_docker_file_for_postgres12(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_12_VERSION)
+def test_update_docker_file_for_postgres14():
+    update_docker_file_for_postgres14(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_12_VERSION)
     with open(f"{TEST_BASE_PATH}/postgres-12/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
