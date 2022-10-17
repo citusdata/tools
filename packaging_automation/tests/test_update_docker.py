@@ -13,9 +13,10 @@ from ..update_docker import (update_docker_file_for_latest_postgres, update_regu
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 TEST_BASE_PATH = f"{BASE_PATH}/docker"
 PROJECT_VERSION = "10.0.3"
-POSTGRES_14_VERSION = "14.1"
-POSTGRES_13_VERSION = "13.5"
-POSTGRES_12_VERSION = "12.9"
+
+POSTGRES_14_VERSION = "14.5"
+POSTGRES_13_VERSION = "13.8"
+
 PROJECT_NAME = "citus"
 version_details = get_version_details(PROJECT_VERSION)
 TEMPLATE_PATH = f"{BASE_PATH}/packaging_automation/templates/docker"
@@ -70,12 +71,12 @@ def test_update_docker_file_alpine():
 
 
 def test_update_docker_file_for_postgres14():
-    update_docker_file_for_postgres14(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_12_VERSION)
-    with open(f"{TEST_BASE_PATH}/postgres-12/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+    update_docker_file_for_postgres14(PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_14_VERSION)
+    with open(f"{TEST_BASE_PATH}/postgres-14/Dockerfile", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
         lines = content.splitlines()
-        assert lines[2].strip() == f"FROM postgres:{POSTGRES_12_VERSION}"
+        assert lines[2].strip() == f"FROM postgres:{POSTGRES_14_VERSION}"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert f"postgresql-$PG_MAJOR-{PROJECT_NAME}-" \
                f"{version_details['major']}.{version_details['minor']}=$CITUS_VERSION" in lines[21]
