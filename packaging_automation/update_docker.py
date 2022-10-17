@@ -28,7 +28,7 @@ class SupportedDockerImages(Enum):
 docker_templates = {SupportedDockerImages.latest: "latest/latest.tmpl.dockerfile",
                     SupportedDockerImages.docker_compose: "latest/docker-compose.tmpl.yml",
                     SupportedDockerImages.alpine: "alpine/alpine.tmpl.dockerfile",
-                    SupportedDockerImages.postgres13: "postgres-12/postgres-13.tmpl.dockerfile",
+                    SupportedDockerImages.postgres13: "postgres-13/postgres-13.tmpl.dockerfile",
                     SupportedDockerImages.postgres14: "postgres-13/postgres-14.tmpl.dockerfile"}
 
 docker_outputs = {SupportedDockerImages.latest: "Dockerfile",
