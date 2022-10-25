@@ -96,20 +96,17 @@ def create_directory_if_not_exists(dest_file_name):
         os.makedirs(dir_name)
 
 
-def get_new_changelog_entry(project_version: str, postgres_version: str = ""):
+def get_new_changelog_entry(project_version: str):
     header = f"### citus-docker v{project_version}.docker ({datetime.strftime(datetime.now(), '%B %d,%Y')}) ###\n"
     citus_bump_str = f"\n* Bump Citus version to {project_version}\n"
-    postgres_bump_str = f"\n* Bump PostgreSQL version to {postgres_version}\n"
 
     changelog_entry = f"{header}{citus_bump_str}"
-    if postgres_version:
-        changelog_entry = f"{changelog_entry}{postgres_bump_str}"
     changelog_entry = f"{changelog_entry}\n"
     return changelog_entry
 
 
-def update_changelog(project_version: str, exec_path: str, postgres_version: str = ""):
-    latest_changelog = get_new_changelog_entry(project_version, postgres_version)
+def update_changelog(project_version: str, exec_path: str):
+    latest_changelog = get_new_changelog_entry(project_version)
     changelog_file_path = f"{exec_path}/CHANGELOG.md"
     with open(changelog_file_path, "r+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
@@ -136,15 +133,12 @@ def update_all_docker_files(project_version: str, exec_path: str):
     update_docker_file_alpine(project_version, template_path, exec_path, latest_postgres_version)
     update_docker_file_for_postgres13(project_version, template_path, exec_path, postgres_13_version)
     update_docker_file_for_postgres14(project_version, template_path, exec_path, postgres_14_version)
-    update_changelog(project_version, exec_path, latest_postgres_version)
+    update_changelog(project_version, exec_path)
 
 
 def read_postgres_versions(pkgvars_file: str) -> Tuple[str, str, str]:
-    if os.path.exists(pkgvars_file):
-        config = dotenv_values(pkgvars_file)
-        return config["postgres_15_version"], config["postgres_14_version"], config["postgres_13_version"]
-
-    return "14.1", "13.5", "12.9"
+    config = dotenv_values(pkgvars_file)
+    return config["postgres_15_version"], config["postgres_14_version"], config["postgres_13_version"]
 
 
 CHECKOUT_DIR = "docker_temp"
@@ -169,8 +163,13 @@ if __name__ == "__main__":
     os.chdir(execution_path)
     pr_branch = f"release-{args.prj_ver}-{uuid.uuid4()}"
     run(f"git checkout -b {pr_branch}")
+
     update_all_docker_files(args.prj_ver, execution_path)
     run("git add .")
+
+    # git add command tries to add all the files, including cloned tools repo as submodule which is not needed
+    # this command removes the submodule from the commit
+    run("git rm -f --cached tools")
 
     commit_message = f"Bump docker to version {args.prj_ver}"
     run(f'git commit -m "{commit_message}"')
