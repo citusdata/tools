@@ -165,11 +165,7 @@ if __name__ == "__main__":
     run(f"git checkout -b {pr_branch}")
 
     update_all_docker_files(args.prj_ver, execution_path)
-    run("git add .")
-
-    # git add command tries to add all the files, including cloned tools repo as submodule which is not needed
-    # this command removes the submodule from the commit
-    run("git rm -f --cached tools")
+    run("git add --update .")
 
     commit_message = f"Bump docker to version {args.prj_ver}"
     run(f'git commit -m "{commit_message}"')
