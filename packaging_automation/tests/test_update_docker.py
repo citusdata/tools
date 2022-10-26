@@ -97,7 +97,7 @@ def test_update_docker_file_for_postgres13():
 
 
 def test_update_changelog_with_postgres():
-    update_changelog(PROJECT_VERSION, TEST_BASE_PATH, POSTGRES_14_VERSION)
+    update_changelog(PROJECT_VERSION, TEST_BASE_PATH)
     with open(f"{TEST_BASE_PATH}/CHANGELOG.md", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
@@ -105,11 +105,9 @@ def test_update_changelog_with_postgres():
         assert lines[0] == f"### citus-docker v{PROJECT_VERSION}.docker " \
                            f"({datetime.strftime(datetime.now(), '%B %d,%Y')}) ###"
         assert lines[2] == f"* Bump Citus version to {PROJECT_VERSION}"
-        assert lines[4] == f"* Bump PostgreSQL version to {POSTGRES_14_VERSION}"
 
 
 def test_update_changelog_without_postgres():
-    update_changelog(PROJECT_VERSION, TEST_BASE_PATH, "")
     with open(f"{TEST_BASE_PATH}/CHANGELOG.md", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         content = reader.read()
@@ -117,11 +115,10 @@ def test_update_changelog_without_postgres():
         assert lines[0] == f"### citus-docker v{PROJECT_VERSION}.docker " \
                            f"({datetime.strftime(datetime.now(), '%B %d,%Y')}) ###"
         assert lines[2] == f"* Bump Citus version to {PROJECT_VERSION}"
-        assert not lines[4].startswith("* Bump PostgreSQL version to")
 
 
 def test_pkgvar_postgres_version_existence():
     config = dotenv_values(PKGVARS_FILE)
+    assert config["postgres_15_version"]
     assert config["postgres_14_version"]
     assert config["postgres_13_version"]
-    assert config["postgres_12_version"]
