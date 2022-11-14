@@ -32,6 +32,9 @@ POSTGRES_EXCLUDE_FILE_NAME = "pg_exclude.yml"
 
 docker_image_names = {
     "almalinux": "almalinux",
+    "rockylinux": "almalinux",
+    "elnew": "almalinux",
+    "olnew": "almalinux",
     "debian": "debian",
     "el": "centos",
     "ol": "oraclelinux",
@@ -307,9 +310,9 @@ def build_packages(github_token: non_empty(non_blank(str)),
         raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")
     postgress_versions_to_process = release_versions if build_type == BuildType.release else nightly_versions
 
-    if platform_postgres_version_source[os_name] == PostgresVersionDockerImageType.single :
-        postgres_docker_extension_iterator = ["all"] 
-    else :
+    if platform_postgres_version_source[os_name] == PostgresVersionDockerImageType.single:
+        postgres_docker_extension_iterator = ["all"]
+    else:
         postgres_docker_extension_iterator = postgress_versions_to_process
 
     docker_image_name = get_docker_image_name(platform)
