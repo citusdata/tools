@@ -33,9 +33,9 @@ POSTGRES_EXCLUDE_FILE_NAME = "pg_exclude.yml"
 docker_image_names = {
     "almalinux": "almalinux",
     "rockylinux": "almalinux",
-    "elnew": "almalinux",
-    "olnew": "almalinux",
     "debian": "debian",
+    "el/9": "almalinux-9",
+    "ol/9": "almalinux-9",
     "el": "centos",
     "ol": "oraclelinux",
     "ubuntu": "ubuntu",
@@ -283,6 +283,8 @@ def get_release_package_folder_name(os_name: str, os_version: str) -> str:
 
 
 def get_docker_image_name(platform: str):
+    if platform in docker_image_names.keys():
+        return docker_image_names[platform]
     os_name, os_version = decode_os_and_release(platform)
     return f'{docker_image_names[os_name]}-{os_version}' if os_version else f'{docker_image_names[os_name]}'
 

@@ -40,9 +40,7 @@ supported_platforms = {
     "debian": ["bullseye", "buster", "stretch", "jessie", "wheezy"],
     "almalinux": ["9"],
     "el": ["8", "7", "6"],
-    "elnew": ["9"],
     "ol": ["7", "8"],
-    "olnew": ["9"],
     "ubuntu": ["focal", "bionic", "trusty","jammy"]
 }
 

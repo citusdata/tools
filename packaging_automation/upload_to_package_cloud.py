@@ -12,10 +12,10 @@ from requests.auth import HTTPBasicAuth
 supported_distros = {
     "el/7": 140,
     "el/8": 205,
-    "elnew/9": 240,
+    "el/9": 240,
     "ol/7": 146,
     "ol/8": 234,
-    "olnew/9": 244,
+    "ol/9": 244,
     "debian/bullseye": 207,
     "debian/buster": 150,
     "debian/stretch": 149,
