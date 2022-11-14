@@ -38,6 +38,7 @@ referenced_repos: List[Repo] = []
 
 supported_platforms = {
     "debian": ["bullseye", "buster", "stretch", "jessie", "wheezy"],
+    "almalinux": ["9"],
     "el": ["8", "7", "6"],
     "ol": ["7", "8"],
     "ubuntu": ["focal", "bionic", "trusty","jammy"]

@@ -31,6 +31,7 @@ POSTGRES_MATRIX_FILE_NAME = "postgres-matrix.yml"
 POSTGRES_EXCLUDE_FILE_NAME = "pg_exclude.yml"
 
 docker_image_names = {
+    "almalinux": "almalinux",
     "debian": "debian",
     "el": "centos",
     "ol": "oraclelinux",
@@ -39,6 +40,7 @@ docker_image_names = {
 }
 
 package_docker_platform_dict = {
+    "almalinux,9": "almalinux/9",
     "centos,8": "el/8",
     "centos,7": "el/7",
     "debian,bullseye": "debian/bullseye",
@@ -71,6 +73,7 @@ class PostgresVersionDockerImageType(Enum):
 platform_postgres_version_source = {
     "el": PostgresVersionDockerImageType.multiple,
     "ol": PostgresVersionDockerImageType.multiple,
+    "almalinux": PostgresVersionDockerImageType.multiple,
     "debian": PostgresVersionDockerImageType.single,
     "ubuntu": PostgresVersionDockerImageType.single,
     "pgxn": PostgresVersionDockerImageType.single
