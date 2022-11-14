@@ -33,6 +33,7 @@ class TestPlatform(Enum):
     debian_stretch = {"name": "debian/stretch", "docker_image_name": "debian-stretch"}
     ubuntu_bionic = {"name": "ubuntu/bionic", "docker_image_name": "ubuntu-bionic"}
     ubuntu_focal = {"name": "ubuntu/focal", "docker_image_name": "ubuntu-focal"}
+    ubuntu_jammy = {"name": "ubuntu/jammy", "docker_image_name": "ubuntu-jammy"}
     undefined = {"name": "undefined", "docker_image_name": "undefined"}
 
 

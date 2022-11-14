@@ -1,4 +1,4 @@
-FROM ubuntu:bionic
+FROM ubuntu:jammy
 ARG CITUS_VERSION
 # FOrmat should be XY and should not include dots e.g for 10.2.1=>102
 ARG CITUS_MAJOR_VERSION
