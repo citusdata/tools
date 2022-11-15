@@ -37,10 +37,10 @@ DEFAULT_UNICODE_ERROR_HANDLER = "surrogateescape"
 referenced_repos: List[Repo] = []
 
 supported_platforms = {
-    "debian": ["bullseye", "buster", "stretch", "jessie", "wheezy"],
+    "debian": ["bookworm", "bullseye", "buster", "stretch", "jessie", "wheezy"],
     "el": ["8", "7", "6"],
     "ol": ["7", "8"],
-    "ubuntu": ["focal", "bionic", "trusty","jammy"]
+    "ubuntu": ["focal", "bionic", "trusty", "jammy", "kinetic"]
 }
 
 
@@ -395,7 +395,7 @@ def remove_cloned_code(exec_path: str):
 
 
 def process_template_file_with_minor(project_version: str, templates_path: str, template_file_path: str,
-                                     minor_version: str,postgres_version: str = ""):
+                                     minor_version: str, postgres_version: str = ""):
     ''' This function gets the template files, changes tha parameters inside the file and returns the output.
         Template files are stored under packaging_automation/templates and these files include parametric items in the
         format of {{parameter_name}}. This function is used while creating docker files and pgxn files which include

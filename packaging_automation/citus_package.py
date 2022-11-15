@@ -41,6 +41,7 @@ docker_image_names = {
 package_docker_platform_dict = {
     "centos,8": "el/8",
     "centos,7": "el/7",
+    "debian,bookworm": "debian/bookworm",
     "debian,bullseye": "debian/bullseye",
     "debian,buster": "debian/buster",
     "debian,stretch": "debian/stretch",
@@ -50,6 +51,7 @@ package_docker_platform_dict = {
     "ubuntu,focal": "ubuntu/focal",
     "ubuntu,bionic": "ubuntu/bionic",
     "ubuntu,jammy": "ubuntu/jammy",
+    "ubuntu,kinetic": "ubuntu/kinetic",
     "pgxn": "pgxn"
 }
 
