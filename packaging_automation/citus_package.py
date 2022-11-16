@@ -31,7 +31,11 @@ POSTGRES_MATRIX_FILE_NAME = "postgres-matrix.yml"
 POSTGRES_EXCLUDE_FILE_NAME = "pg_exclude.yml"
 
 docker_image_names = {
+    "almalinux": "almalinux",
+    "rockylinux": "almalinux",
     "debian": "debian",
+    "el/9": "almalinux-9",
+    "ol/9": "almalinux-9",
     "el": "centos",
     "ol": "oraclelinux",
     "ubuntu": "ubuntu",
@@ -39,6 +43,7 @@ docker_image_names = {
 }
 
 package_docker_platform_dict = {
+    "almalinux,9": "almalinux/9",
     "centos,8": "el/8",
     "centos,7": "el/7",
     "debian,bookworm": "debian/bookworm",
@@ -73,6 +78,7 @@ class PostgresVersionDockerImageType(Enum):
 platform_postgres_version_source = {
     "el": PostgresVersionDockerImageType.multiple,
     "ol": PostgresVersionDockerImageType.multiple,
+    "almalinux": PostgresVersionDockerImageType.multiple,
     "debian": PostgresVersionDockerImageType.single,
     "ubuntu": PostgresVersionDockerImageType.single,
     "pgxn": PostgresVersionDockerImageType.single
@@ -277,8 +283,14 @@ def build_package(github_token: non_empty(non_blank(str)),
 def get_release_package_folder_name(os_name: str, os_version: str) -> str:
     return f"{os_name}-{os_version}"
 
-
+# Gets the docker image name for the given platform.
+# Normally, the docker image name has one to one matching with os name.
+# However, there are some exceptions for this rule. For example, docker image name for both el-9 and ol-9 is
+# almalinux-9. This is because, both el/9 and ol/9 platforms can use packages built on almalinux-9 docker image.
 def get_docker_image_name(platform: str):
+
+    if platform in docker_image_names.keys():
+        return docker_image_names[platform]
     os_name, os_version = decode_os_and_release(platform)
     return f'{docker_image_names[os_name]}-{os_version}' if os_version else f'{docker_image_names[os_name]}'
 
@@ -306,9 +318,9 @@ def build_packages(github_token: non_empty(non_blank(str)),
         raise ValueError("PACKAGING_PASSPHRASE should not be null or empty")
     postgress_versions_to_process = release_versions if build_type == BuildType.release else nightly_versions
 
-    if platform_postgres_version_source[os_name] == PostgresVersionDockerImageType.single :
-        postgres_docker_extension_iterator = ["all"] 
-    else :
+    if platform_postgres_version_source[os_name] == PostgresVersionDockerImageType.single:
+        postgres_docker_extension_iterator = ["all"]
+    else:
         postgres_docker_extension_iterator = postgress_versions_to_process
 
     docker_image_name = get_docker_image_name(platform)
