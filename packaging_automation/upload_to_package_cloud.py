@@ -14,12 +14,15 @@ supported_distros = {
     "el/8": 205,
     "ol/7": 146,
     "ol/8": 234,
-    "debian/bullseye": 207,
-    "debian/buster": 150,
     "debian/stretch": 149,
-    "ubuntu/focal": 210,
+    "debian/buster": 150,
+    "debian/bullseye": 207,
+    "debian/bookworm": 215,
     "ubuntu/bionic": 190,
-    "ubuntu/jammy": 237
+    "ubuntu/focal": 210,
+    "ubuntu/jammy": 237,
+    # TODO: Ubuntu kinetic is not supported yet in packagecloud. We should add it, when it is supported
+    # "ubuntu/kinetic": xxx
 }
 
 supported_repos = ["citus-bot/sample",
