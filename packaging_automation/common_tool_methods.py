@@ -37,11 +37,11 @@ DEFAULT_UNICODE_ERROR_HANDLER = "surrogateescape"
 referenced_repos: List[Repo] = []
 
 supported_platforms = {
-    "debian": ["bullseye", "buster", "stretch", "jessie", "wheezy"],
+    "debian": ["bookworm", "bullseye", "buster", "stretch", "jessie", "wheezy"],
     "almalinux": ["9"],
     "el": ["9", "8", "7", "6"],
     "ol": ["9", "8", "7"],
-    "ubuntu": ["focal", "bionic", "trusty", "jammy"]
+    "ubuntu": ["focal", "bionic", "trusty", "jammy", "kinetic"]
 }
 
 

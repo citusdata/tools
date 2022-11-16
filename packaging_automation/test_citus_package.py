@@ -28,11 +28,14 @@ class TestPlatform(Enum):
     centos_7 = {"name": "centos/7", "docker_image_name": "centos-7"}
     ol_7 = {"name": "ol/7", "docker_image_name": "ol-7"}
     ol_8 = {"name": "ol/8", "docker_image_name": "ol-8"}
-    debian_buster = {"name": "debian/buster", "docker_image_name": "debian-buster", }
-    debian_bullseye = {"name": "debian/bullseye", "docker_image_name": "debian-bullseye"}
     debian_stretch = {"name": "debian/stretch", "docker_image_name": "debian-stretch"}
+    debian_buster = {"name": "debian/buster", "docker_image_name": "debian-buster"}
+    debian_bullseye = {"name": "debian/bullseye", "docker_image_name": "debian-bullseye"}
+    debian_bookworm = {"name": "debian/bookworm", "docker_image_name": "debian-bookworm"}
     ubuntu_bionic = {"name": "ubuntu/bionic", "docker_image_name": "ubuntu-bionic"}
     ubuntu_focal = {"name": "ubuntu/focal", "docker_image_name": "ubuntu-focal"}
+    ubuntu_jammy = {"name": "ubuntu/jammy", "docker_image_name": "ubuntu-jammy"}
+    ubuntu_kinetic = {"name": "ubuntu/kinetic", "docker_image_name": "ubuntu-kinetic"}
     undefined = {"name": "undefined", "docker_image_name": "undefined"}
 
 
@@ -75,7 +78,6 @@ if __name__ == "__main__":
 
     if args.pg_major_version:
         postgres_versions = [p for p in postgres_versions if p == args.pg_major_version]
-
 
     if len(postgres_versions) == 0:
         raise ValueError("At least one supported postgres version is required")

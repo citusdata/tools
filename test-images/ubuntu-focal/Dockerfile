@@ -56,7 +56,7 @@ USER root
 RUN apt-get install -y  build-essential \
                     libcurl4-openssl-dev \
                     libssl-dev \
-                    zlib1g-dev zlibc \
+                    zlib1g-dev  \
                     curl \
                     libffi-dev \
                     gnupg2 && \
