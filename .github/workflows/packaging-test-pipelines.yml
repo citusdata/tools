@@ -1,0 +1,70 @@
+name: Packaging Tests
+
+on:
+  push:
+    branches: "**"
+
+  workflow_dispatch:
+
+  packaging_tests:
+    name: Packaging Tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        packaging_docker_image:
+          - ubuntu-jammy-all
+          - debian-bookworm-all
+          - ubuntu-focal-all
+          - debian-bullseye-all
+          - ubuntu-bionic-all
+          - debian-buster-all
+          - centos-7-pg15
+          - oraclelinux-7-pg10
+          - oraclelinux-7-pg11
+          - oraclelinux-7-pg12
+          - oraclelinux-7-pg13
+          - oraclelinux-7-pg14
+          - oraclelinux-7-pg15
+          - oraclelinux-8-pg10
+          - oraclelinux-8-pg11
+          - oraclelinux-8-pg12
+          - oraclelinux-8-pg13
+          - oraclelinux-8-pg14
+          - oraclelinux-8-pg15
+          - centos-7-pg10
+          - centos-7-pg11
+          - centos-7-pg12
+          - centos-7-pg13
+          - centos-7-pg14
+          - centos-7-pg15
+          - centos-8-pg10
+          - centos-8-pg11
+          - centos-8-pg12
+          - centos-8-pg13
+          - centos-8-pg14
+          - centos-8-pg15
+          - almalinux-9-pg10
+          - almalinux-9-pg11
+          - almalinux-9-pg12
+          - almalinux-9-pg13
+          - almalinux-9-pg14
+          - almalinux-9-pg15
+    container:
+      image: ${{ matrix.packaging_docker_image }}
+      env:
+        NODE_ENV: development
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install package dependencies
+        run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
+
+      - name: Build image for the target platform
+        run: |
+          ./configure
+          make
+          make install
+          ./update_image
