@@ -6,6 +6,7 @@ on:
 
   workflow_dispatch:
 
+jobs:
   packaging_tests:
     name: Packaging Tests
     runs-on: ubuntu-latest
