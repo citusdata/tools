@@ -35,8 +35,10 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
         error_message = get_error_message(base_warnings_to_be_raised, package_type_specific_warnings_to_be_raised,
                                           package_type)
         print(f"Build output check failed. Error Message: \n{error_message}")
+        exit(1)
     else:
         print("Build output check completed succesfully. No warnings")
+        exit(0)
 
 
 def filter_warning_lines(output_lines: List[str], package_type: PackageType) -> Tuple[List[str], List[str]]:
