@@ -23,8 +23,7 @@ supported_distros = {
     "ubuntu/bionic": 190,
     "ubuntu/focal": 210,
     "ubuntu/jammy": 237,
-    # TODO: Ubuntu kinetic is not supported yet in packagecloud. We should add it, when it is supported
-    # "ubuntu/kinetic": xxx
+    "ubuntu/kinetic": 261
 }
 
 supported_repos = ["citus-bot/sample",
