@@ -100,7 +100,7 @@ def test_validate_output_deb():
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         output = reader.read()
-        with pytest.raises(ValueError):
+        with pytest.raises(SystemExit):
             validate_output(output,
                             f"{TEST_BASE_PATH}/files/packaging_warning/packaging_ignore.yml", PackageType.deb)
 
@@ -110,7 +110,7 @@ def test_validate_output_rpm():
               encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
               errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
         output = reader.read()
-        with pytest.raises(ValueError):
+        with pytest.raises(SystemExit):
             validate_output(output,
                             f"{TEST_BASE_PATH}/files/packaging_warning/packaging_ignore_without_rpm_rules.yml",
                             PackageType.rpm)
