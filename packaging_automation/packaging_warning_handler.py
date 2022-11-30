@@ -17,6 +17,8 @@ class PackagingWarningIgnoreType(Enum):
 def validate_output(output: str, ignore_file_path: str, package_type: PackageType):
     base_ignore_list, package_type_specific_ignore_list = parse_ignore_lists(ignore_file_path, package_type)
 
+    print(f"Package type specific ignore list:{package_type_specific_ignore_list}")
+    print(f"Base ignore list:{base_ignore_list}")
     output_lines = output.splitlines()
     warning_lines, package_type_specific_warning_lines = filter_warning_lines(output_lines, package_type)
     print("Checking build output for warnings")
@@ -27,7 +29,7 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
     package_type_specific_warnings_to_be_raised = get_warnings_to_be_raised(package_type_specific_ignore_list,
                                                                             package_type_specific_warning_lines)
 
-    print(f"Package type specific ignore list:{package_type_specific_ignore_list}")
+
     print(f"Package type specific warnings to be raised:{package_type_specific_warnings_to_be_raised}")
     print(f"Base warnings to be raised:{base_warnings_to_be_raised}")
 
