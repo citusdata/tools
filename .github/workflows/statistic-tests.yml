@@ -12,6 +12,7 @@ on:
   push:
     branches:
       - "statistics/**"
+      - "dependabot/**"
 
   workflow_dispatch:
 
