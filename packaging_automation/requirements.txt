@@ -175,7 +175,7 @@ toml==0.10.2
     #   vulture
 typing-extensions==3.10.0.2
     # via mypy
-urllib3==1.26.6
+urllib3==1.26.13
     # via
     #   -r requirements.in
     #   requests
