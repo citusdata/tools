@@ -28,7 +28,7 @@ docutils==0.17.1
     # via pyroma
 dodgy==0.2.1
     # via prospector
-exceptiongroup==1.0.0rc9
+exceptiongroup==0.0.0a0
     # via pytest
 flake8==3.8.4
     # via flake8-polyfill
