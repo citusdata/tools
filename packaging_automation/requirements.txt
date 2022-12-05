@@ -138,7 +138,7 @@ python-gnupg==0.4.7
     # via -r requirements.in
 python-string-utils==1.0.0
     # via -r requirements.in
-pyyaml==5.4.1
+pyyaml==6.0
     # via
     #   -r requirements.in
     #   bandit
@@ -174,7 +174,9 @@ toml==0.10.2
     #   pytest
     #   vulture
 typing-extensions==3.10.0.2
-    # via mypy
+    # via
+    #   gitpython
+    #   mypy
 urllib3==1.26.13
     # via
     #   -r requirements.in
