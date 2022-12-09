@@ -14,7 +14,7 @@ attrs==21.2.0
     # via pytest
 bandit==1.7.0
     # via prospector
-certifi==2021.5.30
+certifi==2022.12.7
     # via requests
 cffi==1.14.5
     # via pynacl
@@ -174,7 +174,9 @@ toml==0.10.2
     #   pytest
     #   vulture
 typing-extensions==3.10.0.2
-    # via mypy
+    # via
+    #   gitpython
+    #   mypy
 urllib3==1.26.13
     # via
     #   -r requirements.in
