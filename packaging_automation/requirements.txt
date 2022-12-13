@@ -4,108 +4,121 @@
 #
 #    pip-compile --resolver=backtracking packaging_automation/requirements.in
 #
-astroid==2.7.3
+astroid==2.12.13
     # via
     #   pylint
     #   pylint-celery
     #   pylint-flask
     #   requirements-detector
-attrs==21.2.0
+attrs==22.1.0
     # via pytest
-bandit==1.7.0
+bandit==1.7.4
     # via prospector
-certifi==2021.5.30
+build==0.9.0
+    # via pyroma
+certifi==2022.12.7
     # via requests
-cffi==1.14.5
+cffi==1.15.1
     # via pynacl
-chardet==4.0.0
+charset-normalizer==2.1.1
     # via requests
-deprecated==1.2.12
+deprecated==1.2.13
     # via pygithub
-docker==5.0.0
+dill==0.3.6
+    # via pylint
+docker==6.0.1
     # via -r packaging_automation/requirements.in
-docutils==0.17.1
+docutils==0.19
     # via pyroma
 dodgy==0.2.1
     # via prospector
-flake8==3.8.4
-    # via flake8-polyfill
+exceptiongroup==1.0.4
+    # via pytest
+flake8==5.0.4
+    # via
+    #   flake8-polyfill
+    #   prospector
 flake8-polyfill==1.0.2
     # via pep8-naming
-frosted==1.4.1
-    # via prospector
-gitdb==4.0.7
+gitdb==4.0.10
     # via gitpython
-gitpython==3.1.20
+gitpython==3.1.29
     # via
     #   -r packaging_automation/requirements.in
     #   bandit
-greenlet==1.1.0
+    #   prospector
+greenlet==2.0.1
     # via sqlalchemy
-idna==2.10
+idna==3.4
     # via requests
 iniconfig==1.1.1
     # via pytest
-isort==5.9.3
+isort==5.11.1
     # via pylint
-jinja2==3.0.1
+jinja2==3.1.2
     # via -r packaging_automation/requirements.in
-lazy-object-proxy==1.6.0
+lazy-object-proxy==1.8.0
     # via astroid
-markupsafe==2.0.1
+markupsafe==2.1.1
     # via jinja2
-mccabe==0.6.1
+mccabe==0.7.0
     # via
     #   flake8
     #   prospector
     #   pylint
-mypy==0.910
+mypy==0.991
     # via prospector
 mypy-extensions==0.4.3
     # via mypy
-packaging==20.9
-    # via pytest
+packaging==21.3
+    # via
+    #   build
+    #   docker
+    #   pytest
+    #   requirements-detector
 parameters-validation==1.2.0
     # via -r packaging_automation/requirements.in
-pathlib2==2.3.5
+pathlib2==2.3.7.post1
     # via -r packaging_automation/requirements.in
-pbr==5.6.0
+pbr==5.11.0
     # via stevedore
+pep517==0.13.0
+    # via
+    #   build
+    #   pyroma
 pep8-naming==0.10.0
     # via prospector
-pies==2.6.7
-    # via frosted
-platformdirs==2.3.0
+platformdirs==2.6.0
     # via pylint
-pluggy==0.13.1
+pluggy==1.0.0
     # via pytest
-prospector[with_everything]==1.5.3.1
+poetry-semver==0.1.0
+    # via requirements-detector
+prospector[with_everything]==1.8.3
     # via -r packaging_automation/requirements.in
-psycopg2-binary==2.9.3
+psycopg2-binary==2.9.5
     # via -r packaging_automation/requirements.in
-py==1.10.0
-    # via pytest
-pycodestyle==2.6.0
+pycodestyle==2.9.1
     # via
     #   flake8
     #   prospector
-pycparser==2.20
+pycparser==2.21
     # via cffi
 pycurl==7.45.1
     # via -r packaging_automation/requirements.in
 pydocstyle==6.1.1
     # via prospector
-pyflakes==2.2.0
+pyflakes==2.5.0
     # via
     #   flake8
     #   prospector
-pygithub==1.55
+pygithub==1.57
     # via -r packaging_automation/requirements.in
-pygments==2.10.0
+pygments==2.13.0
     # via pyroma
-pyjwt==2.4.0
+pyjwt==2.6.0
     # via pygithub
-pylint==2.10.2
+pylint==2.15.8
     # via
     #   prospector
     #   pylint-celery
@@ -114,80 +127,90 @@ pylint==2.10.2
     #   pylint-plugin-utils
 pylint-celery==0.3
     # via prospector
-pylint-django==2.4.4
+pylint-django==2.5.3
     # via prospector
 pylint-flask==0.6
     # via prospector
-pylint-plugin-utils==0.6
+pylint-plugin-utils==0.7
     # via
     #   prospector
     #   pylint-celery
     #   pylint-django
     #   pylint-flask
-pynacl==1.4.0
+pynacl==1.5.0
     # via pygithub
-pyparsing==2.4.7
+pyparsing==3.0.9
     # via packaging
-pyroma==3.2
+pyroma==4.1
     # via prospector
-pytest==6.2.4
+pytest==7.2.0
     # via -r packaging_automation/requirements.in
-python-dotenv==0.19.0
+python-dotenv==0.21.0
     # via -r packaging_automation/requirements.in
-python-gnupg==0.4.7
+python-gnupg==0.5.0
     # via -r packaging_automation/requirements.in
 python-string-utils==1.0.0
     # via -r packaging_automation/requirements.in
-pyyaml==5.4.1
+pyyaml==6.0
     # via
     #   -r packaging_automation/requirements.in
     #   bandit
     #   prospector
-requests==2.25.1
+requests==2.28.1
     # via
     #   -r packaging_automation/requirements.in
     #   docker
     #   pygithub
     #   pyroma
-requirements-detector==0.7
+requirements-detector==1.0.3
     # via prospector
 setoptconf-tmp==0.3.1
     # via prospector
 six==1.16.0
-    # via
-    #   bandit
-    #   pathlib2
-    #   pynacl
-smmap==4.0.0
+    # via pathlib2
+smmap==5.0.0
     # via gitdb
-snowballstemmer==2.1.0
+snowballstemmer==2.2.0
     # via pydocstyle
-sqlalchemy==1.4.20
+sqlalchemy==1.4.45
     # via -r packaging_automation/requirements.in
-stevedore==3.4.0
+stevedore==4.1.1
     # via bandit
 toml==0.10.2
     # via
-    #   mypy
     #   prospector
+    #   requirements-detector
+    #   vulture
+tomli==2.0.1
+    # via
+    #   build
+    #   mypy
+    #   pep517
     #   pylint
     #   pytest
-    #   vulture
-typing-extensions==3.10.0.2
+tomlkit==0.11.6
+    # via pylint
+trove-classifiers==2022.12.1
+    # via pyroma
+typing-extensions==4.4.0
     # via
-    #   gitpython
+    #   astroid
     #   mypy
+    #   pylint
 urllib3==1.26.13
     # via
     #   -r packaging_automation/requirements.in
+    #   docker
     #   requests
-vulture==2.3
+vulture==2.6
     # via prospector
-websocket-client==1.1.0
+websocket-client==1.4.2
     # via docker
-wheel==0.36.2
-    # via -r packaging_automation/requirements.in
-wrapt==1.12.1
+wheel==0.38.4
+    # via
+    #   -r packaging_automation/requirements.in
+    #   pyroma
+wrapt==1.14.1
     # via
     #   astroid
     #   deprecated
