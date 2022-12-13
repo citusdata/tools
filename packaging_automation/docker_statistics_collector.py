@@ -30,7 +30,7 @@ def fetch_and_store_docker_statistics(repository_name: str, db_parameters: DbPar
         raise ValueError("test_day_shift_index and test_total_pull_count parameters are test "
                          "parameters. Please don't use these parameters other than testing.")
 
-    result = requests.get(f"https://hub.docker.com/v2/repositories/citusdata/{repository_name}/")
+    result = requests.get(f"https://hub.docker.com/v2/repositories/citusdata/{repository_name}/", timeout=10)
     total_pull_count = int(result.json()["pull_count"]) if test_total_pull_count == 0 else test_total_pull_count
 
     session = db_session(db_params=db_parameters, is_test=is_test, create_db_objects=True)

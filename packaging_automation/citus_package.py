@@ -240,10 +240,10 @@ def get_postgres_versions(platform: str, input_files_dir: str) -> Tuple[List[str
     platform_key_release = "all" if "all" in exclude_dict_release else platform
     platform_key_nightly = "all" if "all" in exclude_dict_nightly else platform
 
-    if exclude_dict_release and platform_key_release in exclude_dict_release.keys():
+    if exclude_dict_release and platform_key_release in exclude_dict_release:
         release_versions = [v for v in release_versions if v not in exclude_dict_release[platform_key_release]]
 
-    if exclude_dict_nightly and platform_key_nightly in exclude_dict_nightly.keys():
+    if exclude_dict_nightly and platform_key_nightly in exclude_dict_nightly:
         nightly_versions = [v for v in release_versions if v not in exclude_dict_nightly[platform_key_nightly]]
 
     return release_versions, nightly_versions
@@ -289,7 +289,7 @@ def get_release_package_folder_name(os_name: str, os_version: str) -> str:
 # almalinux-9. This is because, both el/9 and ol/9 platforms can use packages built on almalinux-9 docker image.
 def get_docker_image_name(platform: str):
 
-    if platform in docker_image_names.keys():
+    if platform in docker_image_names:
         return docker_image_names[platform]
     os_name, os_version = decode_os_and_release(platform)
     return f'{docker_image_names[os_name]}-{os_version}' if os_version else f'{docker_image_names[os_name]}'

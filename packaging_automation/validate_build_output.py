@@ -11,5 +11,5 @@ if __name__ == "__main__":
     parser.add_argument('--package_type', choices=[p.name for p in PackageType], required=True)
 
     args = parser.parse_args()
-    build_output = Path(args.output_file).read_text()
+    build_output = Path(args.output_file).read_text(encoding="utf-8")
     validate_output(build_output, args.ignore_file, PackageType[args.package_type])

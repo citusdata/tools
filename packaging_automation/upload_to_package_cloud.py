@@ -69,12 +69,12 @@ def upload_to_package_cloud(distro_name, package_name, package_cloud_token, repo
         package_query_url = (
             f'https://{package_cloud_token}:@packagecloud.io/api/v1/repos/{repo_name}/packages.json')
         print(f"Uploading package {os.path.basename(package_name)}")
-        response = requests.post(package_query_url, files=files)
+        response = requests.post(package_query_url, files=files, timeout=600)
         print(f"Response from package cloud: {response.content}")
         return ReturnValue(response.ok, response.content.decode("ascii"), package_name, distro_name, repo_name)
 
 
-def upload_files_in_directory_to_package_cloud(directoryName: str, distro_name: str, package_cloud_token: str,
+def upload_files_in_directory_to_package_cloud(directory_name: str, distro_name: str, package_cloud_token: str,
                                                repo_name: str, current_branch: str,
                                                main_branch: str) -> MultipleReturnValue:
     if not main_branch:
@@ -85,7 +85,7 @@ def upload_files_in_directory_to_package_cloud(directoryName: str, distro_name: 
 
     ret_status: List[ReturnValue] = []
 
-    files = glob.glob(f"{directoryName}/**/*.*", recursive=True)
+    files = glob.glob(f"{directory_name}/**/*.*", recursive=True)
 
     for file in files:
         if file.endswith((".rpm", ".deb")):
@@ -102,7 +102,7 @@ def delete_package_from_package_cloud(package_cloud_token: str, repo_owner: str,
     delete_url = (f'https://{package_cloud_token}:@packagecloud.io/api/v1/repos/{repo_owner}/{repo_name}/'
                   f'{distro_name}/{distro_version}/{package_name}')
 
-    response = requests.delete(delete_url)
+    response = requests.delete(delete_url, timeout=120)
     return ReturnValue(response.ok, response.content, package_name, distro_name, repo_name)
 
 
@@ -110,7 +110,7 @@ def package_exists(package_cloud_token: str, repo_owner: str, repo_name: str, pa
                    platform: str) -> bool:
     query_url = (f"https://packagecloud.io/api/v1/repos/{repo_owner}/{repo_name}/search?"
                  f"q={package_name}&filter=all&dist={urllib.parse.quote(platform, safe='')}")
-    response = requests.get(query_url, auth=HTTPBasicAuth(package_cloud_token, ''))
+    response = requests.get(query_url, auth=HTTPBasicAuth(package_cloud_token, ''), timeout=120)
     return response.ok
 
 
