@@ -174,7 +174,9 @@ toml==0.10.2
     #   pytest
     #   vulture
 typing-extensions==3.10.0.2
-    # via mypy
+    # via
+    #   gitpython
+    #   mypy
 urllib3==1.26.13
     # via
     #   -r requirements.in
@@ -183,7 +185,7 @@ vulture==2.3
     # via prospector
 websocket-client==1.1.0
     # via docker
-wheel==0.36.2
+wheel==0.38.4
     # via -r requirements.in
 wrapt==1.12.1
     # via
