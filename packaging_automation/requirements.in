@@ -4,7 +4,6 @@ Jinja2
 parameters_validation
 pathlib2
 psycopg2-binary
-pycurl
 PyGithub
 pytest
 python-gnupg
