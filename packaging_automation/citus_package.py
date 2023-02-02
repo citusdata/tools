@@ -332,8 +332,10 @@ def build_packages(github_token: non_empty(non_blank(str)),
                       postgres_docker_extension, input_output_parameters, is_test)
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_docker_extension} finished ")
     
-    if not package_unsigned:
-        sign_packages(output_sub_folder, signing_credentials, input_output_parameters)
+    if package_unsigned:
+        print("Warning: Skipping signing packages.")
+        return
+    sign_packages(output_sub_folder, signing_credentials, input_output_parameters)
 
 
 def get_build_platform(packaging_platform: str, packaging_docker_platform: str) -> str:
