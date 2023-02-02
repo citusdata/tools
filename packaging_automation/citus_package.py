@@ -302,7 +302,7 @@ def get_docker_image_name(platform: str):
 def build_packages(github_token: non_empty(non_blank(str)),
                    platform: non_empty(non_blank(str)),
                    build_type: BuildType, signing_credentials: SigningCredentials,
-                   input_output_parameters: InputOutputParameters, is_test: bool = False) -> None:
+                   input_output_parameters: InputOutputParameters, is_test: bool = False, package_unsigned:bool = False) -> None:
     os_name, os_version = decode_os_and_release(platform)
     release_versions, nightly_versions = get_postgres_versions(platform,
                                                                input_output_parameters.input_files_dir)
@@ -331,8 +331,9 @@ def build_packages(github_token: non_empty(non_blank(str)),
         build_package(github_token, build_type, docker_image_name,
                       postgres_docker_extension, input_output_parameters, is_test)
         print(f"Package build for {os_name}-{os_version} for postgres {postgres_docker_extension} finished ")
-
-    # sign_packages(output_sub_folder, signing_credentials, input_output_parameters)
+    
+    if not package_unsigned:
+        sign_packages(output_sub_folder, signing_credentials, input_output_parameters)
 
 
 def get_build_platform(packaging_platform: str, packaging_docker_platform: str) -> str:
@@ -399,6 +400,7 @@ if __name__ == "__main__":
     parser.add_argument('--input_files_dir', required=True)
     parser.add_argument('--output_validation', action="store_true")
     parser.add_argument('--is_test', action="store_true")
+    parser.add_argument('--package_unsigned', action="store_true")
 
     args = parser.parse_args()
 
@@ -409,4 +411,4 @@ if __name__ == "__main__":
     io_parameters = InputOutputParameters.build(args.input_files_dir, args.output_dir, args.output_validation)
     sign_credentials = SigningCredentials(args.secret_key, args.passphrase)
     build_packages(args.gh_token, build_platform, BuildType[args.build_type], sign_credentials,
-                   io_parameters, args.is_test)
+                   io_parameters, args.is_test, args.package_unsigned)
