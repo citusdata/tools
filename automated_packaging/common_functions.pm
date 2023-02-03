@@ -6,30 +6,10 @@ use JSON;
 
 # Export subroutines
 our @ISA = qw(Exporter);
-our @EXPORT = qw(get_and_verify_token get_microsoft_email get_git_name get_sorted_prs create_release_changelog has_backport_label);
+our @EXPORT = qw(get_and_verify_token create_release_changelog);
 
 # untaint environment
 local $ENV{'PATH'} = '/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin';
-
-sub get_microsoft_email {
-    unless (exists $ENV{MICROSOFT_EMAIL}) {
-        die "You must have a MICROSOFT_EMAIL set";
-    }
-
-    my $microsoft_email = $ENV{MICROSOFT_EMAIL};
-    return $microsoft_email;
-}
-
-sub get_git_name {
-    my $git_name = `git config user.name`;
-    # Strip trailing newline
-    chomp $git_name;
-    if ($git_name eq "") {
-        die "You must set your git name using 'git config user.name \"Your name Here\"'";
-    }
-    return $git_name;
-}
-
 
 sub get_and_verify_token {
     unless (exists $ENV{GITHUB_TOKEN}) {
@@ -150,7 +130,7 @@ sub create_release_changelog {
             foreach $line (@log_output) {
                 if ($line =~ /^DESCRIPTION: */) {
                     $description_part = substr($line, length($&), -1);
-                    
+
                     if (length($description_part) > 78) {
                         print("You have to shorten PR message $description_part of $pr_url\n");
                         print("Description should not be longer than 78 charachters, please manually shorten this description\n");
