@@ -39,7 +39,7 @@ MULTI_EXTENSION_OUT = "src/test/regress/expected/multi_extension.out"
 CONFIG_PY = "src/test/regress/upgrade/config.py"
 DISTRIBUTED_SQL_DIR_PATH = "src/backend/distributed/sql"
 DOWNGRADES_DIR_PATH = f"{DISTRIBUTED_SQL_DIR_PATH}/downgrades"
-CONFIGURE_IN = "configure.in"
+CONFIGURE_IN = "configure.ac"
 CONFIGURE = "configure"
 CITUS_CONTROL_SEARCH_PATTERN = r"^default_version*"
 
@@ -321,7 +321,7 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
         checkout_branch(
             patchReleaseParams.release_branch_name, patchReleaseParams.is_test
         )
-    # change version info in configure.in file
+    # change version info in configure.ac file
     update_version_in_configure_in(
         patchReleaseParams.project_name,
         patchReleaseParams.configure_in_path,
@@ -368,7 +368,7 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
     checkout_branch(upcoming_params.main_branch, upcoming_params.is_test)
     # create master-update-version-$curtime branch
     create_and_checkout_branch(upcoming_params.upcoming_version_branch)
-    # update version info with upcoming version on configure.in
+    # update version info with upcoming version on configure.ac
     update_version_in_configure_in(
         upcoming_params.project_name,
         upcoming_params.configure_in_path,
@@ -450,7 +450,7 @@ def prepare_release_branch_for_major_release(majorReleaseParams: MajorReleasePar
     checkout_branch(majorReleaseParams.main_branch, majorReleaseParams.is_test)
     # create release branch in release-X.Y format
     create_and_checkout_branch(majorReleaseParams.release_branch_name)
-    # change version info in configure.in file
+    # change version info in configure.ac file
     update_version_in_configure_in(
         majorReleaseParams.project_name,
         majorReleaseParams.configure_in_path,
