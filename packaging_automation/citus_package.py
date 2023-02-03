@@ -192,7 +192,9 @@ def sign_packages(sub_folder: str, signing_credentials: SigningCredentials,
     rpm_files = glob.glob(f"{output_path}/*.rpm", recursive=True)
     os.environ["PACKAGING_PASSPHRASE"] = signing_credentials.passphrase
     os.environ["PACKAGING_SECRET_KEY"] = signing_credentials.secret_key
-
+    print("Started Signing packages...")
+    print("Rpm files to sign: ", rpm_files)
+    print("Deb files to sign: ", deb_files)
     if len(rpm_files) > 0:
         print("Started RPM Signing...")
         result = run_with_output(f"docker run --rm -v {output_path}:/packages/{sub_folder} -e PACKAGING_SECRET_KEY -e "
@@ -227,6 +229,7 @@ def sign_packages(sub_folder: str, signing_credentials: SigningCredentials,
                             PackageType.deb)
 
         print("DEB signing finished successfully.")
+    print("Finished Signing packages...")
 
 
 def get_postgres_versions(platform: str, input_files_dir: str) -> Tuple[List[str], List[str]]:
