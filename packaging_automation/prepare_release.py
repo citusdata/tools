@@ -36,10 +36,10 @@ from .common_validations import CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
 CITUS_CONTROL = "src/backend/distributed/citus.control"
 MULTI_EXTENSION_OUT = "src/test/regress/expected/multi_extension.out"
-CONFIG_PY = "src/test/regress/upgrade/config.py"
+CONFIG_PY = "src/test/regress/citus_tests/config.py"
 DISTRIBUTED_SQL_DIR_PATH = "src/backend/distributed/sql"
 DOWNGRADES_DIR_PATH = f"{DISTRIBUTED_SQL_DIR_PATH}/downgrades"
-CONFIGURE_IN = "configure.ac"
+CONFIGURE_AC = "configure.ac"
 CONFIGURE = "configure"
 CITUS_CONTROL_SEARCH_PATTERN = r"^default_version*"
 
@@ -57,9 +57,9 @@ MULTI_EXT_DETAIL2_PATTERN = (
     rf"^{MULTI_EXT_DETAIL_PREFIX}\d+\.\d+{MULTI_EXT_DETAIL2_SUFFIX}$"
 )
 
-CONFIG_PY_MASTER_VERSION_SEARCH_PATTERN = r"^MASTER_VERSION = '\d+\.\d+'"
+CONFIG_PY_MASTER_VERSION_SEARCH_PATTERN = r'^MASTER_VERSION = "\d+\.\d+"'
 
-CONFIGURE_IN_SEARCH_PATTERN = "AC_INIT*"
+CONFIGURE_AC_SEARCH_PATTERN = "AC_INIT*"
 REPO_OWNER = "citusdata"
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -69,7 +69,7 @@ MULTI_EXT_OUT_TEMPLATE_FILE = "multi_extension_out_prepare_release.tmpl"
 MULTI_EXT_SQL_TEMPLATE_FILE = "multi_extension_sql_prepare_release.tmpl"
 
 repo_details = {
-    "citus": {"configure-in-str": "Citus", "branch": "master"},
+    "citus": {"configure-in-str": "Citus", "branch": "main"},
     "citus-enterprise": {
         "configure-in-str": "Citus Enterprise",
         "branch": "enterprise-master",
@@ -187,7 +187,7 @@ def update_release(
         multi_extension_out_path=f"{exec_path}/{MULTI_EXTENSION_OUT}",
         multi_extension_sql_path=f"{exec_path}/{MULTI_EXTENSION_SQL}",
         citus_control_file_path=f"{exec_path}/{CITUS_CONTROL}",
-        configure_in_path=f"{exec_path}/{CONFIGURE_IN}",
+        configure_in_path=f"{exec_path}/{CONFIGURE_AC}",
         config_py_path=f"{exec_path}/{CONFIG_PY}",
         distributed_dir_path=f"{exec_path}/{DISTRIBUTED_SQL_DIR_PATH}",
         downgrades_dir_path=f"{exec_path}/{DOWNGRADES_DIR_PATH}",
@@ -560,12 +560,13 @@ def add_downgrade_script_in_multi_extension_file(
 
     if not prepend_line_in_file(
         multi_extension_out_path,
-        "DROP TABLE prev_objects, extension_diff;",
+        "DROP TABLE multi_extension.prev_objects, multi_extension.extension_diff;",
         string_to_prepend,
     ):
         raise ValueError(
             f"Downgrade scripts could not be added in {multi_extension_out_path} since "
-            f"'DROP TABLE prev_objects, extension_diff;' script could not be found  "
+            "'DROP TABLE multi_extension.prev_objects, multi_extension.extension_diff;' "
+            "script could not be found  "
         )
     print(
         f"### Done Test downgrade scripts successfully  added in {multi_extension_out_path}. ###"
@@ -696,7 +697,7 @@ def update_version_in_configure_in(project_name, configure_in_path, project_vers
     print(f"### Updating version on file {configure_in_path}... ###")
     if not replace_line_in_file(
         configure_in_path,
-        CONFIGURE_IN_SEARCH_PATTERN,
+        CONFIGURE_AC_SEARCH_PATTERN,
         f"AC_INIT([{repo_details[project_name]['configure-in-str']}], [{project_version}])",
     ):
         raise ValueError(f"{configure_in_path} does not have match for version")
