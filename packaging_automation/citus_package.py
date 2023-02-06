@@ -252,10 +252,9 @@ def get_postgres_versions(platform: str, input_files_dir: str) -> Tuple[List[str
     return release_versions, nightly_versions
 
 
-@validate_parameters
 # disabled since this is related to parameter_validations library methods
 # pylint: disable=no-value-for-parameter
-def build_package(github_token: non_empty(non_blank(str)),
+def build_package(github_token: str,
                   build_type: BuildType, docker_platform: str, postgres_version: str,
                   input_output_parameters: InputOutputParameters, is_test: bool = False):
     print(f"Started building package for platform:{docker_platform} postgres_version:{postgres_version} ")
