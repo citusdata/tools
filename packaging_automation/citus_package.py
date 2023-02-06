@@ -258,6 +258,7 @@ def get_postgres_versions(platform: str, input_files_dir: str) -> Tuple[List[str
 def build_package(github_token: non_empty(non_blank(str)),
                   build_type: BuildType, docker_platform: str, postgres_version: str,
                   input_output_parameters: InputOutputParameters, is_test: bool = False):
+    print(f"Started building package for platform:{docker_platform} postgres_version:{postgres_version} ")
     docker_image_name = "packaging" if not is_test else "packaging-test"
     postgres_extension = "all" if postgres_version == "all" else f"pg{postgres_version}"
     os.environ["GITHUB_TOKEN"] = github_token
