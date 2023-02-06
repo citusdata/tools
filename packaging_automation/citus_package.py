@@ -276,6 +276,7 @@ def build_package(github_token: non_empty(non_blank(str)),
     if output.stdout:
         print("Output:" + output.stdout)
     if output.returncode != 0:
+        print("Output:" + output.stdout)
         raise ValueError(output.stderr)
 
     if input_output_parameters.output_validation:
