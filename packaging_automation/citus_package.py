@@ -269,17 +269,17 @@ def build_package(github_token: str,
                       f'citus/{docker_image_name}:{docker_platform}-{postgres_extension} {build_type.name}')
 
     print(f"Executing docker command: {docker_command}")
-    # output = run_with_output(docker_command, text=True)
-    #
-    # if output.stdout:
-    #     print("Output:" + output.stdout)
-    # if output.returncode != 0:
-    #     print("Output:" + output.stdout)
-    #     raise ValueError(output.stderr)
+    output = run_with_output(docker_command, text=True)
 
-    # if input_output_parameters.output_validation:
-    #     validate_output(output.stdout, f"{input_output_parameters.input_files_dir}/packaging_ignore.yml",
-    #                     get_package_type_by_docker_image_name(docker_platform))
+    if output.stdout:
+        print("Output:" + output.stdout)
+    if output.returncode != 0:
+        print("Output:" + output.stdout)
+        raise ValueError(output.stderr)
+
+    if input_output_parameters.output_validation:
+        validate_output(output.stdout, f"{input_output_parameters.input_files_dir}/packaging_ignore.yml",
+                        get_package_type_by_docker_image_name(docker_platform))
 
 
 def get_release_package_folder_name(os_name: str, os_version: str) -> str:
