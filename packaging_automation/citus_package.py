@@ -392,6 +392,7 @@ def tear_release_stage_from_package_version(package_version: str) -> str:
 
 
 if __name__ == "__main__":
+    print("Executing package builder...")
     parser = argparse.ArgumentParser()
     parser.add_argument('--gh_token', required=True)
     parser.add_argument('--platform', required=False, choices=platform_names())
