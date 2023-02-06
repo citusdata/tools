@@ -133,7 +133,6 @@ class InputOutputParameters:
     output_validation: bool
 
     @staticmethod
-    @validate_parameters
     # disabled since this is related to parameter_validations library methods
     # pylint: disable=no-value-for-parameter
     def build(input_files_dir: non_empty(non_blank(str)), output_dir: non_empty(non_blank(str)),
@@ -142,7 +141,6 @@ class InputOutputParameters:
                                      output_validation=output_validation)
 
 
-@validate_parameters
 # disabled since this is related to parameter_validations library methods
 # pylint: disable=no-value-for-parameter
 def get_signing_credentials(packaging_secret_key: str,
@@ -299,12 +297,11 @@ def get_docker_image_name(platform: str):
     return f'{docker_image_names[os_name]}-{os_version}' if os_version else f'{docker_image_names[os_name]}'
 
 
-@validate_parameters
 # disabled since this is related to parameter_validations library methods
 # pylint: disable=no-value-for-parameter
 # pylint: disable= too-many-locals
-def build_packages(github_token: non_empty(non_blank(str)),
-                   platform: non_empty(non_blank(str)),
+def build_packages(github_token: str,
+                   platform: str,
                    build_type: BuildType, signing_credentials: SigningCredentials,
                    input_output_parameters: InputOutputParameters, is_test: bool = False, package_unsigned:bool = False) -> None:
     os_name, os_version = decode_os_and_release(platform)
