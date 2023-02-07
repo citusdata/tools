@@ -274,7 +274,7 @@ def build_package(github_token: str,
     if output.stdout:
         print("Output:" + output.stdout)
     if output.stderr:
-        raise ValueError(output.stderr)
+        print("Output:" + output.stdout)
 
     if input_output_parameters.output_validation:
         validate_output(output.stdout, f"{input_output_parameters.input_files_dir}/packaging_ignore.yml",
