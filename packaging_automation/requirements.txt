@@ -132,7 +132,7 @@ pyroma==3.2
     # via prospector
 pytest==6.2.4
     # via -r requirements.in
-python-dotenv==0.19.0
+python-dotenv==1.0.0
     # via -r requirements.in
 python-gnupg==0.4.7
     # via -r requirements.in
@@ -174,7 +174,9 @@ toml==0.10.2
     #   pytest
     #   vulture
 typing-extensions==3.10.0.2
-    # via mypy
+    # via
+    #   gitpython
+    #   mypy
 urllib3==1.26.13
     # via
     #   -r requirements.in
