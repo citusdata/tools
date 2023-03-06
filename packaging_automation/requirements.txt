@@ -28,6 +28,8 @@ docutils==0.17.1
     # via pyroma
 dodgy==0.2.1
     # via prospector
+exceptiongroup==1.1.0
+    # via pytest
 flake8==3.8.4
     # via flake8-polyfill
 flake8-polyfill==1.0.2
@@ -83,8 +85,6 @@ prospector[with_everything]==1.5.3.1
     # via -r requirements.in
 psycopg2-binary==2.9.3
     # via -r requirements.in
-py==1.10.0
-    # via pytest
 pycodestyle==2.6.0
     # via
     #   flake8
@@ -130,7 +130,7 @@ pyparsing==2.4.7
     # via packaging
 pyroma==3.2
     # via prospector
-pytest==6.2.4
+pytest==7.2.2
     # via -r requirements.in
 python-dotenv==0.19.0
     # via -r requirements.in
@@ -171,10 +171,13 @@ toml==0.10.2
     #   mypy
     #   prospector
     #   pylint
-    #   pytest
     #   vulture
+tomli==2.0.1
+    # via pytest
 typing-extensions==3.10.0.2
-    # via mypy
+    # via
+    #   gitpython
+    #   mypy
 urllib3==1.26.13
     # via
     #   -r requirements.in
