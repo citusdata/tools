@@ -53,7 +53,8 @@ def fetch_and_store_docker_statistics(
     )
 
     fetch_date = datetime.now() + timedelta(days=test_day_shift_index)
-    validate_same_day_record_existence(fetch_date, session)
+    if same_day_record_exists(fetch_date, session):
+        return
     day_diff, mod_pull_diff, pull_diff = calculate_diff_params(
         fetch_date, session, total_pull_count
     )
@@ -89,16 +90,11 @@ def calculate_diff_params(fetch_date, session, total_pull_count):
     return day_diff, mod_pull_diff, pull_diff
 
 
-def validate_same_day_record_existence(fetch_date, session):
+def same_day_record_exists(fetch_date, session):
     same_day_record = (
         session.query(DockerStats).filter_by(stat_date=fetch_date.date()).first()
     )
-    if same_day_record:
-        print(
-            f"Docker download record for date {fetch_date.date()} already exists. No need to add record."
-        )
-        sys.exit(0)
-
+    return same_day_record is not None
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
