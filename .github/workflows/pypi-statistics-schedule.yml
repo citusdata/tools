@@ -1,4 +1,4 @@
-name: Statistics Schedule
+name: Pypi Statistics Schedule
 
 env:
   DB_USER_NAME: ${{ secrets.STATS_DB_USER_NAME }}
