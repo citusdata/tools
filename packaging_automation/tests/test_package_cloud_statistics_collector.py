@@ -55,8 +55,6 @@ def test_fetch_and_save_package_cloud_stats():
     page_record_count = 3
     parallel_count = 3
 
-    filtered_package_count = get_filtered_package_count(session)
-
     for index in range(0, parallel_count):
         parallel_exec_parameters = ParallelExecutionParams(
             parallel_count=parallel_count,
