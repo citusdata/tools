@@ -16,4 +16,6 @@ urllib3
 wheel
 python-dotenv
 prospector[with_everything]
+pypistats
+pprintpp
 setuptools==65.6.3
