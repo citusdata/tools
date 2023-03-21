@@ -142,7 +142,7 @@ def package_exists(
         f"https://packagecloud.io/api/v1/repos/{repo_owner}/{repo_name}/search?"
         f"q={package_name}&filter=all&dist={urllib.parse.quote(platform, safe='')}"
     )
-    response = requests.get(query_url, auth=HTTPBasicAuth(package_cloud_token, "", timeout=60))
+    response = requests.get(query_url, auth=HTTPBasicAuth(package_cloud_token, ""), timeout=60)
     return response.ok
 
 
