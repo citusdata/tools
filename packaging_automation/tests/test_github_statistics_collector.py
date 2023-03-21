@@ -38,6 +38,8 @@ def test_github_stats_collector():
         text(f"DROP TABLE IF EXISTS {GithubCloneStatsTransactionsMain.__tablename__}")
     )
     conn.execute(text(f"DROP TABLE IF EXISTS {GithubCloneStats.__tablename__}"))
+    
+    conn.commit()
 
     conn.close()
 

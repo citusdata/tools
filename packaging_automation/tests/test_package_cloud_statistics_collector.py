@@ -49,6 +49,7 @@ def test_fetch_and_save_package_cloud_stats():
     conn.execute(
         text(f"DROP TABLE IF EXISTS {PackageCloudDownloadStats.__tablename__}")
     )
+    conn.commit()
     conn.close()
     session = db_session(db_params=db_parameters, is_test=True)
     page_record_count = 3
