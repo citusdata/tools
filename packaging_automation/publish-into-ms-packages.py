@@ -4,7 +4,7 @@ import os
 import re
 import time
 
-from .common_tool_methods import (run_with_output, str_array_to_str)
+from .common_tool_methods import run_with_output, str_array_to_str
 
 ms_package_repo_map = {
     "el/8": "centos-8",
@@ -13,7 +13,7 @@ ms_package_repo_map = {
     "debian/jessie": "debian-jessie",
     "debian/stretch": "debian-stretch",
     "ubuntu/bionic": "ubuntu-bionic",
-    "ubuntu/focal": "ubuntu-focal"
+    "ubuntu/focal": "ubuntu-focal",
 }
 
 # Ubuntu focal repo id is not returned from repoclient list so we had to add this repo manually
@@ -23,7 +23,9 @@ AMD_SUFFIX = "amd64.deb"
 
 
 def publish_single_package(package_path: str, repo):
-    result = run_with_output(f"repoclient package add --repoID {repo['id']} {package_path}")
+    result = run_with_output(
+        f"repoclient package add --repoID {repo['id']} {package_path}"
+    )
 
     return json.loads(result.stdout)
 
@@ -37,7 +39,7 @@ def get_citus_repos():
     for repo in all_repos:
         if not repo["url"].startswith("citus-"):
             continue
-        name = repo["url"][len("citus-"):]
+        name = repo["url"][len("citus-") :]
         if name in ("ubuntu", "debian"):
             # Suffix distribution
             name = name + "-" + repo["distribution"]
@@ -46,14 +48,20 @@ def get_citus_repos():
             name = re.sub(r"(\d+)", r"-\1", name)
         repos[name] = repo
     # Adding ubuntu-focal manually because list does not include ubuntu-focal
-    repos["ubuntu-focal"] = {"url": "ubuntu-focal", "distribution": "focal", "id": UBUNTU_FOCAL_REPO_ID}
+    repos["ubuntu-focal"] = {
+        "url": "ubuntu-focal",
+        "distribution": "focal",
+        "id": UBUNTU_FOCAL_REPO_ID,
+    }
     return repos
 
 
 # Ensure deb packages contain the distribution, so they do not conflict
 def suffix_deb_package_with_distribution(repository, package_file_path):
     if not package_file_path.endswith(AMD_SUFFIX):
-        raise ValueError(f"Package should have ended with {AMD_SUFFIX}: {package_file_path}")
+        raise ValueError(
+            f"Package should have ended with {AMD_SUFFIX}: {package_file_path}"
+        )
     old_package_path = package_file_path
     package_prefix = package_file_path[: -len(AMD_SUFFIX)]
     package_file_path = f"{package_prefix}+{repository['distribution']}_{AMD_SUFFIX}"
@@ -109,23 +117,27 @@ def check_submissions(all_responses):
     if finished_submissions:
         print(
             f"The following packages were published successfuly:\n"
-            f"{str_array_to_str([os.path.basename(s) for s in finished_submissions])}\n")
+            f"{str_array_to_str([os.path.basename(s) for s in finished_submissions])}\n"
+        )
 
     if unfinished_submissions:
         print(
             f"The following packages were not published successfuly:\n"
-            f"{str_array_to_str([os.path.basename(s) for s in unfinished_submissions])}\n")
-        raise Exception("Some packages were not finished publishing")
+            f"{str_array_to_str([os.path.basename(s) for s in unfinished_submissions])}\n"
+        )
+        raise ValueError("Some packages were not finished publishing")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--platform', choices=ms_package_repo_map.keys())
-    parser.add_argument('--packages_dir', required=True)
+    parser.add_argument("--platform", choices=ms_package_repo_map.keys())
+    parser.add_argument("--packages_dir", required=True)
     args = parser.parse_args()
 
     citus_repos = get_citus_repos()
 
-    submission_responses = publish_packages(args.platform, citus_repos, args.packages_dir)
+    submission_responses = publish_packages(
+        args.platform, citus_repos, args.packages_dir
+    )
 
     check_submissions(submission_responses)

@@ -1,10 +1,7 @@
-from sqlalchemy import create_engine, Column, Integer, String, Date
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from datetime import date, timedelta,datetime
+from sqlalchemy import Column, Integer, String, Date
+from datetime import date, datetime
 import pypistats
 import json
-from pprint import pprint
 from .dbconfig import Base, DbParams, db_session
 import os
 
@@ -38,13 +35,16 @@ class DownloadNumbers(Base):
 
 def fetch_download_numbers(package_name):
 
-    print(f"Fetching download numbers for {package_name} from pypi.org. Started at {datetime.now()}")
+    print(
+        f"Fetching download numbers for {package_name} from pypi.org. Started at {datetime.now()}"
+    )
     download_numbers = json.loads(
         pypistats.overall(package_name, format="json", mirrors=True, total=True)
     )
     session = db_session(db_params=db_params, is_test=False, create_db_objects=True)
-    print(f"{len(download_numbers['data'])} records fetched from pypi.org. Starting to add to database. Started at {datetime.now()}")
-    
+    print(
+        f"{len(download_numbers['data'])} records fetched from pypi.org. Starting to add to database. Started at {datetime.now()}"
+    )
 
     new_record_count = 0
     existing_record_count = 0
@@ -71,11 +71,11 @@ def fetch_download_numbers(package_name):
             session.add(record)
         else:
             existing_record_count += 1
-                   
-            
 
     session.commit()
-    print(f"Process finished. New records: {new_record_count} Existing records: {existing_record_count}. Finished at {datetime.now()}")
+    print(
+        f"Process finished. New records: {new_record_count} Existing records: {existing_record_count}. Finished at {datetime.now()}"
+    )
 
 
 packages = ["django-multitenant"]

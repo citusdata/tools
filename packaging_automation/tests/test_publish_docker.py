@@ -4,10 +4,17 @@ import docker
 import pathlib2
 import pytest
 
-from ..common_tool_methods import (remove_prefix, run, run_with_output)
-from ..publish_docker import (decode_triggering_event_info, GithubTriggerEventSource, decode_tag_parts,
-                              get_image_tag, DockerImageType, publish_main_docker_images, publish_tagged_docker_images,
-                              publish_nightly_docker_image)
+from ..common_tool_methods import remove_prefix, run, run_with_output
+from ..publish_docker import (
+    decode_triggering_event_info,
+    GithubTriggerEventSource,
+    decode_tag_parts,
+    get_image_tag,
+    DockerImageType,
+    publish_main_docker_images,
+    publish_tagged_docker_images,
+    publish_nightly_docker_image,
+)
 
 NON_DEFAULT_BRANCH_NAME = "10.0.3_test"
 DEFAULT_BRANCH_NAME = "master"
@@ -26,8 +33,13 @@ def initialize_env():
 
 
 def test_decode_triggering_event_info():
-    event_source, branch_name = decode_triggering_event_info(f"refs/heads/{NON_DEFAULT_BRANCH_NAME}")
-    assert event_source == GithubTriggerEventSource.branch_push and branch_name == NON_DEFAULT_BRANCH_NAME
+    event_source, branch_name = decode_triggering_event_info(
+        f"refs/heads/{NON_DEFAULT_BRANCH_NAME}"
+    )
+    assert (
+        event_source == GithubTriggerEventSource.branch_push
+        and branch_name == NON_DEFAULT_BRANCH_NAME
+    )
 
     event_source, tag_name = decode_triggering_event_info(f"refs/tags/{TAG_NAME}")
     assert event_source == GithubTriggerEventSource.tag_push and tag_name == TAG_NAME
@@ -35,7 +47,12 @@ def test_decode_triggering_event_info():
 
 def test_decode_tag_parts():
     tag_parts = decode_tag_parts(TAG_NAME)
-    assert len(tag_parts) == 3 and tag_parts[0] == "10" and tag_parts[1] == "0" and tag_parts[2] == "3"
+    assert (
+        len(tag_parts) == 3
+        and tag_parts[0] == "10"
+        and tag_parts[1] == "0"
+        and tag_parts[2] == "3"
+    )
 
     with pytest.raises(ValueError):
         decode_tag_parts(INVALID_TAG_NAME)
@@ -45,7 +62,9 @@ def test_get_image_tag():
     image_name = get_image_tag(remove_prefix(TAG_NAME, "v"), DockerImageType.latest)
     assert image_name == "10.0.3"
 
-    image_name = get_image_tag(remove_prefix(TAG_NAME, "v"), DockerImageType.postgres_13)
+    image_name = get_image_tag(
+        remove_prefix(TAG_NAME, "v"), DockerImageType.postgres_13
+    )
     assert image_name == "10.0.3-pg13"
 
 
