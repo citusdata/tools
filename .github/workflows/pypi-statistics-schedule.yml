@@ -5,7 +5,6 @@ env:
   DB_PASSWORD: ${{ secrets.STATS_DB_PASSWORD }}
   DB_HOST_AND_PORT: ${{ secrets.STATS_DB_HOST_AND_PORT }}
   DB_NAME: ${{ secrets.STATS_DB_NAME }}
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}
 on:
   schedule:
     - cron: "0 15 * * *"
