@@ -30,14 +30,17 @@ def test_github_stats_collector():
         db_name=DB_NAME,
     )
     db = create_engine(db_connection_string(db_params=db_params, is_test=True))
-    db.execute(
+    conn = db.connect()  
+    conn.execute(
         text(f"DROP TABLE IF EXISTS {GithubCloneStatsTransactionsDetail.__tablename__}")
     )
-    db.execute(
+    conn.execute(
         text(f"DROP TABLE IF EXISTS {GithubCloneStatsTransactionsMain.__tablename__}")
     )
-    db.execute(text(f"DROP TABLE IF EXISTS {GithubCloneStats.__tablename__}"))
+    conn.execute(text(f"DROP TABLE IF EXISTS {GithubCloneStats.__tablename__}"))
 
+    conn.close()
+    
     fetch_and_store_github_stats(
         organization_name=ORGANIZATION_NAME,
         repo_name=REPO_NAME,
