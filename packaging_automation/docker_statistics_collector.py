@@ -1,5 +1,4 @@
 import argparse
-import sys
 from datetime import datetime, timedelta
 
 import requests
@@ -95,6 +94,7 @@ def same_day_record_exists(fetch_date, session):
         session.query(DockerStats).filter_by(stat_date=fetch_date.date()).first()
     )
     return same_day_record is not None
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
