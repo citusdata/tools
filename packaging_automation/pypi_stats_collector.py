@@ -22,6 +22,7 @@ db_params = DbParams(
 )
 
 
+
 # Define the model for the download numbers
 class DownloadNumbers(Base):
     __tablename__ = "pypi_downloads"
@@ -32,6 +33,7 @@ class DownloadNumbers(Base):
     download_count = Column(String)
     download_date = Column(Date)
 
+packages = ["django-multitenant"]
 
 def fetch_download_numbers(package_name):
     print(
@@ -76,6 +78,6 @@ def fetch_download_numbers(package_name):
     )
 
 
-packages = ["django-multitenant"]
+
 for package_name in packages:
     fetch_download_numbers(package_name)
