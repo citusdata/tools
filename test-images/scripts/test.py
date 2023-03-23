@@ -21,7 +21,11 @@ class VerificationType(Enum):
     contains = 2
 
 
-def verify(output, expected_result, verification_type: VerificationType = VerificationType.equals) -> bool:
+def verify(
+    output,
+    expected_result,
+    verification_type: VerificationType = VerificationType.equals,
+) -> bool:
     if verification_type == VerificationType.equals:
         return_value = output == expected_result
     elif VerificationType.contains:
@@ -49,11 +53,20 @@ def verify_output(result, expected_result) -> bool:
 
 
 def test_citus():
-    assert verify_output(run_with_output('pg_ctl -D citus -o "-p 9700" -l citus/citus_logfile start'),
-                         r"^'waiting for server to start.... done\\nserver started\\n'$")
-    assert verify_output(run_with_output('psql -p 9700 -c "CREATE EXTENSION citus;"'), r"^'CREATE EXTENSION\\n'$")
-    assert verify_output(run_with_output('psql -p 9700 -c "select version();"'),
-                         rf".*PostgreSQL {POSTGRES_VERSION}.* on x86_64-pc-linux-gnu, compiled by gcc \(.*")
+    assert verify_output(
+        run_with_output('pg_ctl -D citus -o "-p 9700" -l citus/citus_logfile start'),
+        r"^'waiting for server to start.... done\\nserver started\\n'$",
+    )
+    assert verify_output(
+        run_with_output('psql -p 9700 -c "CREATE EXTENSION citus;"'),
+        r"^'CREATE EXTENSION\\n'$",
+    )
+    assert verify_output(
+        run_with_output('psql -p 9700 -c "select version();"'),
+        rf".*PostgreSQL {POSTGRES_VERSION}.* on x86_64-pc-linux-gnu, compiled by gcc \(.*",
+    )
     # Since version info for ol and el 7 contains undefined, undefined was needed to add as expected param for pc
-    assert verify_output(run_with_output('psql -p 9700 -c "select citus_version();"'),
-                         rf".*Citus {CITUS_VERSION} on x86_64-(pc|unknown)-linux-gnu, compiled by gcc.*")
+    assert verify_output(
+        run_with_output('psql -p 9700 -c "select citus_version();"'),
+        rf".*Citus {CITUS_VERSION} on x86_64-(pc|unknown)-linux-gnu, compiled by gcc.*",
+    )
