@@ -34,7 +34,7 @@ jobs:
       - name: Install python requirements
         run: python -m pip install -r packaging_automation/requirements.txt
 
-      - name: Execute 'Docker Pull for Citus Repo'
+      - name: Execute 'Fetch Daily Statistics'
         run: packaging_automation/bash/daily-statistics-job.sh
         env:
           JOB_NAME: "${{ matrix.JOB_NAME }}"
