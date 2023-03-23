@@ -1,0 +1,32 @@
+name: Pypi Statistics Schedule
+
+env:
+  DB_USER_NAME: ${{ secrets.STATS_DB_USER_NAME }}
+  DB_PASSWORD: ${{ secrets.STATS_DB_PASSWORD }}
+  DB_HOST_AND_PORT: ${{ secrets.STATS_DB_HOST_AND_PORT }}
+  DB_NAME: ${{ secrets.STATS_DB_NAME }}
+on:
+  schedule:
+    - cron: "0 15 * * *"
+  push:
+    branches:
+      - "statistics/**"
+      - "dependabot/**"
+
+  workflow_dispatch:
+
+jobs:
+  execute_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install package dependencies
+        run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
+
+      - name: Install python requirements
+        run: python -m pip install -r packaging_automation/requirements.txt
+
+      - name: Execute 'Docker Pull for Citus Repo'
+        run: python -m packaging_automation.pypi_stats_collector
