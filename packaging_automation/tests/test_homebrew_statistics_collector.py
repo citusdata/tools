@@ -20,7 +20,10 @@ db_parameters = DbParams(
 
 def test_fetch_and_save_homebrew_stats():
     db = create_engine(db_connection_string(db_params=db_parameters, is_test=True))
-    db.execute(text(f"DROP TABLE IF EXISTS {HomebrewStats.__tablename__}"))
+    conn = db.connect()
+    conn.execute(text(f"DROP TABLE IF EXISTS {HomebrewStats.__tablename__}"))
+    conn.commit()
+    conn.close()
 
     session = db_session(db_params=db_parameters, is_test=True)
 

@@ -45,7 +45,13 @@ PACKAGE_CLOUD_PARAMETERS = PackageCloudParams(
 
 def test_fetch_and_save_package_cloud_stats():
     db = create_engine(db_connection_string(db_params=db_parameters, is_test=True))
-    db.execute(text(f"DROP TABLE IF EXISTS {PackageCloudDownloadStats.__tablename__}"))
+    conn = db.connect()
+    conn.execute(
+        text(f"DROP TABLE IF EXISTS {PackageCloudDownloadStats.__tablename__}")
+    )
+    conn.commit()
+    conn.close()
+    
     session = db_session(db_params=db_parameters, is_test=True)
     page_record_count = 3
     parallel_count = 3
