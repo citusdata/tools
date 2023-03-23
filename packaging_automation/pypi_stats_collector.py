@@ -34,7 +34,6 @@ class DownloadNumbers(Base):
 
 
 def fetch_download_numbers(package_name):
-
     print(
         f"Fetching download numbers for {package_name} from pypi.org. Started at {datetime.now()}"
     )
@@ -49,7 +48,6 @@ def fetch_download_numbers(package_name):
     new_record_count = 0
     existing_record_count = 0
     for downloads in download_numbers["data"]:
-
         existing_record = (
             session.query(DownloadNumbers)
             .filter_by(
