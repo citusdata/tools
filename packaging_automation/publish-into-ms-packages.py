@@ -99,7 +99,7 @@ def check_submissions(all_responses):
                 run_with_output(f"repoclient package check {package_id}")
                 finished_submissions[pack_path] = response
                 del unfinished_submissions[pack_path]
-            except Exception:
+            except ValueError:
                 print(pack_path, "was not published yet")
 
         if not unfinished_submissions:
@@ -115,7 +115,7 @@ def check_submissions(all_responses):
         print(
             f"The following packages were not published successfuly:\n"
             f"{str_array_to_str([os.path.basename(s) for s in unfinished_submissions])}\n")
-        raise Exception("Some packages were not finished publishing")
+        raise ValueError("Some packages were not finished publishing")
 
 
 if __name__ == "__main__":

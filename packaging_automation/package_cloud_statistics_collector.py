@@ -74,7 +74,7 @@ class PackageCloudDownloadDetails(Base):
 def package_count(organization: PackageCloudOrganization, repo_name: PackageCloudRepo,
                   package_cloud_api_token: str) -> int:
     result = requests.get(
-        f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos.json?include_collaborations=true")
+        f"https://{package_cloud_api_token}:@packagecloud.io/api/v1/repos.json?include_collaborations=true", timeout=60)
 
     repo_list = json.loads(result.content)
     for repo in repo_list:

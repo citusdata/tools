@@ -48,7 +48,7 @@ def get_test_platform_for_os_release(os_release: str) -> TestPlatform:
 
 
 def get_postgres_versions_from_matrix_file(project_version: str) -> List[str]:
-    r = requests.get(POSTGRES_MATRIX_WEB_ADDRESS, allow_redirects=True)
+    r = requests.get(POSTGRES_MATRIX_WEB_ADDRESS, allow_redirects=True, timeout=60)
 
     with open(POSTGRES_MATRIX_FILE, 'wb') as writer:
         writer.write(r.content)

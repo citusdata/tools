@@ -22,7 +22,7 @@ def delete_packages(repo: PackageRepository, package_cloud_api_token: str) -> No
     while True:
         list_url = (f"{url_prefix}/api/v1/repos/citusdata/{repo.value}"
                     f"/packages.json?per_page={PAGE_RECORD_COUNT}&page=0")
-        result = requests.get(list_url)
+        result = requests.get(list_url, timeout=60)
         package_info_list = json.loads(result.content)
         if len(package_info_list) == 0 or end_of_limits_reached:
             break
@@ -33,7 +33,7 @@ def delete_packages(repo: PackageRepository, package_cloud_api_token: str) -> No
             if diff.days > PACKAGE_DELETION_DAYS_THRESHOLD:
                 delete_url = f"{url_prefix}{package_info['destroy_url']}"
 
-                del_result = requests.delete(delete_url)
+                del_result = requests.delete(delete_url, timeout=60)
                 if del_result.status_code == 200:
                     print(f"{package_info['filename']} deleted successfully")
                     successful_count = successful_count + 1

@@ -589,7 +589,7 @@ def stat_get_request(request_address: str, request_type: RequestType, session):
     session.add(request_log)
     session.commit()
     try:
-        result = requests.get(request_address)
+        result = requests.get(request_address, timeout=60)
         request_log.status_code = result.status_code
         request_log.response = result.content.decode("ascii")
     except requests.exceptions.RequestException as e:

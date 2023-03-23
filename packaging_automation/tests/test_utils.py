@@ -13,7 +13,7 @@ def are_strings_equal(expected_string: str, actual_str: str) -> bool:
 
     for output in output_list:
         if not (output.strip() == '+' or output.strip() == '-'):
-            raise Exception(f"Actual and expected string are not same Diff:{''.join(output_list)} ")
+            raise ValueError(f"Actual and expected string are not same Diff:{''.join(output_list)} ")
     return True
 
 
