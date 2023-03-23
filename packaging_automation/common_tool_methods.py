@@ -643,7 +643,7 @@ def is_rpm_file_signed(file_path: str) -> bool:
 
 def verify_rpm_signature_in_dir(rpm_dir_path: str):
     files = []
-    for (dirpath, _, filenames) in os.walk(rpm_dir_path):
+    for dirpath, _, filenames in os.walk(rpm_dir_path):
         files += [os.path.join(dirpath, file) for file in filenames]
     rpm_files = filter(lambda file_name: file_name.endswith("rpm"), files)
     for file in rpm_files:

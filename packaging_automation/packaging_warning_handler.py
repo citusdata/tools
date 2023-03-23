@@ -77,7 +77,6 @@ def filter_warning_lines(
     is_deb_warning_line = False
     is_rpm_warning_line = False
     for output_line in output_lines:
-
         if package_type == PackageType.deb:
             if debian_lintian_starter in output_line:
                 is_deb_warning_line = True

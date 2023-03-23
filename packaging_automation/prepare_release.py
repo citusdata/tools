@@ -302,7 +302,6 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
     # checkout release branch (release-X.Y) In test case release branch for test may not be exist.
     # In this case create one
     if patchReleaseParams.is_test:
-
         non_test_release_branch = patchReleaseParams.release_branch_name.rstrip("-test")
         release_branch_exist = remote_branch_exists(
             non_test_release_branch, os.getcwd()

@@ -135,7 +135,6 @@ def fetch_and_save_package_cloud_stats(
     while is_page_in_range(
         page_index, repo_package_count, parallel_execution_params.page_record_count
     ):
-
         result = stat_get_request(
             package_list_with_pagination_request_address(
                 package_cloud_params,

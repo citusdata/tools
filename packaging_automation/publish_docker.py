@@ -268,7 +268,6 @@ def validate_and_extract_general_parameters(
 
     image_type_invalid_error_message = f"image_type parameter is invalid. Valid ones are {','.join([d.name for d in regular_images_to_be_built()])}."
     try:
-
         if docker_image_type_param == "all" or not docker_image_type_param:
             docker_image_type = None
         else:

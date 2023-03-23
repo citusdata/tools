@@ -375,7 +375,6 @@ def get_release_package_folder_name(os_name: str, os_version: str) -> str:
 # However, there are some exceptions for this rule. For example, docker image name for both el-9 and ol-9 is
 # almalinux-9. This is because, both el/9 and ol/9 platforms can use packages built on almalinux-9 docker image.
 def get_docker_image_name(platform: str):
-
     if platform in docker_image_names:
         return docker_image_names[platform]
     os_name, os_version = decode_os_and_release(platform)

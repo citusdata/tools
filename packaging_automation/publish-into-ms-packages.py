@@ -72,7 +72,6 @@ def suffix_deb_package_with_distribution(repository, package_file_path):
 def publish_packages(target_platform, citus_repos, packages_dir: str):
     responses = {}
     for package_file in os.listdir(packages_dir):
-
         print(f"Target Platform is {target_platform}")
         repo_platform = ms_package_repo_map[target_platform]
         repo = citus_repos[repo_platform]
@@ -100,7 +99,6 @@ def check_submissions(all_responses):
     unfinished_submissions = all_responses.copy()
     finished_submissions = {}
     for i in range(15):
-
         for pack_path, response in all_responses.items():
             package_id = response["Location"].split("/")[-1]
             try:

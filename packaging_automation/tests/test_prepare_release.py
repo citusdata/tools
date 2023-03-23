@@ -199,7 +199,6 @@ def test_patch_release():
         schema_version="10.1-5",
     )
     try:
-
         update_release(
             github_token=github_token,
             project_params=project_params,
