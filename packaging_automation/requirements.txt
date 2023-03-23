@@ -14,6 +14,8 @@ attrs==22.2.0
     # via pytest
 bandit==1.7.5
     # via prospector
+black==23.1.0
+    # via -r packaging_automation/requirements.in
 build==0.10.0
     # via pyroma
 certifi==2022.12.7
@@ -24,6 +26,8 @@ cffi==1.15.1
     #   pynacl
 charset-normalizer==3.1.0
     # via requests
+click==8.1.3
+    # via black
 cryptography==39.0.2
     # via pyjwt
 deprecated==1.2.13
@@ -77,9 +81,12 @@ mdurl==0.1.2
 mypy==1.1.1
     # via prospector
 mypy-extensions==1.0.0
-    # via mypy
+    # via
+    #   black
+    #   mypy
 packaging==23.0
     # via
+    #   black
     #   build
     #   docker
     #   prospector
@@ -90,12 +97,16 @@ parameters-validation==1.2.0
     # via -r packaging_automation/requirements.in
 pathlib2==2.3.7.post1
     # via -r packaging_automation/requirements.in
+pathspec==0.11.1
+    # via black
 pbr==5.11.1
     # via stevedore
 pep8-naming==0.10.0
     # via prospector
 platformdirs==3.1.1
-    # via pylint
+    # via
+    #   black
+    #   pylint
 pluggy==1.0.0
     # via pytest
 poetry-semver==0.1.0
@@ -193,6 +204,7 @@ toml==0.10.2
     #   vulture
 tomli==2.0.1
     # via
+    #   black
     #   build
     #   mypy
     #   pylint
@@ -205,6 +217,7 @@ trove-classifiers==2023.3.9
 typing-extensions==4.5.0
     # via
     #   astroid
+    #   black
     #   mypy
     #   pylint
     #   rich

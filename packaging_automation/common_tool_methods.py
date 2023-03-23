@@ -17,7 +17,7 @@ from github import Commit, Github, PullRequest, Repository
 from jinja2 import Environment, FileSystemLoader
 from parameters_validation import validate_parameters
 
-from .common_validations import (is_tag, is_version)
+from .common_validations import is_tag, is_version
 from .dbconfig import RequestLog, RequestType
 
 BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
@@ -41,7 +41,7 @@ supported_platforms = {
     "almalinux": ["9"],
     "el": ["9", "8", "7", "6"],
     "ol": ["9", "8", "7"],
-    "ubuntu": ["focal", "bionic", "trusty", "jammy", "kinetic"]
+    "ubuntu": ["focal", "bionic", "trusty", "jammy", "kinetic"],
 }
 
 
@@ -93,7 +93,9 @@ def project_version_contains_release_stage(project_version: str) -> bool:
 
 def get_minor_project_version_for_docker(project_version: str) -> str:
     project_version_details = get_version_details(project_version)
-    minor_version = f'{project_version_details["major"]}.{project_version_details["minor"]}'
+    minor_version = (
+        f'{project_version_details["major"]}.{project_version_details["minor"]}'
+    )
     if project_version_contains_release_stage(project_version):
         return f'{project_version_details["stage"]}-{minor_version}'
     return minor_version
@@ -127,7 +129,9 @@ def find_nth_occurrence_position(subject_string: str, search_string: str, n) -> 
     return start
 
 
-def find_nth_matching_line_and_line_number(subject_string: str, regex_pattern: str, n: int) -> Tuple[int, str]:
+def find_nth_matching_line_and_line_number(
+    subject_string: str, regex_pattern: str, n: int
+) -> Tuple[int, str]:
     """Takes a subject string, regex param and the search index as parameter and returns line number of found match.
     If not found returns -1"""
     lines = subject_string.splitlines()
@@ -141,7 +145,7 @@ def find_nth_matching_line_and_line_number(subject_string: str, regex_pattern: s
 
 
 def remove_text_with_parenthesis(param: str) -> str:
-    """Removes texts within parenthesis i.e. outside parenthesis(inside parenthesis)-> outside parenthesis """
+    """Removes texts within parenthesis i.e. outside parenthesis(inside parenthesis)-> outside parenthesis"""
     return re.sub(r"[(\[].*?[)\]]", "", param)
 
 
@@ -165,7 +169,8 @@ def cherry_pick_prs(prs: List[PullRequest.PullRequest]):
             if not is_merge_commit(single_commit):
                 cp_result = run(f"git cherry-pick -x {single_commit.commit.sha}")
                 print(
-                    f"Cherry pick result for PR no {pr.number} and commit sha {single_commit.commit.sha}: {cp_result}")
+                    f"Cherry pick result for PR no {pr.number} and commit sha {single_commit.commit.sha}: {cp_result}"
+                )
 
 
 def get_minor_version(version: str) -> str:
@@ -175,7 +180,7 @@ def get_minor_version(version: str) -> str:
 
 @validate_parameters
 def get_patch_version_regex(version: is_version(str)):
-    return fr"^{re.escape(get_minor_version(version))}{PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX}$"
+    return rf"^{re.escape(get_minor_version(version))}{PATCH_VERSION_MATCH_FROM_MINOR_SUFFIX}$"
 
 
 def is_merge_commit(commit: Commit):
@@ -185,12 +190,17 @@ def is_merge_commit(commit: Commit):
 @validate_parameters
 def get_version_details(version: is_version(str)) -> Dict[str, str]:
     version_parts = version.split(".")
-    release_stage = 'stable'
+    release_stage = "stable"
     assert len(version_parts) == 3
     if project_version_contains_release_stage(version):
-        stage_parts = version_parts[2].split('_')
+        stage_parts = version_parts[2].split("_")
         release_stage = stage_parts[1]
-    return {"major": version_parts[0], "minor": version_parts[1], "patch": version_parts[2], "stage": release_stage}
+    return {
+        "major": version_parts[0],
+        "minor": version_parts[1],
+        "patch": version_parts[2],
+        "stage": release_stage,
+    }
 
 
 @validate_parameters
@@ -221,9 +231,15 @@ def str_array_to_str(str_array: List[str]) -> str:
     return f"{os.linesep.join(str_array)}{os.linesep}"
 
 
-def get_prs_for_patch_release(repo: Repository.Repository, earliest_date: datetime, base_branch: str,
-                              last_date: datetime = None):
-    pull_requests = repo.get_pulls(state="closed", base=base_branch, sort="created", direction="desc")
+def get_prs_for_patch_release(
+    repo: Repository.Repository,
+    earliest_date: datetime,
+    base_branch: str,
+    last_date: datetime = None,
+):
+    pull_requests = repo.get_pulls(
+        state="closed", base=base_branch, sort="created", direction="desc"
+    )
 
     # filter pull requests according to given time interval
     filtered_pull_requests = []
@@ -251,9 +267,15 @@ def filter_prs_by_label(prs: List[PullRequest.PullRequest], label_name: str):
     return filtered_prs
 
 
-def file_includes_line(base_path: str, relative_file_path: str, line_content: str) -> bool:
-    with open(f"{base_path}/{relative_file_path}", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+def file_includes_line(
+    base_path: str, relative_file_path: str, line_content: str
+) -> bool:
+    with open(
+        f"{base_path}/{relative_file_path}",
+        "r",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as reader:
         content = reader.read()
         lines = content.splitlines()
         for line in lines:
@@ -262,16 +284,27 @@ def file_includes_line(base_path: str, relative_file_path: str, line_content: st
     return False
 
 
-def count_line_in_file(base_path: str, relative_file_path: str, search_line: str) -> int:
-    with open(f"{base_path}/{relative_file_path}", "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+def count_line_in_file(
+    base_path: str, relative_file_path: str, search_line: str
+) -> int:
+    with open(
+        f"{base_path}/{relative_file_path}",
+        "r",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as reader:
         content = reader.read()
         lines = content.splitlines()
     return len(list(filter(lambda line: line == search_line, lines)))
 
 
 def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
-    with open(file, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+    with open(
+        file,
+        "r",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as reader:
         file_content = reader.read()
         lines = file_content.splitlines()
         has_match = False
@@ -280,14 +313,24 @@ def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
                 has_match = True
                 lines[line_number] = replace_str
         edited_content = str_array_to_str(lines)
-    with open(file, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
+    with open(
+        file,
+        "w",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as writer:
         writer.write(edited_content)
 
     return has_match
 
 
 def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
-    with open(file, "r+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+    with open(
+        file,
+        "r+",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as reader:
         file_content = reader.read()
         lines = file_content.splitlines()
         has_match = False
@@ -302,20 +345,32 @@ def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
                     # Since line is added after matched string, shift index start with line_number+1
                     # increment of appended_line_index is 2 since copy_lines appended_line_index+1 includes
                     # append_str
-                    lines_to_be_shifted = lines[line_number + 1:]
-                    copy_lines = copy_lines[0:appended_line_index + 2] + lines_to_be_shifted
+                    lines_to_be_shifted = lines[line_number + 1 :]
+                    copy_lines = (
+                        copy_lines[0 : appended_line_index + 2] + lines_to_be_shifted
+                    )
                 else:
                     copy_lines.append(append_str)
             appended_line_index = appended_line_index + 1
         edited_content = str_array_to_str(copy_lines)
-    with open(file, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
+    with open(
+        file,
+        "w",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as writer:
         writer.write(edited_content)
 
     return has_match
 
 
 def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
-    with open(file, "r+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+    with open(
+        file,
+        "r+",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as reader:
         file_content = reader.read()
         lines = file_content.splitlines()
         has_match = False
@@ -328,10 +383,17 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
                 # Since line is added before  matched string shift index start with line_number
                 # increment of prepend_line_index is 1 line after prepended_line_index should be shifted
                 lines_to_be_shifted = lines[line_number:]
-                copy_lines = copy_lines[0:prepended_line_index + 1] + lines_to_be_shifted
+                copy_lines = (
+                    copy_lines[0 : prepended_line_index + 1] + lines_to_be_shifted
+                )
             prepended_line_index = prepended_line_index + 1
         edited_content = str_array_to_str(copy_lines)
-    with open(file, "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING, errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
+    with open(
+        file,
+        "w",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as writer:
         writer.write(edited_content)
 
     return has_match
@@ -375,7 +437,9 @@ def local_branch_exists(branch_name: str, working_dir: str) -> bool:
 
 
 def branch_exists(branch_name: str, working_dir: str) -> bool:
-    return local_branch_exists(branch_name, working_dir) or remote_branch_exists(branch_name, working_dir)
+    return local_branch_exists(branch_name, working_dir) or remote_branch_exists(
+        branch_name, working_dir
+    )
 
 
 def remove_cloned_code(exec_path: str):
@@ -391,42 +455,67 @@ def remove_cloned_code(exec_path: str):
             run(f"rm -rf {exec_path}")
             print("Done. Code deleted successfully.")
         except subprocess.CalledProcessError:
-            print(f"Some files could not be deleted in directory {exec_path}. "
-                  f"Please delete them manually or they will be deleted before next execution")
+            print(
+                f"Some files could not be deleted in directory {exec_path}. "
+                f"Please delete them manually or they will be deleted before next execution"
+            )
 
 
-def process_template_file_with_minor(project_version: str, templates_path: str, template_file_path: str,
-                                     minor_version: str, postgres_version: str = ""):
-    ''' This function gets the template files, changes tha parameters inside the file and returns the output.
-        Template files are stored under packaging_automation/templates and these files include parametric items in the
-        format of {{parameter_name}}. This function is used while creating docker files and pgxn files which include
-        "project_name" as parameter. Example usage is in "test_common_tool_methods/test_process_template_file".
-        Jinja2 is used as th the template engine and render function gets the file change parameters in the file
-         with the given input parameters and returns the output.'''
+def process_template_file_with_minor(
+    project_version: str,
+    templates_path: str,
+    template_file_path: str,
+    minor_version: str,
+    postgres_version: str = "",
+):
+    """This function gets the template files, changes tha parameters inside the file and returns the output.
+    Template files are stored under packaging_automation/templates and these files include parametric items in the
+    format of {{parameter_name}}. This function is used while creating docker files and pgxn files which include
+    "project_name" as parameter. Example usage is in "test_common_tool_methods/test_process_template_file".
+    Jinja2 is used as th the template engine and render function gets the file change parameters in the file
+     with the given input parameters and returns the output."""
     env = get_template_environment(templates_path)
     template = env.get_template(template_file_path)
-    rendered_output = template.render(project_version=project_version, postgres_version=postgres_version,
-                                      project_minor_version=minor_version)
+    rendered_output = template.render(
+        project_version=project_version,
+        postgres_version=postgres_version,
+        project_minor_version=minor_version,
+    )
     return f"{rendered_output}\n"
 
 
-def process_template_file(project_version: str, templates_path: str, template_file_path: str,
-                          postgres_version: str = ""):
+def process_template_file(
+    project_version: str,
+    templates_path: str,
+    template_file_path: str,
+    postgres_version: str = "",
+):
     minor_version = get_minor_project_version(project_version)
-    return process_template_file_with_minor(project_version, templates_path, template_file_path, minor_version,
-                                            postgres_version)
+    return process_template_file_with_minor(
+        project_version,
+        templates_path,
+        template_file_path,
+        minor_version,
+        postgres_version,
+    )
 
 
 def write_to_file(content: str, dest_file_name: str):
-    with open(dest_file_name, "w+", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
+    with open(
+        dest_file_name,
+        "w+",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as writer:
         writer.write(content)
 
 
 def get_gpg_fingerprints_by_name(name: str) -> List[str]:
-    '''Returns GPG fingerprint by its unique key name. We use this function to determine the fingerprint that
-       we should use when signing packages'''
-    result = subprocess.run(shlex.split("gpg --list-keys"), check=True, stdout=subprocess.PIPE)
+    """Returns GPG fingerprint by its unique key name. We use this function to determine the fingerprint that
+    we should use when signing packages"""
+    result = subprocess.run(
+        shlex.split("gpg --list-keys"), check=True, stdout=subprocess.PIPE
+    )
     lines = result.stdout.decode("ascii").splitlines()
     finger_prints = []
     previous_line = ""
@@ -483,18 +572,22 @@ def get_private_key_by_fingerprint_without_passphrase(fingerprint: str) -> str:
     if not private_key:
         raise ValueError(
             "Error while getting key. Most probably packaging key is stored with passphrase. "
-            "Please check the passphrase and try again")
+            "Please check the passphrase and try again"
+        )
     return private_key
 
 
-def get_private_key_by_fingerprint_with_passphrase(fingerprint: str, passphrase: str) -> str:
+def get_private_key_by_fingerprint_with_passphrase(
+    fingerprint: str, passphrase: str
+) -> str:
     gpg = gnupg.GPG()
 
     private_key = gpg.export_keys(fingerprint, secret=True, passphrase=passphrase)
     if not private_key:
         raise ValueError(
             "Error while getting key. Most probably packaging key is stored with passphrase. "
-            "Please check the passphrase and try again")
+            "Please check the passphrase and try again"
+        )
     return private_key
 
 
@@ -505,9 +598,15 @@ def transform_key_into_base64_str(key: str) -> str:
 
 
 def define_rpm_public_key_to_machine(fingerprint: str):
-    with open("rpm_public.key", "w", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as writer:
-        subprocess.run(shlex.split(f"gpg --export -a {fingerprint}"), stdout=writer, check=True)
+    with open(
+        "rpm_public.key",
+        "w",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as writer:
+        subprocess.run(
+            shlex.split(f"gpg --export -a {fingerprint}"), stdout=writer, check=True
+        )
     run("rpm --import rpm_public.key")
     os.remove("rpm_public.key")
 
@@ -544,17 +643,19 @@ def is_rpm_file_signed(file_path: str) -> bool:
 
 def verify_rpm_signature_in_dir(rpm_dir_path: str):
     files = []
-    for (dirpath, _, filenames) in os.walk(rpm_dir_path):
+    for dirpath, _, filenames in os.walk(rpm_dir_path):
         files += [os.path.join(dirpath, file) for file in filenames]
     rpm_files = filter(lambda file_name: file_name.endswith("rpm"), files)
     for file in rpm_files:
         if not is_rpm_file_signed(f"{file}"):
-            raise ValueError(f"File {file} is not signed or there is a signature check problem")
+            raise ValueError(
+                f"File {file} is not signed or there is a signature check problem"
+            )
 
 
 def remove_prefix(text, prefix):
     if text.startswith(prefix):
-        result_str = text[len(prefix):]
+        result_str = text[len(prefix) :]
     else:
         result_str = text
     return result_str
@@ -562,7 +663,7 @@ def remove_prefix(text, prefix):
 
 def remove_suffix(initial_str: str, suffix: str) -> str:
     if initial_str.endswith(suffix):
-        result_str = initial_str[:-len(suffix)]
+        result_str = initial_str[: -len(suffix)]
     else:
         result_str = initial_str
     return result_str
@@ -574,13 +675,24 @@ def initialize_env(exec_path: str, project_name: str, checkout_dir: str):
         run(f"git clone https://github.com/citusdata/{project_name}.git {checkout_dir}")
 
 
-def create_pr(gh_token: str, pr_branch: str, pr_title: str, repo_owner: str, project_name: str, base_branch: str):
+def create_pr(
+    gh_token: str,
+    pr_branch: str,
+    pr_title: str,
+    repo_owner: str,
+    project_name: str,
+    base_branch: str,
+):
     g = Github(gh_token)
     repository = g.get_repo(f"{repo_owner}/{project_name}")
-    create_pr_with_repo(repo=repository, pr_branch=pr_branch, pr_title=pr_title, base_branch=base_branch)
+    create_pr_with_repo(
+        repo=repository, pr_branch=pr_branch, pr_title=pr_title, base_branch=base_branch
+    )
 
 
-def create_pr_with_repo(repo: Repository, pr_branch: str, pr_title: str, base_branch: str):
+def create_pr_with_repo(
+    repo: Repository, pr_branch: str, pr_title: str, base_branch: str
+):
     return repo.create_pull(title=pr_title, base=base_branch, head=pr_branch, body="")
 
 
@@ -595,35 +707,53 @@ def stat_get_request(request_address: str, request_type: RequestType, session):
     except requests.exceptions.RequestException as e:
         result = e.response
         request_log.status_code = -1
-        request_log.response = e.response.content.decode("ascii") if e.response.content.decode("ascii") else str(e)
+        request_log.response = (
+            e.response.content.decode("ascii")
+            if e.response.content.decode("ascii")
+            else str(e)
+        )
     finally:
         session.commit()
     return result
 
 
-def get_supported_postgres_release_versions(postgres_matrix_conf_file_path: str,
-                                            package_version: is_version(str)) -> List[str]:
-    with open(postgres_matrix_conf_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+def get_supported_postgres_release_versions(
+    postgres_matrix_conf_file_path: str, package_version: is_version(str)
+) -> List[str]:
+    with open(
+        postgres_matrix_conf_file_path,
+        "r",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as reader:
         yaml_content = yaml.load(reader, yaml.BaseLoader)
 
     versions_dictionary = {}
-    for version_info in yaml_content['version_matrix']:
-        versions_dictionary[list(version_info.keys())[0]] = \
-            version_info[list(version_info.keys())[0]]['postgres_versions']
+    for version_info in yaml_content["version_matrix"]:
+        versions_dictionary[list(version_info.keys())[0]] = version_info[
+            list(version_info.keys())[0]
+        ]["postgres_versions"]
     release_versions = match_release_version(versions_dictionary, package_version)
 
     return release_versions
 
 
-def get_supported_postgres_nightly_versions(postgres_matrix_conf_file_path: str) -> List[str]:
-    with open(postgres_matrix_conf_file_path, "r", encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-              errors=DEFAULT_UNICODE_ERROR_HANDLER) as reader:
+def get_supported_postgres_nightly_versions(
+    postgres_matrix_conf_file_path: str,
+) -> List[str]:
+    with open(
+        postgres_matrix_conf_file_path,
+        "r",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as reader:
         yaml_content = yaml.load(reader, yaml.BaseLoader)
 
     # nightly version is the last element in the postgres matrix
-    latest_version_info = yaml_content['version_matrix'][-1]
-    nightly_versions = latest_version_info[list(latest_version_info.keys())[0]]["postgres_versions"]
+    latest_version_info = yaml_content["version_matrix"][-1]
+    nightly_versions = latest_version_info[list(latest_version_info.keys())[0]][
+        "postgres_versions"
+    ]
     return nightly_versions
 
 
@@ -631,7 +761,9 @@ def match_release_version(versions_dictionary, package_version: str):
     versions = list(versions_dictionary.keys())
     numeric_versions_of_config: Dict[int, str] = {}
     for version in versions:
-        numeric_versions_of_config[get_numeric_counterpart_of_version(version)] = version
+        numeric_versions_of_config[
+            get_numeric_counterpart_of_version(version)
+        ] = version
     package_version_numeric = get_numeric_counterpart_of_version(package_version)
 
     if package_version_numeric in numeric_versions_of_config:
@@ -656,7 +788,7 @@ def get_numeric_counterpart_of_version(package_version: str):
     numbers_in_version = package_version.split(".")
     # add a 0 if version is minor to calculate and match for patch releases accurately
     if len(numbers_in_version) == 2:
-        numbers_in_version.append('0')
+        numbers_in_version.append("0")
     multiplier = 1
     numeric_counterpart = 0
     for num in reversed(numbers_in_version):

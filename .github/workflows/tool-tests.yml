@@ -44,6 +44,9 @@ jobs:
       - name: Run static code analysis
         run: python -m prospector
 
+      - name: Validate code format
+        run: black . --check
+
       - name: Unit tests for "Common tools"
         run: python -m pytest -q packaging_automation/tests/test_common_tool_methods.py
 
