@@ -24,7 +24,10 @@ def test_docker_statistics_collector():
     )
     db = create_engine(db_connection_string(db_params=db_params, is_test=True))
     sql = text(f"DROP TABLE IF EXISTS {DockerStats.__tablename__}")
-    db.execute(sql)
+    conn = db.connect()
+    conn.execute(sql)
+    conn.commit()
+    conn.close()
     Session = sessionmaker(db)
     session = Session()
     fetch_and_store_docker_statistics(

@@ -17,4 +17,5 @@ urllib3
 wheel
 python-dotenv
 prospector[with_everything]
+pypistats
 setuptools==65.6.3
