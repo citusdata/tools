@@ -336,6 +336,8 @@ def build_package(
     input_output_parameters: InputOutputParameters,
     is_test: bool = False,
 ):
+    print(f"Python INSTALL_RUST: {os.getenv('INSTALL_RUST')}")
+    print(f"Python CI: {os.getenv('CI')}")
     docker_image_name = "packaging" if not is_test else "packaging-test"
     postgres_extension = "all" if postgres_version == "all" else f"pg{postgres_version}"
     os.environ["GITHUB_TOKEN"] = github_token
