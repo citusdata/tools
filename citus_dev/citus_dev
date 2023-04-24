@@ -2,7 +2,7 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--mx] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer]
   citus_dev restart <name> [--watch] [--port=<port>]
   citus_dev (start|stop) <name> [--port=<port>] [--force]
 
@@ -12,7 +12,6 @@ Options:
   --watch                  Watch for changes to the citus plugin and restart the cluster when the plugin updates
   --use-ssl                Create the cluster with ssl enabled
   --no-extension           Do not create the extension while creating the nodes
-  --mx                     Enable metadata sync for all workers
   --destroy                Destroy any old cluster with the same name
   --init-with=<sql_file>   A SQL script to run after creation of the cluster to set up any necessary tables and data
   --init-worker-with=<sql_file>   A SQL script to run after creation of the cluster on the workers
@@ -45,7 +44,7 @@ def run(command, *args, **kwargs):
     return result
 
 
-def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
+def createNodeCommands(clustername, role, index=None, usessl=False):
     nodename = role
     if index != None:
         nodename += "%d" % index
@@ -64,9 +63,6 @@ def createNodeCommands(clustername, role, index=None, usessl=False, mx=False):
         run(f"echo \"citus.node_conninfo = 'sslmode=require'\" >> {clustername}/{nodename}/postgresql.conf")
         run(f"openssl req -new -x509 -days 365 -nodes -text -out {clustername}/{nodename}/server.crt -keyout {clustername}/{nodename}/server.key -subj '/CN={nodename}'")
         run(f"chmod 0600 {clustername}/{nodename}/server.key")
-
-    if mx:
-        run(f"echo \"citus.replication_model = 'streaming'\" >> {clustername}/{nodename}/postgresql.conf")
 
 def createPgBouncerUsers(clustername):
     username = getpass.getuser()
@@ -116,7 +112,6 @@ def main(arguments):
             clustername,
             "coordinator",
             usessl=arguments["--use-ssl"],
-            mx=arguments["--mx"],
         )
 
         port = int(arguments["--port"])
@@ -132,7 +127,6 @@ def main(arguments):
                 "worker",
                 i,
                 usessl=arguments["--use-ssl"],
-                mx=arguments["--mx"],
             )
             if pgbouncer:
                 createPgBouncerConfig(clustername, port, i)
@@ -160,17 +154,11 @@ def main(arguments):
                 nodeport = port + i
                 run(f'psql -p {nodeport} -c "CREATE EXTENSION citus;"')
 
-            # If the cluster size is 0 we add the coordinator as the only node, otherwise we will add all other nodes
-            if size == 0:
-                run(f"psql -p {port} -c \"SELECT * from master_add_node('localhost', {port}, groupId => 0);\"")
-            else:
-                for i in range(size):
-                    workerport = port + 1 + i
-                    run(f"psql -p {port} -c \"SELECT * from master_add_node('localhost', {workerport});\"")
+            run(f"psql -p {port} -c \"SELECT * from citus_set_coordinator_host('localhost', {port});\"")
 
-                    if arguments["--mx"]:
-                        run(f"psql -p {port} -c \"SELECT start_metadata_sync_to_node('localhost', {workerport});\"")
-
+            for i in range(size):
+                workerport = port + 1 + i
+                run(f"psql -p {port} -c \"SELECT * from master_add_node('localhost', {workerport});\"")
             run(f'psql -p {port} -c "SELECT * from master_get_active_worker_nodes();"')
 
         if pgbouncer:
