@@ -154,13 +154,11 @@ def main(arguments):
                 nodeport = port + i
                 run(f'psql -p {nodeport} -c "CREATE EXTENSION citus;"')
 
-            # If the cluster size is 0 we add the coordinator as the only node, otherwise we will add all other nodes
-            if size == 0:
-                run(f"psql -p {port} -c \"SELECT * from master_add_node('localhost', {port}, groupId => 0);\"")
-            else:
-                for i in range(size):
-                    workerport = port + 1 + i
-                    run(f"psql -p {port} -c \"SELECT * from master_add_node('localhost', {workerport});\"")
+            run(f"psql -p {port} -c \"SELECT * from citus_set_coordinator_host('localhost', {port});\"")
+
+            for i in range(size):
+                workerport = port + 1 + i
+                run(f"psql -p {port} -c \"SELECT * from master_add_node('localhost', {workerport});\"")
             run(f'psql -p {port} -c "SELECT * from master_get_active_worker_nodes();"')
 
         if pgbouncer:
