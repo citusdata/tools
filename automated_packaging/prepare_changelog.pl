@@ -50,4 +50,4 @@ close(CHANGELOG_FILE);
 # Commit and push the changes, then open a PR
 `git commit -a -m "Add changelog entry for $NEW_VERSION"`;
 `git push origin $PROJECT-$NEW_VERSION-changelog-$curTime`;
-`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Bump $PROJECT to $NEW_VERSION\", \"base\":\"main\", \"head\":\"$PROJECT-$NEW_VERSION-changelog-$curTime\"}' https://api.github.com/repos/citusdata/$PROJECT/pulls`;
+`curl -g -H "Accept: application/vnd.github.v3.full+json" -X POST --user "$github_token:x-oauth-basic" -d '{\"title\":\"Changelog entries for $NEW_VERSION\", \"base\":\"main\", \"draft\":true, \"head\":\"$PROJECT-$NEW_VERSION-changelog-$curTime\"}' https://api.github.com/repos/citusdata/$PROJECT/pulls`;
