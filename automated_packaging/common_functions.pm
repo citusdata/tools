@@ -127,6 +127,7 @@ sub create_release_changelog {
 
         if ($add_to_changelog) {
             @log_output = split("\n", $pr_hash{'body'});
+            push(@comment_lines, "PR #" . $pr_hash{'number'} . " : " . $pr_hash{'title'} . "\n");
             foreach $line (@log_output) {
                 if ($line =~ /^DESCRIPTION: */) {
                     $description_part = substr($line, length($&), -1);
