@@ -35,11 +35,11 @@ sub get_and_verify_token {
     return $github_token;
 }
 
-# Get sorted PRs according to merged-at by collecting PRs up to given data (using created info)
+# Get lexicographically sorted PRs by collecting PRs up to given data (using created info)
 sub get_sorted_prs {
     my $earliest_pr_date = @_[0];
     my $repo_name = @_[1];
-    my %sorted_pr_hash = ();
+    my @pr_list = ();
     my $github_token = get_and_verify_token();
 
     my $page_number = 1;
@@ -64,7 +64,7 @@ sub get_sorted_prs {
                     next;
                 }
 
-                $sorted_pr_hash{$pr_hash{'merged_at'}} = $pr_hash{'url'};
+                push(@pr_list, $pr_hash{'url'});
             }
         }
 
