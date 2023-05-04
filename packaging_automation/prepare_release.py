@@ -35,13 +35,14 @@ from .common_validations import CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
 CITUS_CONTROL = "src/backend/distributed/citus.control"
+COLUMNAR_CONTROL = "src/backend/columnar/citus_columnar.control"
 MULTI_EXTENSION_OUT = "src/test/regress/expected/multi_extension.out"
 CONFIG_PY = "src/test/regress/upgrade/config.py"
 DISTRIBUTED_SQL_DIR_PATH = "src/backend/distributed/sql"
 DOWNGRADES_DIR_PATH = f"{DISTRIBUTED_SQL_DIR_PATH}/downgrades"
 CONFIGURE_IN = "configure.in"
 CONFIGURE = "configure"
-CITUS_CONTROL_SEARCH_PATTERN = r"^default_version*"
+CONTROL_FILE_SEARCH_PATTERN = r"^default_version*"
 
 MULTI_EXT_DEVEL_SEARCH_PATTERN = rf"^\s*{CITUS_MINOR_VERSION_PATTERN}devel$"
 MULTI_EXT_PATCH_SEARCH_PATTERN = rf"^\s*{CITUS_PATCH_VERSION_PATTERN}$"
@@ -100,6 +101,7 @@ class MajorReleaseParams:
 @dataclass
 class UpcomingVersionBranchParams:
     citus_control_file_path: str
+    columnar_control_file_path: str
     config_py_path: str
     configure_in_path: str
     upcoming_devel_version: str
@@ -124,6 +126,7 @@ class PatchReleaseParams:
     is_test: bool
     main_branch: str
     citus_control_file_path: str
+    columnar_control_file_path: str
     multi_extension_out_path: str
     project_name: str
     project_version: str
@@ -144,6 +147,7 @@ class ProjectParams:
 class PathParams:
     multi_extension_sql_path: str
     citus_control_file_path: str
+    columnar_control_file_path: str
     multi_extension_out_path: str
     configure_in_path: str
     config_py_path: str
@@ -187,6 +191,7 @@ def update_release(
         multi_extension_out_path=f"{exec_path}/{MULTI_EXTENSION_OUT}",
         multi_extension_sql_path=f"{exec_path}/{MULTI_EXTENSION_SQL}",
         citus_control_file_path=f"{exec_path}/{CITUS_CONTROL}",
+        columnar_control_file_path=f"{exec_path}/{COLUMNAR_CONTROL}",
         configure_in_path=f"{exec_path}/{CONFIGURE_IN}",
         config_py_path=f"{exec_path}/{CONFIG_PY}",
         distributed_dir_path=f"{exec_path}/{DISTRIBUTED_SQL_DIR_PATH}",
@@ -237,6 +242,7 @@ def update_release(
             is_test=is_test,
             main_branch=project_params.main_branch,
             citus_control_file_path=path_params.citus_control_file_path,
+            columnar_control_file_path=path_params.columnar_control_file_path,
             config_py_path=path_params.config_py_path,
             configure_in_path=path_params.configure_in_path,
             distributed_dir_path=path_params.distributed_dir_path,
@@ -267,6 +273,7 @@ def update_release(
             project_version=project_params.project_version,
             schema_version=project_params.schema_version,
             citus_control_file_path=path_params.citus_control_file_path,
+            columnar_control_file_path=path_params.columnar_control_file_path,
             release_branch_name=branch_params.release_branch_name,
             repository=repository,
         )
@@ -335,8 +342,9 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
     )
     # if schema version is not empty update citus.control schema version
     if patchReleaseParams.schema_version:
-        update_schema_version_in_citus_control(
+        update_schema_version_in_control_files(
             citus_control_file_path=patchReleaseParams.citus_control_file_path,
+            columnar_control_file_path=patchReleaseParams.columnar_control_file_path,
             schema_version=patchReleaseParams.schema_version,
         )
     if patchReleaseParams.cherry_pick_enabled:
@@ -419,10 +427,12 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
         upcoming_params.upcoming_minor_version,
     )
 
-    # change version in citus.control file
+    # change versions in control files
     default_upcoming_schema_version = f"{upcoming_params.upcoming_minor_version}-1"
-    update_schema_version_in_citus_control(
-        upcoming_params.citus_control_file_path, default_upcoming_schema_version
+    update_schema_version_in_control_files(
+        upcoming_params.citus_control_file_path,
+        upcoming_params.columnar_control_file_path,
+        default_upcoming_schema_version,
     )
     # commit and push changes on master-update-version-$curtime branch
     commit_changes_for_version_bump(
@@ -527,19 +537,22 @@ def commit_changes_for_version_bump(project_name, project_version):
     print(f"### Done Changes committed for {current_branch}. ###")
 
 
-def update_schema_version_in_citus_control(citus_control_file_path, schema_version):
-    print(
-        f"### Updating {citus_control_file_path} file with the  version {schema_version}... ###"
-    )
-    if not replace_line_in_file(
-        citus_control_file_path,
-        CITUS_CONTROL_SEARCH_PATTERN,
-        f"default_version = '{schema_version}'",
-    ):
-        raise ValueError(f"{citus_control_file_path} does not have match for version")
-    print(
-        f"### Done {citus_control_file_path} file is updated with the schema version {schema_version}. ###"
-    )
+def update_schema_version_in_control_files(
+    citus_control_file_path, columnar_control_file_path, schema_version
+):
+    for control_file_path in [citus_control_file_path, columnar_control_file_path]:
+        print(
+            f"### Updating {control_file_path} file with the  version {schema_version}... ###"
+        )
+        if not replace_line_in_file(
+            control_file_path,
+            CONTROL_FILE_SEARCH_PATTERN,
+            f"default_version = '{schema_version}'",
+        ):
+            raise ValueError(f"{control_file_path} does not have match for version")
+        print(
+            f"### Done {control_file_path} file is updated with the schema version {schema_version}. ###"
+        )
 
 
 def add_downgrade_script_in_multi_extension_file(
@@ -583,7 +596,7 @@ def get_current_schema_from_citus_control(citus_control_file_path: str) -> str:
     ) as cc_reader:
         cc_file_content = cc_reader.read()
         _, cc_line = find_nth_matching_line_and_line_number(
-            cc_file_content, CITUS_CONTROL_SEARCH_PATTERN, 1
+            cc_file_content, CONTROL_FILE_SEARCH_PATTERN, 1
         )
         schema_not_found = False
         if len(cc_line) > 0:
