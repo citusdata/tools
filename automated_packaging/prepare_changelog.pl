@@ -2,6 +2,7 @@
 use lib '/usr/local/bin';
 use common_functions;
 use JSON;
+use POSIX qw(strftime);
 
 $PROJECT = $ARGV[0];
 $NEW_VERSION = $ARGV[1];
@@ -13,7 +14,7 @@ $EARLIEST_PR_DATE = $ARGV[2];
 $year += 1900;
 
 # Necessary to create unique branch
-$curTime = time();
+$curTime = "$year-$mon-$mday-$hour-$min-$sec";
 
 sub add_changelog_header() {
 
