@@ -430,15 +430,15 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
         upcoming_params.upcoming_minor_version,
         MULTI_EXT_OUT_TEMPLATE_FILE,
     )
-    # create a new sql file for upgrade path:
-    upgrade_file = create_new_sql_for_upgrade_path(
+    # create new sql files for upgrade path:
+    citus_upgrade_file, columnar_upgrade_file = create_new_sql_for_upgrade_path(
         current_schema_version,
         upcoming_params.citus_sql_dir_path,
         upcoming_params.columnar_sql_dir_path,
         upcoming_params.upcoming_minor_version,
     )
-    # create a new sql file for downgrade path:
-    downgrade_file = create_new_sql_for_downgrade_path(
+    # create new sql files for downgrade path:
+    citus_downgrade_file, columnar_downgrade_file = create_new_sql_for_downgrade_path(
         current_schema_version,
         upcoming_params.citus_downgrades_dir_path,
         upcoming_params.columnar_downgrades_dir_path,
@@ -467,7 +467,12 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
             upcoming_params.upcoming_devel_version,
         )
     print(f"### Done {upcoming_params.upcoming_version_branch} flow executed. ###")
-    return MigrationFiles(upgrade_file=upgrade_file, downgrade_file=downgrade_file)
+    return MigrationFiles(
+        citus_upgrade_file=citus_upgrade_file,
+        columnar_upgrade_file=columnar_upgrade_file,
+        citus_downgrade_file=citus_downgrade_file,
+        columnar_downgrade_file=columnar_downgrade_file,
+    )
 
 
 def prepare_release_branch_for_major_release(majorReleaseParams: MajorReleaseParams):
