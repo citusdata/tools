@@ -79,7 +79,6 @@ def return_lines_starts_with_error(output_lines: List[str]) -> List[str]:
     for line in output_lines:
         if line.startswith("error"):
             error_lines.append(line)
-    print(f"Errors:{error_lines}")
     return error_lines
 
 
