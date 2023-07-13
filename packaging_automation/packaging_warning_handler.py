@@ -66,10 +66,13 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
             for error_line in error_lines:
                 error_message_for_warnings += error_line + "\n"
 
-        print(f"Build output check failed. Error Message: \n{error_message_for_warnings}")
+        print(
+            f"Build output check failed. Error Message: \n{error_message_for_warnings}"
+        )
         sys.exit(1)
     else:
         print("Build output check completed succesfully. No warnings")
+
 
 def return_lines_starts__with_error(output_lines: List[str]) -> List[str]:
     error_lines = []
@@ -77,6 +80,7 @@ def return_lines_starts__with_error(output_lines: List[str]) -> List[str]:
         if line.startswith("error"):
             error_lines.append(line)
     return error_lines
+
 
 def filter_warning_lines(
     output_lines: List[str], package_type: PackageType
