@@ -29,7 +29,7 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
 
     output_lines = output.splitlines()
 
-    error_lines = return_lines_starts__with_error(output_lines)
+    error_lines = return_lines_starts_with_error(output_lines)
 
     warning_lines, package_type_specific_warning_lines = filter_warning_lines(
         output_lines, package_type
@@ -74,11 +74,12 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
         print("Build output check completed succesfully. No warnings")
 
 
-def return_lines_starts__with_error(output_lines: List[str]) -> List[str]:
+def return_lines_starts_with_error(output_lines: List[str]) -> List[str]:
     error_lines = []
     for line in output_lines:
         if line.startswith("error"):
             error_lines.append(line)
+    print(f"Errors:{error_lines}")
     return error_lines
 
 
