@@ -12,6 +12,8 @@ astroid==2.15.6
     #   pylint-celery
     #   pylint-flask
     #   requirements-detector
+attrs==23.1.0
+    # via -r tools/packaging_automation/requirements.in
 bandit==1.7.5
     # via prospector
 black==23.7.0
