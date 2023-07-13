@@ -62,7 +62,7 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
         )
 
         if len(error_lines) > 0:
-            error_message_for_warnings += "\n\nErrors:\n"
+            error_message_for_warnings += "\n\nError Lines:\n"
             for error_line in error_lines:
                 error_message_for_warnings += error_line + "\n"
 
