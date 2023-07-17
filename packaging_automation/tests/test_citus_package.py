@@ -43,6 +43,7 @@ single_postgres_package_counts = {
     "ol/7": 2,
     "ol/8": 3,
     "almalinux/9": 3,
+    "almalinux/8": 3,
     "rockylinux/9": 3,
     "el/9": 3,
     "ol/9": 3,
