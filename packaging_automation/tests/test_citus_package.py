@@ -178,7 +178,7 @@ def test_get_postgres_versions_debain_bullseye():
         platform="debian/bullseye",
     )
     assert len(release_versions) == 2 and release_versions == ["13", "14"]
-    assert len(nightly_versions) == 3 and nightly_versions == ["13", "14", "15"]
+    assert len(nightly_versions) == 2 and nightly_versions == [ "14", "15"]
 
 
 def test_upload_to_package_cloud():
