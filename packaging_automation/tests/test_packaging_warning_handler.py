@@ -10,7 +10,7 @@ from ..packaging_warning_handler import (
     PackageType,
     filter_warning_lines,
     get_warnings_to_be_raised,
-    get_error_message,
+    get_error_message_for_warnings,
     validate_output,
 )
 
@@ -122,7 +122,7 @@ def test_get_error_message():
         debian_warnings_to_be_raised = get_warnings_to_be_raised(
             debian_ignore_list, debian_warning_lines
         )
-        error_message = get_error_message(
+        error_message = get_error_message_for_warnings(
             base_warnings_to_be_raised, debian_warnings_to_be_raised, PackageType.deb
         )
         assert (
@@ -154,7 +154,7 @@ def test_get_error_message_empty_package_specific_errors():
         debian_warnings_to_be_raised = get_warnings_to_be_raised(
             debian_ignore_list, debian_warning_lines
         )
-        error_message = get_error_message(
+        error_message = get_error_message_for_warnings(
             base_warnings_to_be_raised, debian_warnings_to_be_raised, PackageType.deb
         )
         assert error_message == "Warning lines:\nWarning: Unhandled\n"

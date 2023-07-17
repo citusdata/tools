@@ -28,6 +28,9 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
     print(f"Base ignore list:{base_ignore_list}")
 
     output_lines = output.splitlines()
+
+    error_lines = return_lines_starts_with_error(output_lines)
+
     warning_lines, package_type_specific_warning_lines = filter_warning_lines(
         output_lines, package_type
     )
@@ -50,16 +53,33 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
     if (
         len(base_warnings_to_be_raised) > 0
         or len(package_type_specific_warnings_to_be_raised) > 0
+        or len(error_lines) > 0
     ):
-        error_message = get_error_message(
+        error_message_for_warnings = get_error_message_for_warnings(
             base_warnings_to_be_raised,
             package_type_specific_warnings_to_be_raised,
             package_type,
         )
-        print(f"Build output check failed. Error Message: \n{error_message}")
+
+        if len(error_lines) > 0:
+            error_message_for_warnings += "\n\nError Lines:\n"
+            for error_line in error_lines:
+                error_message_for_warnings += error_line + "\n"
+
+        print(
+            f"Build output check failed. Error Message: \n{error_message_for_warnings}"
+        )
         sys.exit(1)
     else:
         print("Build output check completed succesfully. No warnings")
+
+
+def return_lines_starts_with_error(output_lines: List[str]) -> List[str]:
+    error_lines = []
+    for line in output_lines:
+        if line.startswith("error"):
+            error_lines.append(line)
+    return error_lines
 
 
 def filter_warning_lines(
@@ -144,7 +164,7 @@ def get_warnings_to_be_raised(
     return warnings_to_be_raised
 
 
-def get_error_message(
+def get_error_message_for_warnings(
     base_warnings_to_be_raised: List[str],
     package_specific_warnings_to_be_raised: List[str],
     package_type: PackageType,
