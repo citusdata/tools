@@ -13,7 +13,7 @@ from .common_tool_methods import (
 )
 
 POSTGRES_MATRIX_FILE = "postgres-matrix.yml"
-POSTGRES_MATRIX_WEB_ADDRESS = "https://raw.githubusercontent.com/citusdata/packaging/all-citus-unit-tests/postgres-matrix.yml"
+POSTGRES_MATRIX_WEB_ADDRESS = "https://raw.githubusercontent.com/citusdata/packaging/all-citus/postgres-matrix.yml"
 
 
 def run_command(command: str) -> int:
