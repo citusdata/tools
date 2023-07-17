@@ -40,6 +40,7 @@ docker_image_names = {
     "debian": "debian",
     "el/9": "almalinux-9",
     "ol/9": "almalinux-9",
+    "el/8": "almalinux-8",
     "el": "centos",
     "ol": "oraclelinux",
     "ubuntu": "ubuntu",
@@ -48,6 +49,7 @@ docker_image_names = {
 
 package_docker_platform_dict = {
     "almalinux,9": "almalinux/9",
+    "almalinux,8": "almalinux/8",
     "centos,8": "el/8",
     "centos,7": "el/7",
     "debian,bookworm": "debian/bookworm",
