@@ -130,7 +130,7 @@ def find_nth_occurrence_position(subject_string: str, search_string: str, n) -> 
 
 
 def find_nth_matching_line_and_line_number(
-        subject_string: str, regex_pattern: str, n: int
+    subject_string: str, regex_pattern: str, n: int
 ) -> Tuple[int, str]:
     """Takes a subject string, regex param and the search index as parameter and returns line number of found match.
     If not found returns -1"""
@@ -232,10 +232,10 @@ def str_array_to_str(str_array: List[str]) -> str:
 
 
 def get_prs_for_patch_release(
-        repo: Repository.Repository,
-        earliest_date: datetime,
-        base_branch: str,
-        last_date: datetime = None,
+    repo: Repository.Repository,
+    earliest_date: datetime,
+    base_branch: str,
+    last_date: datetime = None,
 ):
     pull_requests = repo.get_pulls(
         state="closed", base=base_branch, sort="created", direction="desc"
@@ -268,13 +268,13 @@ def filter_prs_by_label(prs: List[PullRequest.PullRequest], label_name: str):
 
 
 def file_includes_line(
-        base_path: str, relative_file_path: str, line_content: str
+    base_path: str, relative_file_path: str, line_content: str
 ) -> bool:
     with open(
-            f"{base_path}/{relative_file_path}",
-            "r",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        f"{base_path}/{relative_file_path}",
+        "r",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as reader:
         content = reader.read()
         lines = content.splitlines()
@@ -285,13 +285,13 @@ def file_includes_line(
 
 
 def count_line_in_file(
-        base_path: str, relative_file_path: str, search_line: str
+    base_path: str, relative_file_path: str, search_line: str
 ) -> int:
     with open(
-            f"{base_path}/{relative_file_path}",
-            "r",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        f"{base_path}/{relative_file_path}",
+        "r",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as reader:
         content = reader.read()
         lines = content.splitlines()
@@ -300,10 +300,10 @@ def count_line_in_file(
 
 def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
     with open(
-            file,
-            "r",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        file,
+        "r",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as reader:
         file_content = reader.read()
         lines = file_content.splitlines()
@@ -314,10 +314,10 @@ def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
                 lines[line_number] = replace_str
         edited_content = str_array_to_str(lines)
     with open(
-            file,
-            "w",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        file,
+        "w",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as writer:
         writer.write(edited_content)
 
@@ -326,10 +326,10 @@ def replace_line_in_file(file: str, match_regex: str, replace_str: str) -> bool:
 
 def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
     with open(
-            file,
-            "r+",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        file,
+        "r+",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as reader:
         file_content = reader.read()
         lines = file_content.splitlines()
@@ -345,19 +345,19 @@ def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
                     # Since line is added after matched string, shift index start with line_number+1
                     # increment of appended_line_index is 2 since copy_lines appended_line_index+1 includes
                     # append_str
-                    lines_to_be_shifted = lines[line_number + 1:]
+                    lines_to_be_shifted = lines[line_number + 1 :]
                     copy_lines = (
-                            copy_lines[0: appended_line_index + 2] + lines_to_be_shifted
+                        copy_lines[0 : appended_line_index + 2] + lines_to_be_shifted
                     )
                 else:
                     copy_lines.append(append_str)
             appended_line_index = appended_line_index + 1
         edited_content = str_array_to_str(copy_lines)
     with open(
-            file,
-            "w",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        file,
+        "w",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as writer:
         writer.write(edited_content)
 
@@ -366,10 +366,10 @@ def append_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
 
 def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
     with open(
-            file,
-            "r+",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        file,
+        "r+",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as reader:
         file_content = reader.read()
         lines = file_content.splitlines()
@@ -384,15 +384,15 @@ def prepend_line_in_file(file: str, match_regex: str, append_str: str) -> bool:
                 # increment of prepend_line_index is 1 line after prepended_line_index should be shifted
                 lines_to_be_shifted = lines[line_number:]
                 copy_lines = (
-                        copy_lines[0: prepended_line_index + 1] + lines_to_be_shifted
+                    copy_lines[0 : prepended_line_index + 1] + lines_to_be_shifted
                 )
             prepended_line_index = prepended_line_index + 1
         edited_content = str_array_to_str(copy_lines)
     with open(
-            file,
-            "w",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        file,
+        "w",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as writer:
         writer.write(edited_content)
 
@@ -462,11 +462,11 @@ def remove_cloned_code(exec_path: str):
 
 
 def process_template_file_with_minor(
-        project_version: str,
-        templates_path: str,
-        template_file_path: str,
-        minor_version: str,
-        postgres_version: str = "",
+    project_version: str,
+    templates_path: str,
+    template_file_path: str,
+    minor_version: str,
+    postgres_version: str = "",
 ):
     """This function gets the template files, changes tha parameters inside the file and returns the output.
     Template files are stored under packaging_automation/templates and these files include parametric items in the
@@ -485,10 +485,10 @@ def process_template_file_with_minor(
 
 
 def process_template_file(
-        project_version: str,
-        templates_path: str,
-        template_file_path: str,
-        postgres_version: str = "",
+    project_version: str,
+    templates_path: str,
+    template_file_path: str,
+    postgres_version: str = "",
 ):
     minor_version = get_minor_project_version(project_version)
     return process_template_file_with_minor(
@@ -502,10 +502,10 @@ def process_template_file(
 
 def write_to_file(content: str, dest_file_name: str):
     with open(
-            dest_file_name,
-            "w+",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        dest_file_name,
+        "w+",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as writer:
         writer.write(content)
 
@@ -578,7 +578,7 @@ def get_private_key_by_fingerprint_without_passphrase(fingerprint: str) -> str:
 
 
 def get_private_key_by_fingerprint_with_passphrase(
-        fingerprint: str, passphrase: str
+    fingerprint: str, passphrase: str
 ) -> str:
     gpg = gnupg.GPG()
 
@@ -599,10 +599,10 @@ def transform_key_into_base64_str(key: str) -> str:
 
 def define_rpm_public_key_to_machine(fingerprint: str):
     with open(
-            "rpm_public.key",
-            "w",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        "rpm_public.key",
+        "w",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as writer:
         subprocess.run(
             shlex.split(f"gpg --export -a {fingerprint}"), stdout=writer, check=True
@@ -655,7 +655,7 @@ def verify_rpm_signature_in_dir(rpm_dir_path: str):
 
 def remove_prefix(text, prefix):
     if text.startswith(prefix):
-        result_str = text[len(prefix):]
+        result_str = text[len(prefix) :]
     else:
         result_str = text
     return result_str
@@ -676,12 +676,12 @@ def initialize_env(exec_path: str, project_name: str, checkout_dir: str):
 
 
 def create_pr(
-        gh_token: str,
-        pr_branch: str,
-        pr_title: str,
-        repo_owner: str,
-        project_name: str,
-        base_branch: str,
+    gh_token: str,
+    pr_branch: str,
+    pr_title: str,
+    repo_owner: str,
+    project_name: str,
+    base_branch: str,
 ):
     g = Github(gh_token)
     repository = g.get_repo(f"{repo_owner}/{project_name}")
@@ -691,7 +691,7 @@ def create_pr(
 
 
 def create_pr_with_repo(
-        repo: Repository, pr_branch: str, pr_title: str, base_branch: str
+    repo: Repository, pr_branch: str, pr_title: str, base_branch: str
 ):
     return repo.create_pull(title=pr_title, base=base_branch, head=pr_branch, body="")
 
@@ -718,13 +718,13 @@ def stat_get_request(request_address: str, request_type: RequestType, session):
 
 
 def get_supported_postgres_release_versions(
-        postgres_matrix_conf_file_path: str, package_version: is_version(str)
+    postgres_matrix_conf_file_path: str, package_version: is_version(str)
 ) -> List[str]:
     with open(
-            postgres_matrix_conf_file_path,
-            "r",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        postgres_matrix_conf_file_path,
+        "r",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as reader:
         yaml_content = yaml.load(reader, yaml.BaseLoader)
 
@@ -739,13 +739,13 @@ def get_supported_postgres_release_versions(
 
 
 def get_supported_postgres_nightly_versions(
-        postgres_matrix_conf_file_path: str,
+    postgres_matrix_conf_file_path: str,
 ) -> List[str]:
     with open(
-            postgres_matrix_conf_file_path,
-            "r",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        postgres_matrix_conf_file_path,
+        "r",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as reader:
         yaml_content = yaml.load(reader, yaml.BaseLoader)
 
