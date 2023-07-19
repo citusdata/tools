@@ -161,7 +161,7 @@ def test_get_postgres_versions_ol_7():
     )
     # pg 15 is excluded for all releases with pg_exclude file
     assert len(release_versions) == 2 and release_versions == ["13", "14"]
-    assert len(nightly_versions) == 2 and nightly_versions == ["14", "15"]
+    assert len(nightly_versions) == 2 and nightly_versions == ["13", "14"]
 
 
 def test_get_postgres_versions_el_7():
