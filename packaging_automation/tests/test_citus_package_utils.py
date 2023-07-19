@@ -173,7 +173,7 @@ def test_build_package_rpm():
     build_package(
         github_token=GH_TOKEN,
         build_type=BuildType.release,
-        docker_platform="centos-8",
+        docker_platform="almalinux-8",
         postgres_version="13",
         input_output_parameters=input_output_parameters,
         is_test=True,
