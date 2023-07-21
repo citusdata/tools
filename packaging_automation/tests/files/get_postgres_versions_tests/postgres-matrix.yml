@@ -10,10 +10,13 @@ version_matrix:
       postgres_versions: [11, 12]
   - 9.5:
       postgres_versions: [11, 12, 13]
-  # If 10.0 is released, since it is between 10.1 and 9.5, 9.5 support will be effective for 10.0.x releases
   - 10.1:
       postgres_versions: [12, 13]
   - 10.2:
       postgres_versions: [12, 13, 14]
-  - 11:
-      postgres_versions: [13, 14, 15]
+  - 11.0:
+      postgres_versions: [13, 14]
+  - 11.1:
+      postgres_versions: [ 13, 14, 15 ]
+  - 12.0:
+        postgres_versions: [ 14, 15 ]

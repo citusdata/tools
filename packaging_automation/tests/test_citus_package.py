@@ -159,6 +159,7 @@ def test_get_postgres_versions_ol_7():
         input_files_dir=f"{os.getcwd()}/packaging_automation/tests/files/get_postgres_versions_tests",
         platform="ol/7",
     )
+    # pg 15 is excluded for all releases with pg_exclude file
     assert len(release_versions) == 2 and release_versions == ["13", "14"]
     assert len(nightly_versions) == 2 and nightly_versions == ["13", "14"]
 
@@ -168,8 +169,9 @@ def test_get_postgres_versions_el_7():
         input_files_dir=f"{os.getcwd()}/packaging_automation/tests/files/get_postgres_versions_tests",
         platform="el/7",
     )
+    # pg 15 is excluded for all releases with pg_exclude file
     assert len(release_versions) == 2 and release_versions == ["13", "14"]
-    assert len(nightly_versions) == 3 and nightly_versions == ["13", "14", "15"]
+    assert len(nightly_versions) == 2 and nightly_versions == ["14", "15"]
 
 
 def test_get_postgres_versions_debain_bullseye():
@@ -177,6 +179,7 @@ def test_get_postgres_versions_debain_bullseye():
         input_files_dir=f"{os.getcwd()}/packaging_automation/tests/files/get_postgres_versions_tests",
         platform="debian/bullseye",
     )
+    # pg 15 is excluded for all releases with pg_exclude file
     assert len(release_versions) == 2 and release_versions == ["13", "14"]
     assert len(nightly_versions) == 2 and nightly_versions == ["14", "15"]
 
