@@ -27,7 +27,7 @@ import yaml
 from jinja2 import Template
 
 REPO_SEARCH_PATHS = [
-	'github.com/citusdata/examples/',
+	'github.com/citusdata/public-schemas/',
 	'github.com/',
 ]
 
@@ -36,11 +36,22 @@ APP_DATA = os.path.expanduser("~/.citus_load")
 REPO_CACHE = os.path.join(APP_DATA, "repos")
 CONFIG_FILE = os.path.join(APP_DATA, "config.yaml")
 
+"""
+TRACE provides a simple way to print debug messages to the console. It will only print
+the message if the TRACE environment variable is set. This is to prevent the console
+from being flooded with debug messages.
+"""
+def TRACE(msg):
+	if os.environ.get('TRACE'):
+		print(msg)
+
+"""
+main is the entry point of the application. It will parse the command line arguments
+and call the appropriate function.
+"""
 def main(arguments):
 	config()
-	# if the DEBUG environment variable is set, print the arguments that we get passed in
-	if os.environ.get('DEBUG'):
-		print(arguments)
+	TRACE(arguments)
 
 	if arguments['repo']:
 		repo(arguments)
@@ -50,23 +61,29 @@ def main(arguments):
 		# either load is set, or the repo is passed in as the first argument
 		load(arguments)
 
+"""
+config will load the configuration file and apply the configuration to the application.
+"""
 def config():
 	# check if CONFIG_FILE exists, if is does, open the file, parse the yaml apply the configuration
 	if os.path.exists(CONFIG_FILE):
-		if os.environ.get('DEBUG'):
-			print(f"loading config file: {CONFIG_FILE}")
+		TRACE(f"loading config file: {CONFIG_FILE}")
 
 		with open(CONFIG_FILE, 'r') as f:
 			try:
 				config = yaml.safe_load(f)
 				if config['search_path']:
-					if os.environ.get('DEBUG'):
-						print(f"setting search path: {config['search_path']}")
+					TRACE(f"setting search path: {config['search_path']}")
 
+					global REPO_SEARCH_PATHS
 					REPO_SEARCH_PATHS = config['search_path']
 			except:
 				sys.stderr.write(f"failed to parse config file: {CONFIG_FILE}\n")
 
+"""
+repo will handle all commands related to repositories. This includes listing repositories
+and adding repositories.
+"""
 def repo(arguments):
 	if arguments['list']:
 		repo_list(arguments)
@@ -74,22 +91,37 @@ def repo(arguments):
 		repo_add(arguments)
 	return
 
+"""
+repo_list will list all repositories that are currently in the repository cache.
+"""
 def repo_list(arguments):
 	# print the list of repositories
 	for repo in Repo.list():
 		print(repo.name)
 	return
 
+"""
+repo_add will add a repository to the repository cache. This will clone the repository
+from the remote repository and store it in the repository cache.
+"""
 def repo_add(arguments):
 	repo = arguments['<repo>']
 	print(f"TODO: implement add {repo}")
 	return
 
+"""
+schema will handle all commands related to schemas. This currently only includes listing
+schemas.
+"""
 def schema(arguments):
 	if arguments['list']:
 		schema_list(arguments)
 	return
 
+"""
+schema_list will list all schemas that are currently in the repository cache.
+if the --machine flag is set, the output will be suitable for easier processing.
+"""
 def schema_list(arguments):
 	if arguments['--machine']:
 		schema_names = []
@@ -121,6 +153,16 @@ def schema_list(arguments):
 				print(f"  {schema.name}")
 			print()
 
+"""
+load will load a schema into the database. This will execute all steps in the schema
+in the order they are defined.
+
+The schema can be fully qualified, in which case the schema will be loaded from the
+repository that is specified in the schema name. If the schema is not fully qualified,
+the schema will be searched for on the configured search path.
+
+If the schema is not found, an error will be printed and the application will exit.
+"""
 def load(arguments):
 	refresh_repos()
 
@@ -143,7 +185,11 @@ def load(arguments):
 	for step in schema.steps():
 		print(f"running step: {step.name}")
 		step.run()
-	
+
+"""
+find_schema will find a schema by its name. The name should be in the format
+<repo>/<schema>. If the schema is not found, None is returned.
+"""
 def find_schema(schema_name):
 	for repo in Repo.list():
 		for schema in repo.schemas():
