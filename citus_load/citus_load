@@ -106,7 +106,33 @@ from the remote repository and store it in the repository cache.
 """
 def repo_add(arguments):
 	repo = arguments['<repo>']
-	print(f"TODO: implement add {repo}")
+
+	# check if the repo is already in the cache
+	for r in Repo.list():
+		if r.name == repo:
+			# repo is already in the cache, print an error and exit
+			sys.stderr.write(f"repository already exists: {repo}\n")
+			sys.exit(1)
+
+	# we assume the repo is a github repository, and we will clone it from github via https
+	# we do this by executing the git clone command with the repo name prefixed with https://
+	# to make sure we clone in the right directory, we set the cwd to the REPO_CACHE/<organization>/ folder
+	# and prepare the directory structure to leading upto that directory
+	repourl = f"https://{repo}"
+
+	# to get the base directory for the repository we need to remove the repository name
+	# we do this to remove everything after the last slash
+	repo_base = repo.rsplit('/', 1)[0]
+
+	cwd = os.path.join(REPO_CACHE, repo_base)
+
+	# now that we have the working directory we can create the directory structure
+	os.makedirs(cwd, exist_ok=True)
+
+	subprocess.run(['git', 'clone', f"https://{repo}"], 
+					cwd=cwd,
+					check=True)
+		
 	return
 
 """
@@ -233,8 +259,6 @@ class Repo:
 				# run git pull with the repository as the working directory
 				subprocess.run(['git', 'pull'], 
 								cwd=self.absolute_path,
-								stdout=subprocess.PIPE,
-								stderr=subprocess.PIPE,
 								check=True)
 
 		except FileNotFoundError:
