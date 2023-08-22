@@ -5,3 +5,4 @@
 # generated man pages
 *.1
 __pycache__/
+citus-tools.code-workspace
