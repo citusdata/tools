@@ -1,4 +1,4 @@
-#!/usr/bin/env pipenv-shebang
+#!/usr/bin/env python3
 """citus_dev
 
 Usage:

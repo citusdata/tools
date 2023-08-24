@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# mostly copied from pipenv-shebang, but hardcoded for citus_dev
+function getPipfile() {
+  DIR="$(dirname "$1")"
+  if [[ $DIR == "/" ]]; then exit; fi
+  PIPFILE="$DIR/Pipfile"
+  if [[ -e "$PIPFILE" ]]; then
+    echo "$PIPFILE"
+  else
+    getPipfile "$DIR"
+  fi
+}
+
+SCRIPT="$(realpath "$0")"
+DIRNAME="$(dirname "$SCRIPT")"
+PIPFILE=$(getPipfile "$SCRIPT")
+
+if [[ -n "$PIPFILE" ]]; then
+  PIPENV_PIPFILE="$PIPFILE" exec pipenv run "${DIRNAME}/citus_dev" "$@"
+else
+  echo "Could not locate the Pipfile for citus_dev."
+  exit 1
+fi
