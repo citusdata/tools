@@ -349,7 +349,7 @@ def build_package(
         f"docker run --rm -v {input_output_parameters.output_dir}:/packages -v "
         f"{input_output_parameters.input_files_dir}:/buildfiles:ro "
         f"-e GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE -e CONTAINER_BUILD_RUN_ENABLED "
-        f"-e MSRUSTUP_PAT -e MSCODEHUB_USERNAME -e MSCODEHUB_PASSWORD -e INSTALL_RUST -e CI "
+        f"-e MSRUSTUP_PAT -e CRATES_IO_MIRROR_FEED_TOKEN -e INSTALL_RUST -e CI "
         f"citus/{docker_image_name}:{docker_platform}-{postgres_extension} {build_type.name}"
     )
 
