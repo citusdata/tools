@@ -342,6 +342,7 @@ def build_package(
     postgres_extension = "all" if postgres_version == "all" else f"pg{postgres_version}"
     os.environ["GITHUB_TOKEN"] = github_token
     os.environ["CONTAINER_BUILD_RUN_ENABLED"] = "true"
+    print(f"CRATES_IO_MIRROR_FEED_TOKEN {os.getenv('CRATES_IO_MIRROR_FEED_TOKEN')}")
     if not os.path.exists(input_output_parameters.output_dir):
         os.makedirs(input_output_parameters.output_dir)
 
