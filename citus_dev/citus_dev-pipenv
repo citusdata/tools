@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+realfile=$(realpath $0)
+dir=$(dirname $realfile)
+pipenv-shebang "${dir}/citus_dev" "$@"
