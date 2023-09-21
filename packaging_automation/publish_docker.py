@@ -28,8 +28,8 @@ class DockerImageType(Enum):
     latest = 1
     alpine = 2
     nightly = 3
-    postgres_13 = 4
-    postgres_14 = 5
+    postgres_14 = 4
+    postgres_15 = 5
 
 
 class ManualTriggerType(Enum):
@@ -55,14 +55,14 @@ docker_image_info_dict = {
         "docker-tag": "alpine",
         "schedule-type": ScheduleType.regular,
     },
-    DockerImageType.postgres_13: {
-        "file-name": "postgres-13/Dockerfile",
-        "docker-tag": "pg13",
-        "schedule-type": ScheduleType.regular,
-    },
     DockerImageType.postgres_14: {
         "file-name": "postgres-14/Dockerfile",
         "docker-tag": "pg14",
+        "schedule-type": ScheduleType.regular,
+    },
+    DockerImageType.postgres_15: {
+        "file-name": "postgres-15/Dockerfile",
+        "docker-tag": "pg15",
         "schedule-type": ScheduleType.regular,
     },
     DockerImageType.nightly: {

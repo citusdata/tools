@@ -18,8 +18,8 @@ from ..publish_docker import (
 
 NON_DEFAULT_BRANCH_NAME = "10.0.3_test"
 DEFAULT_BRANCH_NAME = "master"
-TAG_NAME = "v10.0.3"
-INVALID_TAG_NAME = "v10.x"
+TAG_NAME = "v12.0.0"
+INVALID_TAG_NAME = "v12.x"
 DOCKER_IMAGE_NAME = "citusdata/citus"
 docker_client = docker.from_env()
 
@@ -49,9 +49,9 @@ def test_decode_tag_parts():
     tag_parts = decode_tag_parts(TAG_NAME)
     assert (
         len(tag_parts) == 3
-        and tag_parts[0] == "10"
+        and tag_parts[0] == "12"
         and tag_parts[1] == "0"
-        and tag_parts[2] == "3"
+        and tag_parts[2] == "0"
     )
 
     with pytest.raises(ValueError):
@@ -60,12 +60,12 @@ def test_decode_tag_parts():
 
 def test_get_image_tag():
     image_name = get_image_tag(remove_prefix(TAG_NAME, "v"), DockerImageType.latest)
-    assert image_name == "10.0.3"
+    assert image_name == "12.0.0"
 
     image_name = get_image_tag(
-        remove_prefix(TAG_NAME, "v"), DockerImageType.postgres_13
+        remove_prefix(TAG_NAME, "v"), DockerImageType.postgres_15
     )
-    assert image_name == "10.0.3-pg13"
+    assert image_name == "12.0.0-pg15"
 
 
 def test_publish_main_docker_images():
@@ -86,10 +86,10 @@ def test_publish_tagged_docker_images_latest():
     os.chdir("docker")
     try:
         run_with_output("git checkout -b docker-unit-test")
-        publish_tagged_docker_images(DockerImageType.latest, "v10.0.3", False)
-        docker_client.images.get("citusdata/citus:10")
-        docker_client.images.get("citusdata/citus:10.0")
-        docker_client.images.get("citusdata/citus:10.0.3")
+        publish_tagged_docker_images(DockerImageType.latest, "v12.0.0", False)
+        docker_client.images.get("citusdata/citus:12")
+        docker_client.images.get("citusdata/citus:12.0")
+        docker_client.images.get("citusdata/citus:12.0.0")
     finally:
         run_with_output("git checkout master")
         run_with_output("git branch -D docker-unit-test")
@@ -101,9 +101,9 @@ def test_publish_tagged_docker_images_alpine():
     try:
         run_with_output("git checkout -b docker-unit-test")
         publish_tagged_docker_images(DockerImageType.alpine, TAG_NAME, False)
-        docker_client.images.get("citusdata/citus:10-alpine")
-        docker_client.images.get("citusdata/citus:10.0-alpine")
-        docker_client.images.get("citusdata/citus:10.0.3-alpine")
+        docker_client.images.get("citusdata/citus:12-alpine")
+        docker_client.images.get("citusdata/citus:12.0-alpine")
+        docker_client.images.get("citusdata/citus:12.0.0-alpine")
     finally:
         run_with_output("git checkout master")
         run_with_output("git branch -D docker-unit-test")
