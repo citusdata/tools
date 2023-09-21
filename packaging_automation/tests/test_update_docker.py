@@ -121,8 +121,8 @@ def test_update_docker_file_for_postgres14():
 
 
 def test_update_docker_file_for_postgres13():
-    update_docker_file_for_postgres13(
-        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_13_VERSION
+    update_docker_file_for_postgres15(
+        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_15_VERSION
     )
     with open(
         f"{TEST_BASE_PATH}/postgres-13/Dockerfile",
@@ -132,7 +132,7 @@ def test_update_docker_file_for_postgres13():
     ) as reader:
         content = reader.read()
         lines = content.splitlines()
-        assert lines[2].strip() == f"FROM postgres:{POSTGRES_13_VERSION}"
+        assert lines[2].strip() == f"FROM postgres:{POSTGRES_15_VERSION}"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert (
             f"postgresql-$PG_MAJOR-{PROJECT_NAME}-"
