@@ -16,7 +16,7 @@ from ..publish_docker import (
     publish_nightly_docker_image,
 )
 
-NON_DEFAULT_BRANCH_NAME = "10.0.3_test"
+NON_DEFAULT_BRANCH_NAME = "12.0.0_test"
 DEFAULT_BRANCH_NAME = "master"
 TAG_NAME = "v12.0.0"
 INVALID_TAG_NAME = "v12.x"
