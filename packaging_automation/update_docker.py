@@ -53,7 +53,7 @@ BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
 
 def update_docker_file_for_latest_postgres(
-        project_version: str, template_path: str, exec_path: str, postgres_version: str
+    project_version: str, template_path: str, exec_path: str, postgres_version: str
 ):
     minor_version = get_minor_project_version_for_docker(project_version)
     debian_project_version = project_version.replace("_", "-")
@@ -69,7 +69,7 @@ def update_docker_file_for_latest_postgres(
 
 
 def update_regular_docker_compose_file(
-        project_version: str, template_path: str, exec_path: str
+    project_version: str, template_path: str, exec_path: str
 ):
     minor_version = get_minor_project_version_for_docker(project_version)
     content = process_template_file_with_minor(
@@ -85,7 +85,7 @@ def update_regular_docker_compose_file(
 
 
 def update_docker_file_alpine(
-        project_version: str, template_path: str, exec_path: str, postgres_version: str
+    project_version: str, template_path: str, exec_path: str, postgres_version: str
 ):
     minor_version = get_minor_project_version_for_docker(project_version)
     content = process_template_file_with_minor(
@@ -100,7 +100,7 @@ def update_docker_file_alpine(
 
 
 def update_docker_file_for_postgres15(
-        project_version: str, template_path: str, exec_path: str, postgres_version: str
+    project_version: str, template_path: str, exec_path: str, postgres_version: str
 ):
     minor_version = get_minor_project_version_for_docker(project_version)
     debian_project_version = project_version.replace("_", "-")
@@ -117,7 +117,7 @@ def update_docker_file_for_postgres15(
 
 
 def update_docker_file_for_postgres14(
-        project_version: str, template_path: str, exec_path: str, postgres_version: str
+    project_version: str, template_path: str, exec_path: str, postgres_version: str
 ):
     minor_version = get_minor_project_version_for_docker(project_version)
     debian_project_version = project_version.replace("_", "-")
@@ -152,10 +152,10 @@ def update_changelog(project_version: str, exec_path: str):
     latest_changelog = get_new_changelog_entry(project_version)
     changelog_file_path = f"{exec_path}/CHANGELOG.md"
     with open(
-            changelog_file_path,
-            "r+",
-            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-            errors=DEFAULT_UNICODE_ERROR_HANDLER,
+        changelog_file_path,
+        "r+",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as reader:
         if f"({project_version}" not in reader.readline():
             reader.seek(0, 0)
@@ -176,7 +176,7 @@ def update_all_docker_files(project_version: str, exec_path: str):
     (
         postgres_16_version,
         postgres_15_version,
-        postgres_14_version
+        postgres_14_version,
     ) = read_postgres_versions(pkgvars_file)
 
     latest_postgres_version = postgres_16_version
