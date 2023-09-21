@@ -29,31 +29,31 @@ class SupportedDockerImages(Enum):
     latest = 1
     docker_compose = 2
     alpine = 3
-    postgres13 = 4
-    postgres14 = 5
+    postgres14 = 4
+    postgres15 = 5
 
 
 docker_templates = {
     SupportedDockerImages.latest: "latest/latest.tmpl.dockerfile",
     SupportedDockerImages.docker_compose: "latest/docker-compose.tmpl.yml",
     SupportedDockerImages.alpine: "alpine/alpine.tmpl.dockerfile",
-    SupportedDockerImages.postgres13: "postgres-13/postgres-13.tmpl.dockerfile",
     SupportedDockerImages.postgres14: "postgres-14/postgres-14.tmpl.dockerfile",
+    SupportedDockerImages.postgres15: "postgres-15/postgres-15.tmpl.dockerfile",
 }
 
 docker_outputs = {
     SupportedDockerImages.latest: "Dockerfile",
     SupportedDockerImages.docker_compose: "docker-compose.yml",
     SupportedDockerImages.alpine: "alpine/Dockerfile",
-    SupportedDockerImages.postgres13: "postgres-13/Dockerfile",
     SupportedDockerImages.postgres14: "postgres-14/Dockerfile",
+    SupportedDockerImages.postgres15: "postgres-15/Dockerfile",
 }
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 
 
 def update_docker_file_for_latest_postgres(
-    project_version: str, template_path: str, exec_path: str, postgres_version: str
+        project_version: str, template_path: str, exec_path: str, postgres_version: str
 ):
     minor_version = get_minor_project_version_for_docker(project_version)
     debian_project_version = project_version.replace("_", "-")
@@ -69,7 +69,7 @@ def update_docker_file_for_latest_postgres(
 
 
 def update_regular_docker_compose_file(
-    project_version: str, template_path: str, exec_path: str
+        project_version: str, template_path: str, exec_path: str
 ):
     minor_version = get_minor_project_version_for_docker(project_version)
     content = process_template_file_with_minor(
@@ -85,7 +85,7 @@ def update_regular_docker_compose_file(
 
 
 def update_docker_file_alpine(
-    project_version: str, template_path: str, exec_path: str, postgres_version: str
+        project_version: str, template_path: str, exec_path: str, postgres_version: str
 ):
     minor_version = get_minor_project_version_for_docker(project_version)
     content = process_template_file_with_minor(
@@ -99,25 +99,25 @@ def update_docker_file_alpine(
     write_to_file(content, dest_file_name)
 
 
-def update_docker_file_for_postgres13(
-    project_version: str, template_path: str, exec_path: str, postgres_version: str
+def update_docker_file_for_postgres15(
+        project_version: str, template_path: str, exec_path: str, postgres_version: str
 ):
     minor_version = get_minor_project_version_for_docker(project_version)
     debian_project_version = project_version.replace("_", "-")
     content = process_template_file_with_minor(
         debian_project_version,
         template_path,
-        docker_templates[SupportedDockerImages.postgres13],
+        docker_templates[SupportedDockerImages.postgres15],
         minor_version,
         postgres_version,
     )
-    dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres13]}"
+    dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres15]}"
     create_directory_if_not_exists(dest_file_name)
     write_to_file(content, dest_file_name)
 
 
 def update_docker_file_for_postgres14(
-    project_version: str, template_path: str, exec_path: str, postgres_version: str
+        project_version: str, template_path: str, exec_path: str, postgres_version: str
 ):
     minor_version = get_minor_project_version_for_docker(project_version)
     debian_project_version = project_version.replace("_", "-")
@@ -152,12 +152,12 @@ def update_changelog(project_version: str, exec_path: str):
     latest_changelog = get_new_changelog_entry(project_version)
     changelog_file_path = f"{exec_path}/CHANGELOG.md"
     with open(
-        changelog_file_path,
-        "r+",
-        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+            changelog_file_path,
+            "r+",
+            encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+            errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as reader:
-        if not (f"({project_version}" in reader.readline()):
+        if f"({project_version}" not in reader.readline():
             reader.seek(0, 0)
             old_changelog = reader.read()
             changelog = f"{latest_changelog}{old_changelog}"
@@ -174,12 +174,12 @@ def update_all_docker_files(project_version: str, exec_path: str):
     pkgvars_file = f"{exec_path}/pkgvars"
 
     (
+        postgres_16_version,
         postgres_15_version,
-        postgres_14_version,
-        postgres_13_version,
+        postgres_14_version
     ) = read_postgres_versions(pkgvars_file)
 
-    latest_postgres_version = postgres_15_version
+    latest_postgres_version = postgres_16_version
 
     update_docker_file_for_latest_postgres(
         project_version, template_path, exec_path, latest_postgres_version
@@ -188,11 +188,11 @@ def update_all_docker_files(project_version: str, exec_path: str):
     update_docker_file_alpine(
         project_version, template_path, exec_path, latest_postgres_version
     )
-    update_docker_file_for_postgres13(
-        project_version, template_path, exec_path, postgres_13_version
-    )
     update_docker_file_for_postgres14(
         project_version, template_path, exec_path, postgres_14_version
+    )
+    update_docker_file_for_postgres15(
+        project_version, template_path, exec_path, postgres_15_version
     )
     update_changelog(project_version, exec_path)
 
@@ -200,9 +200,9 @@ def update_all_docker_files(project_version: str, exec_path: str):
 def read_postgres_versions(pkgvars_file: str) -> Tuple[str, str, str]:
     config = dotenv_values(pkgvars_file)
     return (
+        config["postgres_16_version"],
         config["postgres_15_version"],
         config["postgres_14_version"],
-        config["postgres_13_version"],
     )
 
 

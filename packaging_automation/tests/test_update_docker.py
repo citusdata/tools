@@ -14,8 +14,8 @@ from ..update_docker import (
     update_docker_file_for_latest_postgres,
     update_regular_docker_compose_file,
     update_docker_file_alpine,
+    update_docker_file_for_postgres15,
     update_docker_file_for_postgres14,
-    update_docker_file_for_postgres13,
     update_changelog,
 )
 
@@ -23,8 +23,8 @@ BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 TEST_BASE_PATH = f"{BASE_PATH}/docker"
 PROJECT_VERSION = "10.0.3"
 
-POSTGRES_14_VERSION = "14.5"
-POSTGRES_13_VERSION = "13.8"
+POSTGRES_15_VERSION = "15.4"
+POSTGRES_14_VERSION = "14.9"
 
 PROJECT_NAME = "citus"
 version_details = get_version_details(PROJECT_VERSION)
