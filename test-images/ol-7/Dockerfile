@@ -62,4 +62,3 @@ USER postgres
 WORKDIR ${POSTGRES_HOME}
 
 CMD ["test_internal.sh"]
-
