@@ -37,7 +37,7 @@ jobs:
           export PROJECT_VERSION="${{ github.event.inputs.project_version }}"
           echo "project_version: ${{ github.event.inputs.project_version }}"
           # To be able to test pipeline without triggering with project_version parameter using workflow_dispatch parameter,
-          # if workflow_dispatch parameter is empty, 11.1.4 parameter is set to execute pipeline.
+          # if workflow_dispatch parameter is empty, 12.0.0 parameter is set to execute pipeline.
           [ -z ${PROJECT_VERSION} ] && export PROJECT_VERSION=12.0.0
           POSTGRES_VERSIONS=$(python -m packaging_automation.get_postgres_versions --project_version ${PROJECT_VERSION})
           echo "Postgres Version: ${POSTGRES_VERSIONS}"
