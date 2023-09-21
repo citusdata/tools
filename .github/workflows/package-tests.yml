@@ -54,7 +54,7 @@ jobs:
           - ol/7
           - debian/buster
           - debian/bullseye
-          - ubuntu/bionic
+          - debian/bookworm
           - ubuntu/focal
           - ubuntu/jammy
         pg: ${{ fromJson(needs.metadata.outputs.pg_versions) }}
