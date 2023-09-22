@@ -1,4 +1,4 @@
-FROM ubuntu:bionic
+FROM debian:bookworm
 ARG CITUS_VERSION
 # FOrmat should be XY and should not include dots e.g for 10.2.1=>102
 ARG CITUS_MAJOR_VERSION
@@ -36,7 +36,6 @@ RUN apt-get update \
 RUN apt-get install -y postgresql-${PG_MAJOR}-citus-${CITUS_MAJOR_VERSION}=${CITUS_VERSION}.citus-${FANCY} \
                        postgresql-$PG_MAJOR-hll=${HLL_VERSION} \
                        postgresql-$PG_MAJOR-topn=${TOPN_VERSION} \
-    && apt-get purge -y --auto-remove curl \
     && rm -rf /var/lib/apt/lists/*12
 
 
