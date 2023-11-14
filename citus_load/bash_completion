@@ -1,0 +1,59 @@
+# citus_dev completion
+
+_citus_load()
+{
+    local cmd cur prev cmds opts clusters
+    COMPREPLY=()
+    _get_comp_words_by_ref cur prev
+    cmd="${COMP_WORDS[1]}"
+    cmds="repo schema load"
+
+    case $prev in
+        repo)
+            subcmds="list add"
+            COMPREPLY=($( compgen -W "${subcmds}" -- "${cur}" ));
+            return 0
+            ;;
+        schema)
+            subcmds="list"
+            COMPREPLY=($( compgen -W "${subcmds}" -- "${cur}" ));
+            return 0
+            ;;
+        load)
+            schemas=$(citus_load schema list --machine)
+            COMPREPLY=($( compgen -W "${schemas}" -- "${cur}" ));
+            return 0
+            ;;
+    esac
+
+    case $cmd in
+        repo)
+            subcmd="${COMP_WORDS[2]}"
+            case $subcmd in
+                list)
+                    opts="--machine"
+                    if [[ ${cur} == -* ]] ; then
+                        COMPREPLY=($( compgen -W "${opts}" -- "${cur}"))
+                    fi
+                    return 0
+                    ;;
+            esac
+            ;;
+        schema)
+            subcmd="${COMP_WORDS[2]}"
+            case $subcmd in
+                list)
+                    opts="--machine"
+                    if [[ ${cur} == -* ]] ; then
+                        COMPREPLY=($( compgen -W "${opts}" -- "${cur}"))
+                    fi
+                    return 0
+                    ;;
+            esac
+            ;;
+    esac
+
+    COMPREPLY=($( compgen -W "${cmds}" -- "${cur}"))
+    return 0
+}
+complete -F _citus_load citus_load
