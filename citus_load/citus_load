@@ -6,7 +6,8 @@ Usage:
   citus_load repo list [-m | --machine]
   citus_load repo add <repo>
   citus_load schema list [-m | --machine]
-  citus_load [load] <schema>
+  citus_load schema list-params <schema> [-m | --machine]
+  citus_load [load] <schema> [<key=value> ...]
   citus_load (-h | --help)
   citus_load --version
 
@@ -164,6 +165,8 @@ schemas.
 def schema(arguments):
     if arguments["list"]:
         schema_list(arguments)
+    if arguments["list-params"]:
+        schema_list_params(arguments)
     return
 
 
@@ -204,7 +207,25 @@ def schema_list(arguments):
                 print(f"  {schema.name}")
             print()
 
+def schema_list_params(arguments):
+    schema_name = arguments["<schema>"]
+    schema = find_schema(schema_name)
+    if schema is None:
+        # loop the prefixes in the search path and try to find a schema that matches
+        # the schema name. If we find one, we will load it.
+        for prefix in REPO_SEARCH_PATHS:
+            fullname = prefix + schema_name
+            schema = find_schema(fullname)
+            if schema is not None:
+                break
 
+    if schema is None:
+        # no schema is found, print an error and exit
+        sys.exit(f"schema not found: {schema_name}\n")
+        return
+
+    print("\n".join(schema.parameters()))
+    
 """
 load will load a schema into the database. This will execute all steps in the schema
 in the order they are defined.
@@ -236,9 +257,23 @@ def load(arguments):
         sys.stderr.write(f"schema not found: {schema_name}\n")
         return
 
+    # paramters
+    parameters = parse_load_parameters(arguments)
+
     for step in schema.steps():
         print(f"running step: {step.name}")
-        step.run()
+        step.run(parameters)
+
+
+def parse_load_parameters(arguments):
+    kv_params = arguments["<key=value>"]
+    parameters = {}
+
+    for kv in kv_params:
+        key, value = kv.split("=", 1)
+        parameters[key] = value
+
+    return parameters
 
 
 """
@@ -332,6 +367,22 @@ class Schema:
         steps.sort(key=lambda s: s.name)
         return steps
 
+    def parameters(self):
+        # read the config.yaml from the absolute_path of the schema and parse the parameters
+        # from the file. If the file does not exist, return an empty list.
+        config_file = os.path.join(self.absolute_path, "config.yaml")
+        if not os.path.exists(config_file):
+            return []
+        
+        with open(config_file, "r") as f:
+            try:
+                config = yaml.safe_load(f)
+                if config["parameters"]:
+                    return config["parameters"].keys()
+            except:
+                sys.exit(f"failed to parse config file: {config_file}\n")
+        return []
+
 
 class SchemaStep:
     name = ""
@@ -341,7 +392,7 @@ class SchemaStep:
         self.name = os.path.basename(filename)
         self.filename = filename
 
-    def run(self):
+    def run(self, parameters):
         raise Exception("run not implemented")
 
     @staticmethod
@@ -389,7 +440,7 @@ class SchemaStepSQL(SchemaStep):
         super().__init__(filename)
         self.cwd = os.path.dirname(filename)
 
-    def run(self):
+    def run(self, parameters):
         subprocess.run(["psql", "-f", self.filename], cwd=self.cwd)
 
 
@@ -400,7 +451,7 @@ class SchemaStepJinjaSQL(SchemaStep):
         super().__init__(filename)
         self.cwd = os.path.dirname(filename)
 
-    def run(self):
+    def run(self, parameters):
         # read the template file and instantiate a jinja template
         with open(self.filename, "r") as f:
             template = Template(f.read())
@@ -410,7 +461,7 @@ class SchemaStepJinjaSQL(SchemaStep):
         p = subprocess.Popen(
             ["psql", "-f", "-"], cwd=self.cwd, stdin=subprocess.PIPE, stdout=sys.stdout
         )
-        template.stream().dump(p.stdin, encoding="utf-8")
+        template.stream(parameters).dump(p.stdin, encoding="utf-8")
         p.communicate()
 
         # check the exit code of psql
@@ -429,7 +480,7 @@ class SchemaStepExec(SchemaStep):
         if not os.access(filename, os.X_OK):
             raise Exception(f"script not executable: { self.name }")
 
-    def run(self):
+    def run(self, parameters):
         subprocess.run([self.filename], cwd=self.cwd)
 
 

@@ -2,55 +2,63 @@
 
 _citus_load()
 {
-    local cmd cur prev cmds opts clusters
+    local cur prev
     COMPREPLY=()
     _get_comp_words_by_ref cur prev
-    cmd="${COMP_WORDS[1]}"
-    cmds="repo schema load"
+    local cmd="${COMP_WORDS[1]}"
+    local cmds="repo schema load"
 
-    CACHE_DIR="${HOME}/.cache/citus_load"
-    REPO_DIR="${HOME}/.local/share/citus_load/repos"
+    # _citus_load_schemas returns a list of schema's from that are available locally
+    _citus_load_schemas()
+    {
+        local CACHE_DIR="${HOME}/.cache/citus_load"
+        local REPO_DIR="${HOME}/.local/share/citus_load/repos"
+        local schema_cache_file="${CACHE_DIR}/schemas"
+
+        # because running the citus_load command to list all the schema's is slow
+        # we cache the schema's in a file and use that to autocomplete
+        # when any file in repo directory is updated, we refresh the cache by deleting
+        # cahce the file.
+        if [ -f $schema_cache_file ] && [ -d $REPO_DIR ]; then
+            # check if the edit time of the schema_cache_file is older than the repo
+            # if so, then the repo has been updated and we need to refresh the schema_cache_file
+            local repo_time_float=$(find $REPO_DIR -type f -printf '%T@\t%p\n' | sort -r -k1 | head -n1 | cut -f1)
+            local repo_time=${repo_time_float%.*}
+            local schema_cache_time=$(stat -c %Y $schema_cache_file)
+            if [ $repo_time -gt $schema_cache_time ]; then
+                rm $schema_cache_file
+            fi
+        fi
+
+        # if the cache file exists we know that the repo's have not been updated since
+        # the last time we cached the schema's. We can use the cache file to autocomplete
+        local schemas
+        if [ -f $schema_cache_file ]; then
+            schemas=$(cat $schema_cache_file)
+        else
+            # load schema's from citus_load and update the cache file
+            schemas=$(citus_load schema list --machine)
+
+            mkdir -p $CACHE_DIR
+            echo "$schemas" > $schema_cache_file
+        fi
+        echo ${schemas}
+        return
+    }
 
     case $prev in
         repo)
-            subcmds="list add"
+            local subcmds="list add"
             COMPREPLY=($( compgen -W "${subcmds}" -- "${cur}" ));
             return 0
             ;;
         schema)
-            subcmds="list"
+            local subcmds="list list-params"
             COMPREPLY=($( compgen -W "${subcmds}" -- "${cur}" ));
             return 0
             ;;
         load)
-            schema_cache_file="${CACHE_DIR}/schemas"
-
-            # because running the citus_load command to list all the schema's is slow
-            # we cache the schema's in a file and use that to autocomplete
-            # when any file in repo directory is updated, we refresh the cache by deleting
-            # cahce the file.
-            if [ -f $schema_cache_file ] && [ -d $REPO_DIR ]; then
-                # check if the edit time of the schema_cache_file is older than the repo
-                # if so, then the repo has been updated and we need to refresh the schema_cache_file
-                repo_time_float=$(find $REPO_DIR -type f -printf '%T@\t%p\n' | sort -r -k1 | head -n1 | cut -f1)
-                repo_time=${repo_time_float%.*}
-                schema_cache_time=$(stat -c %Y $schema_cache_file)
-                if [ $repo_time -gt $schema_cache_time ]; then
-                    rm $schema_cache_file
-                fi
-            fi
-
-            # if the cache file exists we know that the repo's have not been updated since
-            # the last time we cached the schema's. We can use the cache file to autocomplete
-            if [ -f $schema_cache_file ]; then
-                schemas=$(cat $schema_cache_file)
-            else
-                # load schema's from citus_load and update the cache file
-                schemas=$(citus_load schema list --machine)
-
-                mkdir -p $CACHE_DIR
-                echo "$schemas" > $schema_cache_file
-            fi
+            local schemas=$(_citus_load_schemas)
             COMPREPLY=($( compgen -W "${schemas}" -- "${cur}" ));
             return 0
             ;;
@@ -58,10 +66,10 @@ _citus_load()
 
     case $cmd in
         repo)
-            subcmd="${COMP_WORDS[2]}"
+            local subcmd="${COMP_WORDS[2]}"
             case $subcmd in
                 list)
-                    opts="--machine"
+                    local opts="--machine"
                     if [[ ${cur} == -* ]] ; then
                         COMPREPLY=($( compgen -W "${opts}" -- "${cur}"))
                     fi
@@ -70,16 +78,28 @@ _citus_load()
             esac
             ;;
         schema)
-            subcmd="${COMP_WORDS[2]}"
+            local subcmd="${COMP_WORDS[2]}"
             case $subcmd in
                 list)
-                    opts="--machine"
+                    local opts="--machine"
                     if [[ ${cur} == -* ]] ; then
                         COMPREPLY=($( compgen -W "${opts}" -- "${cur}"))
                     fi
                     return 0
                     ;;
+                list-params)
+                    local schemas=$(_citus_load_schemas)
+                    COMPREPLY=($( compgen -W "${schemas}" -- "${cur}" ));
+                    return 0
+                    ;;
             esac
+            ;;
+        load)
+            local schema="${COMP_WORDS[2]}"
+            local keys=$(citus_load schema list-params "${schema}" --machine | tr ' ' '\n' | sed 's/$/=/')
+            compopt -o nospace # prevent a space from being outputted
+            COMPREPLY=($( compgen -W "${keys}" -- "${cur}"))
+            return 0
             ;;
     esac
 
