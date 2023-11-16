@@ -136,10 +136,10 @@ def repo_add(arguments):
 
 	# fetch the repository to make sure we have a FETCH_HEAD file that can be checked
 	# to determine when the repository was last updated.
-	subprocess.run(['git', 'fetch'], 
+	subprocess.run(['git', 'fetch'],
 					cwd=os.path.join(cwd, repo_name),
-					check=True)	
-		
+					check=True)
+
 	return
 
 """
