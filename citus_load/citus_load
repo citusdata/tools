@@ -27,8 +27,8 @@ import yaml
 from jinja2 import Template
 
 REPO_SEARCH_PATHS = [
-	'github.com/citusdata/public-schemas/',
-	'github.com/',
+    "github.com/citusdata/public-schemas/",
+    "github.com/",
 ]
 
 # Expand the home directory
@@ -41,150 +41,170 @@ TRACE provides a simple way to print debug messages to the console. It will only
 the message if the TRACE environment variable is set. This is to prevent the console
 from being flooded with debug messages.
 """
+
+
 def TRACE(msg):
-	if os.environ.get('TRACE'):
-		print(msg)
+    if os.environ.get("TRACE"):
+        print(msg)
+
 
 """
 main is the entry point of the application. It will parse the command line arguments
 and call the appropriate function.
 """
-def main(arguments):
-	config()
-	TRACE(arguments)
 
-	if arguments['repo']:
-		repo(arguments)
-	elif arguments['schema']:
-		schema(arguments)
-	else:
-		# either load is set, or the repo is passed in as the first argument
-		load(arguments)
+
+def main(arguments):
+    config()
+    TRACE(arguments)
+
+    if arguments["repo"]:
+        repo(arguments)
+    elif arguments["schema"]:
+        schema(arguments)
+    else:
+        # either load is set, or the repo is passed in as the first argument
+        load(arguments)
+
 
 """
 config will load the configuration file and apply the configuration to the application.
 """
+
+
 def config():
-	# check if CONFIG_FILE exists, if is does, open the file, parse the yaml apply the configuration
-	if os.path.exists(CONFIG_FILE):
-		TRACE(f"loading config file: {CONFIG_FILE}")
+    # check if CONFIG_FILE exists, if is does, open the file, parse the yaml apply the configuration
+    if os.path.exists(CONFIG_FILE):
+        TRACE(f"loading config file: {CONFIG_FILE}")
 
-		with open(CONFIG_FILE, 'r') as f:
-			try:
-				config = yaml.safe_load(f)
-				if config['search_path']:
-					TRACE(f"setting search path: {config['search_path']}")
+        with open(CONFIG_FILE, "r") as f:
+            try:
+                config = yaml.safe_load(f)
+                if config["search_path"]:
+                    TRACE(f"setting search path: {config['search_path']}")
 
-					global REPO_SEARCH_PATHS
-					REPO_SEARCH_PATHS = config['search_path']
-			except:
-				sys.stderr.write(f"failed to parse config file: {CONFIG_FILE}\n")
+                    global REPO_SEARCH_PATHS
+                    REPO_SEARCH_PATHS = config["search_path"]
+            except:
+                sys.stderr.write(f"failed to parse config file: {CONFIG_FILE}\n")
+
 
 """
 repo will handle all commands related to repositories. This includes listing repositories
 and adding repositories.
 """
+
+
 def repo(arguments):
-	if arguments['list']:
-		repo_list(arguments)
-	elif arguments['add']:
-		repo_add(arguments)
-	return
+    if arguments["list"]:
+        repo_list(arguments)
+    elif arguments["add"]:
+        repo_add(arguments)
+    return
+
 
 """
 repo_list will list all repositories that are currently in the repository cache.
 """
+
+
 def repo_list(arguments):
-	# print the list of repositories
-	for repo in Repo.list():
-		print(repo.name)
-	return
+    # print the list of repositories
+    for repo in Repo.list():
+        print(repo.name)
+    return
+
 
 """
 repo_add will add a repository to the repository cache. This will clone the repository
 from the remote repository and store it in the repository cache.
 """
+
+
 def repo_add(arguments):
-	repo = arguments['<repo>']
+    repo = arguments["<repo>"]
 
-	# check if the repo is already in the cache
-	for r in Repo.list():
-		if r.name == repo:
-			# repo is already in the cache, print an error and exit
-			sys.stderr.write(f"repository already exists: {repo}\n")
-			sys.exit(1)
+    # check if the repo is already in the cache
+    for r in Repo.list():
+        if r.name == repo:
+            # repo is already in the cache, print an error and exit
+            sys.stderr.write(f"repository already exists: {repo}\n")
+            sys.exit(1)
 
-	# we assume the repo is a github repository, and we will clone it from github via https
-	# we do this by executing the git clone command with the repo name prefixed with https://
-	# to make sure we clone in the right directory, we set the cwd to the REPO_CACHE/<organization>/ folder
-	# and prepare the directory structure to leading upto that directory
-	repourl = f"https://{repo}"
+    # we assume the repo is a github repository, and we will clone it from github via https
+    # we do this by executing the git clone command with the repo name prefixed with https://
+    # to make sure we clone in the right directory, we set the cwd to the REPO_CACHE/<organization>/ folder
+    # and prepare the directory structure to leading upto that directory
+    repourl = f"https://{repo}"
 
-	# to get the base directory for the repository we need to remove the repository name
-	# we do this to remove everything after the last slash
-	repo_base = repo.rsplit('/', 1)[0]
-	repo_name = repo.rsplit('/', 1)[1]
+    # to get the base directory for the repository we need to remove the repository name
+    # we do this to remove everything after the last slash
+    repo_base = repo.rsplit("/", 1)[0]
+    repo_name = repo.rsplit("/", 1)[1]
 
-	cwd = os.path.join(REPO_CACHE, repo_base)
+    cwd = os.path.join(REPO_CACHE, repo_base)
 
-	# now that we have the working directory we can create the directory structure
-	os.makedirs(cwd, exist_ok=True)
+    # now that we have the working directory we can create the directory structure
+    os.makedirs(cwd, exist_ok=True)
 
-	subprocess.run(['git', 'clone', f"https://{repo}"], 
-					cwd=cwd,
-					check=True)
+    subprocess.run(["git", "clone", f"https://{repo}"], cwd=cwd, check=True)
 
-	# fetch the repository to make sure we have a FETCH_HEAD file that can be checked
-	# to determine when the repository was last updated.
-	subprocess.run(['git', 'fetch'],
-					cwd=os.path.join(cwd, repo_name),
-					check=True)
+    # fetch the repository to make sure we have a FETCH_HEAD file that can be checked
+    # to determine when the repository was last updated.
+    subprocess.run(["git", "fetch"], cwd=os.path.join(cwd, repo_name), check=True)
 
-	return
+    return
+
 
 """
 schema will handle all commands related to schemas. This currently only includes listing
 schemas.
 """
+
+
 def schema(arguments):
-	if arguments['list']:
-		schema_list(arguments)
-	return
+    if arguments["list"]:
+        schema_list(arguments)
+    return
+
 
 """
 schema_list will list all schemas that are currently in the repository cache.
 if the --machine flag is set, the output will be suitable for easier processing.
 """
+
+
 def schema_list(arguments):
-	if arguments['--machine']:
-		schema_names = []
-		for repo in Repo.list():
-			for schema in repo.schemas():
-				fullname = f"{repo.name}/{schema.name}"
-				schema_names.append(fullname)
+    if arguments["--machine"]:
+        schema_names = []
+        for repo in Repo.list():
+            for schema in repo.schemas():
+                fullname = f"{repo.name}/{schema.name}"
+                schema_names.append(fullname)
 
-				# if the fullname begins with a prefix that is on the search path we will
-				# also ouput the name without the prefix. This is to make it easier to
-				# autocomplete the schema name.
-				# This could result in duplicates if two repositories on the searchpath
-				# have the same schema name. Therefor we should only add the substring if
-				# it has not already been added.
-				for prefix in REPO_SEARCH_PATHS:
-					if fullname.startswith(prefix):
-						subname = fullname[len(prefix):]
-						if subname not in schema_names:
-							schema_names.append(subname)
+                # if the fullname begins with a prefix that is on the search path we will
+                # also ouput the name without the prefix. This is to make it easier to
+                # autocomplete the schema name.
+                # This could result in duplicates if two repositories on the searchpath
+                # have the same schema name. Therefor we should only add the substring if
+                # it has not already been added.
+                for prefix in REPO_SEARCH_PATHS:
+                    if fullname.startswith(prefix):
+                        subname = fullname[len(prefix) :]
+                        if subname not in schema_names:
+                            schema_names.append(subname)
 
-		schema_names.sort()
-		for schema_name in schema_names:
-			print(schema_name)
+        schema_names.sort()
+        for schema_name in schema_names:
+            print(schema_name)
 
-	else:
-		for repo in Repo.list():
-			print(f"{repo.name}")
-			for schema in repo.schemas():
-				print(f"  {schema.name}")
-			print()
+    else:
+        for repo in Repo.list():
+            print(f"{repo.name}")
+            for schema in repo.schemas():
+                print(f"  {schema.name}")
+            print()
+
 
 """
 load will load a schema into the database. This will execute all steps in the schema
@@ -196,218 +216,232 @@ the schema will be searched for on the configured search path.
 
 If the schema is not found, an error will be printed and the application will exit.
 """
-def load(arguments):
-	refresh_repos()
-	return
 
-	schema_name = arguments["<schema>"]
-	schema = find_schema(schema_name)
-	if schema is None:
-		# loop the prefixes in the search path and try to find a schema that matches
-		# the schema name. If we find one, we will load it.
-		for prefix in REPO_SEARCH_PATHS:
-			fullname = prefix + schema_name
-			schema = find_schema(fullname)
-			if schema is not None:
-				break
-	
-	if schema is None:
-		# no schema is found, print an error and exit
-		sys.stderr.write(f"schema not found: {schema_name}\n")
-		return
-	
-	for step in schema.steps():
-		print(f"running step: {step.name}")
-		step.run()
+
+def load(arguments):
+    refresh_repos()
+    return
+
+    schema_name = arguments["<schema>"]
+    schema = find_schema(schema_name)
+    if schema is None:
+        # loop the prefixes in the search path and try to find a schema that matches
+        # the schema name. If we find one, we will load it.
+        for prefix in REPO_SEARCH_PATHS:
+            fullname = prefix + schema_name
+            schema = find_schema(fullname)
+            if schema is not None:
+                break
+
+    if schema is None:
+        # no schema is found, print an error and exit
+        sys.stderr.write(f"schema not found: {schema_name}\n")
+        return
+
+    for step in schema.steps():
+        print(f"running step: {step.name}")
+        step.run()
+
 
 """
 find_schema will find a schema by its name. The name should be in the format
 <repo>/<schema>. If the schema is not found, None is returned.
 """
+
+
 def find_schema(schema_name):
-	for repo in Repo.list():
-		for schema in repo.schemas():
-			fullname = f"{repo.name}/{schema.name}"
-			if fullname == schema_name:
-				return schema
-	return None
+    for repo in Repo.list():
+        for schema in repo.schemas():
+            fullname = f"{repo.name}/{schema.name}"
+            if fullname == schema_name:
+                return schema
+    return None
+
 
 class Repo:
-	name = ""
-	absolute_path = ""
+    name = ""
+    absolute_path = ""
 
-	def __init__(self, absolute_path, name):
-		self.name = name
-		self.absolute_path = absolute_path
+    def __init__(self, absolute_path, name):
+        self.name = name
+        self.absolute_path = absolute_path
 
-	def schemas(self):
-		# Find all schema's contained in this repository.
-		# a schema is a subfolder of the repository that contains one or more valid schema
-		# steps. A schema step is a file that can be executed to create a schema. Its name
-		# follows the following pattern: \d+-<name>
+    def schemas(self):
+        # Find all schema's contained in this repository.
+        # a schema is a subfolder of the repository that contains one or more valid schema
+        # steps. A schema step is a file that can be executed to create a schema. Its name
+        # follows the following pattern: \d+-<name>
 
-		schemas = []
-		for root, dirs, files in os.walk(self.absolute_path):
-			if SchemaStep.hasStepFile(files):
-				name = os.path.relpath(root, self.absolute_path)
-				schemas.append(Schema(root, name))
-		return schemas
-	
-	def refresh(self):
-		# given a repository is a git repository, we can refresh it by pulling the latest
-		# changes from the remote repository.
-		# We only pull if the last pull was more than 24 hours ago.
-		try:
-			# we skip pulling if we fail to read the last mtime of the snitch file
-			git_fetch_head_path = os.path.join(self.absolute_path, ".git/FETCH_HEAD")
-			print(f"should we update {git_fetch_head_path}")
-			last_pull_time = os.path.getmtime(git_fetch_head_path)
-			last_pull_time = datetime.fromtimestamp(last_pull_time)
-			print(last_pull_time)
-			difference = datetime.now() - last_pull_time
+        schemas = []
+        for root, dirs, files in os.walk(self.absolute_path):
+            if SchemaStep.hasStepFile(files):
+                name = os.path.relpath(root, self.absolute_path)
+                schemas.append(Schema(root, name))
+        return schemas
 
-			if difference.total_seconds() > 86400:
-				# run git pull with the repository as the working directory
-				subprocess.run(['git', 'pull'], 
-								cwd=self.absolute_path,
-								check=True)
+    def refresh(self):
+        # given a repository is a git repository, we can refresh it by pulling the latest
+        # changes from the remote repository.
+        # We only pull if the last pull was more than 24 hours ago.
+        try:
+            # we skip pulling if we fail to read the last mtime of the snitch file
+            git_fetch_head_path = os.path.join(self.absolute_path, ".git/FETCH_HEAD")
+            print(f"should we update {git_fetch_head_path}")
+            last_pull_time = os.path.getmtime(git_fetch_head_path)
+            last_pull_time = datetime.fromtimestamp(last_pull_time)
+            print(last_pull_time)
+            difference = datetime.now() - last_pull_time
 
-		except FileNotFoundError:
-			# skip refreshing on file not found error, as this indicates the
-			# repo has not been pulled -ever-.
-			pass
+            if difference.total_seconds() > 86400:
+                # run git pull with the repository as the working directory
+                subprocess.run(["git", "pull"], cwd=self.absolute_path, check=True)
 
-	@staticmethod
-	def list(repo_cache=REPO_CACHE):
-		# find all folders nested in repo_cache that have a .git folder, these are deemed
-		# to be repositories. We create a Repo object from them for easy interaction
-		repos = []
-		repocache = os.path.expanduser(repo_cache)
-		for root, dirs, files in os.walk(repocache):
-			if '.git' in dirs:
-				# remove the REPO_CACHE prefix from the root path before adding the path to the list
-				name = os.path.relpath(root, repocache)
-				repos.append(Repo(root, name))
-		repos.sort(key=lambda r: r.name)
-		return repos
+        except FileNotFoundError:
+            # skip refreshing on file not found error, as this indicates the
+            # repo has not been pulled -ever-.
+            pass
+
+    @staticmethod
+    def list(repo_cache=REPO_CACHE):
+        # find all folders nested in repo_cache that have a .git folder, these are deemed
+        # to be repositories. We create a Repo object from them for easy interaction
+        repos = []
+        repocache = os.path.expanduser(repo_cache)
+        for root, dirs, files in os.walk(repocache):
+            if ".git" in dirs:
+                # remove the REPO_CACHE prefix from the root path before adding the path to the list
+                name = os.path.relpath(root, repocache)
+                repos.append(Repo(root, name))
+        repos.sort(key=lambda r: r.name)
+        return repos
+
 
 class Schema:
-	def __init__(self, absolute_path, name):
-		self.name = name
-		self.absolute_path = absolute_path
-		
-		if not os.path.isdir(self.absolute_path):
-			raise Exception("invalid repository: repository does not exist")
+    def __init__(self, absolute_path, name):
+        self.name = name
+        self.absolute_path = absolute_path
 
-	def steps(self):
-		steps = []
-		for filename in os.listdir(self.absolute_path):
-			abs_filename = os.path.join(self.absolute_path, filename)
-			if not SchemaStep.isStepFile(abs_filename):
-				continue
+        if not os.path.isdir(self.absolute_path):
+            raise Exception("invalid repository: repository does not exist")
 
-			steps.append(SchemaStep.fromFile(abs_filename))
+    def steps(self):
+        steps = []
+        for filename in os.listdir(self.absolute_path):
+            abs_filename = os.path.join(self.absolute_path, filename)
+            if not SchemaStep.isStepFile(abs_filename):
+                continue
 
-		steps.sort(key=lambda s: s.name)
-		return steps
+            steps.append(SchemaStep.fromFile(abs_filename))
+
+        steps.sort(key=lambda s: s.name)
+        return steps
+
 
 class SchemaStep:
-	name = ""
-	filename = ""
+    name = ""
+    filename = ""
 
-	def __init__(self, filename):
-		self.name = os.path.basename(filename)
-		self.filename = filename
+    def __init__(self, filename):
+        self.name = os.path.basename(filename)
+        self.filename = filename
 
-	def run(self):
-		raise Exception("run not implemented")
+    def run(self):
+        raise Exception("run not implemented")
 
-	@staticmethod
-	def isStepFile(filename):
-		basename = os.path.basename(filename)
-		return SchemaStep.isStepFileName(basename)
-	
-	@staticmethod
-	def isStepFileName(filename):
-		m = re.fullmatch("^(\d+)-.*$", filename)
-		if m:
-			return True
-		return False
-	
-	@staticmethod
-	def hasStepFile(files):
-		for filename in files:
-			if SchemaStep.isStepFileName(filename):
-				return True
-		return False
+    @staticmethod
+    def isStepFile(filename):
+        basename = os.path.basename(filename)
+        return SchemaStep.isStepFileName(basename)
 
+    @staticmethod
+    def isStepFileName(filename):
+        m = re.fullmatch("^(\d+)-.*$", filename)
+        if m:
+            return True
+        return False
 
-	@staticmethod
-	def fromFile(filename):
-		basename = os.path.basename(filename)
-		parts = basename.split('.', 1)
+    @staticmethod
+    def hasStepFile(files):
+        for filename in files:
+            if SchemaStep.isStepFileName(filename):
+                return True
+        return False
 
-		if len(parts) == 1:
-			return SchemaStepExec(filename)
-		elif parts[1] == 'sql':
-			return SchemaStepSQL(filename)
-		elif parts[1] == 'jinja.sql':
-			return SchemaStepJinjaSQL(filename)
-		elif parts[1] == 'sh':
-			return SchemaStepExec(filename)
+    @staticmethod
+    def fromFile(filename):
+        basename = os.path.basename(filename)
+        parts = basename.split(".", 1)
 
-		print(f"parts: {len(parts)} {parts}")
+        if len(parts) == 1:
+            return SchemaStepExec(filename)
+        elif parts[1] == "sql":
+            return SchemaStepSQL(filename)
+        elif parts[1] == "jinja.sql":
+            return SchemaStepJinjaSQL(filename)
+        elif parts[1] == "sh":
+            return SchemaStepExec(filename)
 
-		raise Exception(f"unsupported step file: {basename}")
+        print(f"parts: {len(parts)} {parts}")
+
+        raise Exception(f"unsupported step file: {basename}")
+
 
 class SchemaStepSQL(SchemaStep):
-	cwd = None
-	def __init__(self, filename):
-		super().__init__(filename)
-		self.cwd = os.path.dirname(filename)
+    cwd = None
 
-	def run(self):
-		subprocess.run(['psql', '-f', self.filename], cwd=self.cwd)
+    def __init__(self, filename):
+        super().__init__(filename)
+        self.cwd = os.path.dirname(filename)
+
+    def run(self):
+        subprocess.run(["psql", "-f", self.filename], cwd=self.cwd)
+
 
 class SchemaStepJinjaSQL(SchemaStep):
-	cwd = None
-	def __init__(self, filename):
-		super().__init__(filename)
-		self.cwd = os.path.dirname(filename)
+    cwd = None
 
-	def run(self):
-		# read the template file and instantiate a jinja template
-		with open(self.filename, 'r') as f:
-			template = Template(f.read())
+    def __init__(self, filename):
+        super().__init__(filename)
+        self.cwd = os.path.dirname(filename)
 
-		# open psql shell and write the rendered template to its stdin
-		# the arguments '-f -' tells psql to read from stdin
-		p = subprocess.Popen(['psql', '-f', '-'], cwd=self.cwd, stdin=subprocess.PIPE, stdout=sys.stdout)
-		template.stream().dump(p.stdin, encoding='utf-8')
-		p.communicate()
+    def run(self):
+        # read the template file and instantiate a jinja template
+        with open(self.filename, "r") as f:
+            template = Template(f.read())
 
-		# check the exit code of psql
-		rc = p.wait()
-		if rc != 0:
-			raise Exception(f"psql failed with exit code { rc }")
+        # open psql shell and write the rendered template to its stdin
+        # the arguments '-f -' tells psql to read from stdin
+        p = subprocess.Popen(
+            ["psql", "-f", "-"], cwd=self.cwd, stdin=subprocess.PIPE, stdout=sys.stdout
+        )
+        template.stream().dump(p.stdin, encoding="utf-8")
+        p.communicate()
+
+        # check the exit code of psql
+        rc = p.wait()
+        if rc != 0:
+            raise Exception(f"psql failed with exit code { rc }")
+
 
 class SchemaStepExec(SchemaStep):
-	cwd = None
+    cwd = None
 
-	def __init__(self, filename):
-		super().__init__(filename)
-		self.cwd = os.path.dirname(filename)
+    def __init__(self, filename):
+        super().__init__(filename)
+        self.cwd = os.path.dirname(filename)
 
-		if not os.access(filename, os.X_OK):
-			raise Exception(f"script not executable: { self.name }")
+        if not os.access(filename, os.X_OK):
+            raise Exception(f"script not executable: { self.name }")
 
-	def run(self):
-		subprocess.run([self.filename], cwd=self.cwd)
+    def run(self):
+        subprocess.run([self.filename], cwd=self.cwd)
+
 
 def refresh_repos():
-	for repo in Repo.list():
-		repo.refresh()
+    for repo in Repo.list():
+        repo.refresh()
+
 
 if __name__ == "__main__":
-	arguments = docopt(__doc__, version='citus_load 1.0')
-	main(arguments)
+    arguments = docopt(__doc__, version="citus_load 1.0")
+    main(arguments)
