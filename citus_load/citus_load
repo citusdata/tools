@@ -224,7 +224,7 @@ def schema_list_params(arguments):
         sys.exit(f"schema not found: {schema_name}\n")
         return
 
-    print("\n".join(schema.parameters()))
+    print("\n".join(schema.parameters().keys()))
     
 """
 load will load a schema into the database. This will execute all steps in the schema
@@ -259,6 +259,14 @@ def load(arguments):
 
     # paramters
     parameters = parse_load_parameters(arguments)
+    
+    # merge schema parameters with loaded parameters
+    schema_parameters = schema.parameters()
+    for key, value in schema_parameters.items():
+        if key not in parameters:
+            parameters[key] = value
+
+    print(f"parameters: {parameters}")
 
     for step in schema.steps():
         print(f"running step: {step.name}")
@@ -367,21 +375,24 @@ class Schema:
         steps.sort(key=lambda s: s.name)
         return steps
 
-    def parameters(self):
-        # read the config.yaml from the absolute_path of the schema and parse the parameters
-        # from the file. If the file does not exist, return an empty list.
+    def config(self):
+        # read the config.yaml from the absolute_path and parse as a yaml dictionary
         config_file = os.path.join(self.absolute_path, "config.yaml")
         if not os.path.exists(config_file):
-            return []
+            return {}
         
         with open(config_file, "r") as f:
             try:
-                config = yaml.safe_load(f)
-                if config["parameters"]:
-                    return config["parameters"].keys()
+                return yaml.safe_load(f)
             except:
-                sys.exit(f"failed to parse config file: {config_file}\n")
-        return []
+                pass
+        return {}
+
+    def parameters(self):
+        config = self.config()
+        if config["parameters"]:
+            return config["parameters"]
+        return {}
 
 
 class SchemaStep:
