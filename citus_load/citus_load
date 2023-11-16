@@ -219,7 +219,6 @@ If the schema is not found, an error will be printed and the application will ex
 
 def load(arguments):
     refresh_repos()
-    return
 
     schema_name = arguments["<schema>"]
     schema = find_schema(schema_name)
@@ -285,10 +284,8 @@ class Repo:
         try:
             # we skip pulling if we fail to read the last mtime of the snitch file
             git_fetch_head_path = os.path.join(self.absolute_path, ".git/FETCH_HEAD")
-            print(f"should we update {git_fetch_head_path}")
             last_pull_time = os.path.getmtime(git_fetch_head_path)
             last_pull_time = datetime.fromtimestamp(last_pull_time)
-            print(last_pull_time)
             difference = datetime.now() - last_pull_time
 
             if difference.total_seconds() > 86400:

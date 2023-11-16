@@ -36,7 +36,6 @@ _citus_load()
                 repo_time=${repo_time_float%.*}
                 schema_cache_time=$(stat -c %Y $schema_cache_file)
                 if [ $repo_time -gt $schema_cache_time ]; then
-                    echo "repo has been updated, refreshing schema cache"
                     rm $schema_cache_file
                 fi
             fi
