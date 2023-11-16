@@ -32,7 +32,7 @@ REPO_SEARCH_PATHS = [
 ]
 
 # Expand the home directory
-APP_DATA = os.path.expanduser("~/.citus_load")
+APP_DATA = os.path.expanduser("~/.local/share/citus_load")
 REPO_CACHE = os.path.join(APP_DATA, "repos")
 CONFIG_FILE = os.path.join(APP_DATA, "config.yaml")
 

@@ -8,6 +8,9 @@ _citus_load()
     cmd="${COMP_WORDS[1]}"
     cmds="repo schema load"
 
+    CACHE_DIR="${HOME}/.cache/citus_load"
+    REPO_DIR="${HOME}/.local/share/citus_load/repos"
+
     case $prev in
         repo)
             subcmds="list add"
@@ -20,7 +23,35 @@ _citus_load()
             return 0
             ;;
         load)
-            schemas=$(citus_load schema list --machine)
+            schema_cache_file="${CACHE_DIR}/schemas"
+
+            # because running the citus_load command to list all the schema's is slow
+            # we cache the schema's in a file and use that to autocomplete
+            # when any file in repo directory is updated, we refresh the cache by deleting
+            # cahce the file.
+            if [ -f $schema_cache_file ] && [ -d $REPO_DIR ]; then
+                # check if the edit time of the schema_cache_file is older than the repo
+                # if so, then the repo has been updated and we need to refresh the schema_cache_file
+                repo_time_float=$(find $REPO_DIR -type f -printf '%T@\t%p\n' | sort -r -k1 | head -n1 | cut -f1)
+                repo_time=${repo_time_float%.*}
+                schema_cache_time=$(stat -c %Y $schema_cache_file)
+                if [ $repo_time -gt $schema_cache_time ]; then
+                    echo "repo has been updated, refreshing schema cache"
+                    rm $schema_cache_file
+                fi
+            fi
+
+            # if the cache file exists we know that the repo's have not been updated since
+            # the last time we cached the schema's. We can use the cache file to autocomplete
+            if [ -f $schema_cache_file ]; then
+                schemas=$(cat $schema_cache_file)
+            else
+                # load schema's from citus_load and update the cache file
+                schemas=$(citus_load schema list --machine)
+
+                mkdir -p $CACHE_DIR
+                echo "$schemas" > $schema_cache_file
+            fi
             COMPREPLY=($( compgen -W "${schemas}" -- "${cur}" ));
             return 0
             ;;
