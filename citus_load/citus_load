@@ -139,8 +139,7 @@ def repo_add(arguments):
 
     # to get the base directory for the repository we need to remove the repository name
     # we do this to remove everything after the last slash
-    repo_base = repo.rsplit("/", 1)[0]
-    repo_name = repo.rsplit("/", 1)[1]
+    repo_base, repo_name = repo.rsplit("/", 1)
 
     cwd = os.path.join(REPO_CACHE, repo_base)
 
