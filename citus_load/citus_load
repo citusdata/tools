@@ -7,7 +7,7 @@ Usage:
   citus_load repo add <repo>
   citus_load schema list [-m | --machine]
   citus_load schema list-params <schema> [-m | --machine]
-  citus_load [load] <schema> [<key=value> ...]
+  citus_load [load] <schema> [<key=value> ...] [--skip=<step> ...] [--only=<step> ...]
   citus_load (-h | --help)
   citus_load --version
 
@@ -15,6 +15,8 @@ Options:
   -h --help     Show this screen.
   --version     Show version.
   -m --machine  Output suitable for easier processing (eg. autocomplete).
+  --skip=<step> Skip the specified steps.
+  --only=<step> Only run the specified steps.
 
 """
 from docopt import docopt
@@ -268,9 +270,27 @@ def load(arguments):
 
     print(f"parameters: {parameters}")
 
+    skip = arguments["--skip"]
+    only = arguments["--only"]
+
     for step in schema.steps():
+        if skip and name_has_substr_in_list(step.name, skip):
+            print(f"skipping step: {step.name}")
+            continue
+
+        if only and name_has_substr_in_list(step.name, skip):
+            print(f"skipping step: {step.name}")
+            continue
+
         print(f"running step: {step.name}")
         step.run(parameters)
+
+
+def name_has_substr_in_list(name, l):
+    for item in l:
+        if item in name:
+            return True
+    return False
 
 
 def parse_load_parameters(arguments):
