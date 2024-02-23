@@ -2,7 +2,7 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer] [--fsync]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--no-lib] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer] [--fsync]
   citus_dev restart <name> [--watch] [--port=<port>]
   citus_dev (start|stop) <name> [--port=<port>] [--force]
 
@@ -12,6 +12,7 @@ Options:
   --watch                  Watch for changes to the citus plugin and restart the cluster when the plugin updates
   --use-ssl                Create the cluster with ssl enabled
   --no-extension           Do not create the extension while creating the nodes
+  --no-lib                 Do not put citus in shared_preload_libraries
   --destroy                Destroy any old cluster with the same name
   --init-with=<sql_file>   A SQL script to run after creation of the cluster to set up any necessary tables and data
   --init-worker-with=<sql_file>   A SQL script to run after creation of the cluster on the workers
@@ -55,7 +56,12 @@ def createNodeCommands(clustername, role, arguments, index=None):
     else:
         run(f"initdb -D {clustername}/{nodename}")
 
-    shared_preload_libraries = ['citus', 'pg_stat_statements']
+    if arguments['--no-lib']:
+        shared_preload_libraries = []
+    else:
+        shared_preload_libraries = ['citus']
+
+    shared_preload_libraries += ['pg_stat_statements']
 
     shared_preload_libraries = ','.join(shared_preload_libraries)
 
