@@ -44,7 +44,7 @@ def run(command, *args, **kwargs):
     return result
 
 
-def createNodeCommands(clustername, role, index=None, usessl=False):
+def createNodeCommands(clustername, role, arguments, index=None):
     nodename = role
     if index != None:
         nodename += "%d" % index
@@ -58,7 +58,7 @@ def createNodeCommands(clustername, role, index=None, usessl=False):
     run(f"echo \"shared_preload_libraries = '{shared_preload_libraries}'\" >> {clustername}/{nodename}/postgresql.conf")
     run(f'echo "wal_level = logical" >> {clustername}/{nodename}/postgresql.conf')
 
-    if usessl:
+    if arguments["--use-ssl"]:
         run(f'echo "ssl = on" >> {clustername}/{nodename}/postgresql.conf')
         run(f"echo \"citus.node_conninfo = 'sslmode=require'\" >> {clustername}/{nodename}/postgresql.conf")
         run(f"openssl req -new -x509 -days 365 -nodes -text -out {clustername}/{nodename}/server.crt -keyout {clustername}/{nodename}/server.key -subj '/CN={nodename}'")
@@ -111,7 +111,7 @@ def main(arguments):
         createNodeCommands(
             clustername,
             "coordinator",
-            usessl=arguments["--use-ssl"],
+            arguments,
         )
 
         port = int(arguments["--port"])
@@ -125,8 +125,8 @@ def main(arguments):
             createNodeCommands(
                 arguments["<name>"],
                 "worker",
+                arguments,
                 i,
-                usessl=arguments["--use-ssl"],
             )
             if pgbouncer:
                 createPgBouncerConfig(clustername, port, i)
