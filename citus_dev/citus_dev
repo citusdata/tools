@@ -2,7 +2,7 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer] [--fsync]
   citus_dev restart <name> [--watch] [--port=<port>]
   citus_dev (start|stop) <name> [--port=<port>] [--force]
 
@@ -16,6 +16,7 @@ Options:
   --init-with=<sql_file>   A SQL script to run after creation of the cluster to set up any necessary tables and data
   --init-worker-with=<sql_file>   A SQL script to run after creation of the cluster on the workers
   --with-pgbouncer         Setup pgbouncers between worker and coordinator (requires citus enterprise)
+  --fsync                  Make data in citus_dev clusters safe across computer crashes (slower)
   --force                  Forceful shutdown
 
 """
@@ -49,7 +50,10 @@ def createNodeCommands(clustername, role, arguments, index=None):
     if index != None:
         nodename += "%d" % index
 
-    run(f"initdb -D {clustername}/{nodename}")
+    if arguments['--fsync']:
+        run(f"initdb -D {clustername}/{nodename} --no-sync")
+    else:
+        run(f"initdb -D {clustername}/{nodename}")
 
     shared_preload_libraries = ['citus', 'pg_stat_statements']
 
@@ -57,6 +61,8 @@ def createNodeCommands(clustername, role, arguments, index=None):
 
     run(f"echo \"shared_preload_libraries = '{shared_preload_libraries}'\" >> {clustername}/{nodename}/postgresql.conf")
     run(f'echo "wal_level = logical" >> {clustername}/{nodename}/postgresql.conf')
+    if not arguments['--fsync']:
+        run(f'echo "fsync = false" >> {clustername}/{nodename}/postgresql.conf')
 
     if arguments["--use-ssl"]:
         run(f'echo "ssl = on" >> {clustername}/{nodename}/postgresql.conf')
