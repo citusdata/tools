@@ -66,6 +66,9 @@ def createNodeCommands(clustername, role, port, arguments, index=None):
     shared_preload_libraries = ','.join(shared_preload_libraries)
 
     run(f"echo \"port = {port}\" >> {clustername}/{nodename}/postgresql.conf")
+    run(f"echo \"log_filename = '{nodename}_logfile'\" >> {clustername}/{nodename}/postgresql.conf")
+    run(f"echo \"logging_collector = 'on'\" >> {clustername}/{nodename}/postgresql.conf")
+    run(f"echo \"log_directory = '../..'\" >> {clustername}/{nodename}/postgresql.conf")
     run(f"echo \"shared_preload_libraries = '{shared_preload_libraries}'\" >> {clustername}/{nodename}/postgresql.conf")
     run(f'echo "wal_level = logical" >> {clustername}/{nodename}/postgresql.conf')
     if not arguments['--fsync']:
@@ -149,11 +152,11 @@ def main(arguments):
                 createPgBouncerConfig(clustername, port, i)
 
         role = "coordinator"
-        run(f'pg_ctl {pgctl_flags} -D {clustername}/{role} -l {role}_logfile start')
+        run(f'pg_ctl {pgctl_flags} -D {clustername}/{role} start')
 
         for i in range(size):
             role = "worker%d" % i
-            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role} -l {role}_logfile')
+            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role}')
         port = cport
 
         if getpass.getuser() != 'postgres' and not os.getenv('PGDATABASE'):
@@ -200,7 +203,7 @@ def main(arguments):
         clustername = arguments["<name>"]
         port = int(arguments["--port"])
         for role in getRoles(clustername):
-            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role} -l {role}_logfile')
+            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role}')
             port += 1
         for bouncerConfig in getPgBouncerConfigs(clustername):
             run(f'pgbouncer -d {clustername}/{bouncerConfig}')
@@ -217,7 +220,7 @@ def main(arguments):
 
         else:
             for role in getRoles(clustername):
-                run(f'pg_ctl {pgctl_flags} restart -D {clustername}/{role} -l {role}_logfile')
+                run(f'pg_ctl {pgctl_flags} restart -D {clustername}/{role}')
 
 
     else:
