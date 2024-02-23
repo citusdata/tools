@@ -3,8 +3,8 @@
 
 Usage:
   citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--no-lib] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer] [--fsync]
-  citus_dev restart <name> [--watch] [--port=<port>]
-  citus_dev (start|stop) <name> [--port=<port>] [--force]
+  citus_dev restart <name> [--watch]
+  citus_dev (start|stop) <name> [--force]
 
 Options:
   --size=<count>           Number of workers to create when 0 the coordinator will be added as a worker [default: 2]
@@ -46,7 +46,7 @@ def run(command, *args, **kwargs):
     return result
 
 
-def createNodeCommands(clustername, role, arguments, index=None):
+def createNodeCommands(clustername, role, port, arguments, index=None):
     nodename = role
     if index != None:
         nodename += "%d" % index
@@ -65,6 +65,7 @@ def createNodeCommands(clustername, role, arguments, index=None):
 
     shared_preload_libraries = ','.join(shared_preload_libraries)
 
+    run(f"echo \"port = {port}\" >> {clustername}/{nodename}/postgresql.conf")
     run(f"echo \"shared_preload_libraries = '{shared_preload_libraries}'\" >> {clustername}/{nodename}/postgresql.conf")
     run(f'echo "wal_level = logical" >> {clustername}/{nodename}/postgresql.conf')
     if not arguments['--fsync']:
@@ -120,13 +121,15 @@ def main(arguments):
             run(f'rm -rf {clustername}')
 
 
+        port = int(arguments["--port"])
+        cport = port
         createNodeCommands(
             clustername,
             "coordinator",
+            port,
             arguments,
         )
 
-        port = int(arguments["--port"])
         size = int(arguments["--size"])
         pgbouncer = bool(arguments["--with-pgbouncer"])
 
@@ -134,26 +137,23 @@ def main(arguments):
             createPgBouncerUsers(clustername)
 
         for i in range(size):
+            port += 1
             createNodeCommands(
                 arguments["<name>"],
                 "worker",
+                port,
                 arguments,
                 i,
             )
             if pgbouncer:
                 createPgBouncerConfig(clustername, port, i)
 
-        cport = port
         role = "coordinator"
-        run(f'pg_ctl {pgctl_flags} -D {clustername}/{role} -o "-p {cport}" -l {role}_logfile start')
-        port += 1
+        run(f'pg_ctl {pgctl_flags} -D {clustername}/{role} -l {role}_logfile start')
 
-        worker_ports = []
         for i in range(size):
             role = "worker%d" % i
-            worker_ports.append(port)
-            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role} -o "-p {port}" -l {role}_logfile')
-            port += 1
+            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role} -l {role}_logfile')
         port = cport
 
         if getpass.getuser() != 'postgres' and not os.getenv('PGDATABASE'):
@@ -200,7 +200,7 @@ def main(arguments):
         clustername = arguments["<name>"]
         port = int(arguments["--port"])
         for role in getRoles(clustername):
-            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role} -o "-p {port}" -l {role}_logfile')
+            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role} -l {role}_logfile')
             port += 1
         for bouncerConfig in getPgBouncerConfigs(clustername):
             run(f'pgbouncer -d {clustername}/{bouncerConfig}')
@@ -209,18 +209,15 @@ def main(arguments):
 
     elif arguments["restart"]:
         clustername = arguments["<name>"]
-        port = int(arguments["--port"])
         if arguments["--watch"]:
             run(
-                "fswatch -0 '%s' | xargs -0 -n 1 -I{} citus_dev restart %s --port=%d"
-                % (citus_so(), clustername, port)
+                "fswatch -0 '%s' | xargs -0 -n 1 -I{} citus_dev restart %s"
+                % (citus_so(), clustername)
             )
 
         else:
-            cport = port
             for role in getRoles(clustername):
-                run(f'pg_ctl {pgctl_flags} restart -D {clustername}/{role} -o "-p {cport}" -l {role}_logfile')
-                cport += 1
+                run(f'pg_ctl {pgctl_flags} restart -D {clustername}/{role} -l {role}_logfile')
 
 
     else:
