@@ -1,0 +1,9 @@
+# Files created by citus_dev
+coordinator/
+worker*/
+*_logfile
+
+# Python virtual environment
+/.venv
+/venv
+/env

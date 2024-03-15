@@ -2,9 +2,9 @@
 """citus_dev
 
 Usage:
-  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer]
-  citus_dev restart <name> [--watch] [--port=<port>]
-  citus_dev (start|stop) <name> [--port=<port>] [--force]
+  citus_dev make <name> [--size=<count>] [--port=<port>] [--use-ssl] [--no-extension] [--no-lib] [--destroy] [--init-with=<sql_file>] [--init-worker-with=<sql_file>] [--with-pgbouncer] [--fsync]
+  citus_dev restart <name> [--watch]
+  citus_dev (start|stop) <name> [--force]
 
 Options:
   --size=<count>           Number of workers to create when 0 the coordinator will be added as a worker [default: 2]
@@ -12,10 +12,12 @@ Options:
   --watch                  Watch for changes to the citus plugin and restart the cluster when the plugin updates
   --use-ssl                Create the cluster with ssl enabled
   --no-extension           Do not create the extension while creating the nodes
+  --no-lib                 Do not put citus in shared_preload_libraries
   --destroy                Destroy any old cluster with the same name
   --init-with=<sql_file>   A SQL script to run after creation of the cluster to set up any necessary tables and data
   --init-worker-with=<sql_file>   A SQL script to run after creation of the cluster on the workers
   --with-pgbouncer         Setup pgbouncers between worker and coordinator (requires citus enterprise)
+  --fsync                  Make data in citus_dev clusters safe across computer crashes (slower)
   --force                  Forceful shutdown
 
 """
@@ -44,21 +46,35 @@ def run(command, *args, **kwargs):
     return result
 
 
-def createNodeCommands(clustername, role, index=None, usessl=False):
+def createNodeCommands(clustername, role, port, arguments, index=None):
     nodename = role
     if index != None:
         nodename += "%d" % index
 
-    run(f"initdb -D {clustername}/{nodename}")
+    if arguments['--fsync']:
+        run(f"initdb -D {clustername}/{nodename} --no-sync")
+    else:
+        run(f"initdb -D {clustername}/{nodename}")
 
-    shared_preload_libraries = ['citus', 'pg_stat_statements']
+    if arguments['--no-lib']:
+        shared_preload_libraries = []
+    else:
+        shared_preload_libraries = ['citus']
+
+    shared_preload_libraries += ['pg_stat_statements']
 
     shared_preload_libraries = ','.join(shared_preload_libraries)
 
+    run(f"echo \"port = {port}\" >> {clustername}/{nodename}/postgresql.conf")
+    run(f"echo \"log_filename = '{nodename}_logfile'\" >> {clustername}/{nodename}/postgresql.conf")
+    run(f"echo \"logging_collector = 'on'\" >> {clustername}/{nodename}/postgresql.conf")
+    run(f"echo \"log_directory = '../..'\" >> {clustername}/{nodename}/postgresql.conf")
     run(f"echo \"shared_preload_libraries = '{shared_preload_libraries}'\" >> {clustername}/{nodename}/postgresql.conf")
     run(f'echo "wal_level = logical" >> {clustername}/{nodename}/postgresql.conf')
+    if not arguments['--fsync']:
+        run(f'echo "fsync = false" >> {clustername}/{nodename}/postgresql.conf')
 
-    if usessl:
+    if arguments["--use-ssl"]:
         run(f'echo "ssl = on" >> {clustername}/{nodename}/postgresql.conf')
         run(f"echo \"citus.node_conninfo = 'sslmode=require'\" >> {clustername}/{nodename}/postgresql.conf")
         run(f"openssl req -new -x509 -days 365 -nodes -text -out {clustername}/{nodename}/server.crt -keyout {clustername}/{nodename}/server.key -subj '/CN={nodename}'")
@@ -108,13 +124,15 @@ def main(arguments):
             run(f'rm -rf {clustername}')
 
 
+        port = int(arguments["--port"])
+        cport = port
         createNodeCommands(
             clustername,
             "coordinator",
-            usessl=arguments["--use-ssl"],
+            port,
+            arguments,
         )
 
-        port = int(arguments["--port"])
         size = int(arguments["--size"])
         pgbouncer = bool(arguments["--with-pgbouncer"])
 
@@ -122,26 +140,23 @@ def main(arguments):
             createPgBouncerUsers(clustername)
 
         for i in range(size):
+            port += 1
             createNodeCommands(
                 arguments["<name>"],
                 "worker",
+                port,
+                arguments,
                 i,
-                usessl=arguments["--use-ssl"],
             )
             if pgbouncer:
                 createPgBouncerConfig(clustername, port, i)
 
-        cport = port
         role = "coordinator"
-        run(f'pg_ctl {pgctl_flags} -D {clustername}/{role} -o "-p {cport}" -l {role}_logfile start')
-        port += 1
+        run(f'pg_ctl {pgctl_flags} -D {clustername}/{role} start')
 
-        worker_ports = []
         for i in range(size):
             role = "worker%d" % i
-            worker_ports.append(port)
-            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role} -o "-p {port}" -l {role}_logfile')
-            port += 1
+            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role}')
         port = cport
 
         if getpass.getuser() != 'postgres' and not os.getenv('PGDATABASE'):
@@ -165,7 +180,7 @@ def main(arguments):
             # need to start pgbouncers and configure pg_dist_poolinfo
             for i in range(size):
                 coordinatorPort = port
-                workerPort = port + i + 1 
+                workerPort = port + i + 1
                 bouncerPort = port + i + 101
                 run(f'pgbouncer -d {clustername}/worker{i}.pgbouncer.ini')
                 run(f"psql -p {coordinatorPort} -c \"INSERT INTO pg_dist_poolinfo SELECT nodeid, 'host=localhost port={bouncerPort}' AS poolinfo FROM pg_dist_node WHERE nodeport = {workerPort};\"")
@@ -188,7 +203,7 @@ def main(arguments):
         clustername = arguments["<name>"]
         port = int(arguments["--port"])
         for role in getRoles(clustername):
-            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role} -o "-p {port}" -l {role}_logfile')
+            run(f'pg_ctl {pgctl_flags} start -D {clustername}/{role}')
             port += 1
         for bouncerConfig in getPgBouncerConfigs(clustername):
             run(f'pgbouncer -d {clustername}/{bouncerConfig}')
@@ -197,18 +212,15 @@ def main(arguments):
 
     elif arguments["restart"]:
         clustername = arguments["<name>"]
-        port = int(arguments["--port"])
         if arguments["--watch"]:
             run(
-                "fswatch -0 '%s' | xargs -0 -n 1 -I{} citus_dev restart %s --port=%d"
-                % (citus_so(), clustername, port)
+                "fswatch -0 '%s' | xargs -0 -n 1 -I{} citus_dev restart %s"
+                % (citus_so(), clustername)
             )
 
         else:
-            cport = port
             for role in getRoles(clustername):
-                run(f'pg_ctl {pgctl_flags} restart -D {clustername}/{role} -o "-p {cport}" -l {role}_logfile')
-                cport += 1
+                run(f'pg_ctl {pgctl_flags} restart -D {clustername}/{role}')
 
 
     else:
