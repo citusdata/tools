@@ -16,7 +16,7 @@ from ..prepare_release import (
     MULTI_EXTENSION_OUT,
     MULTI_EXTENSION_SQL,
     CONFIGURE,
-    CONFIGURE_IN,
+    CONFIGURE_AC,
     CITUS_CONTROL,
     CONFIG_PY,
     ProjectParams,
@@ -74,7 +74,7 @@ def test_major_release():
 
     assert file_includes_line(test_base_path_major, MULTI_EXTENSION_OUT, " 10.1.0")
     assert file_includes_line(
-        test_base_path_major, CONFIGURE_IN, "AC_INIT([Citus], [10.1.0])"
+        test_base_path_major, CONFIGURE_AC, "AC_INIT([Citus], [10.1.0])"
     )
     assert file_includes_line(
         test_base_path_major, CONFIGURE, "PACKAGE_VERSION='10.1.0'"
@@ -154,7 +154,7 @@ def test_major_release():
         test_base_path_major, CONFIG_PY, "MASTER_VERSION = '10.2'"
     )
     assert file_includes_line(
-        test_base_path_major, CONFIGURE_IN, "AC_INIT([Citus], [10.2devel])"
+        test_base_path_major, CONFIGURE_AC, "AC_INIT([Citus], [10.2devel])"
     )
     assert file_includes_line(
         test_base_path_major, CONFIGURE, "PACKAGE_VERSION='10.2devel'"
@@ -213,7 +213,7 @@ def test_patch_release():
         )
         assert file_includes_line(
             test_base_path_patch,
-            CONFIGURE_IN,
+            CONFIGURE_AC,
             f"AC_INIT([Citus], [{project_params.project_version}])",
         )
         assert file_includes_line(

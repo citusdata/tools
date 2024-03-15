@@ -2,8 +2,8 @@
 ALTER EXTENSION citus UPDATE TO '{{upcoming_minor_version}}';
 ALTER EXTENSION citus UPDATE TO '{{current_schema_version}}';
 -- Should be empty result since upgrade+downgrade should be a no-op
-SELECT * FROM print_extension_changes();
+SELECT * FROM multi_extension.print_extension_changes();
 
 -- Snapshot of state at {{upcoming_minor_version}}
 ALTER EXTENSION citus UPDATE TO '{{upcoming_minor_version}}';
-SELECT * FROM print_extension_changes();
+SELECT * FROM multi_extension.print_extension_changes();
