@@ -35,13 +35,16 @@ from .common_validations import CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION
 
 MULTI_EXTENSION_SQL = "src/test/regress/sql/multi_extension.sql"
 CITUS_CONTROL = "src/backend/distributed/citus.control"
+COLUMNAR_CONTROL = "src/backend/columnar/citus_columnar.control"
 MULTI_EXTENSION_OUT = "src/test/regress/expected/multi_extension.out"
 CONFIG_PY = "src/test/regress/upgrade/config.py"
-DISTRIBUTED_SQL_DIR_PATH = "src/backend/distributed/sql"
-DOWNGRADES_DIR_PATH = f"{DISTRIBUTED_SQL_DIR_PATH}/downgrades"
+CITUS_SQL_DIR_PATH = "src/backend/distributed/sql"
+CITUS_DOWNGRADES_DIR_PATH = f"{CITUS_SQL_DIR_PATH}/downgrades"
+COLUMNAR_SQL_DIR_PATH = "src/backend/columnar/sql"
+COLUMNAR_DOWNGRADES_DIR_PATH = f"{COLUMNAR_SQL_DIR_PATH}/downgrades"
 CONFIGURE_IN = "configure.in"
 CONFIGURE = "configure"
-CITUS_CONTROL_SEARCH_PATTERN = r"^default_version*"
+CONTROL_FILE_SEARCH_PATTERN = r"^default_version*"
 
 MULTI_EXT_DEVEL_SEARCH_PATTERN = rf"^\s*{CITUS_MINOR_VERSION_PATTERN}devel$"
 MULTI_EXT_PATCH_SEARCH_PATTERN = rf"^\s*{CITUS_PATCH_VERSION_PATTERN}$"
@@ -81,8 +84,10 @@ repo_details = {
 class UpdateReleaseReturnValue:
     release_branch_name: str
     upcoming_version_branch: str
-    upgrade_path_sql_file: str
-    downgrade_path_sql_file: str
+    citus_upgrade_path_sql_file: str
+    columnar_upgrade_path_sql_file: str
+    citus_downgrade_path_sql_file: str
+    columnar_downgrade_path_sql_file: str
 
 
 @dataclass
@@ -100,11 +105,14 @@ class MajorReleaseParams:
 @dataclass
 class UpcomingVersionBranchParams:
     citus_control_file_path: str
+    columnar_control_file_path: str
     config_py_path: str
     configure_in_path: str
     upcoming_devel_version: str
-    distributed_dir_path: str
-    downgrades_dir_path: str
+    citus_sql_dir_path: str
+    columnar_sql_dir_path: str
+    citus_downgrades_dir_path: str
+    columnar_downgrades_dir_path: str
     is_test: bool
     main_branch: str
     multi_extension_out_path: str
@@ -124,6 +132,7 @@ class PatchReleaseParams:
     is_test: bool
     main_branch: str
     citus_control_file_path: str
+    columnar_control_file_path: str
     multi_extension_out_path: str
     project_name: str
     project_version: str
@@ -144,11 +153,14 @@ class ProjectParams:
 class PathParams:
     multi_extension_sql_path: str
     citus_control_file_path: str
+    columnar_control_file_path: str
     multi_extension_out_path: str
     configure_in_path: str
     config_py_path: str
-    distributed_dir_path: str
-    downgrades_dir_path: str
+    citus_sql_dir_path: str
+    columnar_sql_dir_path: str
+    citus_downgrades_dir_path: str
+    columnar_downgrades_dir_path: str
 
 
 @dataclass
@@ -169,8 +181,10 @@ BASE_GIT_PATH = pathlib2.Path(__file__).parents[1]
 
 @dataclass
 class MigrationFiles:
-    upgrade_file: str
-    downgrade_file: str
+    citus_upgrade_file: str
+    citus_downgrade_file: str
+    columnar_upgrade_file: str
+    columnar_downgrade_file: str
 
 
 # disabled since this is related to parameter_validations library methods
@@ -187,10 +201,13 @@ def update_release(
         multi_extension_out_path=f"{exec_path}/{MULTI_EXTENSION_OUT}",
         multi_extension_sql_path=f"{exec_path}/{MULTI_EXTENSION_SQL}",
         citus_control_file_path=f"{exec_path}/{CITUS_CONTROL}",
+        columnar_control_file_path=f"{exec_path}/{COLUMNAR_CONTROL}",
         configure_in_path=f"{exec_path}/{CONFIGURE_IN}",
         config_py_path=f"{exec_path}/{CONFIG_PY}",
-        distributed_dir_path=f"{exec_path}/{DISTRIBUTED_SQL_DIR_PATH}",
-        downgrades_dir_path=f"{exec_path}/{DOWNGRADES_DIR_PATH}",
+        citus_sql_dir_path=f"{exec_path}/{CITUS_SQL_DIR_PATH}",
+        columnar_sql_dir_path=f"{exec_path}/{COLUMNAR_SQL_DIR_PATH}",
+        citus_downgrades_dir_path=f"{exec_path}/{CITUS_DOWNGRADES_DIR_PATH}",
+        columnar_downgrades_dir_path=f"{exec_path}/{COLUMNAR_DOWNGRADES_DIR_PATH}",
     )
 
     version_params = VersionParams(
@@ -212,7 +229,7 @@ def update_release(
 
     upcoming_version_branch = ""
 
-    migration_files = MigrationFiles("", "")
+    migration_files = MigrationFiles("", "", "", "")
     # major release
     if is_major_release(project_params.project_version):
         print(
@@ -237,10 +254,13 @@ def update_release(
             is_test=is_test,
             main_branch=project_params.main_branch,
             citus_control_file_path=path_params.citus_control_file_path,
+            columnar_control_file_path=path_params.columnar_control_file_path,
             config_py_path=path_params.config_py_path,
             configure_in_path=path_params.configure_in_path,
-            distributed_dir_path=path_params.distributed_dir_path,
-            downgrades_dir_path=path_params.downgrades_dir_path,
+            citus_sql_dir_path=path_params.citus_sql_dir_path,
+            columnar_sql_dir_path=path_params.columnar_sql_dir_path,
+            citus_downgrades_dir_path=path_params.citus_downgrades_dir_path,
+            columnar_downgrades_dir_path=path_params.columnar_downgrades_dir_path,
             repository=repository,
             upcoming_minor_version=version_params.upcoming_minor_version,
             multi_extension_out_path=path_params.multi_extension_out_path,
@@ -267,6 +287,7 @@ def update_release(
             project_version=project_params.project_version,
             schema_version=project_params.schema_version,
             citus_control_file_path=path_params.citus_control_file_path,
+            columnar_control_file_path=path_params.columnar_control_file_path,
             release_branch_name=branch_params.release_branch_name,
             repository=repository,
         )
@@ -274,8 +295,10 @@ def update_release(
     return UpdateReleaseReturnValue(
         release_branch_name=branch_params.release_branch_name,
         upcoming_version_branch=upcoming_version_branch,
-        upgrade_path_sql_file=f"{DISTRIBUTED_SQL_DIR_PATH}/{migration_files.upgrade_file}",
-        downgrade_path_sql_file=f"{DOWNGRADES_DIR_PATH}/{migration_files.downgrade_file}",
+        citus_upgrade_path_sql_file=f"{CITUS_SQL_DIR_PATH}/{migration_files.citus_upgrade_file}",
+        columnar_upgrade_path_sql_file=f"{COLUMNAR_SQL_DIR_PATH}/{migration_files.columnar_upgrade_file}",
+        citus_downgrade_path_sql_file=f"{CITUS_DOWNGRADES_DIR_PATH}/{migration_files.citus_downgrade_file}",
+        columnar_downgrade_path_sql_file=f"{COLUMNAR_DOWNGRADES_DIR_PATH}/{migration_files.columnar_downgrade_file}",
     )
 
 
@@ -335,8 +358,9 @@ def prepare_release_branch_for_patch_release(patchReleaseParams: PatchReleasePar
     )
     # if schema version is not empty update citus.control schema version
     if patchReleaseParams.schema_version:
-        update_schema_version_in_citus_control(
+        update_schema_version_in_control_files(
             citus_control_file_path=patchReleaseParams.citus_control_file_path,
+            columnar_control_file_path=patchReleaseParams.columnar_control_file_path,
             schema_version=patchReleaseParams.schema_version,
         )
     if patchReleaseParams.cherry_pick_enabled:
@@ -406,23 +430,27 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
         upcoming_params.upcoming_minor_version,
         MULTI_EXT_OUT_TEMPLATE_FILE,
     )
-    # create a new sql file for upgrade path:
-    upgrade_file = create_new_sql_for_upgrade_path(
+    # create new sql files for upgrade path:
+    citus_upgrade_file, columnar_upgrade_file = create_new_sql_for_upgrade_path(
         current_schema_version,
-        upcoming_params.distributed_dir_path,
+        upcoming_params.citus_sql_dir_path,
+        upcoming_params.columnar_sql_dir_path,
         upcoming_params.upcoming_minor_version,
     )
-    # create a new sql file for downgrade path:
-    downgrade_file = create_new_sql_for_downgrade_path(
+    # create new sql files for downgrade path:
+    citus_downgrade_file, columnar_downgrade_file = create_new_sql_for_downgrade_path(
         current_schema_version,
-        upcoming_params.downgrades_dir_path,
+        upcoming_params.citus_downgrades_dir_path,
+        upcoming_params.columnar_downgrades_dir_path,
         upcoming_params.upcoming_minor_version,
     )
 
-    # change version in citus.control file
+    # change versions in control files
     default_upcoming_schema_version = f"{upcoming_params.upcoming_minor_version}-1"
-    update_schema_version_in_citus_control(
-        upcoming_params.citus_control_file_path, default_upcoming_schema_version
+    update_schema_version_in_control_files(
+        upcoming_params.citus_control_file_path,
+        upcoming_params.columnar_control_file_path,
+        default_upcoming_schema_version,
     )
     # commit and push changes on master-update-version-$curtime branch
     commit_changes_for_version_bump(
@@ -439,7 +467,12 @@ def prepare_upcoming_version_branch(upcoming_params: UpcomingVersionBranchParams
             upcoming_params.upcoming_devel_version,
         )
     print(f"### Done {upcoming_params.upcoming_version_branch} flow executed. ###")
-    return MigrationFiles(upgrade_file=upgrade_file, downgrade_file=downgrade_file)
+    return MigrationFiles(
+        citus_upgrade_file=citus_upgrade_file,
+        columnar_upgrade_file=columnar_upgrade_file,
+        citus_downgrade_file=citus_downgrade_file,
+        columnar_downgrade_file=columnar_downgrade_file,
+    )
 
 
 def prepare_release_branch_for_major_release(majorReleaseParams: MajorReleaseParams):
@@ -527,19 +560,22 @@ def commit_changes_for_version_bump(project_name, project_version):
     print(f"### Done Changes committed for {current_branch}. ###")
 
 
-def update_schema_version_in_citus_control(citus_control_file_path, schema_version):
-    print(
-        f"### Updating {citus_control_file_path} file with the  version {schema_version}... ###"
-    )
-    if not replace_line_in_file(
-        citus_control_file_path,
-        CITUS_CONTROL_SEARCH_PATTERN,
-        f"default_version = '{schema_version}'",
-    ):
-        raise ValueError(f"{citus_control_file_path} does not have match for version")
-    print(
-        f"### Done {citus_control_file_path} file is updated with the schema version {schema_version}. ###"
-    )
+def update_schema_version_in_control_files(
+    citus_control_file_path, columnar_control_file_path, schema_version
+):
+    for control_file_path in [citus_control_file_path, columnar_control_file_path]:
+        print(
+            f"### Updating {control_file_path} file with the  version {schema_version}... ###"
+        )
+        if not replace_line_in_file(
+            control_file_path,
+            CONTROL_FILE_SEARCH_PATTERN,
+            f"default_version = '{schema_version}'",
+        ):
+            raise ValueError(f"{control_file_path} does not have match for version")
+        print(
+            f"### Done {control_file_path} file is updated with the schema version {schema_version}. ###"
+        )
 
 
 def add_downgrade_script_in_multi_extension_file(
@@ -583,7 +619,7 @@ def get_current_schema_from_citus_control(citus_control_file_path: str) -> str:
     ) as cc_reader:
         cc_file_content = cc_reader.read()
         _, cc_line = find_nth_matching_line_and_line_number(
-            cc_file_content, CITUS_CONTROL_SEARCH_PATTERN, 1
+            cc_file_content, CONTROL_FILE_SEARCH_PATTERN, 1
         )
         schema_not_found = False
         if len(cc_line) > 0:
@@ -722,45 +758,79 @@ def checkout_branch(branch_name, is_test):
     print(f"### Done {branch_name} checked out and pulled. ###")
 
 
-def upgrade_sql_file_name(current_schema_version, upcoming_minor_version):
-    return f"citus--{current_schema_version}--{upcoming_minor_version}-1.sql"
+def upgrade_sql_file_name(
+    extension_name, current_schema_version, upcoming_migration_version
+):
+    return f"{extension_name}--{current_schema_version}--{upcoming_migration_version}-1.sql"
 
 
 def create_new_sql_for_upgrade_path(
-    current_schema_version, distributed_dir_path, upcoming_minor_version
+    current_schema_version,
+    citus_sql_dir_path,
+    columnar_sql_dir_path,
+    upcoming_minor_version,
 ):
-    newly_created_sql_file = upgrade_sql_file_name(
-        current_schema_version, upcoming_minor_version
+    extension_name = "citus"
+    new_citus_upgrade_sql_file = upgrade_sql_file_name(
+        extension_name, current_schema_version, upcoming_minor_version
     )
-    print(f"### Creating upgrade file {newly_created_sql_file}... ###")
+    print(f"### Creating upgrade file {new_citus_upgrade_sql_file}... ###")
     with open(
-        f"{distributed_dir_path}/{newly_created_sql_file}",
+        f"{citus_sql_dir_path}/{new_citus_upgrade_sql_file}",
         "w",
         encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
         errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as f_writer:
-        content = f"-- citus--{current_schema_version}--{upcoming_minor_version}-1"
+        content = (
+            f"-- {extension_name}--{current_schema_version}--{upcoming_minor_version}-1"
+        )
         content = content + "\n\n"
         content = content + f"-- bump version to {upcoming_minor_version}-1" + "\n\n"
         f_writer.write(content)
-    print(f"### Done {newly_created_sql_file} created. ###")
-    return newly_created_sql_file
+    print(f"### Done {new_citus_upgrade_sql_file} created. ###")
 
-
-def create_new_sql_for_downgrade_path(
-    current_schema_version, distributed_dir_path, upcoming_minor_version
-):
-    newly_created_sql_file = (
-        f"citus--{upcoming_minor_version}-1--{current_schema_version}.sql"
+    extension_name = "columnar"
+    new_columnar_upgrade_sql_file = upgrade_sql_file_name(
+        extension_name, current_schema_version, upcoming_minor_version
     )
-    print(f"### Creating downgrade file {newly_created_sql_file}... ###")
+    print(f"### Creating upgrade file {new_columnar_upgrade_sql_file}... ###")
     with open(
-        f"{distributed_dir_path}/{newly_created_sql_file}",
+        f"{columnar_sql_dir_path}/{new_columnar_upgrade_sql_file}",
         "w",
         encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
         errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as f_writer:
-        content = f"-- citus--{upcoming_minor_version}-1--{current_schema_version}"
+        content = (
+            f"-- {extension_name}--{current_schema_version}--{upcoming_minor_version}-1"
+        )
+        content = content + "\n\n"
+        content = content + f"-- bump version to {upcoming_minor_version}-1" + "\n\n"
+        f_writer.write(content)
+    print(f"### Done {new_columnar_upgrade_sql_file} created. ###")
+
+    return new_citus_upgrade_sql_file, new_columnar_upgrade_sql_file
+
+
+def create_new_sql_for_downgrade_path(
+    current_schema_version,
+    citus_sql_dir_path,
+    columnar_sql_dir_path,
+    upcoming_minor_version,
+):
+    extension_name = "citus"
+    new_citus_downgrade_sql_file = upgrade_sql_file_name(
+        extension_name, upcoming_minor_version, current_schema_version
+    )
+    print(f"### Creating downgrade file {new_citus_downgrade_sql_file}... ###")
+    with open(
+        f"{citus_sql_dir_path}/{new_citus_downgrade_sql_file}",
+        "w",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as f_writer:
+        content = (
+            f"-- {extension_name}--{upcoming_minor_version}-1--{current_schema_version}"
+        )
         content = content + "\n"
         content = (
             content + f"-- this is an empty downgrade path since "
@@ -768,8 +838,33 @@ def create_new_sql_for_downgrade_path(
             f"is empty for now" + "\n"
         )
         f_writer.write(content)
-    print(f"### Done {newly_created_sql_file} created. ###")
-    return newly_created_sql_file
+    print(f"### Done {new_citus_downgrade_sql_file} created. ###")
+
+    extension_name = "columnar"
+    new_columnar_downgrade_sql_file = upgrade_sql_file_name(
+        extension_name, upcoming_minor_version, current_schema_version
+    )
+
+    print(f"### Creating downgrade file {new_columnar_downgrade_sql_file}... ###")
+    with open(
+        f"{columnar_sql_dir_path}/{new_columnar_downgrade_sql_file}",
+        "w",
+        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
+        errors=DEFAULT_UNICODE_ERROR_HANDLER,
+    ) as f_writer:
+        content = (
+            f"-- {extension_name}--{upcoming_minor_version}-1--{current_schema_version}"
+        )
+        content = content + "\n"
+        content = (
+            content + f"-- this is an empty downgrade path since "
+            f"{upgrade_sql_file_name(extension_name, current_schema_version, upcoming_minor_version)} "
+            f"is empty for now" + "\n"
+        )
+        f_writer.write(content)
+    print(f"### Done {new_columnar_downgrade_sql_file} created. ###")
+
+    return new_citus_downgrade_sql_file, new_columnar_downgrade_sql_file
 
 
 CHECKOUT_DIR = "citus_temp"
