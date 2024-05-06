@@ -761,9 +761,9 @@ def match_release_version(versions_dictionary, package_version: str):
     versions = list(versions_dictionary.keys())
     numeric_versions_of_config: Dict[int, str] = {}
     for version in versions:
-        numeric_versions_of_config[
-            get_numeric_counterpart_of_version(version)
-        ] = version
+        numeric_versions_of_config[get_numeric_counterpart_of_version(version)] = (
+            version
+        )
     package_version_numeric = get_numeric_counterpart_of_version(package_version)
 
     if package_version_numeric in numeric_versions_of_config:
