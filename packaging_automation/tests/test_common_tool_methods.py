@@ -265,9 +265,9 @@ def test_getprs():
     repository = g.get_repo("citusdata/citus")
     prs = get_prs_for_patch_release(
         repository,
-        datetime.strptime("2021.02.26", "%Y.%m.%d"),
+        datetime.strptime("2021.02.26", "%Y.%m.%d").replace(tzinfo=timezone.utc),
         "master",
-        datetime.strptime("2021.03.02", "%Y.%m.%d"),
+        datetime.strptime("2021.03.02", "%Y.%m.%d").replace(tzinfo=timezone.utc),
     )
     assert len(prs) == 6
     assert prs[0].number == 4748
@@ -278,9 +278,9 @@ def test_getprs_with_backlog_label():
     repository = g.get_repo("citusdata/citus")
     prs = get_prs_for_patch_release(
         repository,
-        datetime.strptime("2021.02.20", "%Y.%m.%d"),
+        datetime.strptime("2021.02.20", "%Y.%m.%d").replace(tzinfo=timezone.utc),
         "master",
-        datetime.strptime("2021.02.27", "%Y.%m.%d"),
+        datetime.strptime("2021.02.27", "%Y.%m.%d").replace(tzinfo=timezone.utc),
     )
     prs_backlog = filter_prs_by_label(prs, "backport")
     assert len(prs_backlog) == 1
