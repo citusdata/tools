@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=tools/packaging_automation/requirements.txt tools/packaging_automation/requirements.in
 #
-anyio==4.3.0
+anyio==4.4.0
     # via httpx
 astroid==2.15.8
     # via
@@ -45,7 +45,7 @@ deprecated==1.2.14
     # via pygithub
 dill==0.3.8
     # via pylint
-docker==7.0.0
+docker==7.1.0
     # via -r tools/packaging_automation/requirements.in
 docutils==0.21.2
     # via pyroma
@@ -118,7 +118,6 @@ packaging==24.0
     # via
     #   black
     #   build
-    #   docker
     #   prospector
     #   pyroma
     #   pytest
@@ -136,7 +135,7 @@ pbr==6.0.0
     # via stevedore
 pep8-naming==0.10.0
     # via prospector
-platformdirs==4.2.1
+platformdirs==4.2.2
     # via
     #   black
     #   pylint
@@ -196,13 +195,13 @@ pypistats==1.5.0
     # via -r tools/packaging_automation/requirements.in
 pyproject-hooks==1.1.0
     # via build
-pyright==1.1.362
+pyright==1.1.364
     # via prospector
 pyroma==4.2
     # via prospector
 pytablewriter[html]==1.2.0
     # via pypistats
-pytest==8.2.0
+pytest==8.2.1
     # via -r tools/packaging_automation/requirements.in
 python-dateutil==2.9.0.post0
     # via
@@ -223,7 +222,7 @@ pyyaml==6.0.1
     #   -r tools/packaging_automation/requirements.in
     #   bandit
     #   prospector
-requests==2.31.0
+requests==2.32.2
     # via
     #   -r tools/packaging_automation/requirements.in
     #   docker
@@ -275,14 +274,14 @@ tomli==2.0.1
     #   vulture
 tomlkit==0.12.5
     # via pylint
-trove-classifiers==2024.4.10
+trove-classifiers==2024.5.22
     # via pyroma
 typepy[datetime]==1.3.2
     # via
     #   dataproperty
     #   pytablewriter
     #   tabledata
-typing-extensions==4.11.0
+typing-extensions==4.12.0
     # via
     #   anyio
     #   astroid
