@@ -112,7 +112,7 @@ mypy-extensions==1.0.0
     # via
     #   black
     #   mypy
-nodeenv==1.8.0
+nodeenv==1.9.0
     # via pyright
 packaging==24.0
     # via
@@ -195,7 +195,7 @@ pypistats==1.5.0
     # via -r tools/packaging_automation/requirements.in
 pyproject-hooks==1.1.0
     # via build
-pyright==1.1.364
+pyright==1.1.365
     # via prospector
 pyroma==4.2
     # via prospector
