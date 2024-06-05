@@ -1,4 +1,4 @@
-FROM almalinux/almalinux:9
+FROM almalinux:9
 ARG CITUS_VERSION
 # Format should be XY and should not include dots e.g for 10.2.1=>102
 ARG CITUS_MAJOR_VERSION
