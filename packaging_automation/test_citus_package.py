@@ -34,7 +34,7 @@ class TestPlatform(Enum):
     centos_7 = {"name": "centos/7", "docker_image_name": "centos-7"}
     ol_7 = {"name": "ol/7", "docker_image_name": "ol-7"}
     ol_8 = {"name": "ol/8", "docker_image_name": "ol-8"}
-    ol_8 = {"name": "ol/8", "docker_image_name": "ol-9"}
+    ol_9 = {"name": "ol/9", "docker_image_name": "ol-9"}
     debian_stretch = {"name": "debian/stretch", "docker_image_name": "debian-stretch"}
     debian_buster = {"name": "debian/buster", "docker_image_name": "debian-buster"}
     debian_bullseye = {
