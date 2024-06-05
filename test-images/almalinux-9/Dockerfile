@@ -18,7 +18,7 @@ RUN yum update -y
 
 # TODO Parameterize Citus and postgres version
 RUN export CITUS_MAJOR_VER=${CITUS_MAJOR_VERSION//./} && \
-	curl -s https://packagecloud.io/install/repositories/citusdata/community/script.rpm.sh | bash && \
+    curl https://raw.githubusercontent.com/citusdata/packaging/gh-pages-el-9/community/rpm.sh |  bash && \
     yum install -y citus${CITUS_MAJOR_VER}_${PG_MAJOR}-${CITUS_VERSION}.citus-${FANCY}.${PACKAGE_RELEASE_SUFFIX} \
            hll_${PG_MAJOR}-${HLL_VERSION}.${PACKAGE_RELEASE_SUFFIX} \
            topn_${PG_MAJOR}-${TOPN_VERSION}.${PACKAGE_RELEASE_SUFFIX}
