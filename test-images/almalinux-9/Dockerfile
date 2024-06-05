@@ -13,8 +13,7 @@ ENV CITUS_VERSION ${CITUS_VERSION}
 ENV PG_MAJOR ${PG_MAJOR}
 
 
-RUN yum update -y && \
-    yum install -y curl
+RUN yum update -y 
 
 
 # TODO Parameterize Citus and postgres version
