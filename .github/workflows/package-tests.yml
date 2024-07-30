@@ -50,8 +50,6 @@ jobs:
       matrix:
         platform:
           - centos/8
-          - centos/7
-          - ol/7
           - el/9
           - ol/9
           - debian/buster
