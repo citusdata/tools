@@ -15,17 +15,10 @@ ENV PG_MAJOR ${PG_MAJOR}
 
 RUN yum update -y
 
-# Enable EPEL repository and install pygpgme
-RUN yum install -y epel-release && \
-    yum install -y python3-gpg && \
-    yum clean all
-
     
 # TODO Parameterize Citus and postgres version
 RUN export CITUS_MAJOR_VER=${CITUS_MAJOR_VERSION//./} && \
     curl https://raw.githubusercontent.com/citusdata/packaging/gh-pages/community/rpm.sh |  bash && \
-    yum clean all && \
-    yum makecache && \
     yum install -y citus${CITUS_MAJOR_VER}_${PG_MAJOR}-${CITUS_VERSION}.citus-${FANCY}.${PACKAGE_RELEASE_SUFFIX} \
            hll_${PG_MAJOR}-${HLL_VERSION}.${PACKAGE_RELEASE_SUFFIX} \
            topn_${PG_MAJOR}-${TOPN_VERSION}.${PACKAGE_RELEASE_SUFFIX}
