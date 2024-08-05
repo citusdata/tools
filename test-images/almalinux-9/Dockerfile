@@ -17,10 +17,10 @@ RUN yum update -y
 
 # Enable EPEL repository and install pygpgme
 RUN yum install -y epel-release && \
-    yum install -y pygpgme && \
+    yum install -y python3-gpg && \
     yum clean all
 
-
+    
 # TODO Parameterize Citus and postgres version
 RUN export CITUS_MAJOR_VER=${CITUS_MAJOR_VERSION//./} && \
     curl https://raw.githubusercontent.com/citusdata/packaging/gh-pages/community/rpm.sh |  bash && \
