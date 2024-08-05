@@ -40,25 +40,20 @@ USER postgres
 RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citus/postgresql.conf
 
 USER root
-# Install python 3.8 and its dependencies
-RUN yum install -y gcc make && \
-    yum -y install libcurl-devel \
-                   openssl-devel \
-                   bzip2-devel \
-                   libffi-devel \
-                   xz-devel && \
-    curl https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz --output Python-3.8.12.tgz && \
-    tar xvf Python-3.8.12.tgz && \
-    cd Python-3.8.*/ && \
-    ./configure --enable-optimizations && \
-    make altinstall && \
-    python3.8 -m pip install pip-tools
 
+# Install Python 3.8 from source
+RUN yum install -y gcc make libcurl-devel openssl-devel bzip2-devel libffi-devel xz-devel
+
+# Install Python 3.8 from a pre-built package (Alternative to building from source)
+RUN yum install -y python38 python38-pip python38-devel
+
+# Upgrade pip and install pip-tools
+RUN python3.8 -m pip install --upgrade pip && python3.8 -m pip install pip-tools
 
 COPY scripts/* ./
 
+# Use pip-tools to compile and install requirements
 RUN pip-compile && python3.8 -m pip install -r requirements.txt
-
 
 USER postgres
 
