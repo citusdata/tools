@@ -41,11 +41,13 @@ RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citu
 
 USER root
 
-# Install Python 3.8 from source
-RUN yum install -y gcc make libcurl-devel openssl-devel bzip2-devel libffi-devel xz-devel
+# Enable the SCL repository and install Python 3.8
+RUN yum install -y gcc make libcurl-devel openssl-devel bzip2-devel libffi-devel xz-devel && \
+    yum install -y centos-release-scl && \
+    yum install -y rh-python38
 
-# Install Python 3.8 from a pre-built package (Alternative to building from source)
-RUN yum install -y python38 python38-pip python38-devel
+# Setup the environment to use Python 3.8
+ENV PATH="/opt/rh/rh-python38/root/usr/bin:$PATH"
 
 # Upgrade pip and install pip-tools
 RUN python3.8 -m pip install --upgrade pip && python3.8 -m pip install pip-tools
