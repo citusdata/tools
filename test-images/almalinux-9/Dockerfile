@@ -21,10 +21,9 @@ RUN export CITUS_MAJOR_VER=${CITUS_MAJOR_VERSION//./} && \
     curl https://raw.githubusercontent.com/citusdata/packaging/gh-pages/community/rpm.sh |  bash && \
     yum install -y citus${CITUS_MAJOR_VER}_${PG_MAJOR}-${CITUS_VERSION}.citus-${FANCY}.${PACKAGE_RELEASE_SUFFIX} \
            hll_${PG_MAJOR}-${HLL_VERSION}.${PACKAGE_RELEASE_SUFFIX} \
-           topn_${PG_MAJOR}-${TOPN_VERSION}.${PACKAGE_RELEASE_SUFFIX}
+    topn_${PG_MAJOR}-${TOPN_VERSION}.${PACKAGE_RELEASE_SUFFIX}
 
-
-
+    
 ARG POSTGRES_HOME=/var/lib/pgsql
 ENV PATH=/usr/pgsql-${PG_MAJOR}/bin:${PATH}:${POSTGRES_HOME}
 
@@ -40,14 +39,21 @@ USER postgres
 RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citus/postgresql.conf
 
 USER root
-
-# Install necessary development tools and Python 3.8
-RUN yum install -y gcc make libcurl-devel openssl-devel bzip2-devel libffi-devel xz-devel && \
-    yum module enable -y python38 && \
-    yum install -y python38 python38-devel python38-pip
-
-# Upgrade pip and install pip-tools
-RUN python3.8 -m pip install --upgrade pip && python3.8 -m pip install pip-tools
+# Install python 3.8 and its dependencies
+RUN yum install -y gcc make && \
+    yum -y install  libcurl-devel \
+                    openssl-devel \
+                    bzip2-devel \
+                    libffi-devel \
+                    xz-devel \
+                    python38-devel \
+                    openssl-devel &&\
+      curl  https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz --output Python-3.8.12.tgz &&\
+      tar xvf Python-3.8.12.tgz &&\
+      cd Python-3.8.*/ && \
+      ./configure --enable-optimizations && \
+       make altinstall && \
+       python3.8 -m pip install pip-tools
 
 COPY scripts/* ./
 
@@ -59,3 +65,4 @@ USER postgres
 WORKDIR ${POSTGRES_HOME}
 
 CMD ["test_internal.sh"]
+
