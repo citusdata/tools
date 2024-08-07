@@ -37,20 +37,19 @@ RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citu
 USER root
 # Install python 3.8 and its dependencies
 RUN yum install -y gcc make && \
-    yum -y install  libcurl-devel \
+    yum -y install libcurl-devel \
                     openssl-devel \
                     bzip2-devel \
                     libffi-devel \
                     xz-devel \
-                    python38-devel \
                     libzstd-devel \
-                    openssl-devel &&\
-      curl  https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz --output Python-3.8.12.tgz &&\
-      tar xvf Python-3.8.12.tgz &&\
-      cd Python-3.8.*/ && \
-      ./configure --enable-optimizations && \
-       make altinstall && \
-       python3.8 -m pip install pip-tools
+                    zlib-devel &&\
+    curl https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz --output Python-3.8.12.tgz &&\
+    tar xvf Python-3.8.12.tgz &&\
+    cd Python-3.8.*/ && \
+    ./configure --enable-optimizations && \
+    make altinstall && \
+    python3.8 -m pip install pip-tools
 
 COPY scripts/* ./
 
