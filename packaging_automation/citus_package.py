@@ -63,6 +63,7 @@ package_docker_platform_dict = {
     "ubuntu,bionic": "ubuntu/bionic",
     "ubuntu,jammy": "ubuntu/jammy",
     "ubuntu,kinetic": "ubuntu/kinetic",
+    "ubuntu,noble": "ubuntu/noble",
     "pgxn": "pgxn",
 }
 
