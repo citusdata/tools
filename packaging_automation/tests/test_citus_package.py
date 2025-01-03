@@ -55,6 +55,7 @@ single_postgres_package_counts = {
     "ubuntu/focal": 2,
     "ubuntu/jammy": 2,
     "ubuntu/kinetic": 2,
+    "ubuntu/noble": 2,
 }
 
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
