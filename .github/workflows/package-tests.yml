@@ -52,7 +52,6 @@ jobs:
           - centos/8
           - el/9
           - ol/9
-          - debian/buster
           - debian/bullseye
           - debian/bookworm
           - ubuntu/focal

@@ -54,7 +54,6 @@ package_docker_platform_dict = {
     "centos,7": "el/7",
     "debian,bookworm": "debian/bookworm",
     "debian,bullseye": "debian/bullseye",
-    "debian,buster": "debian/buster",
     "debian,stretch": "debian/stretch",
     "oraclelinux,8": "ol/8",
     "oraclelinux,7": "ol/7",
@@ -63,6 +62,7 @@ package_docker_platform_dict = {
     "ubuntu,bionic": "ubuntu/bionic",
     "ubuntu,jammy": "ubuntu/jammy",
     "ubuntu,kinetic": "ubuntu/kinetic",
+    "ubuntu,noble": "ubuntu/noble",
     "pgxn": "pgxn",
 }
 
