@@ -41,7 +41,7 @@ supported_platforms = {
     "almalinux": ["8", "9"],
     "el": ["9", "8", "7", "6"],
     "ol": ["9", "8", "7"],
-    "ubuntu": ["focal", "bionic", "trusty", "jammy", "kinetic"],
+    "ubuntu": ["focal", "bionic", "trusty", "jammy", "kinetic", "noble"],
 }
 
 
