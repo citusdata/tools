@@ -1,0 +1,14 @@
+docker build -t citus-test -f Ubuntu.dockerfile .
+docker build -t citus-test -f Debian.bookworm.dockerfile .
+
+docker rm -f citus-container
+docker run -d --name citus-container citus-test
+docker exec -it citus-container psql -U postgres 
+
+docker exec -i citus-container psql -U postgres < test.sql
+
+
+docker logs -f citus-container
+
+docker exec -it citus-container cat /etc/os-release
+
