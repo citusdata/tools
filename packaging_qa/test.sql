@@ -1,3 +1,5 @@
+SELECT pg_read_file('/etc/os-release', 0, 1000);
+select version();
 \dx
 
 CREATE TABLE events (
