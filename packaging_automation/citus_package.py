@@ -469,6 +469,7 @@ def get_package_version_from_pkgvars(input_files_dir: str):
     version_parts = package_version_with_suffix.split(".")
     # hll is working with minor release format e.g. 2.16.citus-1
     pkg_name = pkgvars_config["pkgname"]
+    org_name = pkgvars_config.get("orgname", "")
 
     if len(version_parts) < 3:
         raise ValueError(
@@ -477,7 +478,7 @@ def get_package_version_from_pkgvars(input_files_dir: str):
 
     third_part_splitted = version_parts[2].split("-")
 
-    if pkg_name in ("hll", "azure_gdpr"):
+    if pkg_name in ("hll", "azure_gdpr") or org_name == "microsoft":
         package_version = f"{version_parts[0]}.{version_parts[1]}"
     else:
         package_version = (
