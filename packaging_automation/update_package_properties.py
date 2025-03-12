@@ -87,7 +87,7 @@ class PackagePropertiesParams:
     project_version: str
     fancy: bool
     fancy_version_number: int
-    microsoft_email: str = ""
+    microsoft_email: str = "onurtirtir@microsoft.com"
     name_surname: str = ""
     changelog_date: datetime = datetime.now()
     changelog_entry: str = ""
