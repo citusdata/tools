@@ -81,6 +81,12 @@ jobs:
           gosu circleci psql -c "SELECT * from citus_add_node('localhost', 9701);" -p 9700 -d test
           gosu circleci psql -c "SELECT * from citus_add_node('localhost', 9702);" -p 9700 -d test
 
+      - name: Dump workspace layout
+        run: |
+          pwd
+          ls -R .
+
+
       - name: Run SQLancer tests
         working-directory: sqlancer
         env:
