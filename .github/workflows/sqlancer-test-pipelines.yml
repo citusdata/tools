@@ -7,6 +7,9 @@ on:
         description: 'Branch, tag or SHA to run tests against'
         required: true
         default: 'release-13.1'
+  push:
+    branches:
+      - m3hm3t/sqllancer
 
 
 jobs:
