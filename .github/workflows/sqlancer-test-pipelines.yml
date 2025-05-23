@@ -37,9 +37,6 @@ jobs:
         run: |
           apt-get update
           apt-get install -y openjdk-11-jdk maven
-      # now mvn will exist…
-      - name: Build SQLancer
-        run: mvn -B package -DskipTests=true -f sqlancer/po
 
       - name: Checkout SQLancer (official)
         uses: actions/checkout@v3
@@ -47,6 +44,13 @@ jobs:
             repository: sqlancer/sqlancer
             ref: main            # or a specific tag/branch you know works
             path: sqlancer
+
+      - name: Cache Maven
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/sqlancer/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-
 
       - name: Build SQLancer
         run: mvn -B package -DskipTests=true -f sqlancer/pom.xml
