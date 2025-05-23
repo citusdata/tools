@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/citusdata/exttester:17.5-dev-aa7482a
+      options: --user root
 
     steps:
 
@@ -32,18 +33,13 @@ jobs:
           ./configure 2>&1 | tee output.log
           make install-all -sj$(nproc) 2>&1 | tee -a output.log
 
-      - name: Cache Maven
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2-
-
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 11
+      - name: Install Java & Maven
+        run: |
+          apt-get update
+          apt-get install -y openjdk-11-jdk maven
+      # now mvn will exist…
+      - name: Build SQLancer
+        run: mvn -B package -DskipTests=true -f sqlancer/po
 
       - name: Checkout SQLancer (official)
         uses: actions/checkout@v3
