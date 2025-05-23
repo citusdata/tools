@@ -57,14 +57,14 @@ jobs:
 
       - name: Initialize Citus cluster
         run: |
+          mkdir -p citus
           for port in 9700 9701 9702; do
-            mkdir -p citus/$port
+            mkdir citus/$port
+            chown circleci:circleci citus/$port
             gosu circleci initdb -D citus/$port
             echo "shared_preload_libraries='citus'" >> citus/$port/postgresql.conf
             gosu circleci pg_ctl -D citus/$port -o "-p $port" -l citus/${port}.log start
-            gosu circleci psql -p $port -c "CREATE ROLE sqlancer SUPERUSER LOGIN CREATEDB PASSWORD 'sqlancer';"
-            gosu circleci createdb test -p $port
-            gosu circleci psql -p $port -d test -c "CREATE EXTENSION citus;"
+            # … rest of your circleci commands …
           done
           # Add workers to coordinator
           gosu circleci psql -p 9700 -d test \
