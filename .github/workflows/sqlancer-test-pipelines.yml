@@ -38,13 +38,14 @@ jobs:
           apt-get update
           apt-get install -y openjdk-11-jdk maven
 
-      - name: Checkout SQLancer (fork)
+      - name: Checkout SQLancer (official fork)
         uses: actions/checkout@v3
         with:
-          repository: m3hm3t/sqlancer
-          ref: m3hm3t/citus_suppoort
+          repository: gokhangulbiz/sqlancer
+          ref: citus_v12_support
           path: sqlancer
-          
+
+
       - name: Cache Maven
         uses: actions/cache@v3
         with:
