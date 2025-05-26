@@ -41,8 +41,8 @@ jobs:
       - name: Checkout Sqlancer
         uses: actions/checkout@v3
         with:
-          ref: gokhangulbiz/citus_v12_support
-          repository: gokhangulbiz/sqlancer
+          ref: m3hm3t/citus_v12_support
+          repository: m3hm3t/citus_suppoort
 
       - name: Cache Maven
         uses: actions/cache@v3
