@@ -94,8 +94,16 @@ jobs:
         with:
           name: citus-logs
           path: |
-            citus/*.{log,logfile}
-            logs
+            # pg_ctl-generated files (coordinator_logfile, worker*_logfile …)
+            citus/*_logfile
+            # any *.log files that may appear in sub-directories
+            citus/**/*.log
+            # SQLancer and Maven logs
+            logs/**
+          if-no-files-found: warn
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
 
       - name: Publish Summary
         if: ${{ always() }}
