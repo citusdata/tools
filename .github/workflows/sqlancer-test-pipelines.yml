@@ -36,7 +36,7 @@ jobs:
       - name: Install Java & Maven
         run: |
           apt-get update
-          apt-get install -y openjdk-11-jdk maven
+          apt-get install -y openjdk-11-jdk maven gawk
 
       - name: Checkout SQLancer (fork)
         uses: actions/checkout@v3
