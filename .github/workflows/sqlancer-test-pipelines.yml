@@ -44,13 +44,6 @@ jobs:
           repository: m3hm3t/sqlancer
           ref: m3hm3t/citus_suppoort
           path: sqlancer
-          
-      - name: Cache Maven
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/sqlancer/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2-
 
       - name: Build SQLancer
         working-directory: sqlancer
@@ -104,24 +97,3 @@ jobs:
           compression-level: 6
           overwrite: false
           include-hidden-files: false
-
-      - name: Publish Summary
-        if: ${{ always() }}
-        run: |
-          grep -R --line-buffered "ERROR:" citus | \
-          awk '
-            {
-              # extract the message part after "ERROR:"
-              match($0, /ERROR:[[:space:]]*(.*)$/, m)
-              if (m[1] != "") {
-                err = m[1]
-                errs[err] = (err in errs) ? errs[err] ", " FILENAME : FILENAME
-              }
-            }
-            END {
-              for (e in errs) {
-                print "### " e >> ENVIRON["GITHUB_STEP_SUMMARY"]
-                print "In: " errs[e] >> ENVIRON["GITHUB_STEP_SUMMARY"]
-              }
-            }'
-        shell: bash
