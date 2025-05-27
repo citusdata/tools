@@ -17,7 +17,7 @@ jobs:
   run-sqlancer-test-on-citus:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/citusdata/exttester:15.3-dev-aa7482a
+      image: ghcr.io/citusdata/exttester:15.13-dev-aa7482a
       options: --user root
 
     steps:
