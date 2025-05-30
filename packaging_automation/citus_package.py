@@ -346,7 +346,7 @@ def build_package(
         os.makedirs(input_output_parameters.output_dir)
 
     docker_command = (
-        f"docker run --rm -v {input_output_parameters.output_dir}:/packages -v "
+        f"docker run -v {input_output_parameters.output_dir}:/packages -v "
         f"{input_output_parameters.input_files_dir}:/buildfiles:ro "
         f"-e GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE -e CONTAINER_BUILD_RUN_ENABLED "
         f"-e MSRUSTUP_PAT -e CRATES_IO_MIRROR_FEED_TOKEN -e INSTALL_RUST -e CI "
