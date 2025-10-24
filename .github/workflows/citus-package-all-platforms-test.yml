@@ -31,7 +31,7 @@ jobs:
           - debian/bookworm
           - debian/trixie
           - debian/bullseye
-          - ubuntu/bionjammy
+          - ubuntu/jammy
           - ubuntu/focal
           - ubuntu/noble
     env:
