@@ -27,15 +27,10 @@ def run_command(command: str) -> int:
 
 
 class TestPlatform(Enum):
-    el_7 = {"name": "el/7", "docker_image_name": "el-7"}
     el_8 = {"name": "el/8", "docker_image_name": "el-8"}
     el_9 = {"name": "el/9", "docker_image_name": "almalinux-9"}
-    centos_8 = {"name": "centos/8", "docker_image_name": "centos-8"}
-    centos_7 = {"name": "centos/7", "docker_image_name": "centos-7"}
-    ol_7 = {"name": "ol/7", "docker_image_name": "ol-7"}
     ol_8 = {"name": "ol/8", "docker_image_name": "ol-8"}
     ol_9 = {"name": "ol/9", "docker_image_name": "ol-9"}
-    debian_stretch = {"name": "debian/stretch", "docker_image_name": "debian-stretch"}
     debian_buster = {"name": "debian/buster", "docker_image_name": "debian-buster"}
     debian_bullseye = {
         "name": "debian/bullseye",
@@ -45,10 +40,10 @@ class TestPlatform(Enum):
         "name": "debian/bookworm",
         "docker_image_name": "debian-bookworm",
     }
-    ubuntu_bionic = {"name": "ubuntu/bionic", "docker_image_name": "ubuntu-bionic"}
+    debian_trixie = {"name": "debian/trixie", "docker_image_name": "debian-trixie"}
     ubuntu_focal = {"name": "ubuntu/focal", "docker_image_name": "ubuntu-focal"}
     ubuntu_jammy = {"name": "ubuntu/jammy", "docker_image_name": "ubuntu-jammy"}
-    ubuntu_kinetic = {"name": "ubuntu/kinetic", "docker_image_name": "ubuntu-kinetic"}
+    ubuntu_noble = {"name": "ubuntu/noble", "docker_image_name": "ubuntu-noble"}
     undefined = {"name": "undefined", "docker_image_name": "undefined"}
 
 
