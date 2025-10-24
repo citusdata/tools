@@ -38,24 +38,16 @@ PACKAGING_EXEC_FOLDER = f"{TEST_BASE_PATH}/{PACKAGING_SOURCE_FOLDER}"
 BASE_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
 
 single_postgres_package_counts = {
-    "el/7": 2,
     "el/8": 3,
-    "ol/7": 2,
-    "ol/8": 3,
-    "almalinux/9": 3,
-    "almalinux/8": 3,
-    "rockylinux/9": 3,
     "el/9": 3,
+    "ol/8": 3,
     "ol/9": 3,
-    "debian/stretch": 2,
-    "debian/bullseye": 2,
-    "debian/bookworm": 2,
-    "debian/trixie": 2,
-    "ubuntu/bionic": 2,
-    "ubuntu/focal": 2,
-    "ubuntu/jammy": 2,
-    "ubuntu/kinetic": 2,
-    "ubuntu/noble": 2,
+    "debian/bullseye": 3,
+    "debian/bookworm": 3,
+    "debian/trixie": 3,
+    "ubuntu/focal": 3,
+    "ubuntu/jammy": 3,
+    "ubuntu/noble": 3,
 }
 
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
@@ -137,8 +129,8 @@ def test_build_packages():
         )
         assert os.path.exists(postgres_version_file_path)
         config = dotenv_values(postgres_version_file_path)
-        assert config["release_versions"] == "12,13,14"
-        assert config["nightly_versions"] == "14,15"
+        assert config["release_versions"] == "14,15,16"
+        assert config["nightly_versions"] == "14,15,16"
 
 
 def test_get_required_package_count():
@@ -161,8 +153,8 @@ def test_get_postgres_versions_ol_9():
         platform="ol/9",
     )
     # pg 15 is excluded for all releases with pg_exclude file
-    assert len(release_versions) == 2 and release_versions == ["13", "14"]
-    assert len(nightly_versions) == 2 and nightly_versions == ["13", "14"]
+    assert len(release_versions) == 2 and release_versions == ["14", "164"]
+    assert len(nightly_versions) == 3 and nightly_versions == ["14", "15", "16"]
 
 
 def test_get_postgres_versions_el_9():
@@ -171,8 +163,8 @@ def test_get_postgres_versions_el_9():
         platform="el/9",
     )
     # pg 15 is excluded for all releases with pg_exclude file
-    assert len(release_versions) == 2 and release_versions == ["13", "14"]
-    assert len(nightly_versions) == 2 and nightly_versions == ["14", "15"]
+    assert len(release_versions) == 2 and release_versions == ["14", "16"]
+    assert len(nightly_versions) == 3 and nightly_versions == ["14", "15", "16"]
 
 
 def test_get_postgres_versions_debain_bullseye():
@@ -181,8 +173,8 @@ def test_get_postgres_versions_debain_bullseye():
         platform="debian/bullseye",
     )
     # pg 15 is excluded for all releases with pg_exclude file
-    assert len(release_versions) == 2 and release_versions == ["13", "14"]
-    assert len(nightly_versions) == 2 and nightly_versions == ["14", "15"]
+    assert len(release_versions) == 2 and release_versions == ["14", "16"]
+    assert len(nightly_versions) == 3 and nightly_versions == ["14", "15", "16"]
 
 
 def test_upload_to_package_cloud():

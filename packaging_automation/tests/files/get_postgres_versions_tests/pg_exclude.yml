@@ -2,4 +2,4 @@ exclude:
   nightly:
     ol/7: [15]
   release:
-    all: []
+    all: [15]
