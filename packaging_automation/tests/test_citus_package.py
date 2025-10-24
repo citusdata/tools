@@ -151,24 +151,24 @@ def test_get_required_package_count():
 
 
 def test_decode_os_packages():
-    os, release = decode_os_and_release("el/7")
-    assert os == "el" and release == "7"
+    os, release = decode_os_and_release("el/9")
+    assert os == "el" and release == "9"
 
 
-def test_get_postgres_versions_ol_7():
+def test_get_postgres_versions_ol_9():
     release_versions, nightly_versions = get_postgres_versions(
         input_files_dir=f"{os.getcwd()}/packaging_automation/tests/files/get_postgres_versions_tests",
-        platform="ol/7",
+        platform="ol/9",
     )
     # pg 15 is excluded for all releases with pg_exclude file
     assert len(release_versions) == 2 and release_versions == ["13", "14"]
     assert len(nightly_versions) == 2 and nightly_versions == ["13", "14"]
 
 
-def test_get_postgres_versions_el_7():
+def test_get_postgres_versions_el_9():
     release_versions, nightly_versions = get_postgres_versions(
         input_files_dir=f"{os.getcwd()}/packaging_automation/tests/files/get_postgres_versions_tests",
-        platform="el/7",
+        platform="el/9",
     )
     # pg 15 is excluded for all releases with pg_exclude file
     assert len(release_versions) == 2 and release_versions == ["13", "14"]
