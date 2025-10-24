@@ -23,14 +23,17 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - el/7
           - el/8
-          - ol/7
+          - el/9
           - ol/8
-          - debian/stretch
+          - ol/9
+          - debian/buster
+          - debian/bookworm
+          - debian/trixie
           - debian/bullseye
-          - ubuntu/bionic
+          - ubuntu/bionjammy
           - ubuntu/focal
+          - ubuntu/noble
     env:
       PLATFORM: ${{ matrix.platform }}
 
