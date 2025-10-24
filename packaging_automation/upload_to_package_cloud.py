@@ -10,22 +10,17 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 supported_distros = {
-    "el/7": 140,
     "el/8": 205,
     "el/9": 240,
-    "ol/7": 146,
     "ol/8": 234,
     "ol/9": 244,
-    "debian/stretch": 149,
     "debian/buster": 150,
     "debian/bullseye": 207,
     "debian/bookworm": 215,
     "debian/trixie": 244, # needs to be validated
-    "ubuntu/bionic": 190,
     "ubuntu/focal": 210,
     "ubuntu/jammy": 237,
     "ubuntu/noble": 243, # needs to be validated
-    "ubuntu/kinetic": 261,
 }
 
 supported_repos = [

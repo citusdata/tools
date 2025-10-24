@@ -35,12 +35,7 @@ POSTGRES_MATRIX_FILE_NAME = "postgres-matrix.yml"
 POSTGRES_EXCLUDE_FILE_NAME = "pg_exclude.yml"
 
 docker_image_names = {
-    "almalinux": "almalinux",
-    "rockylinux": "almalinux",
     "debian": "debian",
-    "el/9": "almalinux-9",
-    "ol/9": "almalinux-9",
-    "el/8": "almalinux-8",
     "el": "centos",
     "ol": "oraclelinux",
     "ubuntu": "ubuntu",
@@ -48,21 +43,15 @@ docker_image_names = {
 }
 
 package_docker_platform_dict = {
-    "almalinux,9": "almalinux/9",
-    "almalinux,8": "almalinux/8",
     "centos,8": "el/8",
-    "centos,7": "el/7",
+    "centos,9": "el/9",
     "debian,trixie": "debian/trixie",
     "debian,bookworm": "debian/bookworm",
     "debian,bullseye": "debian/bullseye",
-    "debian,stretch": "debian/stretch",
     "oraclelinux,8": "ol/8",
-    "oraclelinux,7": "ol/7",
-    "oraclelinux,6": "ol/6",
+    "oraclelinux,9": "ol/9",
     "ubuntu,focal": "ubuntu/focal",
-    "ubuntu,bionic": "ubuntu/bionic",
     "ubuntu,jammy": "ubuntu/jammy",
-    "ubuntu,kinetic": "ubuntu/kinetic",
     "ubuntu,noble": "ubuntu/noble",
     "pgxn": "pgxn",
 }
