@@ -50,6 +50,7 @@ single_postgres_package_counts = {
     "debian/stretch": 2,
     "debian/bullseye": 2,
     "debian/bookworm": 2,
+    "debian/trixie": 2,
     "ubuntu/bionic": 2,
     "ubuntu/focal": 2,
     "ubuntu/jammy": 2,
