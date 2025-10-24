@@ -25,7 +25,7 @@ use constant PACKAGE_URL =>       ## no critic (ProhibitConstantPragma)
   'https://github.com/citusdata/packaging/archive';
 
 my %supported_platforms = (
-    debian => [ "buster", "stretch", "jessie", "wheezy"],
+    debian => [ "trixie", "buster", "stretch", "jessie", "wheezy"],
     el     => [ "8",      "7",      "6" ],
     fedora => [ "28",     "27",      "26"],
     ol     => [ "8",      "7",      "6" ],
