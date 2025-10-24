@@ -153,8 +153,8 @@ def test_get_postgres_versions_ol_9():
         platform="ol/9",
     )
     # pg 15 is excluded for all releases with pg_exclude file
-    assert len(release_versions) == 2 and release_versions == ["14", "164"]
-    assert len(nightly_versions) == 3 and nightly_versions == ["14", "15", "16"]
+    assert len(release_versions) == 2 and release_versions == ["16", "17"]
+    assert len(nightly_versions) == 3 and nightly_versions == ["15", "16", "17"]
 
 
 def test_get_postgres_versions_el_9():
@@ -163,18 +163,18 @@ def test_get_postgres_versions_el_9():
         platform="el/9",
     )
     # pg 15 is excluded for all releases with pg_exclude file
-    assert len(release_versions) == 2 and release_versions == ["14", "16"]
-    assert len(nightly_versions) == 3 and nightly_versions == ["14", "15", "16"]
+    assert len(release_versions) == 2 and release_versions == ["16", "17"]
+    assert len(nightly_versions) == 3 and nightly_versions == ["15", "16", "17"]
 
 
-def test_get_postgres_versions_debain_bullseye():
+def test_get_postgres_versions_debian_bullseye():
     release_versions, nightly_versions = get_postgres_versions(
         input_files_dir=f"{os.getcwd()}/packaging_automation/tests/files/get_postgres_versions_tests",
         platform="debian/bullseye",
     )
     # pg 15 is excluded for all releases with pg_exclude file
-    assert len(release_versions) == 2 and release_versions == ["14", "16"]
-    assert len(nightly_versions) == 3 and nightly_versions == ["14", "15", "16"]
+    assert len(release_versions) == 2 and release_versions == ["16", "17"]
+    assert len(nightly_versions) == 3 and nightly_versions == ["15", "16", "17"]
 
 
 def test_upload_to_package_cloud():
