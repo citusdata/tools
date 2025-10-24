@@ -20,10 +20,12 @@ supported_distros = {
     "debian/buster": 150,
     "debian/bullseye": 207,
     "debian/bookworm": 215,
+    "debian/trixie": 244, # needs to be validated
     "ubuntu/bionic": 190,
     "ubuntu/focal": 210,
     "ubuntu/jammy": 237,
     "ubuntu/kinetic": 261,
+    "ubuntu/noble": 243, # needs to be validated
 }
 
 supported_repos = [
