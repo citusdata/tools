@@ -16,9 +16,9 @@ from ..publish_docker import (
     publish_nightly_docker_image,
 )
 
-NON_DEFAULT_BRANCH_NAME = "12.0.0_test"
+NON_DEFAULT_BRANCH_NAME = "13.2.0_test"
 DEFAULT_BRANCH_NAME = "master"
-TAG_NAME = "v12.0.0"
+TAG_NAME = "v13.2.0"
 INVALID_TAG_NAME = "v12.x"
 DOCKER_IMAGE_NAME = "citusdata/citus"
 docker_client = docker.from_env()
@@ -60,12 +60,12 @@ def test_decode_tag_parts():
 
 def test_get_image_tag():
     image_name = get_image_tag(remove_prefix(TAG_NAME, "v"), DockerImageType.latest)
-    assert image_name == "12.0.0"
+    assert image_name == "13.2.0"
 
     image_name = get_image_tag(
-        remove_prefix(TAG_NAME, "v"), DockerImageType.postgres_15
+        remove_prefix(TAG_NAME, "v"), DockerImageType.postgres_16
     )
-    assert image_name == "12.0.0-pg15"
+    assert image_name == "13.2.0-pg16"
 
 
 def test_publish_main_docker_images():
@@ -86,10 +86,10 @@ def test_publish_tagged_docker_images_latest():
     os.chdir("docker")
     try:
         run_with_output("git checkout -b docker-unit-test")
-        publish_tagged_docker_images(DockerImageType.latest, "v12.0.0", False)
-        docker_client.images.get("citusdata/citus:12")
-        docker_client.images.get("citusdata/citus:12.0")
-        docker_client.images.get("citusdata/citus:12.0.0")
+        publish_tagged_docker_images(DockerImageType.latest, "v13.2.0", False)
+        docker_client.images.get("citusdata/citus:13")
+        docker_client.images.get("citusdata/citus:13.2")
+        docker_client.images.get("citusdata/citus:13.2.0")
     finally:
         run_with_output("git checkout master")
         run_with_output("git branch -D docker-unit-test")
@@ -101,9 +101,9 @@ def test_publish_tagged_docker_images_alpine():
     try:
         run_with_output("git checkout -b docker-unit-test")
         publish_tagged_docker_images(DockerImageType.alpine, TAG_NAME, False)
-        docker_client.images.get("citusdata/citus:12-alpine")
-        docker_client.images.get("citusdata/citus:12.0-alpine")
-        docker_client.images.get("citusdata/citus:12.0.0-alpine")
+        docker_client.images.get("citusdata/citus:13-alpine")
+        docker_client.images.get("citusdata/citus:13.2-alpine")
+        docker_client.images.get("citusdata/citus:13.2.0-alpine")
     finally:
         run_with_output("git checkout master")
         run_with_output("git branch -D docker-unit-test")

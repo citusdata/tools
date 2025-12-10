@@ -29,24 +29,24 @@ class SupportedDockerImages(Enum):
     latest = 1
     docker_compose = 2
     alpine = 3
-    postgres14 = 4
-    postgres15 = 5
+    postgres15 = 4
+    postgres16 = 5
 
 
 docker_templates = {
     SupportedDockerImages.latest: "latest/latest.tmpl.dockerfile",
     SupportedDockerImages.docker_compose: "latest/docker-compose.tmpl.yml",
     SupportedDockerImages.alpine: "alpine/alpine.tmpl.dockerfile",
-    SupportedDockerImages.postgres14: "postgres-14/postgres-14.tmpl.dockerfile",
     SupportedDockerImages.postgres15: "postgres-15/postgres-15.tmpl.dockerfile",
+    SupportedDockerImages.postgres16: "postgres-16/postgres-16.tmpl.dockerfile",
 }
 
 docker_outputs = {
     SupportedDockerImages.latest: "Dockerfile",
     SupportedDockerImages.docker_compose: "docker-compose.yml",
     SupportedDockerImages.alpine: "alpine/Dockerfile",
-    SupportedDockerImages.postgres14: "postgres-14/Dockerfile",
     SupportedDockerImages.postgres15: "postgres-15/Dockerfile",
+    SupportedDockerImages.postgres16: "postgres-16/Dockerfile",
 }
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -116,7 +116,7 @@ def update_docker_file_for_postgres15(
     write_to_file(content, dest_file_name)
 
 
-def update_docker_file_for_postgres14(
+def update_docker_file_for_postgres15(
     project_version: str, template_path: str, exec_path: str, postgres_version: str
 ):
     minor_version = get_minor_project_version_for_docker(project_version)
@@ -124,11 +124,11 @@ def update_docker_file_for_postgres14(
     content = process_template_file_with_minor(
         debian_project_version,
         template_path,
-        docker_templates[SupportedDockerImages.postgres14],
+        docker_templates[SupportedDockerImages.postgres15],
         minor_version,
         postgres_version,
     )
-    dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres14]}"
+    dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres15]}"
     create_directory_if_not_exists(dest_file_name)
     write_to_file(content, dest_file_name)
 
@@ -176,7 +176,6 @@ def update_all_docker_files(project_version: str, exec_path: str):
     (
         postgres_16_version,
         postgres_15_version,
-        postgres_14_version,
     ) = read_postgres_versions(pkgvars_file)
 
     latest_postgres_version = postgres_16_version
@@ -188,11 +187,11 @@ def update_all_docker_files(project_version: str, exec_path: str):
     update_docker_file_alpine(
         project_version, template_path, exec_path, latest_postgres_version
     )
-    update_docker_file_for_postgres14(
-        project_version, template_path, exec_path, postgres_14_version
-    )
     update_docker_file_for_postgres15(
         project_version, template_path, exec_path, postgres_15_version
+    )
+    update_docker_file_for_postgres16(
+        project_version, template_path, exec_path, postgres_16_version
     )
     update_changelog(project_version, exec_path)
 
@@ -202,7 +201,6 @@ def read_postgres_versions(pkgvars_file: str) -> Tuple[str, str, str]:
     return (
         config["postgres_16_version"],
         config["postgres_15_version"],
-        config["postgres_14_version"],
     )
 
 
