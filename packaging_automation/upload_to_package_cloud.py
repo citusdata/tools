@@ -20,6 +20,7 @@ supported_distros = {
     "debian/buster": 150,
     "debian/bullseye": 207,
     "debian/bookworm": 215,
+    #"debian/trixie": ???,
     "ubuntu/bionic": 190,
     "ubuntu/focal": 210,
     "ubuntu/jammy": 237,
