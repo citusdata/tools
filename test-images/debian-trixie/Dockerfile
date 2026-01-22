@@ -22,7 +22,7 @@ RUN apt-get update \
                             wget \
                             curl \
                             gnupg2 \
-                            software-properties-common \
+                            # software-properties-common Commenting out as it is not available in debian base image
                             libcurl4-openssl-dev \
                             libssl-dev
 
