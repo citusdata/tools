@@ -1,13 +1,13 @@
 import argparse
 import os
 from enum import Enum
-from typing import List, Tuple
+from typing import Tuple, List
 
 import docker
 import pathlib2
 from parameters_validation import validate_parameters
 
-from .common_tool_methods import get_current_branch, is_tag_on_branch, remove_prefix
+from .common_tool_methods import remove_prefix, get_current_branch, is_tag_on_branch
 from .common_validations import is_tag
 
 BASE_PATH = pathlib2.Path(__file__).parents[1]

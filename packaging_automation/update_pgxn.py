@@ -5,12 +5,12 @@ import uuid
 import pathlib2
 
 from .common_tool_methods import (
-    create_pr,
-    initialize_env,
     process_template_file,
-    remove_cloned_code,
-    run,
     write_to_file,
+    run,
+    initialize_env,
+    create_pr,
+    remove_cloned_code,
 )
 
 REPO_OWNER = "citusdata"

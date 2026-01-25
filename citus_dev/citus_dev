@@ -21,15 +21,15 @@ Options:
   --force                  Forceful shutdown
 
 """
-import distutils.spawn
-import getpass
+from docopt import docopt
+from subprocess import call
+from subprocess import Popen, PIPE
 import os
 import subprocess
 import sys
+import getpass
 import time
-from subprocess import PIPE, Popen, call
-
-from docopt import docopt
+import distutils.spawn
 
 # for osx we might want to start postgres via a fixopen binary that preloads a
 # dylib to fix the interrupted systemcall, this is done by changing the postgres

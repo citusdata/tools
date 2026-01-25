@@ -37,15 +37,7 @@ DEFAULT_UNICODE_ERROR_HANDLER = "surrogateescape"
 referenced_repos: List[Repo] = []
 
 supported_platforms = {
-    "debian": [
-        "bookworm",
-        "bullseye",
-        "buster",
-        "stretch",
-        "jessie",
-        "wheezy",
-        "trixie",
-    ],
+    "debian": ["bookworm", "bullseye", "buster", "stretch", "jessie", "wheezy", "trixie"],
     "almalinux": ["8", "9"],
     "el": ["9", "8", "7", "6"],
     "ol": ["9", "8", "7"],
@@ -252,7 +244,7 @@ def get_prs_for_patch_release(
     # filter pull requests according to given time interval
     filtered_pull_requests = []
     for pull_request in pull_requests:
-        # NOTE: Using `.merged_at` instead of `.merged` to avoid hitting API rate limits
+        # FIXME: We hit to API rate limit when using `.merged`, so we use `.merged_at` here
         if not pull_request.merged_at:
             continue
         if pull_request.merged_at < earliest_date:

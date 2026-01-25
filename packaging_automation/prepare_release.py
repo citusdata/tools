@@ -3,33 +3,33 @@ import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict
 
 import pathlib2
 from github import Github, Repository
 from parameters_validation import non_blank, non_empty
+from typing import Dict
 
 from .common_tool_methods import (
-    DEFAULT_ENCODING_FOR_FILE_HANDLING,
-    DEFAULT_UNICODE_ERROR_HANDLER,
-    cherry_pick_prs,
-    create_pr_with_repo,
-    filter_prs_by_label,
-    find_nth_matching_line_and_line_number,
-    get_current_branch,
-    get_patch_version_regex,
-    get_prs_for_patch_release,
-    get_template_environment,
-    get_upcoming_minor_version,
     get_version_details,
-    initialize_env,
     is_major_release,
+    get_prs_for_patch_release,
+    filter_prs_by_label,
+    cherry_pick_prs,
+    run,
+    replace_line_in_file,
+    get_current_branch,
+    find_nth_matching_line_and_line_number,
+    get_patch_version_regex,
+    remote_branch_exists,
     local_branch_exists,
     prepend_line_in_file,
-    remote_branch_exists,
+    get_template_environment,
+    get_upcoming_minor_version,
     remove_cloned_code,
-    replace_line_in_file,
-    run,
+    initialize_env,
+    create_pr_with_repo,
+    DEFAULT_ENCODING_FOR_FILE_HANDLING,
+    DEFAULT_UNICODE_ERROR_HANDLER,
 )
 from .common_validations import CITUS_MINOR_VERSION_PATTERN, CITUS_PATCH_VERSION_PATTERN
 

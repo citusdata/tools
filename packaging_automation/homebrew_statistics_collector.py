@@ -1,11 +1,11 @@
 import argparse
 import json
-from datetime import date, datetime
+from datetime import datetime, date
 
-from sqlalchemy import DATE, INTEGER, TIMESTAMP, Column
+from sqlalchemy import Column, INTEGER, DATE, TIMESTAMP
 
 from .common_tool_methods import stat_get_request
-from .dbconfig import Base, DbParams, RequestType, db_session
+from .dbconfig import Base, db_session, DbParams, RequestType
 
 HOMEBREW_STATS_ADDRESS = "https://formulae.brew.sh/api/formula/citus.json"
 

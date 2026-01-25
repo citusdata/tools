@@ -3,21 +3,21 @@ import os
 import uuid
 from datetime import datetime
 from enum import Enum
+from dotenv import dotenv_values
 from typing import Tuple
 
 import pathlib2
-from dotenv import dotenv_values
 
 from .common_tool_methods import (
+    process_template_file_with_minor,
+    write_to_file,
+    run,
+    initialize_env,
+    create_pr,
+    remove_cloned_code,
     DEFAULT_ENCODING_FOR_FILE_HANDLING,
     DEFAULT_UNICODE_ERROR_HANDLER,
-    create_pr,
     get_minor_project_version_for_docker,
-    initialize_env,
-    process_template_file_with_minor,
-    remove_cloned_code,
-    run,
-    write_to_file,
 )
 
 REPO_OWNER = "citusdata"

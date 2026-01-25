@@ -3,9 +3,9 @@ import os
 import pathlib2
 
 from ..common_tool_methods import (
-    DEFAULT_ENCODING_FOR_FILE_HANDLING,
-    DEFAULT_UNICODE_ERROR_HANDLER,
     run,
+    DEFAULT_UNICODE_ERROR_HANDLER,
+    DEFAULT_ENCODING_FOR_FILE_HANDLING,
 )
 from ..update_pgxn import update_meta_json, update_pkgvars
 

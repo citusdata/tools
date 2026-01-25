@@ -1,16 +1,15 @@
 import argparse
 import os
-import shlex
 import subprocess
-import sys
+import shlex
+import requests
 from enum import Enum
+import sys
 from typing import List
 
-import requests
-
 from .common_tool_methods import (
-    get_minor_version,
     get_supported_postgres_release_versions,
+    get_minor_version,
 )
 
 POSTGRES_MATRIX_FILE = "postgres-matrix.yml"
@@ -38,14 +37,8 @@ class TestPlatform(Enum):
     ol_9 = {"name": "ol/9", "docker_image_name": "ol-9"}
     debian_stretch = {"name": "debian/stretch", "docker_image_name": "debian-stretch"}
     debian_buster = {"name": "debian/buster", "docker_image_name": "debian-buster"}
-    debian_bullseye = {
-        "name": "debian/bullseye",
-        "docker_image_name": "debian-bullseye",
-    }
-    debian_bookworm = {
-        "name": "debian/bookworm",
-        "docker_image_name": "debian-bookworm",
-    }
+    debian_bullseye = {"name": "debian/bullseye","docker_image_name": "debian-bullseye",}
+    debian_bookworm = {"name": "debian/bookworm","docker_image_name": "debian-bookworm",}
     debian_trixie = {"name": "debian/trixie", "docker_image_name": "debian-trixie"}
     ubuntu_bionic = {"name": "ubuntu/bionic", "docker_image_name": "ubuntu-bionic"}
     ubuntu_focal = {"name": "ubuntu/focal", "docker_image_name": "ubuntu-focal"}

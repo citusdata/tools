@@ -1,15 +1,15 @@
 import os
 from datetime import datetime
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import text, create_engine
 
-from ..dbconfig import DbParams, db_connection_string, db_session
+from ..dbconfig import db_connection_string, DbParams, db_session
 from ..github_statistics_collector import (
-    GithubCloneStats,
+    fetch_and_store_github_stats,
     GithubCloneStatsTransactionsDetail,
     GithubCloneStatsTransactionsMain,
+    GithubCloneStats,
     GitHubReleases,
-    fetch_and_store_github_stats,
 )
 
 DB_USER_NAME = os.getenv("DB_USER_NAME")

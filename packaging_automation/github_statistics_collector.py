@@ -1,14 +1,14 @@
 import argparse
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict
+from typing import Dict, Any
 
 from github import Github
 from sqlalchemy import (
+    Column,
     DATE,
     INTEGER,
     TIMESTAMP,
-    Column,
     ForeignKey,
     String,
     UniqueConstraint,

@@ -6,11 +6,11 @@ from ..common_tool_methods import (
     DEFAULT_UNICODE_ERROR_HANDLER,
 )
 from ..packaging_warning_handler import (
+    parse_ignore_lists,
     PackageType,
     filter_warning_lines,
-    get_error_message,
     get_warnings_to_be_raised,
-    parse_ignore_lists,
+    get_error_message,
     validate_output,
 )
 

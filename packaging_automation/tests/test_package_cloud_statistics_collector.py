@@ -1,20 +1,20 @@
 import json
 import os
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import text, create_engine
 
 from ..common_tool_methods import stat_get_request
-from ..dbconfig import DbParams, db_connection_string, db_session
+from ..dbconfig import db_session, DbParams, db_connection_string
 from ..package_cloud_statistics_collector import (
-    PackageCloudDownloadStats,
-    PackageCloudOrganization,
-    PackageCloudParams,
-    PackageCloudRepo,
-    ParallelExecutionParams,
-    RequestType,
     fetch_and_save_package_cloud_stats,
-    is_ignored_package,
+    PackageCloudRepo,
+    PackageCloudOrganization,
+    PackageCloudDownloadStats,
     package_list_with_pagination_request_address,
+    RequestType,
+    is_ignored_package,
+    PackageCloudParams,
+    ParallelExecutionParams,
 )
 
 DB_USER_NAME = os.getenv("DB_USER_NAME")

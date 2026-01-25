@@ -5,21 +5,21 @@ from datetime import datetime
 import pathlib2
 
 from ..common_tool_methods import (
-    count_line_in_file,
     file_includes_line,
+    count_line_in_file,
+    run,
     get_last_commit_message,
     remove_cloned_code,
-    run,
 )
 from ..prepare_release import (
-    CITUS_CONTROL,
-    CONFIG_PY,
-    CONFIGURE,
-    CONFIGURE_IN,
+    update_release,
     MULTI_EXTENSION_OUT,
     MULTI_EXTENSION_SQL,
+    CONFIGURE,
+    CONFIGURE_IN,
+    CITUS_CONTROL,
+    CONFIG_PY,
     ProjectParams,
-    update_release,
 )
 
 github_token = os.getenv("GH_TOKEN")

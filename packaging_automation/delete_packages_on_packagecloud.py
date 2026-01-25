@@ -1,9 +1,8 @@
-import argparse
+import requests
 import json
 from datetime import datetime
+import argparse
 from enum import Enum
-
-import requests
 
 PAGE_RECORD_COUNT = 100
 PACKAGE_DELETION_DAYS_THRESHOLD = 10
