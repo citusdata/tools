@@ -506,8 +506,6 @@ to sign packages.
 
 =over 4
 
-=item I<debian/trixie> Debian 13 "Trixie"
-
 =item I<debian/buster> Debian 10 "Buster"
 
 =item I<debian/stretch> Debian 9 "Stretch"
