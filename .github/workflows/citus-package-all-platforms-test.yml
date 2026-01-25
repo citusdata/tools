@@ -30,7 +30,7 @@ jobs:
           - debian/stretch
           - debian/bullseye
           - ubuntu/bionic
-          - ubuntu/focal
+          - ubuntu/noble
     env:
       PLATFORM: ${{ matrix.platform }}
 

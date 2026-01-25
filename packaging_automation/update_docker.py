@@ -32,6 +32,8 @@ class SupportedDockerImages(Enum):
     postgres14 = 4
     postgres15 = 5
     postgres16 = 6
+    postgres17 = 7
+    postgres18 = 8
 
 
 docker_templates = {
@@ -41,6 +43,8 @@ docker_templates = {
     SupportedDockerImages.postgres14: "postgres-14/postgres-14.tmpl.dockerfile",
     SupportedDockerImages.postgres15: "postgres-15/postgres-15.tmpl.dockerfile",
     SupportedDockerImages.postgres16: "postgres-16/postgres-16.tmpl.dockerfile",
+    SupportedDockerImages.postgres17: "postgres-17/postgres-17.tmpl.dockerfile",
+    SupportedDockerImages.postgres18: "postgres-18/postgres-18.tmpl.dockerfile",
 }
 
 docker_outputs = {
@@ -50,6 +54,8 @@ docker_outputs = {
     SupportedDockerImages.postgres14: "postgres-14/Dockerfile",
     SupportedDockerImages.postgres15: "postgres-15/Dockerfile",
     SupportedDockerImages.postgres16: "postgres-16/Dockerfile",
+    SupportedDockerImages.postgres17: "postgres-17/Dockerfile",
+    SupportedDockerImages.postgres18: "postgres-18/Dockerfile",
 }
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
@@ -99,6 +105,40 @@ def update_docker_file_alpine(
         postgres_version,
     )
     dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.alpine]}"
+    write_to_file(content, dest_file_name)
+
+
+def update_docker_file_for_postgres18(
+    project_version: str, template_path: str, exec_path: str, postgres_version: str
+):
+    minor_version = get_minor_project_version_for_docker(project_version)
+    debian_project_version = project_version.replace("_", "-")
+    content = process_template_file_with_minor(
+        debian_project_version,
+        template_path,
+        docker_templates[SupportedDockerImages.postgres18],
+        minor_version,
+        postgres_version,
+    )
+    dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres18]}"
+    create_directory_if_not_exists(dest_file_name)
+    write_to_file(content, dest_file_name)
+
+
+def update_docker_file_for_postgres17(
+    project_version: str, template_path: str, exec_path: str, postgres_version: str
+):
+    minor_version = get_minor_project_version_for_docker(project_version)
+    debian_project_version = project_version.replace("_", "-")
+    content = process_template_file_with_minor(
+        debian_project_version,
+        template_path,
+        docker_templates[SupportedDockerImages.postgres17],
+        minor_version,
+        postgres_version,
+    )
+    dest_file_name = f"{exec_path}/{docker_outputs[SupportedDockerImages.postgres17]}"
+    create_directory_if_not_exists(dest_file_name)
     write_to_file(content, dest_file_name)
 
 
@@ -194,13 +234,14 @@ def update_all_docker_files(project_version: str, exec_path: str):
     pkgvars_file = f"{exec_path}/pkgvars"
 
     (
+        postgres_18_version,
         postgres_17_version,
         postgres_16_version,
         postgres_15_version,
         postgres_14_version,
     ) = read_postgres_versions(pkgvars_file)
 
-    latest_postgres_version = postgres_17_version
+    latest_postgres_version = postgres_18_version
 
     update_docker_file_for_latest_postgres(
         project_version, template_path, exec_path, latest_postgres_version
@@ -218,12 +259,22 @@ def update_all_docker_files(project_version: str, exec_path: str):
     update_docker_file_for_postgres16(
         project_version, template_path, exec_path, postgres_16_version
     )
+    update_docker_file_for_postgres16(
+        project_version, template_path, exec_path, postgres_16_version
+    )
+    update_docker_file_for_postgres17(
+        project_version, template_path, exec_path, postgres_17_version
+    )
+    update_docker_file_for_postgres18(
+        project_version, template_path, exec_path, postgres_18_version
+    )
     update_changelog(project_version, exec_path)
 
 
 def read_postgres_versions(pkgvars_file: str) -> Tuple[str, str, str]:
     config = dotenv_values(pkgvars_file)
     return (
+        config["postgres_18_version"],
         config["postgres_17_version"],
         config["postgres_16_version"],
         config["postgres_15_version"],

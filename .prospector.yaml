@@ -9,5 +9,7 @@ autodetect: true
 
 pylint:
   disable:
+    - django-not-available
   options:
+    max-line-length: 160
     max-args: 6
