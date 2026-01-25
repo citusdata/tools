@@ -245,7 +245,7 @@ def prepend_latest_changelog_into_debian_changelog(
         encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
         errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as reader:
-        if not (package_properties_params.changelog_version_entry in reader.readline()):
+        if package_properties_params.changelog_version_entry not in reader.readline():
             reader.seek(0, 0)
             old_changelog = reader.read()
             changelog = f"{debian_latest_changelog}{old_changelog}"

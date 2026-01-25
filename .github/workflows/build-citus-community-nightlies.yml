@@ -28,8 +28,9 @@ jobs:
           - ol/7
           - debian/bullseye
           - debian/bookworm
+          - debian/trixie
           - ubuntu/bionic
-          - ubuntu/focal
+          - ubuntu/noble
           - ubuntu/jammy
 
     steps:

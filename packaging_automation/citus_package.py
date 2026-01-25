@@ -55,6 +55,7 @@ package_docker_platform_dict = {
     "debian,bookworm": "debian/bookworm",
     "debian,bullseye": "debian/bullseye",
     "debian,stretch": "debian/stretch",
+    "debian,trixie": "debian/trixie",
     "oraclelinux,8": "ol/8",
     "oraclelinux,7": "ol/7",
     "oraclelinux,6": "ol/6",

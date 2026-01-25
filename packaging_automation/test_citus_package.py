@@ -45,9 +45,11 @@ class TestPlatform(Enum):
         "name": "debian/bookworm",
         "docker_image_name": "debian-bookworm",
     }
+    debian_trixie = {"name": "debian/trixie", "docker_image_name": "debian-trixie"}
     ubuntu_bionic = {"name": "ubuntu/bionic", "docker_image_name": "ubuntu-bionic"}
     ubuntu_focal = {"name": "ubuntu/focal", "docker_image_name": "ubuntu-focal"}
     ubuntu_jammy = {"name": "ubuntu/jammy", "docker_image_name": "ubuntu-jammy"}
+    ubuntu_noble = {"name": "ubuntu/noble", "docker_image_name": "ubuntu-noble"}
     ubuntu_kinetic = {"name": "ubuntu/kinetic", "docker_image_name": "ubuntu-kinetic"}
     undefined = {"name": "undefined", "docker_image_name": "undefined"}
 
