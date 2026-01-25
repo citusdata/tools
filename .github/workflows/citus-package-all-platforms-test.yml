@@ -29,9 +29,8 @@ jobs:
           - ol/8
           - debian/stretch
           - debian/bullseye
-          - debian/trixie
           - ubuntu/bionic
-          - ubuntu/focal
+          - ubuntu/noble
     env:
       PLATFORM: ${{ matrix.platform }}
 

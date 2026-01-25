@@ -52,7 +52,7 @@ single_postgres_package_counts = {
     "debian/bookworm": 2,
     "debian/trixie": 2,
     "ubuntu/bionic": 2,
-    "ubuntu/focal": 2,
+    "ubuntu/noble": 2,
     "ubuntu/jammy": 2,
     "ubuntu/kinetic": 2,
     "ubuntu/noble": 2,
