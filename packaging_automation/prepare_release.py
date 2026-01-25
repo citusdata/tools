@@ -523,7 +523,7 @@ def commit_changes_for_version_bump(project_name, project_version):
     current_branch = get_current_branch(os.getcwd())
     print(f"### Committing changes for branch {current_branch}... ###")
     run("git add .")
-    run(f' git commit  -m "Bump {project_name} version to {project_version} "')
+    run(f'git commit -m "Bump {project_name} version to {project_version}"')
     print(f"### Done Changes committed for {current_branch}. ###")
 
 
