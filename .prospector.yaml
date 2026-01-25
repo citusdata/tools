@@ -14,8 +14,6 @@ pylint:
     - missing-function-docstring
     - invalid-name
     - too-few-public-methods
-    - duplicate-code
-    - wrong-import-order
     - too-many-instance-attributes
     - too-many-arguments
     - too-many-branches
@@ -23,8 +21,7 @@ pylint:
     - too-many-statements
     - line-too-long
     - redefined-outer-name
-    - fixme
-    - ungrouped-imports
+    - django-not-available
   options:
     max-line-length: 160
     max-args: 6

@@ -1,8 +1,8 @@
-import subprocess
-import shlex
-from enum import Enum
 import os
 import re
+import shlex
+import subprocess
+from enum import Enum
 
 CITUS_VERSION = os.getenv("CITUS_VERSION")
 POSTGRES_VERSION = os.getenv("POSTGRES_VERSION")

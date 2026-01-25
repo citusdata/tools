@@ -2,21 +2,21 @@ import os
 from datetime import datetime
 
 import pathlib2
+from dotenv import dotenv_values
 
 from ..common_tool_methods import (
-    run,
-    get_version_details,
     DEFAULT_ENCODING_FOR_FILE_HANDLING,
     DEFAULT_UNICODE_ERROR_HANDLER,
+    get_version_details,
+    run,
 )
-from dotenv import dotenv_values
 from ..update_docker import (
-    update_docker_file_for_latest_postgres,
-    update_regular_docker_compose_file,
-    update_docker_file_alpine,
-    update_docker_file_for_postgres15,
-    update_docker_file_for_postgres14,
     update_changelog,
+    update_docker_file_alpine,
+    update_docker_file_for_latest_postgres,
+    update_docker_file_for_postgres14,
+    update_docker_file_for_postgres15,
+    update_regular_docker_compose_file,
 )
 
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])

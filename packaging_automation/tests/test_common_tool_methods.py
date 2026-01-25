@@ -1,15 +1,11 @@
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from shutil import copyfile
-
-from datetime import timezone
-
 
 import pathlib2
 from github import Github
 
-from .test_utils import generate_new_gpg_key
 from ..common_tool_methods import (
     DEFAULT_ENCODING_FOR_FILE_HANDLING,
     DEFAULT_UNICODE_ERROR_HANDLER,
@@ -27,8 +23,8 @@ from ..common_tool_methods import (
     get_patch_version_regex,
     get_project_version_from_tag_name,
     get_prs_for_patch_release,
-    get_supported_postgres_release_versions,
     get_supported_postgres_nightly_versions,
+    get_supported_postgres_release_versions,
     get_upcoming_minor_version,
     get_version_details,
     is_major_release,
@@ -45,6 +41,7 @@ from ..common_tool_methods import (
     run_with_output,
     str_array_to_str,
 )
+from .test_utils import generate_new_gpg_key
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
 BASE_PATH = pathlib2.Path(__file__).parents[1]

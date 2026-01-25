@@ -3,7 +3,6 @@ import os
 import pathlib2
 from dotenv import dotenv_values
 
-from .test_utils import generate_new_gpg_key
 from ..citus_package import (
     POSTGRES_VERSION_FILE,
     BuildType,
@@ -12,8 +11,8 @@ from ..citus_package import (
     build_packages,
     decode_os_and_release,
     get_build_platform,
-    get_release_package_folder_name,
     get_postgres_versions,
+    get_release_package_folder_name,
 )
 from ..common_tool_methods import (
     define_rpm_public_key_to_machine,
@@ -30,6 +29,7 @@ from ..upload_to_package_cloud import (
     package_exists,
     upload_files_in_directory_to_package_cloud,
 )
+from .test_utils import generate_new_gpg_key
 
 TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 

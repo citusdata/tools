@@ -7,8 +7,8 @@ import pathlib2
 import pytest
 
 from ..common_tool_methods import (
-    DEFAULT_UNICODE_ERROR_HANDLER,
     DEFAULT_ENCODING_FOR_FILE_HANDLING,
+    DEFAULT_UNICODE_ERROR_HANDLER,
 )
 from ..update_package_properties import (
     PackagePropertiesParams,
@@ -17,9 +17,9 @@ from ..update_package_properties import (
     get_rpm_changelog,
     prepend_latest_changelog_into_debian_changelog,
     spec_file_name,
-    update_rpm_spec,
-    update_pkgvars,
     update_all_changes,
+    update_pkgvars,
+    update_rpm_spec,
 )
 from .test_utils import are_strings_equal
 

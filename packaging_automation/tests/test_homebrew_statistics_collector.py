@@ -1,9 +1,9 @@
 import os
 
-from sqlalchemy import text, create_engine
+from sqlalchemy import create_engine, text
 
-from ..dbconfig import db_session, DbParams, db_connection_string
-from ..homebrew_statistics_collector import fetch_and_save_homebrew_stats, HomebrewStats
+from ..dbconfig import DbParams, db_connection_string, db_session
+from ..homebrew_statistics_collector import HomebrewStats, fetch_and_save_homebrew_stats
 
 DB_USER_NAME = os.getenv("DB_USER_NAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")

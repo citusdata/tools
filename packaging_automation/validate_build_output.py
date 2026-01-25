@@ -1,8 +1,8 @@
 import argparse
-
-from .packaging_warning_handler import validate_output
-from .common_tool_methods import PackageType
 from pathlib import Path
+
+from .common_tool_methods import PackageType
+from .packaging_warning_handler import validate_output
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

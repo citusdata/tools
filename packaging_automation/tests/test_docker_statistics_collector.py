@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from ..dbconfig import Base, db_connection_string, DbParams
-from ..docker_statistics_collector import fetch_and_store_docker_statistics, DockerStats
+from ..dbconfig import Base, DbParams, db_connection_string
+from ..docker_statistics_collector import DockerStats, fetch_and_store_docker_statistics
 
 DB_USER_NAME = os.getenv("DB_USER_NAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")

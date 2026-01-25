@@ -3,7 +3,7 @@ import sys
 from datetime import datetime, timedelta
 
 import requests
-from sqlalchemy import Column, DATE, INTEGER, TIMESTAMP, desc
+from sqlalchemy import DATE, INTEGER, TIMESTAMP, Column, desc
 
 from .common_tool_methods import str_array_to_str
 from .dbconfig import Base, DbParams, db_session

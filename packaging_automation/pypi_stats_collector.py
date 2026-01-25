@@ -1,10 +1,11 @@
-from sqlalchemy import Column, Integer, String, Date
-from datetime import date, datetime
-import pypistats
 import json
-from .dbconfig import Base, DbParams, db_session
 import os
+from datetime import date, datetime
 
+import pypistats
+from sqlalchemy import Column, Date, Integer, String
+
+from .dbconfig import Base, DbParams, db_session
 
 # Define the database connection
 db_name = os.getenv(

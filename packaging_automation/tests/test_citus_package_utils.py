@@ -4,31 +4,31 @@ import subprocess
 import pathlib2
 import pytest
 
-from .test_utils import generate_new_gpg_key
 from ..citus_package import (
-    decode_os_and_release,
-    is_docker_running,
-    get_signing_credentials,
-    get_postgres_versions,
-    build_package,
     BuildType,
-    sign_packages,
-    SigningCredentials,
     InputOutputParameters,
+    SigningCredentials,
+    build_package,
+    decode_os_and_release,
     get_package_version_without_release_stage_from_pkgvars,
+    get_postgres_versions,
+    get_signing_credentials,
+    is_docker_running,
+    sign_packages,
     write_postgres_versions_into_file,
 )
 from ..common_tool_methods import (
-    delete_all_gpg_keys_by_name,
-    get_gpg_fingerprints_by_name,
-    run,
-    get_private_key_by_fingerprint_without_passphrase,
     define_rpm_public_key_to_machine,
+    delete_all_gpg_keys_by_name,
     delete_rpm_key_by_name,
+    get_gpg_fingerprints_by_name,
     get_private_key_by_fingerprint_with_passphrase,
-    verify_rpm_signature_in_dir,
+    get_private_key_by_fingerprint_without_passphrase,
+    run,
     transform_key_into_base64_str,
+    verify_rpm_signature_in_dir,
 )
+from .test_utils import generate_new_gpg_key
 
 TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"

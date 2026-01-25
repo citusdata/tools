@@ -8,7 +8,7 @@ from enum import Enum
 
 import pathlib2
 import string_utils
-from parameters_validation import validate_parameters, parameter_validation
+from parameters_validation import parameter_validation, validate_parameters
 
 from .common_tool_methods import (
     DEFAULT_ENCODING_FOR_FILE_HANDLING,
@@ -21,7 +21,7 @@ from .common_tool_methods import (
     remove_cloned_code,
     run,
 )
-from .common_validations import is_version, is_tag
+from .common_validations import is_tag, is_version
 
 BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 REPO_OWNER = "citusdata"

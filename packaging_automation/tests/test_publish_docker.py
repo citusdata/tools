@@ -6,14 +6,14 @@ import pytest
 
 from ..common_tool_methods import remove_prefix, run, run_with_output
 from ..publish_docker import (
-    decode_triggering_event_info,
+    DockerImageType,
     GithubTriggerEventSource,
     decode_tag_parts,
+    decode_triggering_event_info,
     get_image_tag,
-    DockerImageType,
     publish_main_docker_images,
-    publish_tagged_docker_images,
     publish_nightly_docker_image,
+    publish_tagged_docker_images,
 )
 
 NON_DEFAULT_BRANCH_NAME = "12.0.0_test"
