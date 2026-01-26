@@ -1,7 +1,7 @@
 name: Build and publish citus community nightly packages
 
 env:
-  MAIN_BRANCH: "all-citus"
+  MAIN_BRANCH: "ihalatci-update-all-citus"
   PACKAGING_PASSPHRASE: ${{ secrets.PACKAGING_PASSPHRASE }}
   PACKAGING_SECRET_KEY: ${{ secrets.PACKAGING_SECRET_KEY }}
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
