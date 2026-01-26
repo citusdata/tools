@@ -14,6 +14,8 @@ from ..citus_package import (
     get_build_platform,
     get_release_package_folder_name,
     get_postgres_versions,
+    PostgresVersionDockerImageType,
+    platform_postgres_version_source,
 )
 from ..common_tool_methods import (
     define_rpm_public_key_to_machine,
@@ -70,6 +72,15 @@ PACKAGING_BRANCH_NAME = os.getenv("PACKAGING_BRANCH_NAME", "all-citus-unit-tests
 
 
 def get_required_package_count(input_files_dir: str, platform: str):
+    os_name, _ = decode_os_and_release(platform)
+    if (
+        platform_postgres_version_source.get(os_name)
+        == PostgresVersionDockerImageType.single
+    ):
+        print(
+            f"get_required_package_count(single): platform={platform}, count={single_postgres_package_counts[platform]}"
+        )
+        return single_postgres_package_counts[platform]
     release_versions, _ = get_postgres_versions(
         platform=platform, input_files_dir=input_files_dir
     )
@@ -147,6 +158,15 @@ def test_get_required_package_count():
             input_files_dir=PACKAGING_EXEC_FOLDER, platform="el/8"
         )
         == 9
+    )
+
+
+def test_get_required_package_count_single_platform():
+    assert (
+        get_required_package_count(
+            input_files_dir=PACKAGING_EXEC_FOLDER, platform="debian/trixie"
+        )
+        == single_postgres_package_counts["debian/trixie"]
     )
 
 
