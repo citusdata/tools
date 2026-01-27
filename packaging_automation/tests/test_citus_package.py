@@ -39,14 +39,14 @@ BASE_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
 
 single_postgres_package_counts = {
     "el/7": 2,
-    "el/8": 3,
+    "el/8": 31,
     "ol/7": 2,
-    "ol/8": 3,
-    "almalinux/9": 3,
-    "almalinux/8": 3,
+    "ol/8": 1,
+    "almalinux/9": 1,
+    "almalinux/8": 1,
     "rockylinux/9": 3,
-    "el/9": 3,
-    "ol/9": 3,
+    "el/9": 1,
+    "ol/9": 1,
     "debian/stretch": 2,
     "debian/bullseye": 2,
     "debian/bookworm": 2,
@@ -94,7 +94,7 @@ def setup_module():
 
 def teardown_module():
     if os.path.exists("packaging_test"):
-        run("rm -r packaging_test")
+        run("rm -rf packaging_test")
 
 
 def test_build_packages():
@@ -137,8 +137,8 @@ def test_build_packages():
         )
         assert os.path.exists(postgres_version_file_path)
         config = dotenv_values(postgres_version_file_path)
-        assert config["release_versions"] == "12,13,14"
-        assert config["nightly_versions"] == "14,15"
+        assert config["release_versions"] == "15,16,17"
+        assert config["nightly_versions"] == "16,17,18"
 
 
 def test_get_required_package_count():
