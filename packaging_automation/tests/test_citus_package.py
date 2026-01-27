@@ -39,7 +39,7 @@ BASE_OUTPUT_FOLDER = f"{PACKAGING_EXEC_FOLDER}/packages"
 
 single_postgres_package_counts = {
     "el/7": 2,
-    "el/8": 31,
+    "el/8": 1,
     "ol/7": 2,
     "ol/8": 1,
     "almalinux/9": 1,
