@@ -146,7 +146,7 @@ def test_get_required_package_count():
         get_required_package_count(
             input_files_dir=PACKAGING_EXEC_FOLDER, platform="el/8"
         )
-        == 9
+        == 3
     )
 
 

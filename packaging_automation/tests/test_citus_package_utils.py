@@ -166,15 +166,15 @@ def test_build_package_debian():
 def test_build_package_rpm():
     input_output_parameters = InputOutputParameters.build(
         PACKAGING_EXEC_FOLDER,
-        f"{OUTPUT_FOLDER}/debian-stretch",
+        f"{OUTPUT_FOLDER}/rpm_build",
         output_validation=False,
     )
 
     build_package(
         github_token=GH_TOKEN,
         build_type=BuildType.release,
-        docker_platform="almalinux-8",
-        postgres_version="13",
+        docker_platform="almalinux-9",
+        postgres_version="17",
         input_output_parameters=input_output_parameters,
         is_test=True,
     )
