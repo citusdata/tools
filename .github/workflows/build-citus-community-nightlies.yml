@@ -42,7 +42,6 @@ jobs:
           app-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_KEY }}
           owner: ${{ github.repository_owner }}
-          repositories: citus,packaging,tools
 
       - name: Debug - Test token access to repos
         env:
