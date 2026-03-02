@@ -360,7 +360,10 @@ def build_package(
     if output.stdout:
         print("Output:" + output.stdout)
     if output.returncode != 0:
-        raise ValueError(output.stderr)
+        error_msg = f"Docker command failed with return code {output.returncode}\n"
+        error_msg += f"STDOUT:\n{output.stdout}\n" if output.stdout else "STDOUT: (empty)\n"
+        error_msg += f"STDERR:\n{output.stderr}\n" if output.stderr else "STDERR: (empty)\n"
+        raise ValueError(error_msg)
 
     if input_output_parameters.output_validation:
         validate_output(

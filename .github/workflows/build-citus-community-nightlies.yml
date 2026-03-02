@@ -42,6 +42,23 @@ jobs:
           app-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_KEY }}
           owner: ${{ github.repository_owner }}
+          repositories: citus,packaging,tools
+
+      - name: Debug - Test token access to repos
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+        run: |
+          echo "Testing token access to repositories..."
+          for repo in citus packaging tools; do
+            echo "Testing access to citusdata/$repo..."
+            if gh api repos/citusdata/$repo --jq '.full_name' 2>/dev/null; then
+              echo "✓ Access to citusdata/$repo OK"
+            else
+              echo "✗ No access to citusdata/$repo"
+            fi
+          done
+          echo "Token scopes:"
+          curl -sS -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/rate_limit | head -20
 
       - name: Checkout repository
         uses: actions/checkout@v3
