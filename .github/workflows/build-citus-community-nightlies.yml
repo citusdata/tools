@@ -45,10 +45,6 @@ jobs:
         with:
           fetch-depth: 1
           path: tools
-      - name: Validate token
-        env:
-          GH_TOKEN: ${{ steps.app.outputs.token }}
-        run: gh repo view --json name -q .name
 
       # This step is to fetch the images unanonymously to have higher bandwidth
       - name: Login to Docker Hub
