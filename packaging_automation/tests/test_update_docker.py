@@ -9,22 +9,20 @@ from ..common_tool_methods import (
     DEFAULT_ENCODING_FOR_FILE_HANDLING,
     DEFAULT_UNICODE_ERROR_HANDLER,
 )
-from dotenv import dotenv_values
 from ..update_docker import (
     update_docker_file_for_latest_postgres,
     update_regular_docker_compose_file,
     update_docker_file_alpine,
-    update_docker_file_for_postgres15,
-    update_docker_file_for_postgres14,
+    update_docker_file_for_postgres16,
     update_changelog,
 )
+from dotenv import dotenv_values
 
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 TEST_BASE_PATH = f"{BASE_PATH}/docker"
 PROJECT_VERSION = "12.0.0"
 
-POSTGRES_15_VERSION = "15.4"
-POSTGRES_14_VERSION = "14.9"
+POSTGRES_16_VERSION = "16.4"
 
 PROJECT_NAME = "citus"
 version_details = get_version_details(PROJECT_VERSION)
@@ -45,7 +43,7 @@ def teardown_module():
 
 def test_update_docker_file_for_latest_postgres():
     update_docker_file_for_latest_postgres(
-        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_14_VERSION
+        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_16_VERSION
     )
     with open(
         f"{TEST_BASE_PATH}/Dockerfile",
@@ -55,7 +53,7 @@ def test_update_docker_file_for_latest_postgres():
     ) as reader:
         content = reader.read()
         lines = content.splitlines()
-        assert lines[2].strip() == f"FROM postgres:{POSTGRES_14_VERSION}"
+        assert lines[2].strip() == f"FROM postgres:{POSTGRES_16_VERSION}"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert (
             f"postgresql-$PG_MAJOR-{PROJECT_NAME}-"
@@ -83,7 +81,7 @@ def test_update_regular_docker_compose_file():
 
 def test_update_docker_file_alpine():
     update_docker_file_alpine(
-        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_14_VERSION
+        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_16_VERSION
     )
     with open(
         f"{TEST_BASE_PATH}/alpine/Dockerfile",
@@ -93,46 +91,24 @@ def test_update_docker_file_alpine():
     ) as reader:
         content = reader.read()
         lines = content.splitlines()
-        assert lines[2].strip() == f"FROM postgres:{POSTGRES_14_VERSION}-alpine"
+        assert lines[2].strip() == f"FROM postgres:{POSTGRES_16_VERSION}-alpine"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert len(lines) == 58
 
 
-def test_update_docker_file_for_postgres14():
-    update_docker_file_for_postgres14(
-        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_14_VERSION
+def test_update_docker_file_for_postgres16():
+    update_docker_file_for_postgres16(
+        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_16_VERSION
     )
     with open(
-        f"{TEST_BASE_PATH}/postgres-14/Dockerfile",
+        f"{TEST_BASE_PATH}/postgres-16/Dockerfile",
         "r",
         encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
         errors=DEFAULT_UNICODE_ERROR_HANDLER,
     ) as reader:
         content = reader.read()
         lines = content.splitlines()
-        assert lines[2].strip() == f"FROM postgres:{POSTGRES_14_VERSION}"
-        assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
-        assert (
-            f"postgresql-$PG_MAJOR-{PROJECT_NAME}-"
-            f"{version_details['major']}.{version_details['minor']}=$CITUS_VERSION"
-            in lines[21]
-        )
-        assert len(lines) == 42
-
-
-def test_update_docker_file_for_postgres15():
-    update_docker_file_for_postgres15(
-        PROJECT_VERSION, TEMPLATE_PATH, TEST_BASE_PATH, POSTGRES_15_VERSION
-    )
-    with open(
-        f"{TEST_BASE_PATH}/postgres-15/Dockerfile",
-        "r",
-        encoding=DEFAULT_ENCODING_FOR_FILE_HANDLING,
-        errors=DEFAULT_UNICODE_ERROR_HANDLER,
-    ) as reader:
-        content = reader.read()
-        lines = content.splitlines()
-        assert lines[2].strip() == f"FROM postgres:{POSTGRES_15_VERSION}"
+        assert lines[2].strip() == f"FROM postgres:{POSTGRES_16_VERSION}"
         assert lines[3].strip() == f"ARG VERSION={PROJECT_VERSION}"
         assert (
             f"postgresql-$PG_MAJOR-{PROJECT_NAME}-"
@@ -177,5 +153,4 @@ def test_update_changelog_without_postgres():
 
 def test_pkgvar_postgres_version_existence():
     config = dotenv_values(PKGVARS_FILE)
-    assert config["postgres_15_version"]
-    assert config["postgres_14_version"]
+    assert config["postgres_16_version"]
