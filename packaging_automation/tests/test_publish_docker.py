@@ -22,6 +22,9 @@ TAG_NAME = "v12.0.0"
 INVALID_TAG_NAME = "v12.x"
 DOCKER_IMAGE_NAME = "citusdata/citus"
 docker_client = docker.from_env()
+GH_TOKEN = os.getenv("GH_TOKEN")
+if not GH_TOKEN:
+    raise RuntimeError("GITHUB_TOKEN or GH_TOKEN must be set in the environment for authenticated git operations.")
 
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
 EXEC_PATH = f"{BASE_PATH}/docker"
@@ -29,7 +32,7 @@ EXEC_PATH = f"{BASE_PATH}/docker"
 
 def initialize_env():
     if not os.path.exists("docker"):
-        run("git clone https://github.com/citusdata/docker.git")
+        run(f"git clone https://x-access-token:{GH_TOKEN}@github.com/citusdata/docker.git")
 
 
 def test_decode_triggering_event_info():

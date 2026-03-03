@@ -26,6 +26,8 @@ from .test_utils import are_strings_equal
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[1])
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
+if not GITHUB_TOKEN:
+    raise RuntimeError("GH_TOKEN environment variable must be set for the tests to run.")
 PROJECT_VERSION = os.getenv("PROJECT_VERSION", default="10.2.4")
 TAG_NAME = os.getenv("TAG_NAME", default="v10.2.4")
 PROJECT_NAME = os.getenv("PROJECT_NAME", default="citus")

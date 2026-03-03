@@ -40,7 +40,7 @@ def initialize_env() -> str:
     test_base_path_major = f"{BASE_PATH}/{uuid.uuid4()}"
     remove_cloned_code(test_base_path_major)
     if not os.path.exists(test_base_path_major):
-        run(f"git clone https://github.com/citusdata/citus.git {test_base_path_major}")
+        run(f"git clone https://x-access-token:{github_token}@github.com/citusdata/citus.git {test_base_path_major}")
     return test_base_path_major
 
 

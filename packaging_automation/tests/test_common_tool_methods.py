@@ -47,6 +47,8 @@ from ..common_tool_methods import (
 )
 
 GITHUB_TOKEN = os.getenv("GH_TOKEN")
+if not GITHUB_TOKEN:
+    raise RuntimeError("GH_TOKEN environment variable must be set for the tests to run.")
 BASE_PATH = pathlib2.Path(__file__).parents[1]
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"

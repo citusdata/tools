@@ -34,6 +34,8 @@ TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
 TEST_GPG_KEY_PASSPHRASE = "Citus123"
 GH_TOKEN = os.getenv("GH_TOKEN")
+if not GH_TOKEN:
+    raise RuntimeError("GITHUB_TOKEN or GH_TOKEN must be set in the environment for authenticated git operations.")
 
 PACKAGING_SOURCE_FOLDER = "packaging_test"
 PACKAGING_EXEC_FOLDER = f"{TEST_BASE_PATH}/{PACKAGING_SOURCE_FOLDER}"
@@ -46,7 +48,7 @@ INPUT_OUTPUT_PARAMETERS = InputOutputParameters.build(
 def setup_module():
     if not os.path.exists("packaging_test"):
         run(
-            f"git clone --branch all-citus-unit-tests https://github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}"
+            f"git clone --branch all-citus-unit-tests https://x-access-token:{GH_TOKEN}@github.com/citusdata/packaging.git {PACKAGING_SOURCE_FOLDER}"
         )
 
 

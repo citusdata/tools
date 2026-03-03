@@ -19,7 +19,6 @@ jobs:
     name: Build package
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
     strategy:
       fail-fast: false
@@ -43,27 +42,10 @@ jobs:
           private-key: ${{ secrets.GH_APP_KEY }}
           owner: ${{ github.repository_owner }}
 
-      - name: Debug - Test token access to repos
-        env:
-          GH_TOKEN: ${{ steps.app.outputs.token }}
-        run: |
-          echo "Testing token access to repositories..."
-          for repo in citus packaging tools; do
-            echo "Testing access to citusdata/$repo..."
-            if gh api repos/citusdata/$repo --jq '.full_name' 2>/dev/null; then
-              echo "✓ Access to citusdata/$repo OK"
-            else
-              echo "✗ No access to citusdata/$repo"
-            fi
-          done
-          echo "Token scopes:"
-          curl -sS -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/rate_limit | head -20
-
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 1
-          path: tools
+          token: ${{steps.app.outputs.token}}
 
       # This step is to fetch the images unanonymously to have higher bandwidth
       - name: Login to Docker Hub
@@ -73,7 +55,11 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Clone build branch
-        run: git clone -b "${MAIN_BRANCH}" --depth=1  https://github.com/citusdata/packaging.git packaging
+        env:
+          GH_TOKEN: ${{steps.app.outputs.token}}
+        run: |
+          git clone -b "${MAIN_BRANCH}" --depth=1 \
+          https://x-access-token:${GH_TOKEN}@github.com/citusdata/packaging.git packaging
 
       - name: Install package dependencies
         run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
@@ -83,7 +69,8 @@ jobs:
 
       - name: Build packages
         env:
-          GH_TOKEN: ${{ steps.app.outputs.token }}
+          GH_TOKEN: ${{steps.app.outputs.token}}
+          GITHUB_TOKEN: ${{steps.app.outputs.token}}
         run: |
           python -m  tools.packaging_automation.citus_package \
           --gh_token "${GH_TOKEN}" \

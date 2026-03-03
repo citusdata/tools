@@ -14,12 +14,15 @@ TEST_BASE_PATH = f"{BASE_PATH}/packaging_test"
 PROJECT_VERSION = "10.0.3"
 PROJECT_NAME = "citus"
 TEMPLATE_PATH = f"{BASE_PATH}/packaging_automation/templates/pgxn"
+GH_TOKEN = os.getenv("GH_TOKEN")
+if not GH_TOKEN:
+    raise RuntimeError("GITHUB_TOKEN or GH_TOKEN must be set in the environment for authenticated git operations.")
 
 
 def setup_module():
     if not os.path.exists("packaging_test"):
         run(
-            "git clone --branch pgxn-citus https://github.com/citusdata/packaging.git packaging_test"
+            f"git clone --branch pgxn-citus https://x-access-token:{GH_TOKEN}@github.com/citusdata/packaging.git packaging_test"
         )
 
 

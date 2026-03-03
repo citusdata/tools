@@ -17,6 +17,8 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST_AND_PORT = os.getenv("DB_HOST_AND_PORT")
 DB_NAME = os.getenv("DB_NAME")
 GH_TOKEN = os.getenv("GH_TOKEN")
+if not GH_TOKEN:
+    raise RuntimeError("GITHUB_TOKEN or GH_TOKEN must be set in the environment for authenticated git operations.")
 
 ORGANIZATION_NAME = "citusdata"
 REPO_NAME = "citus"

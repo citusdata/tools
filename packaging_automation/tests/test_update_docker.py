@@ -30,11 +30,13 @@ PROJECT_NAME = "citus"
 version_details = get_version_details(PROJECT_VERSION)
 TEMPLATE_PATH = f"{BASE_PATH}/packaging_automation/templates/docker"
 PKGVARS_FILE = f"{TEST_BASE_PATH}/pkgvars"
-
+GH_TOKEN = os.getenv("GH_TOKEN")
+if not GH_TOKEN:
+    raise RuntimeError("GITHUB_TOKEN or GH_TOKEN must be set in the environment for authenticated git operations.")
 
 def setup_module():
     if not os.path.exists("docker"):
-        run("git clone https://github.com/citusdata/docker.git")
+        run(f"git clone https://x-access-token:{GH_TOKEN}@github.com/citusdata/docker.git")
 
 
 def teardown_module():

@@ -61,6 +61,8 @@ single_postgres_package_counts = {
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
 TEST_GPG_KEY_PASSPHRASE = os.getenv("PACKAGING_PASSPHRASE")
 GH_TOKEN = os.getenv("GH_TOKEN")
+if not GH_TOKEN:
+    raise RuntimeError("GITHUB_TOKEN or GH_TOKEN must be set in the environment for authenticated git operations.")
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 PLATFORM = get_build_platform(
@@ -87,7 +89,7 @@ def setup_module():
     )
     if not os.path.exists(PACKAGING_EXEC_FOLDER):
         run(
-            f"git clone --branch {packaging_branch_name} https://github.com/citusdata/packaging.git"
+            f"git clone --branch {packaging_branch_name} https://x-access-token:{GH_TOKEN}@github.com/citusdata/packaging.git"
             f" {PACKAGING_EXEC_FOLDER}"
         )
 

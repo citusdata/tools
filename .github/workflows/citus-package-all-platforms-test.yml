@@ -1,8 +1,6 @@
 name: Citus package all platforms tests
 
 env:
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}
-  GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
   PACKAGING_PASSPHRASE: ${{ secrets.PACKAGING_PASSPHRASE }}
   MICROSOFT_EMAIL: gindibay@microsoft.com
   USER_NAME: Gurkan Indibay
@@ -19,6 +17,8 @@ on:
 jobs:
   unit_test_execution:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -36,17 +36,33 @@ jobs:
       PLATFORM: ${{ matrix.platform }}
 
     steps:
+
+      - name: Create GitHub App token
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{steps.app.outputs.token}}
+
+          
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
 
-      - name: Define git credentails
+      - name: Define git credentials
         run: git config --global user.email "${MICROSOFT_EMAIL}"&& git config --global user.name "${USER_NAME}"
 
       - name: Install python requirements
         run: python -m pip install -r packaging_automation/requirements.txt
 
       - name: Citus package tests
+        env:
+          GH_TOKEN: ${{steps.app.outputs.token}}
+          GITHUB_TOKEN: ${{steps.app.outputs.token}}
         run: python -m pytest -q packaging_automation/tests/test_citus_package.py -s
