@@ -12,14 +12,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
 
-      - name: Install package dependencies
-        run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
+       - name: Create GitHub App token
+         id: app
+         uses: actions/create-github-app-token@v1
+         with:
+          app-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_KEY }}
+          owner: ${{ github.repository_owner }}
 
-      - name: Install python requirements
-        run: python -m pip install -r packaging_automation/requirements.txt
+       - name: Checkout repository
+         uses: actions/checkout@v3
+         with:
+           token: ${{steps.app.outputs.token}}
 
-      - name: Build and publish docker images tests
-        run: python -m pytest -q packaging_automation/tests/test_publish_docker.py
+       - name: Install package dependencies
+         run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
+
+       - name: Install python requirements
+         run: python -m pip install -r packaging_automation/requirements.txt
+
+       - name: Build and publish docker images tests
+         env:
+          GH_TOKEN: ${{steps.app.outputs.token}}
+         run: python -m pytest -q packaging_automation/tests/test_publish_docker.py
