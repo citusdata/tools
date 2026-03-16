@@ -22,6 +22,7 @@ def get_postgres_versions_from_matrix_file(project_version: str) -> List[str]:
 
     return pg_versions
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--project_version", required=True)
