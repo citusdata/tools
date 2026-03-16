@@ -11,6 +11,7 @@ from .common_tool_methods import (
 POSTGRES_MATRIX_FILE = "postgres-matrix.yml"
 POSTGRES_MATRIX_WEB_ADDRESS = "https://raw.githubusercontent.com/citusdata/packaging/all-citus/postgres-matrix.yml"
 
+
 def get_postgres_versions_from_matrix_file(project_version: str) -> List[str]:
     r = requests.get(POSTGRES_MATRIX_WEB_ADDRESS, allow_redirects=True, timeout=60)
 
