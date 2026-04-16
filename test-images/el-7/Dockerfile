@@ -42,7 +42,7 @@ USER postgres
 RUN cd ~ && initdb -D citus && echo "shared_preload_libraries = 'citus'" >> citus/postgresql.conf
 
 USER root
-# Install python 3.8 and its dependencies
+# Install python 3.12 and its dependencies
 RUN yum install -y gcc make && \
     yum groupinstall -y 'Development Tools' && \
     yum -y install  libcurl-devel \
@@ -52,16 +52,16 @@ RUN yum install -y gcc make && \
                     xz-devel \
                     python38-devel \
                     openssl-devel &&\
-      curl  https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz --output Python-3.8.12.tgz &&\
-      tar xvf Python-3.8.12.tgz &&\
-      cd Python-3.8.*/ && \
+      curl  https://www.python.org/ftp/python/3.12.12/Python-3.12.12.tgz --output Python-3.12.12.tgz &&\
+      tar xvf Python-3.12.12.tgz &&\
+      cd Python-3.12.*/ && \
       ./configure --enable-optimizations && \
        make altinstall && \
-       python3.8 -m pip install pip-tools
+       python3.12 -m pip install pip-tools
 
 COPY scripts/* ./
 
-RUN pip-compile && python3.8 -m pip install -r requirements.txt
+RUN pip-compile && python3.12 -m pip install -r requirements.txt
 
 
 USER postgres

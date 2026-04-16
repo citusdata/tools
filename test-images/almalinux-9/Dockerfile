@@ -42,18 +42,18 @@ USER root
 # Enable EPEL repository and install dependencies for Python 3.8
 RUN yum install -y epel-release && \
     yum install -y gcc make libcurl-devel openssl-devel bzip2-devel libffi-devel xz-devel wget tar zlib-devel && \
-    wget https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz && \
-    tar xvf Python-3.8.12.tgz && \
-    cd Python-3.8.12 && \
+    wget https://www.python.org/ftp/python/3.12.12/Python-3.12.12.tgz && \
+    tar xvf Python-3.12.12.tgz && \
+    cd Python-3.12.12 && \
     ./configure --enable-optimizations && \
     make altinstall && \
-    python3.8 -m pip install pip-tools
+    python3.12 -m pip install pip-tools
 
 
 COPY scripts/* ./
 
 # Use pip-tools to compile and install requirements
-RUN pip-compile && python3.8 -m pip install -r requirements.txt
+RUN pip-compile && python3.12 -m pip install -r requirements.txt
 
 USER postgres
 
