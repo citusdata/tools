@@ -1,7 +1,10 @@
 import argparse
 import glob
 import os
+import shlex
+import shutil
 import subprocess
+import tempfile
 from enum import Enum
 from typing import Dict
 from typing import List
@@ -338,21 +341,42 @@ def build_package(
     postgres_version: str,
     input_output_parameters: InputOutputParameters,
     is_test: bool = False,
-    container_gh_token: str = "",
+    actor_name: str = "",
+    actor_email: str = "",
 ):
     docker_image_name = "packaging" if not is_test else "packaging-test"
     postgres_extension = "all" if postgres_version == "all" else f"pg{postgres_version}"
-    # Packaging containers call GET /user and GET /user/emails via determine_name/determine_email.
-    # Those endpoints require a user-scoped token (PAT). GitHub App installation tokens are
-    # repository-scoped and will receive a 403 for user endpoints, so a separate PAT token is
-    # used for the container when provided.
-    os.environ["GITHUB_TOKEN"] = container_gh_token if container_gh_token else github_token
+    os.environ["GITHUB_TOKEN"] = github_token
     os.environ["CONTAINER_BUILD_RUN_ENABLED"] = "true"
     if not os.path.exists(input_output_parameters.output_dir):
         os.makedirs(input_output_parameters.output_dir)
 
+    # When an actor name and email are provided (e.g. when running under a GitHub App
+    # installation token), we shadow the /scripts/determine_name and
+    # /scripts/determine_email scripts inside the container with tiny override scripts
+    # that just echo the supplied values.  This avoids the GET /user and GET /user/emails
+    # API calls that those scripts make, which fail with 403 when the token is a GitHub
+    # App installation token (not a user-scoped PAT).
+    actor_tmpdir = None
+    actor_mounts = ""
+    if actor_name and actor_email:
+        actor_tmpdir = tempfile.mkdtemp(prefix="citus_pkg_actor_")
+        for script_name, value in [
+            ("determine_name", actor_name),
+            ("determine_email", actor_email),
+        ]:
+            script_path = os.path.join(actor_tmpdir, script_name)
+            with open(script_path, "w", encoding="utf-8") as f:
+                f.write(f"#!/bin/bash\nprintf '%s\\n' {shlex.quote(value)}\n")
+            os.chmod(script_path, 0o755)
+        actor_mounts = (
+            f"-v {actor_tmpdir}/determine_name:/scripts/determine_name:ro "
+            f"-v {actor_tmpdir}/determine_email:/scripts/determine_email:ro "
+        )
+
     docker_command = (
-        f"docker run --rm -v {input_output_parameters.output_dir}:/packages -v "
+        f"docker run --rm {actor_mounts}"
+        f"-v {input_output_parameters.output_dir}:/packages -v "
         f"{input_output_parameters.input_files_dir}:/buildfiles:ro "
         f"-e GITHUB_TOKEN -e PACKAGE_ENCRYPTION_KEY -e UNENCRYPTED_PACKAGE -e CONTAINER_BUILD_RUN_ENABLED "
         f"-e MSRUSTUP_PAT -e CRATES_IO_MIRROR_FEED_TOKEN -e INSTALL_RUST -e CI "
@@ -360,12 +384,19 @@ def build_package(
     )
 
     print(f"Executing docker command: {docker_command}")
-    output = run_with_output(docker_command, text=True)
+    try:
+        output = run_with_output(docker_command, text=True)
+    finally:
+        if actor_tmpdir:
+            shutil.rmtree(actor_tmpdir, ignore_errors=True)
 
-    if output.stdout:
-        print("Output:" + output.stdout)
     if output.returncode != 0:
-        raise ValueError(output.stderr)
+        raise ValueError(
+            "Docker command failed.\n"
+            f"Command: {docker_command}\n"
+            f"Exit code: {output.returncode}\n"
+            f"--- combined output (stdout+stderr) ---\n{output.stdout}\n"
+        )
 
     if input_output_parameters.output_validation:
         validate_output(
@@ -405,7 +436,8 @@ def build_packages(
     signing_credentials: SigningCredentials,
     input_output_parameters: InputOutputParameters,
     is_test: bool = False,
-    container_gh_token: str = "",
+    actor_name: str = "",
+    actor_email: str = "",
 ) -> None:
     os_name, os_version = decode_os_and_release(platform)
     release_versions, nightly_versions = get_postgres_versions(
@@ -454,7 +486,8 @@ def build_packages(
             postgres_docker_extension,
             input_output_parameters,
             is_test,
-            container_gh_token,
+            actor_name,
+            actor_email,
         )
         print(
             f"Package build for {os_name}-{os_version} for postgres {postgres_docker_extension} finished "
@@ -528,13 +561,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gh_token", required=True)
     parser.add_argument(
-        "--container_gh_token",
+        "--actor_name",
         required=False,
         default="",
-        help="Token used as GITHUB_TOKEN inside packaging containers. "
-             "Defaults to --gh_token when not set. Must be a user-scoped token "
-             "(PAT) because the packaging scripts call GET /user and GET /user/emails, "
-             "which are not accessible with GitHub App installation tokens.",
+        help="Committer name written into package changelogs. When set together with "
+             "--actor_email, the packaging container's determine_name and determine_email "
+             "scripts are overridden so that GET /user is never called. This allows "
+             "GitHub App installation tokens to be used without a PAT.",
+    )
+    parser.add_argument(
+        "--actor_email",
+        required=False,
+        default="",
+        help="Committer email written into package changelogs. See --actor_name.",
     )
     parser.add_argument("--platform", required=False, choices=platform_names())
     parser.add_argument(
@@ -567,5 +606,6 @@ if __name__ == "__main__":
         sign_credentials,
         io_parameters,
         args.is_test,
-        args.container_gh_token,
+        args.actor_name,
+        args.actor_email,
     )
