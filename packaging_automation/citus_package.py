@@ -338,10 +338,15 @@ def build_package(
     postgres_version: str,
     input_output_parameters: InputOutputParameters,
     is_test: bool = False,
+    container_gh_token: str = "",
 ):
     docker_image_name = "packaging" if not is_test else "packaging-test"
     postgres_extension = "all" if postgres_version == "all" else f"pg{postgres_version}"
-    os.environ["GITHUB_TOKEN"] = github_token
+    # Packaging containers call GET /user and GET /user/emails via determine_name/determine_email.
+    # Those endpoints require a user-scoped token (PAT). GitHub App installation tokens are
+    # repository-scoped and will receive a 403 for user endpoints, so a separate PAT token is
+    # used for the container when provided.
+    os.environ["GITHUB_TOKEN"] = container_gh_token if container_gh_token else github_token
     os.environ["CONTAINER_BUILD_RUN_ENABLED"] = "true"
     if not os.path.exists(input_output_parameters.output_dir):
         os.makedirs(input_output_parameters.output_dir)
@@ -400,6 +405,7 @@ def build_packages(
     signing_credentials: SigningCredentials,
     input_output_parameters: InputOutputParameters,
     is_test: bool = False,
+    container_gh_token: str = "",
 ) -> None:
     os_name, os_version = decode_os_and_release(platform)
     release_versions, nightly_versions = get_postgres_versions(
@@ -448,6 +454,7 @@ def build_packages(
             postgres_docker_extension,
             input_output_parameters,
             is_test,
+            container_gh_token,
         )
         print(
             f"Package build for {os_name}-{os_version} for postgres {postgres_docker_extension} finished "
@@ -520,6 +527,15 @@ def tear_release_stage_from_package_version(package_version: str) -> str:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gh_token", required=True)
+    parser.add_argument(
+        "--container_gh_token",
+        required=False,
+        default="",
+        help="Token used as GITHUB_TOKEN inside packaging containers. "
+             "Defaults to --gh_token when not set. Must be a user-scoped token "
+             "(PAT) because the packaging scripts call GET /user and GET /user/emails, "
+             "which are not accessible with GitHub App installation tokens.",
+    )
     parser.add_argument("--platform", required=False, choices=platform_names())
     parser.add_argument(
         "--packaging_docker_platform",
@@ -551,4 +567,5 @@ if __name__ == "__main__":
         sign_credentials,
         io_parameters,
         args.is_test,
+        args.container_gh_token,
     )
