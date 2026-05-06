@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# make bash behave
+set -uo pipefail
+IFS=$'\n\t'
+
+# constants
+success=0
+failure=1
+
+email=""
+
+# Try the authenticated API first.  GitHub App installation tokens (ghs_...)
+# return 403 for GET /user and GET /user/emails because those endpoints require
+# a user-scoped token; curl -sf treats HTTP errors as failures and returns empty
+# output, so we fall through to the env-var fallback below.
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+    # fallback to public email field
+    email=$(curl -sf \
+        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        https://api.github.com/user | jq -r '.email // empty')
+
+    # prefer the verified Microsoft/citusdata address when available
+    jqfilter='map(select(.verified and (.email | test("@microsoft.com$|^bots@citusdata.com$")))) | first | .email // empty'
+    citusemail=$(curl -sf \
+        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        https://api.github.com/user/emails | jq -r "${jqfilter}")
+
+    if [ -n "${citusemail}" ]; then
+        email="${citusemail}"
+    fi
+fi
+
+# Fall back to the GitHub Actions noreply address for the triggering actor when
+# the API call does not return a usable email (e.g. under a GitHub App token).
+# GitHub's canonical noreply format is: {id}+{login}@users.noreply.github.com
+if [ -z "${email}" ] && [ -n "${GITHUB_ACTOR_ID:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
+    email="${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
+fi
+
+if [ -z "${email}" ]; then
+    echo "$0: could not determine email" >&2
+    exit $failure
+fi
+
+echo "${email}"
+exit $success

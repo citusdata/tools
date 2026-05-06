@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# make bash behave
+set -euo pipefail
+IFS=$'\n\t'
+
+# constants
+success=0
+failure=1
+
+fullname=""
+
+# Try the authenticated API first.  GitHub App installation tokens (ghs_...)
+# return 403 for GET /user because that endpoint requires a user-scoped token;
+# curl -sf treats HTTP errors as failures and returns empty output, so we fall
+# through to the env-var fallback below.
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+    fullname=$(curl -sf \
+        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        https://api.github.com/user | jq -r '.name // empty')
+fi
+
+# Fall back to the actor identity supplied by GitHub Actions when the API call
+# does not return a usable name (e.g. when running under a GitHub App token).
+if [ -z "${fullname}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
+    fullname="${GITHUB_ACTOR}"
+fi
+
+if [ -z "${fullname}" ]; then
+    echo "$0: could not determine user name" >&2
+    exit $failure
+fi
+
+echo "${fullname}"
+exit $success
