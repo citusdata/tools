@@ -4,7 +4,6 @@ env:
   MAIN_BRANCH: "all-citus"
   PACKAGING_PASSPHRASE: ${{ secrets.PACKAGING_PASSPHRASE }}
   PACKAGING_SECRET_KEY: ${{ secrets.PACKAGING_SECRET_KEY }}
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}
   DOCKERHUB_USER_NAME: ${{ secrets.DOCKERHUB_USER_NAME }}
   DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
 on:
@@ -32,9 +31,25 @@ jobs:
           - ubuntu/jammy
 
     steps:
+
+      - name: Create GitHub App token
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Set GH_TOKEN for all steps
+        run: echo "GH_TOKEN=${{ steps.app.outputs.token }}" >> $GITHUB_ENV
+
+      - name: Configure git with x-access-token
+        run: git config --global url."https://x-access-token:${{ steps.app.outputs.token }}@github.com/".insteadOf "https://github.com/"
+
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
+          token: ${{ steps.app.outputs.token }}
           fetch-depth: 1
           path: tools
 

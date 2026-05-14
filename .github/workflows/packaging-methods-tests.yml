@@ -1,7 +1,5 @@
 name: Packaging helper methods tests
 
-env:
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
 on:
   push:
@@ -15,8 +13,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Create GitHub App token
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Set GH_TOKEN for all steps
+        run: echo "GH_TOKEN=${{ steps.app.outputs.token }}" >> $GITHUB_ENV
+
+      - name: Configure git with x-access-token
+        run: git config --global url."https://x-access-token:${{ steps.app.outputs.token }}@github.com/".insteadOf "https://github.com/"
+
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ steps.app.outputs.token }}
 
       - name: Install package dependencies
         run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
