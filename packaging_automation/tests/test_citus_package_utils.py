@@ -200,7 +200,7 @@ def test_sign_packages():
         PACKAGING_EXEC_FOLDER, f"{OUTPUT_FOLDER}", output_validation=False
     )
     sign_packages(
-        sub_folder="centos-8",
+        sub_folder="rpm_build",
         signing_credentials=signing_credentials,
         input_output_parameters=input_output_parameters,
     )
