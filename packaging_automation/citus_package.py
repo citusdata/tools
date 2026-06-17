@@ -228,6 +228,12 @@ def sign_packages(
     output_path = f"{input_output_parameters.output_dir}/{sub_folder}"
     deb_files = glob.glob(f"{output_path}/*.deb", recursive=True)
     rpm_files = glob.glob(f"{output_path}/*.rpm", recursive=True)
+    if len(rpm_files) == 0 and len(deb_files) == 0:
+        print(
+            f"WARNING: sign_packages found no .rpm or .deb files under '{output_path}'. "
+            f"Nothing will be signed. If packages were expected here, the sign path does not "
+            f"match the build output path (check the output_dir handling in build_packages)."
+        )
     os.environ["PACKAGING_PASSPHRASE"] = signing_credentials.passphrase
     os.environ["PACKAGING_SECRET_KEY"] = signing_credentials.secret_key
 
@@ -434,9 +440,8 @@ def build_packages(
 
     docker_image_name = get_docker_image_name(platform)
     output_sub_folder = get_release_package_folder_name(os_name, os_version)
-    input_output_parameters.output_dir = (
-        f"{input_output_parameters.output_dir}/{output_sub_folder}"
-    )
+    base_output_dir = input_output_parameters.output_dir
+    input_output_parameters.output_dir = f"{base_output_dir}/{output_sub_folder}"
     for postgres_docker_extension in postgres_docker_extension_iterator:
         print(
             f"Package build for {os_name}-{os_version} for postgres {postgres_docker_extension} started... "
@@ -453,6 +458,12 @@ def build_packages(
             f"Package build for {os_name}-{os_version} for postgres {postgres_docker_extension} finished "
         )
 
+    # Restore the base output dir before signing. build_package mounts output_dir at
+    # /packages, so the packages are produced under "{base_output_dir}/{output_sub_folder}".
+    # sign_packages re-appends the sub_folder to output_dir, so it must receive the base dir
+    # (not the build-time mutated value); otherwise the sign path becomes
+    # "{base}/{sub_folder}/{sub_folder}", matches no packages, and signing is silently skipped.
+    input_output_parameters.output_dir = base_output_dir
     sign_packages(output_sub_folder, signing_credentials, input_output_parameters)
 
 
