@@ -49,12 +49,12 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - centos/8
           - el/9
           - ol/9
           - debian/bullseye
           - debian/bookworm
           - ubuntu/jammy
+          - ubuntu/noble
         pg: ${{ fromJson(needs.metadata.outputs.pg_versions) }}
     env:
       PLATFORM: ${{ matrix.platform }}
