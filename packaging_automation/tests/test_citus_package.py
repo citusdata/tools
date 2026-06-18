@@ -61,7 +61,12 @@ single_postgres_package_counts = {
 }
 
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
-TEST_GPG_KEY_PASSPHRASE = os.getenv("PACKAGING_PASSPHRASE")
+# Use the literal passphrase baked into the throwaway test key
+# (tests/files/gpg/packaging_with_passphrase.gpg -> Passphrase: Citus123) rather
+# than the prod PACKAGING_PASSPHRASE secret, so this unit test stays self-contained
+# and immune to production signing-key/passphrase rotations. Matches the convention
+# already used in test_citus_package_utils.py.
+TEST_GPG_KEY_PASSPHRASE = "Citus123"
 GH_TOKEN = os.getenv("GH_TOKEN")
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
