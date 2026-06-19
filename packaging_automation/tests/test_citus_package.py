@@ -2,6 +2,7 @@ import glob
 import os
 
 import pathlib2
+import pytest
 from dotenv import dotenv_values
 
 from .test_utils import generate_new_gpg_key
@@ -106,6 +107,21 @@ def teardown_module():
 
 
 def test_build_packages():
+    # dev5 Fix A: the packaging per-pg CI matrix enumerates pg{14..18} per rpm distro to drive
+    # update_image into building every {os}-pg{N} base image, but tools' rpm release set is only
+    # a subset (e.g. [15,16,17]). When POSTGRES_VERSION targets a version outside that set, there
+    # is nothing for this test to build/sign, so skip gracefully (skip == success) rather than
+    # letting build_packages raise. The image for that pg was still built by update_image, so
+    # push_images downstream still reseeds it.
+    if POSTGRES_VERSION and PLATFORM != "pgxn":
+        release_versions, _ = get_postgres_versions(
+            platform=PLATFORM, input_files_dir=PACKAGING_EXEC_FOLDER
+        )
+        if POSTGRES_VERSION not in release_versions:
+            pytest.skip(
+                f"pg{POSTGRES_VERSION} not in release set {release_versions} for {PLATFORM}"
+            )
+
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
     generate_new_gpg_key(
@@ -153,9 +169,18 @@ def test_build_packages():
 
     postgres_version_file_path = f"{PACKAGING_EXEC_FOLDER}/{POSTGRES_VERSION_FILE}"
     if PLATFORM != "pgxn":
-        assert len(os.listdir(release_output_folder)) == get_required_package_count(
-            input_files_dir=PACKAGING_EXEC_FOLDER, platform=PLATFORM
-        )
+        # dev5 Fix B: when POSTGRES_VERSION restricts the build to a single in-set version,
+        # only that version's packages are produced, so the expected count is the per-version
+        # package count (single_postgres_package_counts), not the full len(release_versions) *
+        # per-version count. When POSTGRES_VERSION is empty/None (nightlies/CLI/deb/pgxn), keep
+        # the original all-versions expectation.
+        if POSTGRES_VERSION:
+            expected_package_count = single_postgres_package_counts[PLATFORM]
+        else:
+            expected_package_count = get_required_package_count(
+                input_files_dir=PACKAGING_EXEC_FOLDER, platform=PLATFORM
+            )
+        assert len(os.listdir(release_output_folder)) == expected_package_count
         assert os.path.exists(postgres_version_file_path)
         config = dotenv_values(postgres_version_file_path)
         assert config["release_versions"] == "15,16,17"
