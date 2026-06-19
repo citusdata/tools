@@ -73,6 +73,7 @@ REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 PLATFORM = get_build_platform(
     os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_PLATFORM")
 )
+POSTGRES_VERSION = os.getenv("POSTGRES_VERSION")
 PACKAGING_BRANCH_NAME = os.getenv("PACKAGING_BRANCH_NAME", "all-citus-unit-tests")
 
 
@@ -130,6 +131,7 @@ def test_build_packages():
         signing_credentials,
         input_output_parameters,
         is_test=True,
+        postgres_version=POSTGRES_VERSION,
     )
     verify_rpm_signature_in_dir(BASE_OUTPUT_FOLDER)
     os_name, os_version = decode_os_and_release(PLATFORM)
