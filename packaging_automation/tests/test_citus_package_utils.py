@@ -142,7 +142,7 @@ def test_get_postgres_versions():
 def test_build_package_debian():
     input_output_parameters = InputOutputParameters.build(
         PACKAGING_EXEC_FOLDER,
-        f"{OUTPUT_FOLDER}/debian-stretch",
+        f"{OUTPUT_FOLDER}/debian-bookworm",
         output_validation=False,
     )
 
@@ -156,7 +156,7 @@ def test_build_package_debian():
     build_package(
         github_token=GH_TOKEN,
         build_type=BuildType.release,
-        docker_platform="debian-stretch",
+        docker_platform="debian-bookworm",
         postgres_version="all",
         input_output_parameters=input_output_parameters,
         is_test=True,
@@ -200,12 +200,12 @@ def test_sign_packages():
         PACKAGING_EXEC_FOLDER, f"{OUTPUT_FOLDER}", output_validation=False
     )
     sign_packages(
-        sub_folder="centos-8",
+        sub_folder="rpm_build",
         signing_credentials=signing_credentials,
         input_output_parameters=input_output_parameters,
     )
     sign_packages(
-        sub_folder="debian-stretch",
+        sub_folder="debian-bookworm",
         signing_credentials=signing_credentials,
         input_output_parameters=input_output_parameters,
     )

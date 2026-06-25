@@ -645,8 +645,25 @@ def rpm_key_matches_summary(key: str, summary: str):
 
 
 def is_rpm_file_signed(file_path: str) -> bool:
-    result = run_with_output(f"rpm -K {file_path}")
-    return result.returncode == 0
+    # `rpm -K` / `--checksig` cannot discriminate signed from unsigned packages: it returns
+    # success ("digests OK") for an unsigned rpm as long as the digests verify. Query the
+    # signature header tags directly instead. Which tag carries the signature depends on the
+    # rpm version that produced it:
+    #   - legacy V3 signatures (e.g. rpm 4.11 / centos:7 signer) populate SIGPGP / SIGGPG
+    #   - header-only signatures (rpm >= 4.16 `rpm --addsign`) populate RSAHEADER
+    # The package is unsigned only when all of these render the literal string "(none)".
+    result = run_with_output(
+        f"rpm -qp --qf '%{{SIGPGP:pgpsig}}|%{{SIGGPG:pgpsig}}|%{{RSAHEADER:pgpsig}}' {file_path}"
+    )
+    if result.returncode != 0:
+        return False
+    output = (
+        result.stdout.decode("ascii", "replace")
+        if isinstance(result.stdout, bytes)
+        else result.stdout
+    )
+    signature_tags = output.strip().split("|")
+    return any(tag.strip() not in ("(none)", "") for tag in signature_tags)
 
 
 def verify_rpm_signature_in_dir(rpm_dir_path: str):

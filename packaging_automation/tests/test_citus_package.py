@@ -1,3 +1,4 @@
+import glob
 import os
 
 import pathlib2
@@ -21,6 +22,7 @@ from ..common_tool_methods import (
     delete_rpm_key_by_name,
     get_gpg_fingerprints_by_name,
     get_private_key_by_fingerprint_with_passphrase,
+    is_rpm_file_signed,
     run,
     transform_key_into_base64_str,
     verify_rpm_signature_in_dir,
@@ -59,7 +61,12 @@ single_postgres_package_counts = {
 }
 
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
-TEST_GPG_KEY_PASSPHRASE = os.getenv("PACKAGING_PASSPHRASE")
+# Use the literal passphrase baked into the throwaway test key
+# (tests/files/gpg/packaging_with_passphrase.gpg -> Passphrase: Citus123) rather
+# than the prod PACKAGING_PASSPHRASE secret, so this unit test stays self-contained
+# and immune to production signing-key/passphrase rotations. Matches the convention
+# already used in test_citus_package_utils.py.
+TEST_GPG_KEY_PASSPHRASE = "Citus123"
 GH_TOKEN = os.getenv("GH_TOKEN")
 PACKAGE_CLOUD_API_TOKEN = os.getenv("PACKAGE_CLOUD_API_TOKEN")
 REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
@@ -128,6 +135,18 @@ def test_build_packages():
     os_name, os_version = decode_os_and_release(PLATFORM)
     sub_folder = get_release_package_folder_name(os_name, os_version)
     release_output_folder = f"{BASE_OUTPUT_FOLDER}/{sub_folder}"
+    # Regression guard for the sign_packages path-doubling bug: the build output folder and the
+    # folder sign_packages signs in must resolve to the SAME path. If build_packages leaks its
+    # build-time output_dir mutation into sign_packages again, the sign path becomes a doubled
+    # "{sub_folder}/{sub_folder}", matches no packages, and signing is silently skipped, leaving
+    # the produced rpms unsigned. Assert every rpm actually produced at the build path carries a
+    # real signature (no-op for deb/pgxn platforms, which produce no rpm files here).
+    produced_rpms = glob.glob(f"{release_output_folder}/*.rpm")
+    for produced_rpm in produced_rpms:
+        assert is_rpm_file_signed(produced_rpm), (
+            f"Produced package '{produced_rpm}' is unsigned; sign_packages path-doubling "
+            f"regression detected (signing was silently skipped)."
+        )
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
 
     postgres_version_file_path = f"{PACKAGING_EXEC_FOLDER}/{POSTGRES_VERSION_FILE}"
