@@ -5,6 +5,7 @@ import subprocess
 from enum import Enum
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 import docker
@@ -398,7 +399,7 @@ def get_docker_image_name(platform: str):
 @validate_parameters
 # disabled since this is related to parameter_validations library methods
 # pylint: disable=no-value-for-parameter
-# pylint: disable= too-many-locals
+# pylint: disable= too-many-locals, too-many-arguments
 def build_packages(
     github_token: non_empty(non_blank(str)),
     platform: non_empty(non_blank(str)),
@@ -406,6 +407,7 @@ def build_packages(
     signing_credentials: SigningCredentials,
     input_output_parameters: InputOutputParameters,
     is_test: bool = False,
+    postgres_version: Optional[str] = None,
 ) -> None:
     os_name, os_version = decode_os_and_release(platform)
     release_versions, nightly_versions = get_postgres_versions(
@@ -437,6 +439,13 @@ def build_packages(
         postgres_docker_extension_iterator = ["all"]
     else:
         postgres_docker_extension_iterator = postgress_versions_to_process
+        if postgres_version:
+            if postgres_version not in postgress_versions_to_process:
+                raise ValueError(
+                    f"Requested postgres_version '{postgres_version}' is not in the "
+                    f"{build_type.name} versions for '{platform}': {postgress_versions_to_process}"
+                )
+            postgres_docker_extension_iterator = [postgres_version]
 
     docker_image_name = get_docker_image_name(platform)
     output_sub_folder = get_release_package_folder_name(os_name, os_version)

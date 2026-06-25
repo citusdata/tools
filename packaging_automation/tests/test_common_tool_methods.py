@@ -4,10 +4,10 @@ from datetime import datetime
 from shutil import copyfile
 
 from datetime import timezone
+from unittest.mock import MagicMock
 
 
 import pathlib2
-from github import Github
 
 from .test_utils import generate_new_gpg_key
 from ..common_tool_methods import (
@@ -46,7 +46,6 @@ from ..common_tool_methods import (
     str_array_to_str,
 )
 
-GITHUB_TOKEN = os.getenv("GH_TOKEN")
 BASE_PATH = pathlib2.Path(__file__).parents[1]
 TEST_BASE_PATH = pathlib2.Path(__file__).parent.absolute()
 TEST_GPG_KEY_NAME = "Citus Data <packaging@citusdata.com>"
@@ -262,28 +261,66 @@ def test_prepend_line_in_file():
         os.remove(test_file)
 
 
+def _utc_date(date_str: str) -> datetime:
+    return datetime.strptime(date_str, "%Y.%m.%d").replace(tzinfo=timezone.utc)
+
+
+def _mock_pull_request(number, merged_at, label_names=()):
+    pull_request = MagicMock()
+    pull_request.number = number
+    pull_request.merged_at = merged_at
+    labels = []
+    for label_name in label_names:
+        label = MagicMock()
+        label.name = label_name
+        labels.append(label)
+    pull_request.labels = labels
+    return pull_request
+
+
 def test_getprs():
-    # created at is not seen on Github. Should be checked on API result
-    g = Github(GITHUB_TOKEN)
-    repository = g.get_repo("citusdata/citus")
+    # get_prs_for_patch_release paginates every closed PR of the base repo through
+    # the live GitHub API. The hardcoded 2021 window forces walking citus's entire
+    # PR history, which intermittently trips a PyGithub redirect-loop error on deep
+    # pages. Mock the repository so the date-window filtering and merge-date sort are
+    # exercised deterministically and offline.
+    repository = MagicMock()
+    repository.get_pulls.return_value = [
+        _mock_pull_request(4748, _utc_date("2021.02.26")),
+        _mock_pull_request(4750, _utc_date("2021.02.27")),
+        _mock_pull_request(4753, _utc_date("2021.02.28")),
+        _mock_pull_request(4760, _utc_date("2021.03.01")),
+        _mock_pull_request(4762, _utc_date("2021.03.01")),
+        _mock_pull_request(4769, _utc_date("2021.03.02")),
+        _mock_pull_request(4700, _utc_date("2021.02.20")),  # before window
+        _mock_pull_request(4799, _utc_date("2021.03.10")),  # after window
+        _mock_pull_request(4800, None),  # not merged
+    ]
     prs = get_prs_for_patch_release(
         repository,
-        datetime.strptime("2021.02.26", "%Y.%m.%d").replace(tzinfo=timezone.utc),
+        _utc_date("2021.02.26"),
         "master",
-        datetime.strptime("2021.03.02", "%Y.%m.%d").replace(tzinfo=timezone.utc),
+        _utc_date("2021.03.02"),
     )
     assert len(prs) == 6
     assert prs[0].number == 4748
 
 
 def test_getprs_with_backlog_label():
-    g = Github(GITHUB_TOKEN)
-    repository = g.get_repo("citusdata/citus")
+    repository = MagicMock()
+    repository.get_pulls.return_value = [
+        _mock_pull_request(4746, _utc_date("2021.02.25"), label_names=("backport",)),
+        _mock_pull_request(4740, _utc_date("2021.02.21"), label_names=("bug",)),
+        _mock_pull_request(4744, _utc_date("2021.02.24")),
+        _mock_pull_request(4730, _utc_date("2021.02.10"), label_names=("backport",)),
+        _mock_pull_request(4790, _utc_date("2021.03.05"), label_names=("backport",)),
+        _mock_pull_request(4795, None, label_names=("backport",)),
+    ]
     prs = get_prs_for_patch_release(
         repository,
-        datetime.strptime("2021.02.20", "%Y.%m.%d").replace(tzinfo=timezone.utc),
+        _utc_date("2021.02.20"),
         "master",
-        datetime.strptime("2021.02.27", "%Y.%m.%d").replace(tzinfo=timezone.utc),
+        _utc_date("2021.02.27"),
     )
     prs_backlog = filter_prs_by_label(prs, "backport")
     assert len(prs_backlog) == 1

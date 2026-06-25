@@ -2,6 +2,7 @@ import glob
 import os
 
 import pathlib2
+import pytest
 from dotenv import dotenv_values
 
 from .test_utils import generate_new_gpg_key
@@ -9,12 +10,14 @@ from ..citus_package import (
     POSTGRES_VERSION_FILE,
     BuildType,
     InputOutputParameters,
+    PostgresVersionDockerImageType,
     SigningCredentials,
     build_packages,
     decode_os_and_release,
     get_build_platform,
     get_release_package_folder_name,
     get_postgres_versions,
+    platform_postgres_version_source,
 )
 from ..common_tool_methods import (
     define_rpm_public_key_to_machine,
@@ -73,6 +76,7 @@ REPO_CLIENT_SECRET = os.getenv("REPO_CLIENT_SECRET")
 PLATFORM = get_build_platform(
     os.getenv("PLATFORM"), os.getenv("PACKAGING_IMAGE_PLATFORM")
 )
+POSTGRES_VERSION = os.getenv("POSTGRES_VERSION")
 PACKAGING_BRANCH_NAME = os.getenv("PACKAGING_BRANCH_NAME", "all-citus-unit-tests")
 
 
@@ -105,6 +109,32 @@ def teardown_module():
 
 
 def test_build_packages():
+    # postgres_version only narrows the build for "multiple"-image platforms (rpm distros),
+    # where build_packages iterates one docker image per pg version. For "single"-image platforms
+    # (debian/ubuntu/pgxn) the iterator is always ["all"], so postgres_version is a no-op and every
+    # release version is built regardless of what is passed. Gate the filter-aware branches below on
+    # that distinction so the test's skip/count logic always matches what build_packages actually
+    # does, no matter what the external packaging matrix passes for a single-image platform.
+    os_name, _ = decode_os_and_release(PLATFORM)
+    version_filter_active = bool(POSTGRES_VERSION) and (
+        platform_postgres_version_source[os_name]
+        == PostgresVersionDockerImageType.multiple
+    )
+    # The packaging per-pg CI matrix enumerates pg{14..18} per rpm distro to drive
+    # update_image into building every {os}-pg{N} base image, but the rpm release set is only
+    # a subset (e.g. [15,16,17]). When POSTGRES_VERSION targets a version outside that set, there
+    # is nothing for this test to build/sign, so skip gracefully (skip == success) rather than
+    # letting build_packages raise. The image for that pg was still built by update_image, so
+    # push_images downstream still reseeds it.
+    if version_filter_active:
+        release_versions, _ = get_postgres_versions(
+            platform=PLATFORM, input_files_dir=PACKAGING_EXEC_FOLDER
+        )
+        if POSTGRES_VERSION not in release_versions:
+            pytest.skip(
+                f"pg{POSTGRES_VERSION} not in release set {release_versions} for {PLATFORM}"
+            )
+
     delete_all_gpg_keys_by_name(TEST_GPG_KEY_NAME)
     delete_rpm_key_by_name(TEST_GPG_KEY_NAME)
     generate_new_gpg_key(
@@ -130,9 +160,10 @@ def test_build_packages():
         signing_credentials,
         input_output_parameters,
         is_test=True,
+        postgres_version=POSTGRES_VERSION,
     )
     verify_rpm_signature_in_dir(BASE_OUTPUT_FOLDER)
-    os_name, os_version = decode_os_and_release(PLATFORM)
+    _, os_version = decode_os_and_release(PLATFORM)
     sub_folder = get_release_package_folder_name(os_name, os_version)
     release_output_folder = f"{BASE_OUTPUT_FOLDER}/{sub_folder}"
     # Regression guard for the sign_packages path-doubling bug: the build output folder and the
@@ -151,9 +182,19 @@ def test_build_packages():
 
     postgres_version_file_path = f"{PACKAGING_EXEC_FOLDER}/{POSTGRES_VERSION_FILE}"
     if PLATFORM != "pgxn":
-        assert len(os.listdir(release_output_folder)) == get_required_package_count(
-            input_files_dir=PACKAGING_EXEC_FOLDER, platform=PLATFORM
-        )
+        # When POSTGRES_VERSION restricts the build to a single in-set version (multiple-image
+        # platforms only), only that version's packages are produced, so the expected count is the
+        # per-version package count (single_postgres_package_counts), not the full
+        # len(release_versions) * per-version count. When the filter is inactive — POSTGRES_VERSION
+        # empty/None, or a single-image platform where it is a no-op — keep the all-versions
+        # expectation.
+        if version_filter_active:
+            expected_package_count = single_postgres_package_counts[PLATFORM]
+        else:
+            expected_package_count = get_required_package_count(
+                input_files_dir=PACKAGING_EXEC_FOLDER, platform=PLATFORM
+            )
+        assert len(os.listdir(release_output_folder)) == expected_package_count
         assert os.path.exists(postgres_version_file_path)
         config = dotenv_values(postgres_version_file_path)
         assert config["release_versions"] == "15,16,17"
