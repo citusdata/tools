@@ -367,7 +367,11 @@ def build_package(
     if output.stdout:
         print("Output:" + output.stdout)
     if output.returncode != 0:
-        raise ValueError(output.stderr)
+        raise ValueError(
+            f"Build failed (rc={output.returncode}).\n"
+            f"STDOUT:\n{output.stdout}\n"
+            f"STDERR:\n{output.stderr}"
+        )
 
     if input_output_parameters.output_validation:
         validate_output(
