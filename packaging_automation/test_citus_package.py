@@ -50,6 +50,10 @@ class TestPlatform(Enum):
     ubuntu_focal = {"name": "ubuntu/focal", "docker_image_name": "ubuntu-focal"}
     ubuntu_jammy = {"name": "ubuntu/jammy", "docker_image_name": "ubuntu-jammy"}
     ubuntu_noble = {"name": "ubuntu/noble", "docker_image_name": "ubuntu-noble"}
+    ubuntu_resolute = {
+        "name": "ubuntu/resolute",
+        "docker_image_name": "ubuntu-resolute",
+    }
     ubuntu_kinetic = {"name": "ubuntu/kinetic", "docker_image_name": "ubuntu-kinetic"}
     undefined = {"name": "undefined", "docker_image_name": "undefined"}
 

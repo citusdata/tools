@@ -25,6 +25,7 @@ supported_distros = {
     "ubuntu/focal": 210,
     "ubuntu/jammy": 237,
     "ubuntu/noble": 284,
+    "ubuntu/resolute": -1,  # TODO: real packagecloud distro_version_id for Ubuntu 26.04 (resolute); -1 is a loud placeholder so uploads fail safely until filled
     "ubuntu/kinetic": 261,
 }
 
