@@ -1,9 +1,9 @@
 import argparse
 import os
+import subprocess
 from enum import Enum
 from typing import Tuple, List
 
-import docker
 import pathlib2
 from parameters_validation import validate_parameters
 
@@ -91,9 +91,37 @@ docker_image_info_dict = {
 }
 DOCKER_IMAGE_NAME = "citusdata/citus"
 
-docker_client = docker.from_env()
+PLATFORM_AMD64 = "linux/amd64"
+PLATFORM_MULTI_ARCH = "linux/amd64,linux/arm64"
 
-docker_api_client = docker.APIClient()
+
+def get_platforms(docker_image_type: DockerImageType) -> str:
+    multi_arch_enabled = os.getenv("DOCKER_BUILD_MULTI_ARCH", "").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    if docker_image_type == DockerImageType.alpine and multi_arch_enabled:
+        return PLATFORM_MULTI_ARCH
+    return PLATFORM_AMD64
+
+
+def run_buildx_build(
+    dockerfile: str,
+    platforms: str,
+    image_tags: List[str],
+    will_image_be_published: bool,
+):
+    command = ["docker", "buildx", "build", "--platform", platforms, "-f", dockerfile]
+    for image_tag in image_tags:
+        command.extend(["-t", image_tag])
+    if will_image_be_published:
+        command.append("--push")
+    elif platforms == PLATFORM_AMD64:
+        command.append("--load")
+    command.append(".")
+    subprocess.run(command, check=True)
 
 
 def regular_images_to_be_built(
@@ -183,16 +211,15 @@ def publish_main_docker_images(
 ):
     print(f"Building main docker image for {docker_image_type.name}...")
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_type.name}"
-    _, logs = docker_client.images.build(
+    run_buildx_build(
         dockerfile=docker_image_info_dict[docker_image_type]["file-name"],
-        tag=docker_image_name,
-        path=".",
+        platforms=get_platforms(docker_image_type),
+        image_tags=[docker_image_name],
+        will_image_be_published=will_image_be_published,
     )
-    flush_logs(logs)
     print(f"Main docker image for {docker_image_type.name} built.")
     if will_image_be_published:
         print(f"Publishing main docker image for {docker_image_type.name}...")
-        docker_client.images.push(DOCKER_IMAGE_NAME, tag=docker_image_type.name)
         print(f"Publishing main docker image for {docker_image_type.name} finished")
     else:
         current_branch = get_current_branch(os.getcwd())
@@ -203,13 +230,6 @@ def publish_main_docker_images(
             )
 
 
-def flush_logs(logs):
-    for log in logs:
-        log_str = log.get("stream")
-        if log_str:
-            print(log_str, end="")
-
-
 def publish_tagged_docker_images(
     docker_image_type, tag_name: str, will_image_be_published: bool
 ):
@@ -218,32 +238,18 @@ def publish_tagged_docker_images(
     )
     tag_parts = decode_tag_parts(tag_name)
     tag_version_part = ""
-    docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_type.name}"
-    _, logs = docker_client.images.build(
-        dockerfile=docker_image_info_dict[docker_image_type]["file-name"],
-        tag=docker_image_name,
-        path=".",
-    )
-    flush_logs(logs)
-    print(f"{docker_image_type.name} image built.Now starting tagging and pushing...")
+    image_tags = []
     for tag_part in tag_parts:
         tag_version_part = tag_version_part + tag_part
         image_tag = get_image_tag(tag_version_part, docker_image_type)
-        print(f"Tagging {docker_image_name} with the tag {image_tag}...")
-        docker_api_client.tag(docker_image_name, docker_image_name, image_tag)
-        print(f"Tagging {docker_image_name} with the tag {image_tag} finished.")
-        if will_image_be_published:
-            print(f"Pushing {docker_image_name} with the tag {image_tag}...")
-            push_logs = docker_client.images.push(DOCKER_IMAGE_NAME, tag=image_tag)
-            print("Push logs:")
-            print(push_logs)
-            print(f"Pushing {docker_image_name} with the tag {image_tag} finished")
-        else:
-            print(
-                f"Skipped pushing {docker_image_type} with the tag {image_tag} since will_image_be_published flag is false"
-            )
-
+        image_tags.append(f"{DOCKER_IMAGE_NAME}:{image_tag}")
         tag_version_part = tag_version_part + "."
+    run_buildx_build(
+        dockerfile=docker_image_info_dict[docker_image_type]["file-name"],
+        platforms=get_platforms(docker_image_type),
+        image_tags=image_tags,
+        will_image_be_published=will_image_be_published,
+    )
     print(
         f"Building and publishing tagged image {docker_image_type.name} for tag {tag_name} finished."
     )
@@ -252,20 +258,16 @@ def publish_tagged_docker_images(
 def publish_nightly_docker_image(will_image_be_published: bool):
     print("Building nightly image...")
     docker_image_name = f"{DOCKER_IMAGE_NAME}:{docker_image_info_dict[DockerImageType.nightly]['docker-tag']}"
-    _, logs = docker_client.images.build(
+    run_buildx_build(
         dockerfile=docker_image_info_dict[DockerImageType.nightly]["file-name"],
-        tag=docker_image_name,
-        path=".",
+        platforms=get_platforms(DockerImageType.nightly),
+        image_tags=[docker_image_name],
+        will_image_be_published=will_image_be_published,
     )
-    flush_logs(logs)
     print("Nightly image build finished.")
 
     if will_image_be_published:
         print("Pushing nightly image...")
-        docker_client.images.push(
-            DOCKER_IMAGE_NAME,
-            tag=docker_image_info_dict[DockerImageType.nightly]["docker-tag"],
-        )
         print("Nightly image push finished.")
     else:
         print(

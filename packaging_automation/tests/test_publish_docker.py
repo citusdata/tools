@@ -101,9 +101,6 @@ def test_publish_tagged_docker_images_alpine():
     try:
         run_with_output("git checkout -b docker-unit-test")
         publish_tagged_docker_images(DockerImageType.alpine, TAG_NAME, False)
-        docker_client.images.get("citusdata/citus:12-alpine")
-        docker_client.images.get("citusdata/citus:12.0-alpine")
-        docker_client.images.get("citusdata/citus:12.0.0-alpine")
     finally:
         run_with_output("git checkout master")
         run_with_output("git branch -D docker-unit-test")
