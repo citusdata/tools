@@ -16,11 +16,11 @@ attrs==23.2.0
     # via -r tools/packaging_automation/requirements.in
 bandit==1.7.8
     # via prospector
-black==24.4.2
+black==26.3.1
     # via -r tools/packaging_automation/requirements.in
 build==1.2.1
     # via pyroma
-certifi==2024.2.2
+certifi==2024.7.4
     # via
     #   httpcore
     #   httpx
@@ -35,7 +35,7 @@ charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via black
-cryptography==46.0.6
+cryptography==48.0.1
     # via pyjwt
 dataproperty==1.0.1
     # via
@@ -71,9 +71,9 @@ gitpython==3.1.50
     #   prospector
 greenlet==3.0.3
     # via sqlalchemy
-h11==0.14.0
+h11==0.16.0
     # via httpcore
-httpcore==1.0.5
+httpcore==1.0.9
     # via httpx
 httpx==0.27.0
     # via pypistats
@@ -123,11 +123,12 @@ packaging==24.0
     #   pytest
     #   requirements-detector
     #   typepy
+    #   wheel
 parameters-validation==1.2.0
     # via -r tools/packaging_automation/requirements.in
 pathlib2==2.3.7.post1
     # via -r tools/packaging_automation/requirements.in
-pathspec==0.12.1
+pathspec==1.1.1
     # via black
 pathvalidate==3.2.0
     # via pytablewriter
@@ -169,7 +170,7 @@ pygments==2.20.0
     #   pyroma
     #   pytest
     #   rich
-pyjwt[crypto]==2.8.0
+pyjwt[crypto]==2.13.0
     # via pygithub
 pylint==2.17.7
     # via
@@ -190,7 +191,7 @@ pylint-plugin-utils==0.7
     #   pylint-celery
     #   pylint-django
     #   pylint-flask
-pynacl==1.5.0
+pynacl==1.6.2
     # via pygithub
 pypistats==1.5.0
     # via -r tools/packaging_automation/requirements.in
@@ -216,6 +217,8 @@ python-slugify==8.0.4
     # via pypistats
 python-string-utils==1.0.0
     # via -r tools/packaging_automation/requirements.in
+pytokens==0.4.1
+    # via black
 pytz==2024.1
     # via typepy
 pyyaml==6.0.1
@@ -290,6 +293,7 @@ typing-extensions==4.15.0
     #   cryptography
     #   mypy
     #   pygithub
+    #   pyjwt
     #   sqlalchemy
 urllib3==2.7.0
     # via
@@ -301,7 +305,7 @@ vulture==2.11
     # via prospector
 wcwidth==0.2.13
     # via prettytable
-wheel==0.43.0
+wheel==0.46.2
     # via -r tools/packaging_automation/requirements.in
 wrapt==1.16.0
     # via

@@ -5,7 +5,6 @@ import json
 from .dbconfig import Base, DbParams, db_session
 import os
 
-
 # Define the database connection
 db_name = os.getenv(
     "DB_NAME",
