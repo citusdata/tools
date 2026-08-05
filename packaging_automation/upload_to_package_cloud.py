@@ -25,6 +25,7 @@ supported_distros = {
     "ubuntu/focal": 210,
     "ubuntu/jammy": 237,
     "ubuntu/noble": 284,
+    "ubuntu/resolute": 320,
     "ubuntu/kinetic": 261,
 }
 

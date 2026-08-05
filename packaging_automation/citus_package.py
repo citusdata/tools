@@ -65,6 +65,7 @@ package_docker_platform_dict = {
     "ubuntu,jammy": "ubuntu/jammy",
     "ubuntu,kinetic": "ubuntu/kinetic",
     "ubuntu,noble": "ubuntu/noble",
+    "ubuntu,resolute": "ubuntu/resolute",
     "pgxn": "pgxn",
 }
 
