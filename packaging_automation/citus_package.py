@@ -365,10 +365,14 @@ def build_package(
     print(f"Executing docker command: {docker_command}")
     output = run_with_output(docker_command, text=True)
 
+    if output.returncode != 0:
+        raise ValueError(
+            f"Build failed (rc={output.returncode}).\n"
+            f"STDOUT:\n{output.stdout}\n"
+            f"STDERR:\n{output.stderr}"
+        )
     if output.stdout:
         print("Output:" + output.stdout)
-    if output.returncode != 0:
-        raise ValueError(output.stderr)
 
     if input_output_parameters.output_validation:
         validate_output(
