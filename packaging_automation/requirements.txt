@@ -35,7 +35,7 @@ charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via black
-cryptography==48.0.1
+cryptography==50.0.0
     # via pyjwt
 dataproperty==1.0.1
     # via
@@ -65,7 +65,7 @@ flake8-polyfill==1.0.2
     # via pep8-naming
 gitdb==4.0.11
     # via gitpython
-gitpython==3.1.50
+gitpython==3.1.57
     # via
     #   -r tools/packaging_automation/requirements.in
     #   prospector
