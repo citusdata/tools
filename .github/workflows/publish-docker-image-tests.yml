@@ -15,6 +15,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Install package dependencies
         run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libssl-dev python3-testresources
 
