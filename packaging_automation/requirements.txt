@@ -16,16 +16,16 @@ attrs==23.2.0
     # via -r tools/packaging_automation/requirements.in
 bandit==1.7.8
     # via prospector
-black==24.4.2
+black==26.3.1
     # via -r tools/packaging_automation/requirements.in
 build==1.2.1
     # via pyroma
-certifi==2024.2.2
+certifi==2024.7.4
     # via
     #   httpcore
     #   httpx
     #   requests
-cffi==1.16.0
+cffi==2.0.0
     # via
     #   cryptography
     #   pynacl
@@ -35,7 +35,7 @@ charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via black
-cryptography==42.0.7
+cryptography==48.0.1
     # via pyjwt
 dataproperty==1.0.1
     # via
@@ -65,19 +65,19 @@ flake8-polyfill==1.0.2
     # via pep8-naming
 gitdb==4.0.11
     # via gitpython
-gitpython==3.1.43
+gitpython==3.1.50
     # via
     #   -r tools/packaging_automation/requirements.in
     #   prospector
 greenlet==3.0.3
     # via sqlalchemy
-h11==0.14.0
+h11==0.16.0
     # via httpcore
-httpcore==1.0.5
+httpcore==1.0.9
     # via httpx
 httpx==0.27.0
     # via pypistats
-idna==3.7
+idna==3.15
     # via
     #   anyio
     #   httpx
@@ -86,7 +86,7 @@ iniconfig==2.0.0
     # via pytest
 isort==5.13.2
     # via pylint
-jinja2==3.1.4
+jinja2==3.1.6
     # via -r tools/packaging_automation/requirements.in
 lazy-object-proxy==1.10.0
     # via astroid
@@ -123,11 +123,12 @@ packaging==24.0
     #   pytest
     #   requirements-detector
     #   typepy
+    #   wheel
 parameters-validation==1.2.0
     # via -r tools/packaging_automation/requirements.in
 pathlib2==2.3.7.post1
     # via -r tools/packaging_automation/requirements.in
-pathspec==0.12.1
+pathspec==1.1.1
     # via black
 pathvalidate==3.2.0
     # via pytablewriter
@@ -144,7 +145,7 @@ pluggy==1.5.0
     # via pytest
 prettytable==3.10.0
     # via pypistats
-prospector[with-everything,with_everything]==1.10.3
+prospector[with-everything]==1.10.3
     # via -r tools/packaging_automation/requirements.in
 psycopg2-binary==2.9.9
     # via -r tools/packaging_automation/requirements.in
@@ -164,11 +165,12 @@ pyflakes==2.5.0
     #   prospector
 pygithub==2.3.0
     # via -r tools/packaging_automation/requirements.in
-pygments==2.18.0
+pygments==2.20.0
     # via
     #   pyroma
+    #   pytest
     #   rich
-pyjwt[crypto]==2.8.0
+pyjwt[crypto]==2.13.0
     # via pygithub
 pylint==2.17.7
     # via
@@ -189,7 +191,7 @@ pylint-plugin-utils==0.7
     #   pylint-celery
     #   pylint-django
     #   pylint-flask
-pynacl==1.5.0
+pynacl==1.6.2
     # via pygithub
 pypistats==1.5.0
     # via -r tools/packaging_automation/requirements.in
@@ -201,13 +203,13 @@ pyroma==4.2
     # via prospector
 pytablewriter[html]==1.2.0
     # via pypistats
-pytest==8.2.1
+pytest==9.0.3
     # via -r tools/packaging_automation/requirements.in
 python-dateutil==2.9.0.post0
     # via
     #   pypistats
     #   typepy
-python-dotenv==1.0.1
+python-dotenv==1.2.2
     # via -r tools/packaging_automation/requirements.in
 python-gnupg==0.5.2
     # via -r tools/packaging_automation/requirements.in
@@ -215,6 +217,8 @@ python-slugify==8.0.4
     # via pypistats
 python-string-utils==1.0.0
     # via -r tools/packaging_automation/requirements.in
+pytokens==0.4.1
+    # via black
 pytz==2024.1
     # via typepy
 pyyaml==6.0.1
@@ -222,7 +226,7 @@ pyyaml==6.0.1
     #   -r tools/packaging_automation/requirements.in
     #   bandit
     #   prospector
-requests==2.32.2
+requests==2.33.0
     # via
     #   -r tools/packaging_automation/requirements.in
     #   docker
@@ -281,15 +285,17 @@ typepy[datetime]==1.3.2
     #   dataproperty
     #   pytablewriter
     #   tabledata
-typing-extensions==4.12.0
+typing-extensions==4.15.0
     # via
     #   anyio
     #   astroid
     #   black
+    #   cryptography
     #   mypy
     #   pygithub
+    #   pyjwt
     #   sqlalchemy
-urllib3==2.2.1
+urllib3==2.7.0
     # via
     #   -r tools/packaging_automation/requirements.in
     #   docker
@@ -299,7 +305,7 @@ vulture==2.11
     # via prospector
 wcwidth==0.2.13
     # via prettytable
-wheel==0.43.0
+wheel==0.46.2
     # via -r tools/packaging_automation/requirements.in
 wrapt==1.16.0
     # via
