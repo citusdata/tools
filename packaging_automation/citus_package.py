@@ -329,7 +329,7 @@ def get_postgres_versions(
     if exclude_dict_nightly and platform_key_nightly in exclude_dict_nightly:
         nightly_versions = [
             v
-            for v in release_versions
+            for v in nightly_versions
             if v not in exclude_dict_nightly[platform_key_nightly]
         ]
 
