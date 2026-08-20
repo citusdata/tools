@@ -62,9 +62,9 @@ def test_update_docker_file_for_latest_postgres():
         assert (
             f"postgresql-$PG_MAJOR-{PROJECT_NAME}-"
             f"{version_details['major']}.{version_details['minor']}=$CITUS_VERSION"
-            in lines[21]
+            in lines[22]
         )
-        assert len(lines) == 42
+        assert len(lines) == 43
 
 
 def test_update_regular_docker_compose_file():
