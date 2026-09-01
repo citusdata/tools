@@ -16,7 +16,7 @@ attrs==23.2.0
     # via -r tools/packaging_automation/requirements.in
 bandit==1.7.8
     # via prospector
-black==26.3.1
+black==26.5.1
     # via -r tools/packaging_automation/requirements.in
 build==1.2.1
     # via pyroma
@@ -35,7 +35,7 @@ charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via black
-cryptography==48.0.1
+cryptography==50.0.0
     # via pyjwt
 dataproperty==1.0.1
     # via
@@ -65,7 +65,7 @@ flake8-polyfill==1.0.2
     # via pep8-naming
 gitdb==4.0.11
     # via gitpython
-gitpython==3.1.50
+gitpython==3.1.58
     # via
     #   -r tools/packaging_automation/requirements.in
     #   prospector
@@ -147,7 +147,7 @@ prettytable==3.10.0
     # via pypistats
 prospector[with-everything]==1.10.3
     # via -r tools/packaging_automation/requirements.in
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.12
     # via -r tools/packaging_automation/requirements.in
 pycodestyle==2.9.1
     # via
@@ -155,7 +155,7 @@ pycodestyle==2.9.1
     #   prospector
 pycparser==2.22
     # via cffi
-pycurl==7.45.3
+pycurl==7.47.0
     # via -r tools/packaging_automation/requirements.in
 pydocstyle==6.3.0
     # via prospector
@@ -203,7 +203,7 @@ pyroma==4.2
     # via prospector
 pytablewriter[html]==1.2.0
     # via pypistats
-pytest==9.0.3
+pytest==9.1.1
     # via -r tools/packaging_automation/requirements.in
 python-dateutil==2.9.0.post0
     # via
