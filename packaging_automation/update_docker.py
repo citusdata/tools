@@ -267,4 +267,5 @@ if __name__ == "__main__":
             PROJECT_NAME,
             MAIN_BRANCH,
         )
+    if not args.is_test and not args.pipeline:
         remove_cloned_code(execution_path)
