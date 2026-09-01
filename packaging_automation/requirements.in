@@ -19,4 +19,4 @@ wheel
 python-dotenv
 prospector[with_everything]
 pypistats
-setuptools==70.0.0
+setuptools==83.0.0
