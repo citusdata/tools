@@ -1,5 +1,5 @@
 # This file is auto generated from it's template,
-# see citusdata/tools/packaging_automation/templates/docker/postgres-16/postgres-16.tmpl.dockerfile.
+# see citusdata/tools/packaging_automation/templates/docker/postgres-19/postgres-19.tmpl.dockerfile.
 FROM postgres:{{postgres_version}}
 ARG VERSION={{project_version}}
 LABEL maintainer="Citus Data https://citusdata.com" \
@@ -20,8 +20,8 @@ RUN apt-get update \
        curl \
     && curl -s https://install.citusdata.com/community/deb.sh | bash \
     && apt-get install -y postgresql-$PG_MAJOR-citus-{{project_minor_version}}=$CITUS_VERSION \
-                          postgresql-$PG_MAJOR-hll=2.18.citus-1 \
-                          postgresql-$PG_MAJOR-topn=2.6.0.citus-1 \
+                          postgresql-$PG_MAJOR-hll=2.21.citus-1 \
+                          postgresql-$PG_MAJOR-topn=2.7.1.citus-1 \
     && apt-get purge -y --auto-remove curl \
     && rm -rf /var/lib/apt/lists/*
 

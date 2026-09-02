@@ -63,9 +63,9 @@ def test_get_image_tag():
     assert image_name == "12.0.0"
 
     image_name = get_image_tag(
-        remove_prefix(TAG_NAME, "v"), DockerImageType.postgres_15
+        remove_prefix(TAG_NAME, "v"), DockerImageType.postgres_19
     )
-    assert image_name == "12.0.0-pg15"
+    assert image_name == "12.0.0-pg19"
 
 
 def test_publish_main_docker_images():
