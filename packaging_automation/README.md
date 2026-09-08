@@ -40,26 +40,8 @@ python -m pip install -r packaging_automation/requirements.txt
 
 If all the steps above completed successfully , you are ready for script execution
 
-## Debian Bullseye retirement
-
-Debian 11 (Bullseye) LTS ended on 2026-08-31. It is no longer eligible for new
-package builds, installation tests, or uploads. Bookworm and Trixie remain
-supported Debian targets. This retirement does not change other distributions.
-
-Coordinate rollout across repositories:
-
-1. Remove Bullseye from active caller matrices and host selection in
-   `citusdata/packaging` (`develop` and `all-citus`), Citus CI, and test automation;
-   update installer eligibility on packaging's `gh-pages` branch. Do this before
-   those callers adopt tools that reject Bullseye. Existing tools pins may still
-   recognize Bullseye, so updating tools alone does not retire those callers.
-2. Release these tools changes through the normal release process, then update
-   shared tools pins to that published release. Do not bump pins to an unpublished
-   version.
-
-Keep already-published packages and historical data. Package inspection and
-deletion helpers accept distro names independently of the upload allowlist, so
-they can still operate on legacy Bullseye packages without re-enabling uploads.
+Debian 11 (Bullseye) is no longer supported after Debian LTS ended on 2026-08-31.
+Use Bookworm or Trixie instead. Already-published packages remain available.
 
 # **Prepare Release **
 
@@ -265,4 +247,3 @@ Script executes docker build on given image type and publishes the docker image 
             --exec_path "$(pwd)" --tag_name ${{ github.event.inputs.tag_name }} \
             --manual_trigger_type ${{ github.event.inputs.trigger_type }}
 ```
-
