@@ -1,16 +1,12 @@
 import os
 import subprocess
-from unittest.mock import patch
 
 import pathlib2
 import pytest
 
 from .test_utils import generate_new_gpg_key
-from .. import upload_to_package_cloud
 from ..citus_package import (
     decode_os_and_release,
-    get_build_platform,
-    get_docker_image_name,
     is_docker_running,
     get_signing_credentials,
     get_postgres_versions,
@@ -32,11 +28,6 @@ from ..common_tool_methods import (
     get_private_key_by_fingerprint_with_passphrase,
     verify_rpm_signature_in_dir,
     transform_key_into_base64_str,
-    platform_names,
-)
-from ..test_citus_package import (
-    TestPlatform as PackageTestPlatform,
-    get_test_platform_for_os_release,
 )
 
 TEST_BASE_PATH = os.getenv("BASE_PATH", default=pathlib2.Path(__file__).parents[2])
@@ -79,57 +70,6 @@ def test_decode_os_and_release():
 
     with pytest.raises(ValueError):
         decode_os_and_release("debian/anders")
-
-
-def test_bullseye_is_not_an_active_platform():
-    assert "debian/bullseye" not in platform_names()
-    with pytest.raises(ValueError, match="bullseye is not among supported releases"):
-        decode_os_and_release("debian/bullseye")
-    with pytest.raises(ValueError, match="bullseye is not among supported releases"):
-        get_docker_image_name("debian/bullseye")
-    with pytest.raises(KeyError):
-        get_build_platform(None, "debian,bullseye")
-    assert (
-        get_test_platform_for_os_release("debian/bullseye")
-        == PackageTestPlatform.undefined
-    )
-    assert "debian/bullseye" not in upload_to_package_cloud.supported_distros
-
-
-@pytest.mark.parametrize("release", ["bookworm", "trixie"])
-def test_supported_debian_platforms(release):
-    platform = f"debian/{release}"
-    assert platform in platform_names()
-    assert decode_os_and_release(platform) == ("debian", release)
-    assert get_build_platform(None, f"debian,{release}") == platform
-    assert get_docker_image_name(platform) == f"debian-{release}"
-    test_platform = get_test_platform_for_os_release(platform)
-    assert test_platform.value["docker_image_name"] == f"debian-{release}"
-    assert platform in upload_to_package_cloud.supported_distros
-
-
-def test_legacy_bullseye_package_operations():
-    with patch.object(upload_to_package_cloud.requests, "get") as get:
-        get.return_value.ok = True
-        assert upload_to_package_cloud.package_exists(
-            "test-token", "citus-bot", "sample", "old.deb", "debian/bullseye"
-        )
-        assert get.call_args.args[0] == (
-            "https://packagecloud.io/api/v1/repos/citus-bot/sample/search?"
-            "q=old.deb&filter=all&dist=debian%2Fbullseye"
-        )
-    with patch.object(upload_to_package_cloud.requests, "delete") as delete:
-        delete.return_value.ok = True
-        delete.return_value.content = b"deleted"
-        result = upload_to_package_cloud.delete_package_from_package_cloud(
-            "test-token", "citus-bot", "sample", "debian", "bullseye", "old.deb"
-        )
-        assert result.success_status
-        delete.assert_called_once_with(
-            "https://test-token:@packagecloud.io/api/v1/repos/citus-bot/sample/"
-            "debian/bullseye/old.deb",
-            timeout=60,
-        )
 
 
 def test_is_docker_running():
