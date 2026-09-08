@@ -54,7 +54,6 @@ package_docker_platform_dict = {
     "centos,8": "el/8",
     "centos,7": "el/7",
     "debian,bookworm": "debian/bookworm",
-    "debian,bullseye": "debian/bullseye",
     "debian,stretch": "debian/stretch",
     "debian,trixie": "debian/trixie",
     "oraclelinux,8": "ol/8",
