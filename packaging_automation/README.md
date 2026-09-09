@@ -40,6 +40,9 @@ python -m pip install -r packaging_automation/requirements.txt
 
 If all the steps above completed successfully , you are ready for script execution
 
+Debian 11 (Bullseye) is no longer supported after Debian LTS ended on 2026-08-31.
+Use Bookworm or Trixie instead. Already-published packages remain available.
+
 # **Prepare Release **
 
 prepare-release.py script performs the pre-packaging configurations in citus/citus-enterprise projects.
@@ -244,4 +247,3 @@ Script executes docker build on given image type and publishes the docker image 
             --exec_path "$(pwd)" --tag_name ${{ github.event.inputs.tag_name }} \
             --manual_trigger_type ${{ github.event.inputs.trigger_type }}
 ```
-
