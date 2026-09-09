@@ -37,10 +37,6 @@ class TestPlatform(Enum):
     ol_9 = {"name": "ol/9", "docker_image_name": "ol-9"}
     debian_stretch = {"name": "debian/stretch", "docker_image_name": "debian-stretch"}
     debian_buster = {"name": "debian/buster", "docker_image_name": "debian-buster"}
-    debian_bullseye = {
-        "name": "debian/bullseye",
-        "docker_image_name": "debian-bullseye",
-    }
     debian_bookworm = {
         "name": "debian/bookworm",
         "docker_image_name": "debian-bookworm",

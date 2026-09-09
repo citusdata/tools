@@ -18,7 +18,6 @@ supported_distros = {
     "ol/9": 244,
     "debian/stretch": 149,
     "debian/buster": 150,
-    "debian/bullseye": 207,
     "debian/bookworm": 215,
     "debian/trixie": 221,
     "ubuntu/bionic": 190,

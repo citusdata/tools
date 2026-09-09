@@ -39,7 +39,6 @@ referenced_repos: List[Repo] = []
 supported_platforms = {
     "debian": [
         "bookworm",
-        "bullseye",
         "buster",
         "stretch",
         "jessie",

@@ -53,7 +53,6 @@ single_postgres_package_counts = {
     "el/9": 1,
     "ol/9": 1,
     "debian/stretch": 2,
-    "debian/bullseye": 2,
     "debian/bookworm": 2,
     "debian/trixie": 2,
     "ubuntu/bionic": 2,
@@ -237,10 +236,10 @@ def test_get_postgres_versions_el_7():
     assert len(nightly_versions) == 2 and nightly_versions == ["14", "15"]
 
 
-def test_get_postgres_versions_debain_bullseye():
+def test_get_postgres_versions_debian_bookworm():
     release_versions, nightly_versions = get_postgres_versions(
         input_files_dir=f"{os.getcwd()}/packaging_automation/tests/files/get_postgres_versions_tests",
-        platform="debian/bullseye",
+        platform="debian/bookworm",
     )
     # pg 15 is excluded for all releases with pg_exclude file
     assert len(release_versions) == 2 and release_versions == ["13", "14"]
