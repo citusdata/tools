@@ -2,7 +2,8 @@ import os
 import re
 import sys
 from enum import Enum
-from typing import List, Tuple
+from itertools import groupby
+from typing import List, Set, Tuple
 
 import yaml
 
@@ -62,6 +63,43 @@ def validate_output(output: str, ignore_file_path: str, package_type: PackageTyp
         print("Build output check completed succesfully. No warnings")
 
 
+def _known_arm64_diversion_warnings(output_lines: List[str]) -> Set[int]:
+    warning = "dpkg-shlibdeps: warning: diversions involved - output may be incorrect"
+    source = " diversion by libc6 from: /lib/ld-linux-aarch64.so.1"
+    target = " diversion by libc6 to: /lib/ld-linux-aarch64.so.1.usr-is-merged"
+    known_warnings = set()
+
+    # Keep unknown/malformed diversion records in the block so they veto it.
+    for is_diagnostic, block in groupby(
+        enumerate(output_lines),
+        lambda item: item[1]
+        .lstrip()
+        .startswith(("dpkg-shlibdeps:", "diversion", "local diversion")),
+    ):
+        if not is_diagnostic:
+            continue
+        records = list(block)
+        lines = [line for _, line in records]
+        if (
+            set(lines) != {warning, source, target}
+            or lines.count(source) != lines.count(target)
+            or lines.count(warning) != 2 * lines.count(source)
+        ):
+            continue
+
+        # Parallel dh_shlibdeps may interleave records, but every detail must
+        # follow a warning. Only complete libc6 ARM64 usr-merge blocks qualify.
+        pending_warnings = 0
+        for line in lines:
+            pending_warnings += 1 if line == warning else -1
+            if pending_warnings < 0:
+                break
+        else:
+            known_warnings.update(index for index, line in records if line == warning)
+
+    return known_warnings
+
+
 def filter_warning_lines(
     output_lines: List[str], package_type: PackageType
 ) -> Tuple[List[str], List[str]]:
@@ -76,7 +114,10 @@ def filter_warning_lines(
     package_specific_warning_lines = []
     is_deb_warning_line = False
     is_rpm_warning_line = False
-    for output_line in output_lines:
+    known_diversion_warnings = set()
+    if package_type == PackageType.deb:
+        known_diversion_warnings = _known_arm64_diversion_warnings(output_lines)
+    for line_index, output_line in enumerate(output_lines):
         if package_type == PackageType.deb:
             if debian_lintian_starter in output_line:
                 is_deb_warning_line = True
@@ -87,7 +128,7 @@ def filter_warning_lines(
                         package_specific_warning_lines.append(output_line)
                     else:
                         is_deb_warning_line = False
-                else:
+                elif line_index not in known_diversion_warnings:
                     base_warning_lines.append(output_line)
         else:
             if rpm_lintian_starter in output_line:
