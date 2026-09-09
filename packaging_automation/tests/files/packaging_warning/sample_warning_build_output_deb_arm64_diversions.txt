@@ -1,0 +1,26 @@
+   dh_shlibdeps -a
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+ diversion by libc6 from: /lib/ld-linux-aarch64.so.1
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+ diversion by libc6 to: /lib/ld-linux-aarch64.so.1.usr-is-merged
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+ diversion by libc6 from: /lib/ld-linux-aarch64.so.1
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+ diversion by libc6 to: /lib/ld-linux-aarch64.so.1.usr-is-merged
+ diversion by libc6 from: /lib/ld-linux-aarch64.so.1
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+ diversion by libc6 to: /lib/ld-linux-aarch64.so.1.usr-is-merged
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+ diversion by libc6 from: /lib/ld-linux-aarch64.so.1
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+ diversion by libc6 to: /lib/ld-linux-aarch64.so.1.usr-is-merged
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+ diversion by libc6 from: /lib/ld-linux-aarch64.so.1
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+ diversion by libc6 to: /lib/ld-linux-aarch64.so.1.usr-is-merged
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+ diversion by libc6 from: /lib/ld-linux-aarch64.so.1
+dpkg-shlibdeps: warning: diversions involved - output may be incorrect
+ diversion by libc6 to: /lib/ld-linux-aarch64.so.1.usr-is-merged
+   dh_installdeb -a
