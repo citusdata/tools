@@ -1,7 +1,8 @@
+anyio>=4.14.2
 attrs
 black
 docker
-GitPython
+GitPython>=3.1.62
 Jinja2
 parameters_validation
 pathlib2
@@ -10,13 +11,14 @@ platformdirs==4.12.1
 psycopg2-binary
 pycurl
 PyGithub
+PyJWT[crypto]>=2.15.0
 pytest
 python-gnupg
 python-string-utils
 PyYAML
 requests
 SQLAlchemy
-urllib3
+urllib3>=2.8.0
 wheel
 python-dotenv
 prospector[with_everything]
