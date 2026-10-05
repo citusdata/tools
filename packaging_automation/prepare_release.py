@@ -775,7 +775,7 @@ def create_new_sql_for_downgrade_path(
 CHECKOUT_DIR = "citus_temp"
 
 
-def validate_parameters(major_release_flag: bool):
+def validate_parameters(major_release_flag: bool, arguments: argparse.Namespace):
     if major_release_flag and arguments.cherry_pick_enabled:
         raise ValueError("Cherry pick could be enabled only for patch release")
 
@@ -810,7 +810,7 @@ if __name__ == "__main__":
     arguments = parser.parse_args()
     execution_path = f"{os.getcwd()}/{CHECKOUT_DIR}"
     major_release = is_major_release(arguments.prj_ver)
-    validate_parameters(major_release)
+    validate_parameters(major_release, arguments)
 
     try:
         initialize_env(execution_path, arguments.prj_name, CHECKOUT_DIR)

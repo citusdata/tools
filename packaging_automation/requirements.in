@@ -1,6 +1,7 @@
 anyio>=4.14.2
 attrs
 black
+click>=8.3.3
 docker
 GitPython>=3.1.62
 Jinja2
@@ -19,8 +20,8 @@ PyYAML
 requests
 SQLAlchemy
 urllib3>=2.8.0
-wheel
+wheel>=0.48.0
 python-dotenv
-prospector[with_everything]
+prospector[with_everything]>=1.12.1
 pypistats
-setuptools==70.0.0
+setuptools>=83.0.0
