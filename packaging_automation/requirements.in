@@ -5,6 +5,8 @@ GitPython
 Jinja2
 parameters_validation
 pathlib2
+# Include the pytest plugin and its startup-import fix.
+platformdirs==4.12.1
 psycopg2-binary
 pycurl
 PyGithub

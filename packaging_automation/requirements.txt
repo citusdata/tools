@@ -136,8 +136,9 @@ pbr==6.0.0
     # via stevedore
 pep8-naming==0.10.0
     # via prospector
-platformdirs==4.2.2
+platformdirs==4.12.1
     # via
+    #   -r tools/packaging_automation/requirements.in
     #   black
     #   pylint
     #   pypistats
