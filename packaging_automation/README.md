@@ -1,6 +1,6 @@
 ## Python Environment Installation
 
-Before using script, you need to make sure that Python > 3.8 is installed in your system.
+Before using script, you need to make sure that Python >= 3.10 is installed in your system.
 
 ### Clone Tools Repository
 
@@ -23,7 +23,7 @@ python -m pip --version
 Output should be like following
 
 ``` console
-pip 21.1.2 from /home/vagrant/.local/lib/python3.8/site-packages/pip (python 3.8)
+pip 22.0.2 from /usr/lib/python3/dist-packages/pip (python 3.10)
 ```
 
 If you get error, you should first install pip
