@@ -1,5 +1,5 @@
 docker
-GitPython
+GitPython>=3.1.62
 Jinja2
 parameters_validation
 pathlib2
