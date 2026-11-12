@@ -4,6 +4,7 @@ env:
   PACKAGE_CLOUD_API_TOKEN: ${{ secrets.PACKAGE_CLOUD_API_TOKEN }}
 
 on:
+  workflow_dispatch:
   schedule:
     # https://crontab.guru/#0_18_*_*_*
     - cron: "0 18 * * *"
@@ -16,7 +17,6 @@ jobs:
       matrix:
         package_repository:
           - community-nightlies
-          - enterprise-nightlies
 
     steps:
       - name: Checkout repository

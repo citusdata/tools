@@ -16,12 +16,13 @@ jobs:
   statistics_fetch:
     name: Fetch Statistics
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         parallel_index: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-        repo: [community, enterprise]
+        repo: [community]
 
     steps:
       - name: Checkout repository
