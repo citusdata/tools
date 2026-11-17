@@ -14,7 +14,7 @@ on:
 
 jobs:
   make-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Check out repository
@@ -23,7 +23,7 @@ jobs:
         run: make && sudo make install
 
   unit_test_execution:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Generate GitHub App token
