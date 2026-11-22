@@ -1,4 +1,4 @@
-name: Build and publish citus community nightly packages
+name: Build citus community nightlies (validation)
 
 env:
   MAIN_BRANCH: "all-citus"
@@ -7,9 +7,6 @@ env:
   DOCKERHUB_USER_NAME: ${{ secrets.DOCKERHUB_USER_NAME }}
   DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
 on:
-  push:
-    branches:
-      - "**"
   schedule:
     - cron: "30 1 * * *"
   workflow_dispatch:
