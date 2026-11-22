@@ -13,7 +13,7 @@ on:
 
 jobs:
   metadata:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       pg_versions: ${{ steps.generate-postgres.outputs.pg_versions }}
       citus_version: ${{ steps.get-citus-version.outputs.citus_version }}
@@ -43,7 +43,7 @@ jobs:
           echo "Postgres Version: ${POSTGRES_VERSIONS}"
           echo "::set-output name=pg_versions::${POSTGRES_VERSIONS}"
   test_execution:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: metadata
     strategy:
       fail-fast: false
