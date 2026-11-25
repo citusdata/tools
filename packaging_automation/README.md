@@ -182,12 +182,15 @@ Script can be used for  citus version upgrades.
 10.0.1
 (Required)
 
+**--pg_min_major:** Lowest PostgreSQL major the Citus release line supports (integer >= 10). Written to `META.json`
+as the PGXN runtime requirement `<major>.0.0`. There is no default. (Required)
+
 **--is_test:** If used, branches would not be pushed remote repository and PR would not be created (Optional)
 
 ### Example
 
 ``` console
- python -m  packaging_automation.update_pgxn --gh_token <your-personal-token> --prj_ver 10.0.4
+ python -m  packaging_automation.update_pgxn --gh_token <your-personal-token> --prj_ver 14.3.0 --pg_min_major 16
 ```
 
 ## Upload to package cloud 
