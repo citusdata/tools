@@ -2,6 +2,10 @@
 
 Before using script, you need to make sure that Python >= 3.10 is installed in your system.
 
+`packaging_automation/requirements.txt` installs and runs on Python 3.10 through 3.14 (consumer workflows on
+`ubuntu-latest` / Ubuntu 26.04 get Python 3.14, requiring `greenlet` 3.2.4 and `SQLAlchemy` 2.0.44). Run linters
+(`python -m prospector`) on Python 3.10 to match the tool tests workflow.
+
 ### Clone Tools Repository
 
 git clone https://github.com/citusdata/tools.git

@@ -73,7 +73,7 @@ gitpython==3.1.62
     # via
     #   -r tools/packaging_automation/requirements.in
     #   prospector
-greenlet==3.0.3
+greenlet==3.2.4
     # via sqlalchemy
 h11==0.16.0
     # via httpcore
@@ -255,7 +255,7 @@ sniffio==1.3.1
     # via httpx
 snowballstemmer==2.2.0
     # via pydocstyle
-sqlalchemy==2.0.30
+sqlalchemy==2.0.44
     # via -r tools/packaging_automation/requirements.in
 stevedore==5.2.0
     # via bandit
