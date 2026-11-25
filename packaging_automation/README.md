@@ -238,7 +238,9 @@ Script executes docker build on given image type and publishes the docker image 
 
 **--manual_trigger_type:** Trigger type when executing the script manually. Available options: main,tags,nightly (Required)
 
-**--image_type:** Image type to be published. Available options: latest,alpine,nightly, postgre12
+**--image_type:** Image type to be published. Available options: latest, alpine, nightly, postgres_16, postgres_17,
+postgres_18, postgres_19. Without it, every regular image type is built, so callers that do not ship every
+PostgreSQL major should pass it explicitly from a workflow matrix.
 
 ### Example
 
