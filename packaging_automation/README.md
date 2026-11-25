@@ -138,32 +138,53 @@ images after citus/postgres release
 
 ## Script Usage
 
-Script can be used for both citus version upgrades and PostgreSQL updates.
+The script takes the exact identity of a published Citus release and the Docker base PostgreSQL versions of the
+release line Docker ships. It regenerates the Dockerfiles for those majors, keeps `pkgvars` in sync, and adds a
+changelog entry. Every requested major must already have a `postgres_<major>_version` entry in `pkgvars`; majors
+outside the input (such as a preview major) are left untouched and reported.
+
+Before creating a branch or touching files, the script verifies that `--source_tag` exists in `citusdata/citus`
+(for Alpine) and that `postgresql-<major>-citus-<X.Y>=<deb_version>` is published in the community APT index
+(`debian/trixie`, `amd64`) for every regenerated major. RPM packages are not a Docker dependency and are not checked.
+
+Only generated files are staged, so unrelated files or a nested `tools` clone are never committed. The pull request
+branch name is deterministic: replays on a matching checkout exit without committing, an existing open PR is skipped,
+and an orphaned branch on origin without an open PR fails loudly.
 
 ### Available flags
 
-**--gh_token:** Personal access token that is authorized to commit docker project. (Required)
-
-**--postgres_version:** Optional value that could be set when new postgres version needs to be set in docker images
-
-**--prj_ver:** Upcoming version to be used for release. should include three level of digits separated by dots, e.g:
-10.0.1
+**--source_tag:** Citus source tag, e.g. `v14.3.0`. The Alpine image builds Citus from this tag. Stable tags only.
 (Required)
 
-**--is_test:** If used, branches would not be pushed remote repository and PR would not be created (Optional)
+**--deb_version:** Exact published Debian package version, e.g. `14.3.0.citus-1`. Debian-based images install this
+exact version. (Required)
+
+**--postgres_versions:** Docker base PostgreSQL versions, as `16.14,17.10,18.4`, a JSON array
+`["16.14", "17.10", "18.4"]`, or a JSON mapping `{"16": "16.14", "17": "17.10", "18": "18.4"}`. Apt form `19~rc1`
+is accepted. (Required)
+
+**--latest_postgres_major:** PostgreSQL major for `latest` and `alpine`. Defaults to their current major. Prerelease
+bases are rejected. (Optional)
+
+**--explicitly_requested:** Required for patch releases (`vX.Y.Z` with `Z > 0`). (Optional)
+
+**--apt_repository / --apt_distribution:** APT repository and distribution checked before modifying files. Defaults:
+`https://packagecloud.io/citusdata/community` and `debian/trixie` (`amd64`). (Optional)
+
+**--apt_check_attempts / --apt_retry_interval_seconds:** Retry bound for APT index lag. Defaults: 5 attempts,
+60 seconds apart. (Optional)
+
+**--gh_token:** GitHub token used to look up and create pull requests. Required unless `--is_test` is set.
+
+**--pipeline / --exec_path:** Run against an existing docker checkout at `--exec_path` instead of cloning one.
+
+**--is_test:** Skip pushing the branch and opening a pull request. (Optional)
 
 ### Example 
 
-#### Citus Upgrade
-
 ``` console
- python -m  packaging_automation.update_docker --gh_token <your-personal-token>  --prj_ver 10.0.4
-```
-
-#### Citus and PostgreSQL version upgrade
-
-``` console
- python -m  packaging_automation.update_docker --gh_token <your-personal-token>  --prj_ver 10.0.4 --postgres-version 14.0
+ python -m packaging_automation.update_docker --gh_token <your-personal-token> \
+     --source_tag v14.3.0 --deb_version 14.3.0.citus-1 --postgres_versions 16.14,17.10,18.4
 ```
 
 ## Update Pgxn 
