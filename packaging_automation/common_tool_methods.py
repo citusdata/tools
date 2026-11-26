@@ -715,9 +715,9 @@ def create_pr(
 
 
 def create_pr_with_repo(
-    repo: Repository, pr_branch: str, pr_title: str, base_branch: str
+    repo: Repository, pr_branch: str, pr_title: str, base_branch: str, body: str = ""
 ):
-    return repo.create_pull(title=pr_title, base=base_branch, head=pr_branch, body="")
+    return repo.create_pull(title=pr_title, base=base_branch, head=pr_branch, body=body)
 
 
 def stat_get_request(request_address: str, request_type: RequestType, session):

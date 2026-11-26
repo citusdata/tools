@@ -11,7 +11,7 @@ LABEL maintainer="Citus Data https://citusdata.com" \
       org.label-schema.version=${VERSION} \
       org.label-schema.schema-version="1.0"
 
-ENV CITUS_VERSION ${VERSION}.citus-1
+ENV CITUS_VERSION ${VERSION}.citus-{{deb_revision}}
 
 # install Citus
 RUN apt-get update \
